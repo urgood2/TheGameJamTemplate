@@ -1,6 +1,9 @@
 add_executable(unit_tests
     unit/test_animation_playback.cpp
     unit/test_engine_context.cpp
+    unit/test_registry_consolidation.cpp
+    unit/test_blackboard.cpp
+    unit/test_goap_utils.cpp
     unit/test_color_utils.cpp
     unit/test_component_cache.cpp
     unit/test_bulk_component_access.cpp

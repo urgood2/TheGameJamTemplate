@@ -111,3 +111,33 @@ Lightweight guidance for adding guardrails during the EngineContext migration.
 - If recovery requires freeing/reallocating resources, document the owner; avoid raw-pointer escape hatches without comments.
 - Do not retry by recreating EngineContext mid-frame; tear down and reinit instead.
 - If recovery frees and reallocates GPU/physics objects, state ownership and thread expectations inline.
+
+## Decision Tree
+
+```
+Error occurs
+    │
+    ├─► Is it a developer bug? (null ptr, invalid args, invariant violation)
+    │       └─► YES: throw exception / assert (fail fast)
+    │
+    ├─► Is recovery possible without user impact?
+    │       └─► YES: Use Result<T,E>, log warning, apply fallback
+    │
+    ├─► Is it during initialization?
+    │       └─► YES: Log error, fail init cleanly
+    │
+    ├─► Is it a Lua callback?
+    │       └─► YES: Use safeLuaCall, log with context, continue
+    │
+    └─► Default: Log error with system prefix, return error state
+```
+
+## Quick Reference
+
+| Scenario | Pattern |
+|----------|---------|
+| C++ function that can fail | Return `Result<T, std::string>` |
+| Lua callback | Wrap with `safeLuaCall()` |
+| Exception-throwing code | Wrap with `tryWithLog()` |
+| Asset that might not exist | Use `loadWithRetry()` or guard with fallback |
+| Lambda in Sol2 binding | Use `LUA_BINDING_TRY`/`CATCH` macros |

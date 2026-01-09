@@ -230,6 +230,7 @@ extern quadtree::Quadtree<entt::entity, decltype(getBoxUI)> quadtreeUI;
 //---------------------------------------------------------
 // variables
 
+ENGINECTX_DEPRECATED("Access EngineContext::enemies instead of globals::enemies")
 extern vector<entt::entity> enemies;
 
 // keep track of execution step name during world gen (also for loading screen)
@@ -273,17 +274,52 @@ extern vector<vector<entt::entity>> map;
 extern vector<double> pathfindingMatrix;
 [[nodiscard]] std::vector<double> &getPathfindingMatrix();
 
-// clicked entity
+ENGINECTX_DEPRECATED("Access EngineContext::clickedEntity instead of globals::clickedEntity")
 extern entt::entity clickedEntity;
 
-// various raw files
-extern json activityJSON, colorsJSON, environmentJSON, floraJSON, humanJSON,
-    levelsJSON, materialsJSON, worldGenJSON, muscleJSON, timeJSON,
-    behaviorTreeConfigJSON, levelCurvesJSON, namegenJSON, professionJSON,
-    particleEffectsJSON, uiStringsJSON, animationsJSON, itemsJSON,
-    combatActionToStateJSON, combatAttackWoundsJSON,
-    combatAvailableActionsByStateJSON, objectsJSON, aiConfigJSON, aiActionsJSON,
-    aiWorldstateJSON, ninePatchJSON;
+// JSON configuration files - actively used
+extern json colorsJSON, uiStringsJSON, animationsJSON, aiConfigJSON,
+    aiActionsJSON, aiWorldstateJSON, ninePatchJSON;
+
+// Deprecated JSON blobs - unused legacy data, will be removed in future version
+[[deprecated("activityJSON is unused - remove reference")]]
+extern json activityJSON;
+[[deprecated("environmentJSON is unused - remove reference")]]
+extern json environmentJSON;
+[[deprecated("floraJSON is unused - remove reference")]]
+extern json floraJSON;
+[[deprecated("humanJSON is unused - remove reference")]]
+extern json humanJSON;
+[[deprecated("levelsJSON is unused - remove reference")]]
+extern json levelsJSON;
+[[deprecated("materialsJSON is unused - remove reference")]]
+extern json materialsJSON;
+[[deprecated("worldGenJSON is unused - remove reference")]]
+extern json worldGenJSON;
+[[deprecated("muscleJSON is unused - remove reference")]]
+extern json muscleJSON;
+[[deprecated("timeJSON is unused - remove reference")]]
+extern json timeJSON;
+[[deprecated("behaviorTreeConfigJSON is unused - remove reference")]]
+extern json behaviorTreeConfigJSON;
+[[deprecated("levelCurvesJSON is unused - remove reference")]]
+extern json levelCurvesJSON;
+[[deprecated("namegenJSON is unused - remove reference")]]
+extern json namegenJSON;
+[[deprecated("professionJSON is unused - remove reference")]]
+extern json professionJSON;
+[[deprecated("particleEffectsJSON is unused - remove reference")]]
+extern json particleEffectsJSON;
+[[deprecated("itemsJSON is unused - remove reference")]]
+extern json itemsJSON;
+[[deprecated("combatActionToStateJSON is unused - remove reference")]]
+extern json combatActionToStateJSON;
+[[deprecated("combatAttackWoundsJSON is unused - remove reference")]]
+extern json combatAttackWoundsJSON;
+[[deprecated("combatAvailableActionsByStateJSON is unused - remove reference")]]
+extern json combatAvailableActionsByStateJSON;
+[[deprecated("objectsJSON is unused - remove reference")]]
+extern json objectsJSON;
 
 extern json miniJamCardsJSON, miniJamEnemiesJSON;
 

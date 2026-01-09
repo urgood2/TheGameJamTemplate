@@ -18,6 +18,9 @@
 #include <unordered_map>
 #include <any>
 
+#include "systems/ai/blackboard.hpp"
+#include "systems/ai/goap_utils.hpp"
+
 // ! component usage index
 /*
  * Tile :
@@ -44,48 +47,6 @@ struct TransformCustom {
 // --------------------------------------------------------
 struct GOAPComponent;
 
-// Used to store variables between actions for separate entities with a string identifier
-class Blackboard {
-public:
-    // Set a value in the blackboard
-    template<typename T>
-    void set(const std::string& key, const T& value) {
-        data[key] = value;
-    }
-
-    // Get a value from the blackboard (returns std::any)
-    template<typename T>
-    T get(const std::string& key) const {
-        if (data.find(key) != data.end()) {
-            return std::any_cast<T>(data.at(key));
-        }
-        throw std::runtime_error("Key not found");
-    }
-
-    // Check if a key exists in the blackboard
-    bool contains(const std::string& key) const {
-        return data.find(key) != data.end();
-    }
-
-    // Check the number of items in the blackboard
-    std::size_t size() const {
-        return data.size();
-    }
-
-    // Check if the blackboard is empty
-    bool isEmpty() const {
-        return data.empty();
-    }
-
-    // Clear all items from the blackboard
-    void clear() {
-        data.clear();
-    }
-
-private:
-    std::unordered_map<std::string, std::any> data;  // Key-value store for variables
-};
-
 // holds the modular "actions" that the AI can take
 struct Action {
     enum class Result { // contains the result of the action
@@ -109,62 +70,6 @@ struct Action {
     
     bool is_running = false;
 };
-
-// Build a mask given atom names; ignores unknown names.
-static inline bfield_t mask_from_names(const actionplanner_t& ap, const std::vector<std::string>& names) {
-    bfield_t m = 0;
-    for (const auto& nm : names) {
-        for (int i = 0; i < ap.numatoms; ++i) {
-            if (ap.atm_names[i] && nm == ap.atm_names[i]) {
-                m |= (1LL << i);
-                break;
-            }
-        }
-    }
-    return m;
-}
-
-// If the action declares an explicit 'watch' field in Lua, use it.
-// Accepts: a string "*" (watch all), or a table of strings.
-// If no 'watch' given, we fallback to auto-watch the action's PRE keys (hassle-free default).
-static inline bfield_t build_watch_mask(const actionplanner_t& ap, sol::table actionTbl) {
-    // 1) Explicit watch = "*" → watch ALL defined atoms
-    if (actionTbl["watch"].valid() && actionTbl["watch"].get_type() == sol::type::string) {
-        std::string s = actionTbl["watch"];
-        if (s == "*") {
-            // all bits up to ap.numatoms
-            if (ap.numatoms >= 63) return ~0ULL;       // conservative
-            return ((1ULL << ap.numatoms) - 1ULL);
-        }
-    }
-
-    // 2) Explicit watch = { "hungry", "duplicator_available", ... }
-    if (actionTbl["watch"].valid() && actionTbl["watch"].get_type() == sol::type::table) {
-        std::vector<std::string> names;
-        sol::table w = actionTbl["watch"];
-        for (auto& kv : w) {
-            if (kv.second.get_type() == sol::type::string) {
-                names.push_back(kv.second.as<std::string>());
-            }
-        }
-        return mask_from_names(ap, names);
-    }
-
-    // 3) No watch provided → hassle-free default:
-    //    automatically watch the PRE keys (typical trigger to invalidate the plan).
-    std::vector<std::string> preNames;
-    if (actionTbl["pre"].valid() && actionTbl["pre"].get_type() == sol::type::table) {
-        sol::table pre = actionTbl["pre"];
-        for (auto& kv : pre) {
-            if (kv.first.get_type() == sol::type::string) {
-                preNames.push_back(kv.first.as<std::string>());
-            }
-        }
-    }
-    return mask_from_names(ap, preNames);
-}
-
-
 
 struct GOAPComponent
 {
@@ -194,13 +99,7 @@ struct GOAPComponent
 
     sol::table def; // Lua table to store loaded goap AI data (ai directory under scripts), which can be customized per entity.
     
-    // New field to store the current action's update() coroutine
     sol::coroutine currentUpdateCoroutine;
-
-    ~GOAPComponent()
-    {
-        goap_actionplanner_clear(&ap);
-    }
 };
 
 // --------------------------------------------------------

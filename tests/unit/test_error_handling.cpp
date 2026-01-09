@@ -138,4 +138,43 @@ TEST(ErrorHandling, LoadWithRetryReturnsLastErrorAfterExhaustion) {
     EXPECT_EQ(attempts, 3); // maxRetries attempts + final attempt
 }
 
+TEST(ErrorHandling, ResultValueOrThrowThrowsOnError) {
+    util::Result<int, std::string> result("error message");
+
+    EXPECT_THROW(result.valueOrThrow(), std::runtime_error);
+}
+
+TEST(ErrorHandling, ResultValueOrThrowReturnsValueOnSuccess) {
+    util::Result<int, std::string> result(42);
+
+    EXPECT_EQ(result.valueOrThrow(), 42);
+}
+
+TEST(ErrorHandling, ResultValueOrReturnsDefaultOnError) {
+    util::Result<int, std::string> result("error");
+
+    EXPECT_EQ(result.valueOr(99), 99);
+}
+
+TEST(ErrorHandling, ResultValueOrReturnsValueOnSuccess) {
+    util::Result<int, std::string> result(42);
+
+    EXPECT_EQ(result.valueOr(99), 42);
+}
+
+TEST(ErrorHandling, TryWithLogHandlesVoidReturn) {
+    bool executed = false;
+    auto result = util::tryWithLog([&]() { executed = true; }, "void fn");
+
+    EXPECT_TRUE(result.isOk());
+    EXPECT_TRUE(executed);
+}
+
+TEST(ErrorHandling, TryWithLogCatchesUnknownException) {
+    auto result = util::tryWithLog([]() -> int { throw 42; }, "unknown throw");
+
+    EXPECT_TRUE(result.isErr());
+    EXPECT_EQ(result.error(), "unknown exception");
+}
+
 } // namespace

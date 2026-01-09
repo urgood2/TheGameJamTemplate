@@ -27,12 +27,29 @@ struct BakedNinePatch {
   Texture2D texture; // use as source texture
 };
 
-// used in uiconfig
+enum class SpriteScaleMode {
+    Fixed,
+    Stretch,
+    Tile
+};
+
+struct NPatchRegionModes {
+    SpriteScaleMode topLeft = SpriteScaleMode::Fixed;
+    SpriteScaleMode topRight = SpriteScaleMode::Fixed;
+    SpriteScaleMode bottomLeft = SpriteScaleMode::Fixed;
+    SpriteScaleMode bottomRight = SpriteScaleMode::Fixed;
+    SpriteScaleMode top = SpriteScaleMode::Tile;
+    SpriteScaleMode bottom = SpriteScaleMode::Tile;
+    SpriteScaleMode left = SpriteScaleMode::Tile;
+    SpriteScaleMode right = SpriteScaleMode::Tile;
+    SpriteScaleMode center = SpriteScaleMode::Stretch;
+};
+
 struct NPatchTiling {
   bool top = false, bottom = false, left = false, right = false;
   bool centerX = false, centerY = false;
-  Color background = {0, 0, 0, 0}; // transparent by default
-  float pixelScale = 1.0f;         // repeated-tile pitch multiplier
+  Color background = {0, 0, 0, 0};
+  float pixelScale = 1.0f;
 };
 
 // Helper: safe int cast from float size (prevents negative/NaN)

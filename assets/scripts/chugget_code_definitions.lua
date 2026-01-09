@@ -1973,6 +1973,26 @@ Rectangle = {
 
 
 ---
+--- Raylib NPatchInfo for 9-patch rendering
+---
+---@class NPatchInfo
+NPatchInfo = {
+    ---@type Rectangle
+    source = nil,  -- Source rectangle in texture
+    ---@type integer
+    left = nil,  -- Left border offset
+    ---@type integer
+    top = nil,  -- Top border offset
+    ---@type integer
+    right = nil,  -- Right border offset
+    ---@type integer
+    bottom = nil,  -- Bottom border offset
+    ---@type integer
+    layout = nil  -- NPatch layout type
+}
+
+
+---
 --- namespace for rendering & layer operations
 ---
 ---@class layer
@@ -4131,6 +4151,78 @@ UIStylingType = {
 
 
 ---
+--- Defines the anchor point for a UI decoration relative to its parent.
+---
+---@class UIDecorationAnchor
+UIDecorationAnchor = {
+    TopLeft = 0,  -- Anchor to top-left corner.
+    TopCenter = 1,  -- Anchor to top-center.
+    TopRight = 2,  -- Anchor to top-right corner.
+    MiddleLeft = 3,  -- Anchor to middle-left.
+    Center = 4,  -- Anchor to center.
+    MiddleRight = 5,  -- Anchor to middle-right.
+    BottomLeft = 6,  -- Anchor to bottom-left corner.
+    BottomCenter = 7,  -- Anchor to bottom-center.
+    BottomRight = 8  -- Anchor to bottom-right corner.
+}
+
+
+---
+--- A decorative sprite overlay that can be attached to UI elements.
+---
+---@class UIDecoration
+UIDecoration = {
+    ---@type string
+    spriteName = nil,  -- The name of the sprite to display.
+    ---@type UIDecorationAnchor
+    anchor = nil,  -- The anchor point for positioning.
+    ---@type Vector2
+    offset = nil,  -- Offset from the anchor point.
+    ---@type number
+    opacity = nil,  -- Opacity (0.0 to 1.0).
+    ---@type boolean
+    flipX = nil,  -- Whether to flip horizontally.
+    ---@type boolean
+    flipY = nil,  -- Whether to flip vertically.
+    ---@type number
+    rotation = nil,  -- Rotation in radians.
+    ---@type Vector2
+    scale = nil,  -- Scale factor.
+    ---@type integer
+    zOffset = nil,  -- Z-order offset for layering.
+    ---@type Color
+    tint = nil,  -- Color tint to apply.
+    ---@type boolean
+    visible = nil,  -- Whether the decoration is visible.
+    ---@type string
+    id = nil  -- Optional identifier for the decoration.
+}
+
+
+---
+--- A collection of UI decorations attached to an element.
+---
+---@class UIDecorations
+UIDecorations = {
+    ---@type UIDecoration[]
+    items = nil  -- The list of decorations.
+}
+
+---
+--- Adds a decoration to the collection.
+---
+---@param decoration UIDecoration
+---@return nil
+function UIDecorations:add(...) end
+
+---
+--- Returns the number of decorations.
+---
+---@return integer
+function UIDecorations:count(...) end
+
+
+---
 --- A comprehensive configuration component for defining all aspects of a UI element.
 ---
 ---@class UIConfig
@@ -5195,6 +5287,13 @@ function UIConfigBuilder:addNPatchInfo(...) end
 ---@param texture string
 ---@return self
 function UIConfigBuilder:addNPatchSourceTexture(...) end
+
+---
+--- Sets decorative sprite overlays.
+---
+---@param decorations UIDecorations
+---@return self
+function UIConfigBuilder:addDecorations(...) end
 
 ---
 --- Constructs the final UIConfig object.

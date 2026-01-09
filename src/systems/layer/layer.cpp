@@ -177,6 +177,50 @@ void exposeToLua(sol::state &lua, EngineContext *ctx) {
     rec.record_property("Rectangle", {"height", "number", "Height"});
   }
 
+  // --- NPatchInfo binding
+  // -------------------------------------------------------
+  {
+    auto npatchUT = lua.new_usertype<NPatchInfo>(
+        "NPatchInfo", sol::no_constructor,
+        "source", &NPatchInfo::source,
+        "left", &NPatchInfo::left,
+        "top", &NPatchInfo::top,
+        "right", &NPatchInfo::right,
+        "bottom", &NPatchInfo::bottom,
+        "layout", &NPatchInfo::layout,
+        sol::meta_function::to_string, [](const NPatchInfo &n) {
+          char buf[128];
+          std::snprintf(buf, sizeof(buf),
+                        "NPatchInfo(left=%d, top=%d, right=%d, bottom=%d)",
+                        n.left, n.top, n.right, n.bottom);
+          return std::string(buf);
+        });
+
+    // Attach a static NPatchInfo.new(...)
+    sol::table npatchTbl = lua["NPatchInfo"];
+    npatchTbl.set_function(
+        "new", sol::overload(
+            []() { return NPatchInfo{}; },
+            [](Rectangle source, int left, int top, int right, int bottom) {
+              NPatchInfo n{};
+              n.source = source;
+              n.left = left;
+              n.top = top;
+              n.right = right;
+              n.bottom = bottom;
+              n.layout = NPATCH_NINE_PATCH;
+              return n;
+            }));
+
+    rec.add_type("NPatchInfo", true).doc = "Raylib NPatchInfo for 9-patch rendering";
+    rec.record_property("NPatchInfo", {"source", "Rectangle", "Source rectangle in texture"});
+    rec.record_property("NPatchInfo", {"left", "integer", "Left border offset"});
+    rec.record_property("NPatchInfo", {"top", "integer", "Top border offset"});
+    rec.record_property("NPatchInfo", {"right", "integer", "Right border offset"});
+    rec.record_property("NPatchInfo", {"bottom", "integer", "Bottom border offset"});
+    rec.record_property("NPatchInfo", {"layout", "integer", "NPatch layout type"});
+  }
+
   rec.add_type("layer").doc = "namespace for rendering & layer operations";
   rec.add_type("layer.LayerOrderComponent", true).doc =
       "Stores Z-index for layer sorting";

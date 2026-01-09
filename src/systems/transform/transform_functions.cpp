@@ -1466,26 +1466,23 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         
         // check if buffer is full and if so, flush batch
         
-        auto zlevel = 3000; // draw on top of most things
+        constexpr int zlevel = 99999;
         
-        if (node.debug.debugText)
-        {
-            // does debug text contain "uibox"?
-            // if (node.debug.debugText.value().find("UIBox") != std::string::npos)
-            // {
-            //     SPDLOG_DEBUG("Debug text contains 'uibox' for entity {}", static_cast<int>(e));
-            //     SPDLOG_DEBUG("UIbox location: x: {}, y: {}, w: {}, h: {}", 
-            //                 transform.getVisualX(), 
-            //                 transform.getVisualY(), 
-            //                 transform.getVisualW(), 
-            //                 transform.getVisualH());
-                            
-            // }
+        int nestingDepth = 0;
+        if (role.master != entt::null) {
+            entt::entity current = role.master;
+            while (current != entt::null && nestingDepth < 10) {
+                nestingDepth++;
+                if (registry->any_of<InheritedProperties>(current)) {
+                    current = registry->get<InheritedProperties>(current).master;
+                } else {
+                    break;
+                }
+            }
         }
 
         layer::QueueCommand<layer::CmdPushMatrix>(layer, [](layer::CmdPushMatrix *cmd) {
-            // Push the current matrix onto the stack
-        }, zlevel, drawSpace); // always on top of the stack
+        }, zlevel, drawSpace);
 
 
         layer::QueueCommand<layer::CmdTranslate>(layer, [x = transform.getVisualX() + transform.getVisualW() * 0.5, y = transform.getVisualY() + transform.getVisualH() * 0.5](layer::CmdTranslate *cmd) {
@@ -1514,67 +1511,60 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             scale = uiConfig.scale.value_or(1.0f);
         }
 
+        float textYOffset = -18.0f * scale * (nestingDepth + 1);
+
+        std::string debugText;
+        bool bumpTextUp = false;
         if (node.debug.debugText)
         {
-            bool bumpTextUp = false;
-            // does debug text contain "uibox"?
             if (registry->any_of<ui::UIBoxComponent>(e))
             {
-                // if so, bump text up
                 bumpTextUp = true;
             }
-            auto textToUse = node.debug.debugText.value();
-            if (registry->any_of<collision::ScreenSpaceCollisionMarker>(e))
-            {
-                textToUse += fmt::format(" (Screen)");
-            }
-            else 
-            {
-                textToUse += fmt::format(" (World)");
-            }
-            float textWidth = MeasureText(textToUse.c_str(), 15 * scale);
-            layer::QueueCommand<layer::CmdTextPro>(layer, [text = textToUse, font = GetFontDefault(), textWidth, scale, visualW = transform.getVisualW(), visualH = transform.getVisualH(), bumpTextUp](layer::CmdTextPro *cmd) {
-                cmd->text = text.c_str();
-                cmd->font = font;
-                cmd->x = visualW / 2 - textWidth / 2;
-                cmd->y = bumpTextUp? - visualH * 0.1f : - visualH * 0.05f;
-                cmd->origin = {0, 0};
-                cmd->rotation = 0;
-                cmd->fontSize = 15 * scale;
-                cmd->spacing = 1.0f;
-                cmd->color = WHITE;
-            }, zlevel, drawSpace);
+            debugText = node.debug.debugText.value();
         }
         else {
-            // If ui, get ui type + entity number
-            // if not ui, just use "entity X"
-            std::string debugText = "Entity " + std::to_string(static_cast<int>(e));
+            debugText = "Entity " + std::to_string(static_cast<int>(e));
             if (registry->any_of<ui::UIConfig>(e))
             {
                 auto &uiConfig = registry->get<ui::UIConfig>(e);
                 debugText = fmt::format("{} {}", magic_enum::enum_name<ui::UITypeEnum>(uiConfig.uiType.value_or(ui::UITypeEnum::NONE)), debugText);
             }
-            if (registry->any_of<collision::ScreenSpaceCollisionMarker>(e))
-            {
-                debugText += fmt::format(" (Screen)");
-            }
-            else 
-            {
-                debugText += fmt::format(" (World)");
-            }
-            float textWidth = MeasureText(debugText.c_str(), 15 * scale);
-            layer::QueueCommand<layer::CmdTextPro>(layer, [debugText, textWidth, scale, visualW = transform.getVisualW(), visualH = transform.getVisualH()](layer::CmdTextPro *cmd) {
-                cmd->text = debugText.c_str();
-                cmd->font = GetFontDefault();
-                cmd->x = visualW / 2 - textWidth / 2;
-                cmd->y = - visualH * 0.05f;
-                cmd->origin = {0, 0};
-                cmd->rotation = 0;
-                cmd->fontSize = 15 * scale;
-                cmd->spacing = 1.0f;
-                cmd->color = WHITE;
-            }, zlevel, drawSpace);
         }
+        
+        if (registry->any_of<collision::ScreenSpaceCollisionMarker>(e))
+        {
+            debugText += " (Screen)";
+        }
+        else 
+        {
+            debugText += " (World)";
+        }
+        
+        float fontSize = 15 * scale;
+        float textWidth = MeasureText(debugText.c_str(), static_cast<int>(fontSize));
+        float textX = transform.getVisualW() / 2 - textWidth / 2;
+        float textY = bumpTextUp ? textYOffset - transform.getVisualH() * 0.05f : textYOffset;
+        float padding = 2.0f;
+        
+        layer::QueueCommand<layer::CmdDrawRectanglePro>(layer, [textX, textY, textWidth, fontSize, padding](layer::CmdDrawRectanglePro *cmd) {
+            cmd->offsetX = textX - padding;
+            cmd->offsetY = textY - padding;
+            cmd->size = Vector2{textWidth + padding * 2, fontSize + padding * 2};
+            cmd->color = Color{0, 0, 0, 200};
+        }, zlevel, drawSpace);
+        
+        layer::QueueCommand<layer::CmdTextPro>(layer, [text = debugText, textX, textY, fontSize](layer::CmdTextPro *cmd) {
+            cmd->text = text.c_str();
+            cmd->font = GetFontDefault();
+            cmd->x = textX;
+            cmd->y = textY;
+            cmd->origin = {0, 0};
+            cmd->rotation = 0;
+            cmd->fontSize = fontSize;
+            cmd->spacing = 1.0f;
+            cmd->color = WHITE;
+        }, zlevel, drawSpace);
 
         float lineWidth = 4;
         if (node.state.isBeingFocused)

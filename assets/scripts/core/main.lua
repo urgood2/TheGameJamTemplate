@@ -28,6 +28,11 @@ local LightingDemo = require("demos.lighting_demo")
 local SpecialItem = require("core.special_item")
 SaveManager = require("core.save_manager") -- Global for C++ debug UI access
 local PatchNotesModal = require("ui.patch_notes_modal")
+local ok, InventoryGridDemo = pcall(require, "examples.inventory_grid_demo")
+if not ok then
+    print("[ERROR] Failed to load InventoryGridDemo: " .. tostring(InventoryGridDemo))
+    InventoryGridDemo = nil
+end
 -- Represents game loop main module
 main = main or {}
 
@@ -499,6 +504,7 @@ function initMainMenu()
 end
 
 function createTabDemo()
+    print("[TRACE] createTabDemo called")
     local dsl = require("ui.ui_syntax_sugar")
     
     local tabDef = dsl.root {
@@ -560,6 +566,14 @@ function createTabDemo()
                             }
                         end
                     },
+                    {
+                        id = "sprites",
+                        label = "Sprites",
+                        content = function()
+                            local SpriteShowcase = require("ui.sprite_ui_showcase")
+                            return SpriteShowcase.createShowcase()
+                        end
+                    },
                 }
             }
         }
@@ -567,6 +581,19 @@ function createTabDemo()
     
     mainMenuEntities.tab_demo_uibox = dsl.spawn({ x = 50, y = 50 }, tabDef)
     ui.box.set_draw_layer(mainMenuEntities.tab_demo_uibox, "ui")
+    
+    -- Initialize inventory grid demo
+    if InventoryGridDemo then
+        print("[TRACE] Initializing InventoryGridDemo...")
+        local ok, err = pcall(InventoryGridDemo.init)
+        if not ok then
+            print("[ERROR] InventoryGridDemo.init() failed: " .. tostring(err))
+        else
+            print("[TRACE] InventoryGridDemo initialized successfully")
+        end
+    else
+        print("[WARN] InventoryGridDemo module not loaded, skipping init")
+    end
 end
 
 function createPatchNotesButton()
@@ -686,6 +713,7 @@ end
 function clearMainMenu()
 
     -- RenderGroupsTest.cleanup()
+    InventoryGridDemo.cleanup()
 
     if mainMenuEntities.special_item_1 then mainMenuEntities.special_item_1:destroy(); mainMenuEntities.special_item_1 = nil end
     if mainMenuEntities.special_item_2 then mainMenuEntities.special_item_2:destroy(); mainMenuEntities.special_item_2 = nil end

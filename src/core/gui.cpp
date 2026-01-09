@@ -11,6 +11,7 @@
 #include "../util/crash_reporter.hpp"
 
 #include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/sinks/basic_file_sink.h"
 
 #include <map>
 // #include <boost/regex.hpp>
@@ -88,8 +89,10 @@ static ImU32 LerpColor(ImU32 c1, ImU32 c2, float t) {
         // Combine the csys sink with spdlog's default sink (console output)
         auto stdout_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
 
-        // Create a logger with both sinks
-        auto combined_logger = std::make_shared<spdlog::logger>("combined", spdlog::sinks_init_list{stdout_sink, csys_sink});
+        auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("debug.log", true);
+        file_sink->set_level(spdlog::level::warn);
+
+        auto combined_logger = std::make_shared<spdlog::logger>("combined", spdlog::sinks_init_list{stdout_sink, csys_sink, file_sink});
         crash_reporter::AttachSinkToLogger(combined_logger);
 
         // Set the global logger

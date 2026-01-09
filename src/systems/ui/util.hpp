@@ -80,6 +80,9 @@ namespace ui {
         auto ApplyTransformMatrix(const float& visualX,  const float& visualY,  const float& visualW,  const float& visualH,  const float& visualScaleWithHoverAndDynamicMotionReflected,  const float& visualR, const float& rotationOffset, layer::Layer* layerPtr, std::optional<Vector2> addedOffset = std::nullopt, bool applyOnlyTranslation = false, const int& zIndex = 0) -> void;
         void ApplyTransformMatrixImmediate(const float& visualX,  const float& visualY,  const float& visualW,  const float& visualH,  const float& visualScaleWithHoverAndDynamicMotionReflected,  const float& visualR, const float& rotationOffset, layer::Layer* layerPtr, std::optional<Vector2> addedOffset, bool applyOnlyTranslation);
         void DrawNPatchUIElementImmediate(layer::Layer* layerPtr, entt::registry &registry, entt::entity entity, const Color &colorOverride, float parallaxModifier, std::optional<float> progress);
+        
+        void DrawUIDecorations(layer::Layer* layerPtr, const UIDecorations& decorations, float parentX, float parentY, float parentW, float parentH);
+        void DrawUIDecorationsQueued(layer::Layer* layerPtr, const UIDecorations& decorations, float parentX, float parentY, float parentW, float parentH, int zIndex);
 
     }
 }

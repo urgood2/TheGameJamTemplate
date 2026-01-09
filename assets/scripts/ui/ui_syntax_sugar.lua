@@ -373,7 +373,7 @@ function dsl.progressBar(opts)
             minHeight             = opts.minHeight or 20,
             progressBar           = true,
             progressBarMaxValue   = opts.maxValue or 1.0,
-            progressBarEmptyColor = color(opts.emptyColor or "darkgray"),
+            progressBarEmptyColor = color(opts.emptyColor or "gray"),
             progressBarFullColor  = color(opts.fullColor or "green"),
             progressBarFetchValueLambda = opts.getValue,
             align                 = opts.align or (bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)),
@@ -558,6 +558,36 @@ function dsl.list(data, mapper)
         end
     end
     return nodes
+end
+
+------------------------------------------------------------
+-- 1️⃣7️⃣ Sprite Box (9-patch or fixed sprite background)
+------------------------------------------------------------
+function dsl.spriteBox(opts)
+    opts = opts or {}
+    local config = {
+        id = opts.id,
+        padding = opts.padding or 0,
+    }
+    
+    if opts.sprite then
+        if opts.sprite.fixed then
+            local frame = init and init.getSpriteFrame and init.getSpriteFrame(opts.sprite.sprite, globals.g_ctx)
+            if frame then
+                config.minWidth = frame.frame.width
+                config.minHeight = frame.frame.height
+                config.maxWidth = frame.frame.width
+                config.maxHeight = frame.frame.height
+            end
+        end
+        config.spriteBorder = opts.sprite
+    end
+    
+    return def{
+        type = opts.vertical and "VERTICAL_CONTAINER" or "HORIZONTAL_CONTAINER",
+        config = config,
+        children = opts.children or {},
+    }
 end
 
 ------------------------------------------------------------
@@ -809,6 +839,255 @@ function dsl.getTabIds(containerId)
         table.insert(ids, tab.id)
     end
     return ids
+end
+
+
+------------------------------------------------------------
+-- INVENTORY GRID
+-- Draggable item grid with slots, stacking, and filtering
+------------------------------------------------------------
+
+local _gridRegistry = {}
+
+function dsl.inventoryGrid(opts)
+    opts = opts or {}
+    local rows = opts.rows or 3
+    local cols = opts.cols or 3
+    local slotW = opts.slotSize and opts.slotSize.w or 64
+    local slotH = opts.slotSize and opts.slotSize.h or 64
+    local spacing = opts.slotSpacing or 4
+    local gridId = opts.id or ("grid_" .. tostring(math.random(100000, 999999)))
+    local gridConfig = opts.config or {}
+    local slotsConfig = opts.slots or {}
+    
+    _gridRegistry[gridId] = {
+        rows = rows,
+        cols = cols,
+        config = gridConfig,
+        slotsConfig = slotsConfig,
+        onSlotChange = opts.onSlotChange,
+        onSlotClick = opts.onSlotClick,
+        onItemStack = opts.onItemStack,
+    }
+    
+    local gridRows = {}
+    local slotIndex = 0
+    
+    for r = 1, rows do
+        local rowChildren = {}
+        
+        for c = 1, cols do
+            slotIndex = slotIndex + 1
+            local slotId = gridId .. "_slot_" .. slotIndex
+            local slotConfig = slotsConfig[slotIndex] or {}
+            local defaultSlotColor = gridConfig.slotColor and color(gridConfig.slotColor) or color("gray")
+            local slotColor = slotConfig.color or defaultSlotColor
+            
+            local slotNode = def{
+                type = "HORIZONTAL_CONTAINER",
+                config = {
+                    id = slotId,
+                    color = slotColor,
+                    minWidth = slotW,
+                    minHeight = slotH,
+                    maxWidth = slotW,
+                    maxHeight = slotH,
+                    hover = true,
+                    canCollide = true,
+                    emboss = gridConfig.slotEmboss or 1,
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+                    _slotIndex = slotIndex,
+                    _gridId = gridId,
+                    _isInventorySlot = true,
+                },
+                children = {}
+            }
+            
+            table.insert(rowChildren, slotNode)
+            if c < cols then
+                table.insert(rowChildren, dsl.spacer(spacing, slotH))
+            end
+        end
+        
+        local rowNode = def{
+            type = "HORIZONTAL_CONTAINER",
+            config = { align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER) },
+            children = rowChildren
+        }
+        
+        table.insert(gridRows, rowNode)
+        if r < rows then
+            table.insert(gridRows, dsl.spacer(slotW * cols + spacing * (cols - 1), spacing))
+        end
+    end
+    
+    return def{
+        type = "VERTICAL_CONTAINER",
+        config = {
+            id = gridId,
+            color = gridConfig.backgroundColor and color(gridConfig.backgroundColor) or nil,
+            padding = gridConfig.padding or 4,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+            _isInventoryGrid = true,
+            _gridConfig = gridConfig,
+            _slotsConfig = slotsConfig,
+            _gridRows = rows,
+            _gridCols = cols,
+        },
+        children = gridRows
+    }
+end
+
+function dsl.getGridConfig(gridId)
+    return _gridRegistry[gridId]
+end
+
+function dsl.cleanupGrid(gridId)
+    _gridRegistry[gridId] = nil
+end
+
+------------------------------------------------------------
+-- CUSTOM PANEL
+-- Custom-rendered UI element that participates in layout
+------------------------------------------------------------
+
+function dsl.customPanel(opts)
+    opts = opts or {}
+    local panelId = opts.id or ("custom_panel_" .. tostring(math.random(100000, 999999)))
+    local panelConfig = opts.config or {}
+    
+    return def{
+        type = "HORIZONTAL_CONTAINER",
+        config = {
+            id = panelId,
+            minWidth = opts.minWidth or 100,
+            minHeight = opts.minHeight or 100,
+            maxWidth = opts.preferredWidth,
+            maxHeight = opts.preferredHeight,
+            color = panelConfig.color and color(panelConfig.color) or nil,
+            hover = panelConfig.hover,
+            canCollide = panelConfig.canCollide,
+            _isCustomPanel = true,
+            _onDraw = opts.onDraw,
+            _onUpdate = opts.onUpdate,
+            _onInput = opts.onInput,
+            _focusable = opts.focusable,
+        },
+        children = {}
+    }
+end
+
+------------------------------------------------------------
+-- SPRITE PANEL
+-- Nine-patch sprite panel with inline definition (no JSON)
+------------------------------------------------------------
+
+function dsl.spritePanel(opts)
+    opts = opts or {}
+    local panelId = opts.id or ("sprite_panel_" .. tostring(math.random(100000, 999999)))
+    
+    local borders = opts.borders or { 8, 8, 8, 8 }
+    if type(borders) == "table" and #borders == 4 then
+        borders = { left = borders[1], top = borders[2], right = borders[3], bottom = borders[4] }
+    end
+    
+    local decorations = {}
+    if opts.decorations then
+        for _, decor in ipairs(opts.decorations) do
+            table.insert(decorations, {
+                sprite = decor.sprite,
+                position = decor.position or "top_left",
+                offset = decor.offset or { 0, 0 },
+                opacity = decor.opacity or 1.0,
+                flip = decor.flip,
+                rotation = decor.rotation or 0,
+                zOffset = decor.zOffset or 0,
+                visible = decor.visible ~= false,
+                id = decor.id
+            })
+        end
+    end
+    
+    return def{
+        type = opts.containerType or "VERTICAL_CONTAINER",
+        config = {
+            id = panelId,
+            minWidth = opts.minWidth,
+            minHeight = opts.minHeight,
+            maxWidth = opts.maxWidth,
+            maxHeight = opts.maxHeight,
+            padding = opts.padding,
+            hover = opts.hover,
+            canCollide = opts.canCollide,
+            align = opts.align or bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+            _isSpritePanel = true,
+            _spriteName = opts.sprite,
+            _borders = borders,
+            _sizing = opts.sizing or "fit_content",
+            _decorations = decorations,
+            _regions = opts.regions,
+            _tint = opts.tint and color(opts.tint) or nil,
+        },
+        children = opts.children or {}
+    }
+end
+
+------------------------------------------------------------
+-- SPRITE BUTTON
+-- Button with different sprites for each state
+------------------------------------------------------------
+
+function dsl.spriteButton(opts)
+    opts = opts or {}
+    local buttonId = opts.id or ("sprite_btn_" .. tostring(math.random(100000, 999999)))
+    
+    local borders = opts.borders or { 4, 4, 4, 4 }
+    if type(borders) == "table" and #borders == 4 then
+        borders = { left = borders[1], top = borders[2], right = borders[3], bottom = borders[4] }
+    end
+    
+    local states = opts.states
+    local baseSprite = nil
+    
+    if not states and opts.sprite then
+        baseSprite = opts.sprite
+        states = {
+            normal = opts.sprite .. "_normal.png",
+            hover = opts.sprite .. "_hover.png",
+            pressed = opts.sprite .. "_pressed.png",
+            disabled = opts.sprite .. "_disabled.png"
+        }
+    end
+    
+    local textNode = nil
+    if opts.label or opts.text then
+        textNode = dsl.text(opts.label or opts.text, {
+            fontSize = opts.fontSize or 16,
+            color = opts.textColor or "white",
+            shadow = opts.shadow ~= false
+        })
+    end
+    
+    return def{
+        type = "HORIZONTAL_CONTAINER",
+        config = {
+            id = buttonId,
+            minWidth = opts.minWidth,
+            minHeight = opts.minHeight,
+            padding = opts.padding or 4,
+            hover = true,
+            canCollide = true,
+            buttonCallback = opts.onClick,
+            disableButton = opts.disabled,
+            align = opts.align or bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+            _isSpriteButton = true,
+            _states = states,
+            _baseSprite = baseSprite,
+            _borders = borders,
+            _currentState = "normal",
+        },
+        children = textNode and { textNode } or (opts.children or {})
+    }
 end
 
 ------------------------------------------------------------

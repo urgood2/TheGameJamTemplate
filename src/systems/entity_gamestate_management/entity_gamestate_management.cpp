@@ -396,6 +396,10 @@ void exposeToLua(sol::state &lua) {
         PropagateStateEffectsToUIBox(registry, uiBox);
     });
     
+    lua.set_function("has_state_tag", [&registry](entt::entity e) -> bool {
+        return registry.all_of<StateTag>(e);
+    });
+    
    
     
     rec.record_free_function({}, {

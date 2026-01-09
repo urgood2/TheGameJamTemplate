@@ -204,6 +204,78 @@ namespace ui {
         rec.record_property("UIStylingType", {"NinePatchBorders", "1", "A 9-patch texture for scalable borders."});
         rec.record_property("UIStylingType", {"Sprite", "2", "A sprite texture with configurable scale mode."});
 
+        // 12b) UIDecoration::Anchor Enum
+        lua.new_enum<UIDecoration::Anchor>("UIDecorationAnchor", {
+            {"TopLeft",      UIDecoration::Anchor::TopLeft},
+            {"TopCenter",    UIDecoration::Anchor::TopCenter},
+            {"TopRight",     UIDecoration::Anchor::TopRight},
+            {"MiddleLeft",   UIDecoration::Anchor::MiddleLeft},
+            {"Center",       UIDecoration::Anchor::Center},
+            {"MiddleRight",  UIDecoration::Anchor::MiddleRight},
+            {"BottomLeft",   UIDecoration::Anchor::BottomLeft},
+            {"BottomCenter", UIDecoration::Anchor::BottomCenter},
+            {"BottomRight",  UIDecoration::Anchor::BottomRight}
+        });
+        auto& anchorEnum = rec.add_type("UIDecorationAnchor");
+        anchorEnum.doc = "Defines the anchor point for a UI decoration relative to its parent.";
+        rec.record_property("UIDecorationAnchor", {"TopLeft", "0", "Anchor to top-left corner."});
+        rec.record_property("UIDecorationAnchor", {"TopCenter", "1", "Anchor to top-center."});
+        rec.record_property("UIDecorationAnchor", {"TopRight", "2", "Anchor to top-right corner."});
+        rec.record_property("UIDecorationAnchor", {"MiddleLeft", "3", "Anchor to middle-left."});
+        rec.record_property("UIDecorationAnchor", {"Center", "4", "Anchor to center."});
+        rec.record_property("UIDecorationAnchor", {"MiddleRight", "5", "Anchor to middle-right."});
+        rec.record_property("UIDecorationAnchor", {"BottomLeft", "6", "Anchor to bottom-left corner."});
+        rec.record_property("UIDecorationAnchor", {"BottomCenter", "7", "Anchor to bottom-center."});
+        rec.record_property("UIDecorationAnchor", {"BottomRight", "8", "Anchor to bottom-right corner."});
+
+        // 12c) UIDecoration struct
+        lua.new_usertype<UIDecoration>("UIDecoration",
+            sol::constructors<UIDecoration()>(),
+            "spriteName", &UIDecoration::spriteName,
+            "anchor",     &UIDecoration::anchor,
+            "offset",     &UIDecoration::offset,
+            "opacity",    &UIDecoration::opacity,
+            "flipX",      &UIDecoration::flipX,
+            "flipY",      &UIDecoration::flipY,
+            "rotation",   &UIDecoration::rotation,
+            "scale",      &UIDecoration::scale,
+            "zOffset",    &UIDecoration::zOffset,
+            "tint",       &UIDecoration::tint,
+            "visible",    &UIDecoration::visible,
+            "id",         &UIDecoration::id
+        );
+        auto& decorDef = rec.add_type("UIDecoration", /*is_data_class=*/true);
+        decorDef.doc = "A decorative sprite overlay that can be attached to UI elements.";
+        rec.record_property("UIDecoration", {"spriteName", "string", "The name of the sprite to display."});
+        rec.record_property("UIDecoration", {"anchor", "UIDecorationAnchor", "The anchor point for positioning."});
+        rec.record_property("UIDecoration", {"offset", "Vector2", "Offset from the anchor point."});
+        rec.record_property("UIDecoration", {"opacity", "number", "Opacity (0.0 to 1.0)."});
+        rec.record_property("UIDecoration", {"flipX", "boolean", "Whether to flip horizontally."});
+        rec.record_property("UIDecoration", {"flipY", "boolean", "Whether to flip vertically."});
+        rec.record_property("UIDecoration", {"rotation", "number", "Rotation in radians."});
+        rec.record_property("UIDecoration", {"scale", "Vector2", "Scale factor."});
+        rec.record_property("UIDecoration", {"zOffset", "integer", "Z-order offset for layering."});
+        rec.record_property("UIDecoration", {"tint", "Color", "Color tint to apply."});
+        rec.record_property("UIDecoration", {"visible", "boolean", "Whether the decoration is visible."});
+        rec.record_property("UIDecoration", {"id", "string", "Optional identifier for the decoration."});
+
+        // 12d) UIDecorations container
+        lua.new_usertype<UIDecorations>("UIDecorations",
+            sol::constructors<UIDecorations()>(),
+            "items", &UIDecorations::items,
+            "add", [](UIDecorations& self, const UIDecoration& d) {
+                self.items.push_back(d);
+            },
+            "count", [](const UIDecorations& self) {
+                return self.items.size();
+            }
+        );
+        auto& decorsDef = rec.add_type("UIDecorations", /*is_data_class=*/true);
+        decorsDef.doc = "A collection of UI decorations attached to an element.";
+        rec.record_property("UIDecorations", {"items", "UIDecoration[]", "The list of decorations."});
+        rec.record_method("UIDecorations", {"add", "---@param decoration UIDecoration\n---@return nil", "Adds a decoration to the collection.", false, false});
+        rec.record_method("UIDecorations", {"count", "---@return integer", "Returns the number of decorations.", false, false});
+
         // 13) UIConfig
         lua.new_usertype<UIConfig>("UIConfig",  sol::call_constructor, sol::constructors<UIConfig>(),
             // Styling
@@ -213,6 +285,7 @@ namespace ui {
             "spriteSourceTexture",   &UIConfig::spriteSourceTexture,
             "spriteSourceRect",      &UIConfig::spriteSourceRect,
             "spriteScaleMode",       &UIConfig::spriteScaleMode,
+            "decorations",           &UIConfig::decorations,
             // General
             "id",                    &UIConfig::id,
             "instanceType",          &UIConfig::instanceType,
@@ -772,6 +845,7 @@ namespace ui {
             "addStylingType",                 &UIConfig::Builder::addStylingType,
             "addNPatchInfo",                  &UIConfig::Builder::addNPatchInfo,
             "addNPatchSourceTexture",         &UIConfig::Builder::addNPatchSourceTexture,
+            "addDecorations",                 &UIConfig::Builder::addDecorations,
             "build",                          &UIConfig::Builder::build,
             "buildBundle",                    &UIConfig::Builder::buildBundle
         );
@@ -877,6 +951,7 @@ namespace ui {
         rec.record_method("UIConfigBuilder", {"addStylingType", "---@param type UIStylingType\n---@return self", "Sets the styling type.", false, false});
         rec.record_method("UIConfigBuilder", {"addNPatchInfo", "---@param info NPatchInfo\n---@return self", "Sets the 9-patch info.", false, false});
         rec.record_method("UIConfigBuilder", {"addNPatchSourceTexture", "---@param texture string\n---@return self", "Sets the 9-patch texture.", false, false});
+        rec.record_method("UIConfigBuilder", {"addDecorations", "---@param decorations UIDecorations\n---@return self", "Sets decorative sprite overlays.", false, false});
         rec.record_method("UIConfigBuilder", {"build", "---@param self UIConfigBuilder\n---@return UIConfig", "Constructs the final UIConfig object.", false, false});
         rec.record_method("UIConfigBuilder", {"buildBundle", "---@param self UIConfigBuilder\n---@return UIConfigBundle", "Builds UIConfig and extracts split components (UIStyleConfig, UILayoutConfig, UIInteractionConfig, UIContentConfig) into a bundle.", false, false});
 

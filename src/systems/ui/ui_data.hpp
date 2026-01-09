@@ -13,7 +13,8 @@
 #include "systems/transform/transform_functions.hpp"
 #include "systems/input/input_functions.hpp"
 #include "systems/reflection/reflection.hpp"
-#include "systems/ui/ui_pack.hpp"  // For SpriteScaleMode
+#include "systems/ui/ui_pack.hpp"
+#include "systems/ui/ui_decoration.hpp"
 
 
 //Note: uibox is master to all ui elements within it, including the root element.
@@ -196,6 +197,7 @@ namespace ui
         std::optional<Texture2D*> spriteSourceTexture;
         std::optional<Rectangle> spriteSourceRect;
         SpriteScaleMode spriteScaleMode = SpriteScaleMode::Stretch;
+        std::optional<UIDecorations> decorations;
 
         // General Properties
         std::optional<std::string> id;           // Unique identifier, used to store in children vector. If predefined in the definition stage, it will be maintained. Otherwise, children of an entity get a unique id starting at 0 and incrementing.
@@ -839,6 +841,11 @@ namespace ui
 
         Builder& addNPatchSourceTexture(const std::optional<Texture2D>& nPatchSourceTexture) {
             uiConfig.nPatchSourceTexture = nPatchSourceTexture;
+            return *this;
+        }
+        
+        Builder& addDecorations(const UIDecorations& decorations) {
+            uiConfig.decorations = decorations;
             return *this;
         }
 

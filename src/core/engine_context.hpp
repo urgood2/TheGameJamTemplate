@@ -123,6 +123,8 @@ struct EngineContext {
     entt::entity cursor{entt::null};
     entt::entity overlayMenu{entt::null};
     entt::entity gameWorldContainerEntity{entt::null};
+    std::vector<entt::entity> enemies{};
+    entt::entity clickedEntity{entt::null};
 
     explicit EngineContext(EngineConfig cfg);
     ~EngineContext();

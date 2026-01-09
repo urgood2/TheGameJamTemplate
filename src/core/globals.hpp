@@ -230,6 +230,7 @@ extern quadtree::Quadtree<entt::entity, decltype(getBoxUI)> quadtreeUI;
 //---------------------------------------------------------
 // variables
 
+ENGINECTX_DEPRECATED("Access EngineContext::enemies instead of globals::enemies")
 extern vector<entt::entity> enemies;
 
 // keep track of execution step name during world gen (also for loading screen)
@@ -273,7 +274,7 @@ extern vector<vector<entt::entity>> map;
 extern vector<double> pathfindingMatrix;
 [[nodiscard]] std::vector<double> &getPathfindingMatrix();
 
-// clicked entity
+ENGINECTX_DEPRECATED("Access EngineContext::clickedEntity instead of globals::clickedEntity")
 extern entt::entity clickedEntity;
 
 // JSON configuration files - actively used

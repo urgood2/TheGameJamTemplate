@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lua Codebase Analysis Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .card { @apply bg-white rounded-xl shadow-lg p-6 transition-all hover:shadow-xl; }
+        .priority-p0 { @apply border-l-4 border-red-500; }
+        .priority-p1 { @apply border-l-4 border-orange-500; }
+        .priority-p2 { @apply border-l-4 border-yellow-500; }
+        .priority-p3 { @apply border-l-4 border-green-500; }
+        .stat-card { @apply bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4 text-center; }
+        .code { @apply font-mono text-sm bg-gray-100 px-2 py-1 rounded; }
+        .tab-active { @apply border-b-2 border-purple-600 text-purple-600; }
+        .severity-critical { @apply bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium; }
+        .severity-high { @apply bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs font-medium; }
+        .severity-medium { @apply bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium; }
+        .severity-low { @apply bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium; }
+        details summary { cursor: pointer; }
+        details summary::-webkit-details-marker { display: none; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg text-white py-8 px-6">
+        <div class="max-w-7xl mx-auto">
+            <h1 class="text-3xl font-bold mb-2">Lua Codebase Analysis Report</h1>
+            <p class="text-purple-100">TheGameJamTemplate • Generated Jan 9, 2026</p>
+            <div class="mt-6 grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div class="stat-card">
+                    <div class="text-3xl font-bold text-purple-600">100</div>
+                    <div class="text-gray-600 text-sm">Lua Files</div>
+                </div>
+                <div class="stat-card">
+                    <div class="text-3xl font-bold text-red-600">11,359</div>
+                    <div class="text-gray-600 text-sm">Lines in gameplay.lua</div>
+                </div>
+                <div class="stat-card">
+                    <div class="text-3xl font-bold text-orange-600">2,702</div>
+                    <div class="text-gray-600 text-sm">Magic Numbers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="text-3xl font-bold text-yellow-600">527</div>
+                    <div class="text-gray-600 text-sm">Unsafe Accesses</div>
+                </div>
+                <div class="stat-card">
+                    <div class="text-3xl font-bold text-green-600">68</div>
+                    <div class="text-gray-600 text-sm">Distance Duplicates</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="bg-white shadow-sm sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex space-x-8 overflow-x-auto">
+                <button onclick="showTab('roadmap')" id="tab-roadmap" class="py-4 px-2 font-medium text-gray-600 hover:text-purple-600 tab-active">Refactoring Roadmap</button>
+                <button onclick="showTab('anti-patterns')" id="tab-anti-patterns" class="py-4 px-2 font-medium text-gray-600 hover:text-purple-600">Anti-Patterns</button>
+                <button onclick="showTab('duplication')" id="tab-duplication" class="py-4 px-2 font-medium text-gray-600 hover:text-purple-600">Code Duplication</button>
+                <button onclick="showTab('performance')" id="tab-performance" class="py-4 px-2 font-medium text-gray-600 hover:text-purple-600">Performance</button>
+                <button onclick="showTab('organization')" id="tab-organization" class="py-4 px-2 font-medium text-gray-600 hover:text-purple-600">Module Organization</button>
+                <button onclick="showTab('naming')" id="tab-naming" class="py-4 px-2 font-medium text-gray-600 hover:text-purple-600">Naming & Conventions</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        <!-- Roadmap Tab -->
+        <div id="content-roadmap" class="tab-content">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Prioritized Refactoring Roadmap</h2>
+            
+            <!-- P0 Critical -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-red-600 mb-4 flex items-center">
+                    <span class="w-3 h-3 bg-red-500 rounded-full mr-2"></span>
+                    P0 – Critical (Do This Week)
+                </h3>
+                <div class="space-y-4">
+                    <div class="card priority-p0">
+                        <div class="flex justify-between items-start mb-3">
+                            <h4 class="font-semibold text-gray-800">1. Unify Movement AI Functions</h4>
+                            <span class="severity-critical">CRITICAL</span>
+                        </div>
+                        <p class="text-gray-600 mb-3">wave_helpers.lua:194-272 has 4 nearly-identical movement functions (move_toward_player, flee_from_player, kite_from_player, wander)</p>
+                        <div class="flex flex-wrap gap-2 text-sm">
+                            <span class="code">wave_helpers.lua</span>
+                            <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded">Effort: 1-4h</span>
+                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">Impact: Maintainability</span>
+                        </div>
+                    </div>
+
+                    <div class="card priority-p0">
+                        <div class="flex justify-between items-start mb-3">
+                            <h4 class="font-semibold text-gray-800">2. Eliminate Hot-Path Allocations</h4>
+                            <span class="severity-critical">CRITICAL</span>
+                        </div>
+                        <p class="text-gray-600 mb-3">Card batching creates 3-50 tables per frame. Lighting creates 256 strings per frame for uniform names.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3">
+                            <div class="bg-gray-50 p-2 rounded">
+                                <div class="font-mono text-xs text-gray-500">gameplay.lua:2139</div>
+                                <div class="text-sm">Card batching tables</div>
+                            </div>
+                            <div class="bg-gray-50 p-2 rounded">
+                                <div class="font-mono text-xs text-gray-500">lighting.lua:886</div>
+                                <div class="text-sm">Visible lights array</div>
+                            </div>
+                            <div class="bg-gray-50 p-2 rounded">
+                                <div class="font-mono text-xs text-gray-500">lighting.lua:916</div>
+                                <div class="text-sm">Uniform name strings</div>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap gap-2 text-sm">
+                            <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded">Effort: 2-4h</span>
+                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">Impact: 15-25% GC reduction</span>
+                        </div>
+                    </div>
+
+                    <div class="card priority-p0">
+                        <div class="flex justify-between items-start mb-3">
+                            <h4 class="font-semibold text-gray-800">3. Split God Objects</h4>
+                            <span class="severity-critical">CRITICAL</span>
+                        </div>
+                        <p class="text-gray-600 mb-3">gameplay.lua (11,359 lines) and combat_system.lua (6,210 lines) are unmaintainable. Extract 2-3 subsystems first.</p>
+                        <div class="bg-gray-50 p-4 rounded-lg mb-3">
+                            <div class="font-medium mb-2">Proposed Split for gameplay.lua:</div>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                                <span class="bg-white px-2 py-1 rounded border">game_loop.lua</span>
+                                <span class="bg-white px-2 py-1 rounded border">player_controller.lua</span>
+                                <span class="bg-white px-2 py-1 rounded border">ui_orchestration.lua</span>
+                                <span class="bg-white px-2 py-1 rounded border">event_handlers.lua</span>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap gap-2 text-sm">
+                            <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded">Effort: 1-2 days</span>
+                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">Impact: Unlocks all future refactors</span>
+                        </div>
+                    </div>
+
+                    <div class="card priority-p0">
+                        <div class="flex justify-between items-start mb-3">
+                            <h4 class="font-semibold text-gray-800">4. Replace Unsafe Component Access</h4>
+                            <span class="severity-high">HIGH</span>
+                        </div>
+                        <p class="text-gray-600 mb-3">527 component_cache.get() without nil checks. 1,288 direct .actualX/.actualY mutations without using Q helpers.</p>
+                        <div class="flex flex-wrap gap-2 text-sm">
+                            <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded">Effort: 1 day</span>
+                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">Impact: Prevents nil crashes</span>
+                        </div>
+                    </div>
+
+                    <div class="card priority-p0">
+                        <div class="flex justify-between items-start mb-3">
+                            <h4 class="font-semibold text-gray-800">5. Migrate Timer Chains to timer.sequence()</h4>
+                            <span class="severity-high">HIGH</span>
+                        </div>
+                        <p class="text-gray-600 mb-3">196 timer.after/every calls create orphan timers. timer.sequence() provides built-in cancellation.</p>
+                        <div class="flex flex-wrap gap-2 text-sm">
+                            <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded">Effort: 4-6h</span>
+                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">Impact: Prevents memory leaks</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- P1 High -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-orange-600 mb-4 flex items-center">
+                    <span class="w-3 h-3 bg-orange-500 rounded-full mr-2"></span>
+                    P1 – High (This Month)
+                </h3>
+                <div class="space-y-4">
+                    <div class="card priority-p1">
+                        <h4 class="font-semibold text-gray-800 mb-2">Split util.lua (4,114 lines)</h4>
+                        <p class="text-gray-600 text-sm">Classic utility dumping ground. Split into: math_helpers, entity_utils, ui_helpers, fx_utils</p>
+                    </div>
+                    <div class="card priority-p1">
+                        <h4 class="font-semibold text-gray-800 mb-2">Consolidate Global State (84 assignments)</h4>
+                        <p class="text-gray-600 text-sm">globals.* mutations scattered across 9 files. Centralize with explicit setters.</p>
+                    </div>
+                    <div class="card priority-p1">
+                        <h4 class="font-semibold text-gray-800 mb-2">Codemod for Q.distance() Adoption</h4>
+                        <p class="text-gray-600 text-sm">Replace 68 math.sqrt(dx*dx + dy*dy) instances with Q.distance()</p>
+                    </div>
+                    <div class="card priority-p1">
+                        <h4 class="font-semibold text-gray-800 mb-2">Refactor Parameter Explosion</h4>
+                        <p class="text-gray-600 text-sm">makeDirectionalWipeWithTimer has 11 params! Convert top 5 offenders to table-based params.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- P2 Medium -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-yellow-600 mb-4 flex items-center">
+                    <span class="w-3 h-3 bg-yellow-500 rounded-full mr-2"></span>
+                    P2 – Medium (This Quarter)
+                </h3>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div class="card priority-p2">
+                        <h4 class="font-semibold text-gray-800 mb-2">Magic Numbers → Constants</h4>
+                        <p class="text-gray-600 text-sm">2,702 hardcoded numbers. Create constants module per subsystem.</p>
+                    </div>
+                    <div class="card priority-p2">
+                        <h4 class="font-semibold text-gray-800 mb-2">Naming Consistency</h4>
+                        <p class="text-gray-600 text-sm">Mixed camelCase/snake_case. Draft naming guide, rename with migration shims.</p>
+                    </div>
+                    <div class="card priority-p2">
+                        <h4 class="font-semibold text-gray-800 mb-2">Object Pooling Adoption</h4>
+                        <p class="text-gray-600 text-sm">pool.lua exists but underutilized. Extend to card batching, lighting, FX.</p>
+                    </div>
+                    <div class="card priority-p2">
+                        <h4 class="font-semibold text-gray-800 mb-2">CI Metrics Tooling</h4>
+                        <p class="text-gray-600 text-sm">Build script to flag raw component_cache usage in CI.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- P3 Low -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-green-600 mb-4 flex items-center">
+                    <span class="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+                    P3 – Low (Backlog)
+                </h3>
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div class="card priority-p3 text-sm">
+                        <h4 class="font-semibold text-gray-800 mb-1">Localize Functions</h4>
+                        <p class="text-gray-500">Per-module localization where profiling proves beneficial</p>
+                    </div>
+                    <div class="card priority-p3 text-sm">
+                        <h4 class="font-semibold text-gray-800 mb-1">table.concat Adoption</h4>
+                        <p class="text-gray-500">Ensure string-heavy systems use concat</p>
+                    </div>
+                    <div class="card priority-p3 text-sm">
+                        <h4 class="font-semibold text-gray-800 mb-1">signal_group Adoption</h4>
+                        <p class="text-gray-500">Prevent event handler memory leaks</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Avoid Section -->
+            <div class="bg-red-50 border border-red-200 rounded-xl p-6">
+                <h3 class="text-lg font-semibold text-red-800 mb-4">⚠️ Refactors to AVOID</h3>
+                <ul class="space-y-2 text-red-700">
+                    <li class="flex items-start">
+                        <span class="mr-2">❌</span>
+                        <span>Full rewrite of gameplay.lua without phased extraction (destabilizes core gameplay)</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="mr-2">❌</span>
+                        <span>Replacing globals.* with new state manager before P1 cleanup</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="mr-2">❌</span>
+                        <span>Automatic renaming of versioned files (tooltip_v2) without fallback aliases</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Anti-Patterns Tab -->
+        <div id="content-anti-patterns" class="tab-content hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Anti-Patterns & Code Smells</h2>
+            
+            <div class="grid gap-6">
+                <div class="card">
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">God Objects</h3>
+                        <span class="severity-critical">CRITICAL</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b">
+                                    <th class="text-left py-2">File</th>
+                                    <th class="text-right py-2">Lines</th>
+                                    <th class="text-left py-2">Issue</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b">
+                                    <td class="py-2 font-mono text-purple-600">gameplay.lua</td>
+                                    <td class="text-right py-2 font-bold text-red-600">11,359</td>
+                                    <td class="py-2">Handles UI, combat, cards, tooltips, state, rendering</td>
+                                </tr>
+                                <tr class="border-b">
+                                    <td class="py-2 font-mono text-purple-600">combat_system.lua</td>
+                                    <td class="text-right py-2 font-bold text-orange-600">6,210</td>
+                                    <td class="py-2">Monolithic combat logic mixing multiple concerns</td>
+                                </tr>
+                                <tr class="border-b">
+                                    <td class="py-2 font-mono text-purple-600">util.lua</td>
+                                    <td class="text-right py-2 font-bold text-yellow-600">4,114</td>
+                                    <td class="py-2">Classic utility dumping ground</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">Magic Numbers Epidemic</h3>
+                        <span class="severity-high">HIGH</span>
+                    </div>
+                    <p class="text-gray-600 mb-4">2,702 instances of hardcoded numbers across the codebase</p>
+                    <div class="bg-gray-50 p-4 rounded-lg font-mono text-sm">
+                        <div class="text-gray-500 mb-2">Examples:</div>
+                        <div class="text-red-600">Projectile speeds: 300, 400, 500, 800</div>
+                        <div class="text-red-600">Lifetimes: 1000, 2000, 3000 ms</div>
+                        <div class="text-red-600">UI positions: 100, 200, 150</div>
+                        <div class="text-red-600">Conversion: / 1000 for ms→s</div>
+                    </div>
+                    <div class="mt-4 bg-green-50 p-4 rounded-lg">
+                        <div class="font-medium text-green-800 mb-2">✅ Recommended Fix:</div>
+                        <pre class="text-sm text-green-700">C.PROJECTILE = {
+  SPEED_SLOW = 300,
+  SPEED_NORMAL = 500,
+  SPEED_FAST = 800,
+  LIFETIME_SHORT = 1000,
+}</pre>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">Unsafe Component Access</h3>
+                        <span class="severity-high">HIGH</span>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="bg-red-50 p-4 rounded-lg">
+                            <div class="font-medium text-red-800 mb-2">❌ Current (527 instances):</div>
+                            <pre class="text-sm text-red-700">local transform = component_cache.get(entity, Transform)
+transform.actualX = x  -- CRASH if nil!</pre>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <div class="font-medium text-green-800 mb-2">✅ Safe Pattern:</div>
+                            <pre class="text-sm text-green-700">local transform = component_cache.get(entity, Transform)
+if not transform then return end
+transform.actualX = x</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">Global State Pollution</h3>
+                        <span class="severity-medium">MEDIUM</span>
+                    </div>
+                    <p class="text-gray-600 mb-4">84 assignments to globals.* scattered across 9 files</p>
+                    <ul class="text-sm text-gray-600 space-y-1">
+                        <li>• globals.currency modified in 6 different files</li>
+                        <li>• globals.shopState mutated in 4 files</li>
+                        <li>• globals.isShopOpen toggled in 3 files</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">Parameter Explosion</h3>
+                        <span class="severity-low">LOW</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b">
+                                    <th class="text-left py-2">Function</th>
+                                    <th class="text-right py-2">Params</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b">
+                                    <td class="py-2 font-mono">makeDirectionalWipeWithTimer</td>
+                                    <td class="text-right py-2 font-bold text-red-600">11</td>
+                                </tr>
+                                <tr class="border-b">
+                                    <td class="py-2 font-mono">spawnCircularBurstParticles</td>
+                                    <td class="text-right py-2 font-bold text-orange-600">8</td>
+                                </tr>
+                                <tr class="border-b">
+                                    <td class="py-2 font-mono">makeSwirlEmitter</td>
+                                    <td class="text-right py-2 font-bold text-yellow-600">6</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Duplication Tab -->
+        <div id="content-duplication" class="tab-content hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Code Duplication Analysis</h2>
+            
+            <div class="grid gap-6">
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Distance Calculation (68 instances)</h3>
+                    <p class="text-gray-600 mb-4">Pattern: <code class="code">math.sqrt(dx * dx + dy * dy)</code> appears 68 times across 22 files</p>
+                    <details class="bg-gray-50 p-4 rounded-lg">
+                        <summary class="font-medium cursor-pointer">View affected files</summary>
+                        <ul class="mt-3 text-sm text-gray-600 space-y-1 font-mono">
+                            <li>combat/wave_helpers.lua (9 instances)</li>
+                            <li>combat/projectile_system.lua (16 instances)</li>
+                            <li>core/Q.lua (4 instances)</li>
+                            <li>core/gameplay.lua (8 instances)</li>
+                        </ul>
+                    </details>
+                    <div class="mt-4 bg-green-50 p-4 rounded-lg">
+                        <div class="font-medium text-green-800">✅ Use instead: <code class="bg-green-100 px-2 py-1 rounded">Q.distance(e1, e2)</code></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Component Access Guards (377 instances)</h3>
+                    <p class="text-gray-600 mb-4">Pattern: <code class="code">component_cache.get(entity, Transform)</code> repeated with same validation logic</p>
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <div class="font-medium text-green-800">✅ Use instead: <code class="bg-green-100 px-2 py-1 rounded">Q.withTransform(entity, fn)</code> or <code class="bg-green-100 px-2 py-1 rounded">Q.move(entity, x, y)</code></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Movement AI Duplication (wave_helpers.lua)</h3>
+                    <p class="text-gray-600 mb-4">4 nearly-identical functions with only direction logic differing:</p>
+                    <div class="grid md:grid-cols-2 gap-4 text-sm">
+                        <div class="bg-gray-50 p-3 rounded">
+                            <div class="font-mono text-purple-600">move_toward_player</div>
+                            <div class="text-gray-500">Lines 194-209</div>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <div class="font-mono text-purple-600">flee_from_player</div>
+                            <div class="text-gray-500">Lines 211-226</div>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <div class="font-mono text-purple-600">kite_from_player</div>
+                            <div class="text-gray-500">Lines 228-252</div>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <div class="font-mono text-purple-600">wander</div>
+                            <div class="text-gray-500">Lines 257-272</div>
+                        </div>
+                    </div>
+                    <div class="mt-4 bg-green-50 p-4 rounded-lg">
+                        <div class="font-medium text-green-800">✅ Refactor to: Behavior composition pattern (core/behaviors.lua)</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Timer Chains (196 instances)</h3>
+                    <p class="text-gray-600 mb-4">Sequential timer.after() calls creating callback hell</p>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="bg-red-50 p-4 rounded-lg">
+                            <div class="font-medium text-red-800 mb-2">❌ Current Pattern:</div>
+                            <pre class="text-xs text-red-700">timer.after(0.2, function()
+    timer.after(0.5, function()
+        timer.after(0.3, function()
+            -- nested callback hell
+        end)
+    end)
+end)</pre>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <div class="font-medium text-green-800 mb-2">✅ Use timer.sequence():</div>
+                            <pre class="text-xs text-green-700">timer.sequence("anim")
+    :wait(0.2)
+    :do_now(fn1)
+    :wait(0.5)
+    :do_now(fn2)
+    :start()</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Tab -->
+        <div id="content-performance" class="tab-content hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Performance Concerns</h2>
+            
+            <div class="bg-orange-50 border border-orange-200 rounded-xl p-6 mb-6">
+                <h3 class="text-lg font-semibold text-orange-800 mb-2">Estimated Performance Gains</h3>
+                <div class="grid md:grid-cols-3 gap-4 text-center">
+                    <div>
+                        <div class="text-2xl font-bold text-orange-600">15-25%</div>
+                        <div class="text-sm text-orange-700">GC Pressure Reduction (Phase 1)</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-orange-600">5-10%</div>
+                        <div class="text-sm text-orange-700">FPS Improvement (Phase 1)</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-orange-600">5-10%</div>
+                        <div class="text-sm text-orange-700">CPU Reduction (Phase 3)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full bg-white rounded-xl shadow-lg">
+                    <thead>
+                        <tr class="bg-gray-50">
+                            <th class="text-left p-4">Issue</th>
+                            <th class="text-left p-4">Location</th>
+                            <th class="text-left p-4">Allocs/Frame</th>
+                            <th class="text-left p-4">Impact</th>
+                            <th class="text-left p-4">Priority</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-t">
+                            <td class="p-4">Card batching tables</td>
+                            <td class="p-4 font-mono text-sm">gameplay.lua:2139</td>
+                            <td class="p-4">3-50 tables</td>
+                            <td class="p-4"><span class="severity-critical">CRITICAL</span></td>
+                            <td class="p-4 font-bold">P0</td>
+                        </tr>
+                        <tr class="border-t">
+                            <td class="p-4">Lighting visible list</td>
+                            <td class="p-4 font-mono text-sm">lighting.lua:886</td>
+                            <td class="p-4">1 + 32 inserts</td>
+                            <td class="p-4"><span class="severity-high">HIGH</span></td>
+                            <td class="p-4 font-bold">P0</td>
+                        </tr>
+                        <tr class="border-t">
+                            <td class="p-4">Uniform name strings</td>
+                            <td class="p-4 font-mono text-sm">lighting.lua:916</td>
+                            <td class="p-4">256 strings</td>
+                            <td class="p-4"><span class="severity-high">HIGH</span></td>
+                            <td class="p-4 font-bold">P1</td>
+                        </tr>
+                        <tr class="border-t">
+                            <td class="p-4">Text character iteration</td>
+                            <td class="p-4 font-mono text-sm">command_buffer_text.lua:533</td>
+                            <td class="p-4">1000 closures</td>
+                            <td class="p-4"><span class="severity-medium">MEDIUM</span></td>
+                            <td class="p-4 font-bold">P1</td>
+                        </tr>
+                        <tr class="border-t">
+                            <td class="p-4">Projectile removal list</td>
+                            <td class="p-4 font-mono text-sm">projectile_system.lua:1054</td>
+                            <td class="p-4">1 table/update</td>
+                            <td class="p-4"><span class="severity-medium">MEDIUM</span></td>
+                            <td class="p-4 font-bold">P2</td>
+                        </tr>
+                        <tr class="border-t">
+                            <td class="p-4">Wand table copying</td>
+                            <td class="p-4 font-mono text-sm">wand_executor.lua:96</td>
+                            <td class="p-4">5-20/cast</td>
+                            <td class="p-4"><span class="severity-medium">MEDIUM</span></td>
+                            <td class="p-4 font-bold">P2</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-6 card">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Fix Pattern: Pre-allocate & Reuse</h3>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div class="bg-red-50 p-4 rounded-lg">
+                        <div class="font-medium text-red-800 mb-2">❌ Current (allocates every frame):</div>
+                        <pre class="text-xs text-red-700">function draw()
+    local batchedCardBuckets = {}  -- NEW!
+    local cardZCache = {}          -- NEW!
+    -- ...
+end</pre>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <div class="font-medium text-green-800 mb-2">✅ Fixed (reuse tables):</div>
+                        <pre class="text-xs text-green-700">local _buckets = {}
+local _cache = {}
+
+function draw()
+    for k in pairs(_buckets) do _buckets[k] = nil end
+    for k in pairs(_cache) do _cache[k] = nil end
+    -- reuse _buckets and _cache
+end</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Organization Tab -->
+        <div id="content-organization" class="tab-content hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Module Organization</h2>
+            
+            <div class="grid gap-6">
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Circular Dependencies</h3>
+                    <div class="bg-red-50 p-4 rounded-lg">
+                        <div class="font-mono text-sm">
+                            <div class="flex items-center text-red-700">
+                                <span>core/gameplay.lua</span>
+                                <span class="mx-2">→</span>
+                                <span>wand/*</span>
+                                <span class="mx-2">→</span>
+                                <span>combat/projectile_system.lua</span>
+                            </div>
+                            <div class="text-red-600 mt-2 text-xs">Cannot use core without wand, cannot test wand in isolation</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Hierarchy Violations</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li class="flex items-start">
+                            <span class="text-red-500 mr-2">❌</span>
+                            <span><code class="code">core/main.lua</code> requires gameplay.lua directly (can't use core without gameplay)</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-red-500 mr-2">❌</span>
+                            <span><code class="code">data/cards.lua</code> requires core modules (data should be pure config)</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-red-500 mr-2">❌</span>
+                            <span><code class="code">combat/projectile_system.lua</code> requires util.util (cross-layer dependency)</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Proposed Hierarchy</h3>
+                    <div class="bg-gray-50 p-4 rounded-lg font-mono text-sm">
+                        <pre>core/           # Pure engine (no game logic)
+├── ecs/        # Entity, component, cache
+├── rendering/  # Draw, shaders, layers
+├── timing/     # Timer, tween, sequence
+└── utils/      # Q, popup, fx
+
+systems/        # Game systems
+├── combat/     # Combat, projectiles, waves
+├── wand/       # Card evaluation, execution
+├── ui/         # All UI modules
+└── progression/# Shop, level-up, stats
+
+data/           # Pure config (NO requires)
+content/        # Game content (cards, enemies)</pre>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Orphaned Files</h3>
+                    <div class="grid md:grid-cols-2 gap-4 text-sm">
+                        <div class="bg-yellow-50 p-3 rounded">
+                            <div class="font-mono text-yellow-800">test_draw_batching.lua</div>
+                            <div class="text-yellow-600">Root → Move to tests/</div>
+                        </div>
+                        <div class="bg-yellow-50 p-3 rounded">
+                            <div class="font-mono text-yellow-800">test_projectiles.lua</div>
+                            <div class="text-yellow-600">Root → Move to tests/</div>
+                        </div>
+                        <div class="bg-yellow-50 p-3 rounded">
+                            <div class="font-mono text-yellow-800">AI_TABLE_CONTENT_EXAMPLE.lua</div>
+                            <div class="text-yellow-600">Root → Move to examples/</div>
+                        </div>
+                        <div class="bg-yellow-50 p-3 rounded">
+                            <div class="font-mono text-yellow-800">chugget_code_definitions.lua</div>
+                            <div class="text-yellow-600">Unclear purpose (12,776 lines)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Naming Tab -->
+        <div id="content-naming" class="tab-content hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Naming & Conventions</h2>
+            
+            <div class="grid gap-6">
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Recommended Naming Conventions</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b bg-gray-50">
+                                    <th class="text-left p-3">Element</th>
+                                    <th class="text-left p-3">Convention</th>
+                                    <th class="text-left p-3">Example</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b">
+                                    <td class="p-3">Module files</td>
+                                    <td class="p-3"><code class="code">snake_case.lua</code></td>
+                                    <td class="p-3 font-mono text-purple-600">entity_builder.lua</td>
+                                </tr>
+                                <tr class="border-b">
+                                    <td class="p-3">Module tables</td>
+                                    <td class="p-3"><code class="code">PascalCase</code></td>
+                                    <td class="p-3 font-mono text-purple-600">EntityBuilder</td>
+                                </tr>
+                                <tr class="border-b">
+                                    <td class="p-3">Public functions</td>
+                                    <td class="p-3"><code class="code">camelCase</code></td>
+                                    <td class="p-3 font-mono text-purple-600">EntityBuilder.create()</td>
+                                </tr>
+                                <tr class="border-b">
+                                    <td class="p-3">Private functions</td>
+                                    <td class="p-3"><code class="code">snake_case</code></td>
+                                    <td class="p-3 font-mono text-purple-600">local function setup_tooltip()</td>
+                                </tr>
+                                <tr class="border-b">
+                                    <td class="p-3">Constants</td>
+                                    <td class="p-3"><code class="code">SCREAMING_SNAKE</code></td>
+                                    <td class="p-3 font-mono text-purple-600">PLANNING_STATE</td>
+                                </tr>
+                                <tr class="border-b">
+                                    <td class="p-3">Callbacks</td>
+                                    <td class="p-3"><code class="code">on_* prefix</code></td>
+                                    <td class="p-3 font-mono text-purple-600">on_spawn, on_death</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Inconsistencies Found</h3>
+                    <div class="space-y-4">
+                        <div class="bg-yellow-50 p-4 rounded-lg">
+                            <div class="font-medium text-yellow-800 mb-2">timer.lua _opts suffix inconsistency</div>
+                            <div class="grid md:grid-cols-2 gap-2 text-sm font-mono">
+                                <div class="text-yellow-700">timer.after_opts() ✓</div>
+                                <div class="text-yellow-700">timer.every_opts() ✓</div>
+                                <div class="text-red-600">timer.sequence() ✗ (no _opts)</div>
+                            </div>
+                        </div>
+                        <div class="bg-yellow-50 p-4 rounded-lg">
+                            <div class="font-medium text-yellow-800 mb-2">Version suffix inconsistency</div>
+                            <div class="text-sm text-yellow-700">
+                                behavior_script.lua vs behavior_script_v2.lua (no deprecation strategy)
+                            </div>
+                        </div>
+                        <div class="bg-yellow-50 p-4 rounded-lg">
+                            <div class="font-medium text-yellow-800 mb-2">Ambiguous parameter names</div>
+                            <div class="text-sm font-mono text-yellow-700">
+                                on_spawn = function(e, ctx, helpers) — 'e' should be 'entity'
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Positive Findings ✅</h3>
+                    <ul class="space-y-2 text-sm text-green-700">
+                        <li class="flex items-start">
+                            <span class="mr-2">✅</span>
+                            <span>Q.lua has comprehensive header with usage examples</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="mr-2">✅</span>
+                            <span>entity_builder.lua documents design principles</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="mr-2">✅</span>
+                            <span>enemies.lua has migration notes and behavior documentation</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="mr-2">✅</span>
+                            <span>4-space indentation consistent throughout</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-gray-400 py-6 px-6 mt-8">
+        <div class="max-w-7xl mx-auto text-center text-sm">
+            <p>Generated by Sisyphus Code Analysis • 8 agents deployed • Analysis time: ~3 minutes</p>
+        </div>
+    </footer>
+
+    <script>
+        function showTab(tabName) {
+            // Hide all content
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            // Remove active from all tabs
+            document.querySelectorAll('nav button').forEach(el => el.classList.remove('tab-active'));
+            // Show selected content
+            document.getElementById('content-' + tabName).classList.remove('hidden');
+            // Mark tab as active
+            document.getElementById('tab-' + tabName).classList.add('tab-active');
+        }
+    </script>
+</body>
+</html>

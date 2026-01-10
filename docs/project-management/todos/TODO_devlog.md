@@ -537,3 +537,28 @@
 01/06/2026
   - Fixed dynamic text entry binding to pass function instead of string, preventing crashes on card hover.
   - Replaced missing wand icon sprites with placeholder assets.
+
+01/07/2026
+  - Implemented inventory grid UI with drag-drop, sort buttons, tab switching, and slot snapping functionality.
+  - Fixed screen-space collision for UI cards by combining ObjectAttachedToUITag with transform.set_space('screen') to resolve camera zoom coordinate mismatch.
+  - Enhanced animation system with advanced playback controls including reverse, pause, resume, and frame callbacks.
+  - Added equipment system design document outlining gear slots, stats, and upgrade mechanics.
+  - Added annotation review system for Claude Code code review workflows.
+  - Synced Lua cookbook with 3 new data definition recipes.
+
+01/08/2026
+  - Implemented custom sprite panel system with nine-patch stretching, decorations API, hover overlays, and comprehensive demo.
+  - Major C++ refactoring: migrated 15+ systems from globals::getRegistry() to explicit registry parameters for better testability.
+  - Added SystemRegistry for self-registering systems with priority-based initialization.
+  - Added multi-tab grid switching to inventory demo with proper item visibility management during tab transitions.
+  - Added forward declaration headers and removed duplicate includes to improve compile times.
+  - Documented sprite panels/decorations API and Tiny Rogues design reference.
+
+01/09/2026
+  - Major C++ architectural refactoring with TDD: registry consolidation tests, Blackboard class extraction, GOAP utility extraction, Result<T,E> error handling tests.
+  - Migrated enemies and clickedEntity from globals to EngineContext pattern (Phase 3.5).
+  - Deprecated 19 unused JSON blobs identified in globals audit.
+  - Added runtime validation for legacy registry access with deprecation warnings.
+  - Updated inventory grid API with improved documentation and demo.
+  - Added modal system infrastructure and Lua analysis reports.
+  - Documented debug key mappings/conflicts, RAII patterns, and memory management guidelines.

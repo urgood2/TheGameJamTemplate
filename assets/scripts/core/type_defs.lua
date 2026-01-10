@@ -240,8 +240,7 @@ function BoardType:_layoutRow(area, cards, cardW, cardH)
             ct.actualY = math_floor(y + 0.5)
             
             -- Reset scale for row view (in case switching from grid)
-            ct.scaleX = 1.0
-            ct.scaleY = 1.0
+            ct.scale = 1.0
         end
 
         --------------------------------------------------------

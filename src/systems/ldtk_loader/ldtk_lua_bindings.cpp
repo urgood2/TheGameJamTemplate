@@ -2,6 +2,7 @@
 // This file contains all the Lua bindings for the LDtk loader system
 
 #include "ldtk_combined.hpp"
+#include "ldtk_field_converters.hpp"
 #include "sol/sol.hpp"
 #include "systems/scripting/binding_recorder.hpp"
 #include "systems/scripting/sol2_helpers.hpp"
@@ -37,199 +38,91 @@ void exposeToLua(sol::state& lua) {
     return ldtk_loader::PrefabForEntity(entityName);
   });
 
-  // Helper to convert entity fields to Lua table
   auto entityFieldsToLua = [](sol::state_view lua_view, const ldtk::Entity &ent) -> sol::table {
     sol::table fields = lua_view.create_table();
+    using namespace ldtk_converters;
 
-    // Get all field definitions from the entity
     for (const auto &fieldDef : ent.allFields()) {
       const std::string &name = fieldDef.name;
-
       try {
         switch (fieldDef.type) {
         case ldtk::FieldType::Int: {
           const auto &f = ent.getField<int>(name);
-          if (!f.is_null())
-            fields[name] = f.value();
+          if (!f.is_null()) fields[name] = f.value();
           break;
         }
         case ldtk::FieldType::Float: {
           const auto &f = ent.getField<float>(name);
-          if (!f.is_null())
-            fields[name] = f.value();
+          if (!f.is_null()) fields[name] = f.value();
           break;
         }
         case ldtk::FieldType::Bool: {
           const auto &f = ent.getField<bool>(name);
-          if (!f.is_null())
-            fields[name] = f.value();
+          if (!f.is_null()) fields[name] = f.value();
           break;
         }
         case ldtk::FieldType::String: {
           const auto &f = ent.getField<std::string>(name);
-          if (!f.is_null())
-            fields[name] = f.value();
+          if (!f.is_null()) fields[name] = f.value();
           break;
         }
         case ldtk::FieldType::Color: {
           const auto &f = ent.getField<ldtk::Color>(name);
-          if (!f.is_null()) {
-            sol::table color = lua_view.create_table();
-            color["r"] = f.value().r;
-            color["g"] = f.value().g;
-            color["b"] = f.value().b;
-            color["a"] = f.value().a;
-            fields[name] = color;
-          }
+          if (!f.is_null()) fields[name] = colorToLua(lua_view, f.value());
           break;
         }
         case ldtk::FieldType::Point: {
           const auto &f = ent.getField<ldtk::IntPoint>(name);
-          if (!f.is_null()) {
-            sol::table point = lua_view.create_table();
-            point["x"] = f.value().x;
-            point["y"] = f.value().y;
-            fields[name] = point;
-          }
+          if (!f.is_null()) fields[name] = pointToLua(lua_view, f.value());
           break;
         }
         case ldtk::FieldType::Enum: {
           const auto &f = ent.getField<ldtk::EnumValue>(name);
-          if (!f.is_null())
-            fields[name] = f.value().name;
+          if (!f.is_null()) fields[name] = f.value().name;
           break;
         }
         case ldtk::FieldType::FilePath: {
           const auto &f = ent.getField<ldtk::FilePath>(name);
-          if (!f.is_null())
-            fields[name] = std::string(f.value().c_str());
+          if (!f.is_null()) fields[name] = std::string(f.value().c_str());
           break;
         }
         case ldtk::FieldType::EntityRef: {
           const auto &f = ent.getField<ldtk::EntityRef>(name);
-          if (!f.is_null()) {
-            sol::table ref = lua_view.create_table();
-            ref["entity_iid"] = f.value().entity_iid.str();
-            ref["layer_iid"] = f.value().layer_iid.str();
-            ref["level_iid"] = f.value().level_iid.str();
-            ref["world_iid"] = f.value().world_iid.str();
-            fields[name] = ref;
-          }
+          if (!f.is_null()) fields[name] = entityRefToLua(lua_view, f.value());
           break;
         }
-        case ldtk::FieldType::ArrayInt: {
-          const auto &arr = ent.getArrayField<int>(name);
-          sol::table t = lua_view.create_table();
-          for (size_t i = 0; i < arr.size(); ++i) {
-            if (!arr[i].is_null())
-              t[i + 1] = arr[i].value();
-          }
-          fields[name] = t;
+        case ldtk::FieldType::ArrayInt:
+          fields[name] = simpleArrayToLua(lua_view, ent.getArrayField<int>(name));
           break;
-        }
-        case ldtk::FieldType::ArrayFloat: {
-          const auto &arr = ent.getArrayField<float>(name);
-          sol::table t = lua_view.create_table();
-          for (size_t i = 0; i < arr.size(); ++i) {
-            if (!arr[i].is_null())
-              t[i + 1] = arr[i].value();
-          }
-          fields[name] = t;
+        case ldtk::FieldType::ArrayFloat:
+          fields[name] = simpleArrayToLua(lua_view, ent.getArrayField<float>(name));
           break;
-        }
-        case ldtk::FieldType::ArrayBool: {
-          const auto &arr = ent.getArrayField<bool>(name);
-          sol::table t = lua_view.create_table();
-          for (size_t i = 0; i < arr.size(); ++i) {
-            if (!arr[i].is_null())
-              t[i + 1] = arr[i].value();
-          }
-          fields[name] = t;
+        case ldtk::FieldType::ArrayBool:
+          fields[name] = simpleArrayToLua(lua_view, ent.getArrayField<bool>(name));
           break;
-        }
-        case ldtk::FieldType::ArrayString: {
-          const auto &arr = ent.getArrayField<std::string>(name);
-          sol::table t = lua_view.create_table();
-          for (size_t i = 0; i < arr.size(); ++i) {
-            if (!arr[i].is_null())
-              t[i + 1] = arr[i].value();
-          }
-          fields[name] = t;
+        case ldtk::FieldType::ArrayString:
+          fields[name] = simpleArrayToLua(lua_view, ent.getArrayField<std::string>(name));
           break;
-        }
-        case ldtk::FieldType::ArrayColor: {
-          const auto &arr = ent.getArrayField<ldtk::Color>(name);
-          sol::table t = lua_view.create_table();
-          for (size_t i = 0; i < arr.size(); ++i) {
-            if (!arr[i].is_null()) {
-              sol::table color = lua_view.create_table();
-              color["r"] = arr[i].value().r;
-              color["g"] = arr[i].value().g;
-              color["b"] = arr[i].value().b;
-              color["a"] = arr[i].value().a;
-              t[i + 1] = color;
-            }
-          }
-          fields[name] = t;
+        case ldtk::FieldType::ArrayColor:
+          fields[name] = arrayToLua(lua_view, ent.getArrayField<ldtk::Color>(name), colorToLua);
           break;
-        }
-        case ldtk::FieldType::ArrayPoint: {
-          const auto &arr = ent.getArrayField<ldtk::IntPoint>(name);
-          sol::table t = lua_view.create_table();
-          for (size_t i = 0; i < arr.size(); ++i) {
-            if (!arr[i].is_null()) {
-              sol::table point = lua_view.create_table();
-              point["x"] = arr[i].value().x;
-              point["y"] = arr[i].value().y;
-              t[i + 1] = point;
-            }
-          }
-          fields[name] = t;
+        case ldtk::FieldType::ArrayPoint:
+          fields[name] = arrayToLua(lua_view, ent.getArrayField<ldtk::IntPoint>(name), pointToLua);
           break;
-        }
-        case ldtk::FieldType::ArrayEnum: {
-          const auto &arr = ent.getArrayField<ldtk::EnumValue>(name);
-          sol::table t = lua_view.create_table();
-          for (size_t i = 0; i < arr.size(); ++i) {
-            if (!arr[i].is_null())
-              t[i + 1] = arr[i].value().name;
-          }
-          fields[name] = t;
+        case ldtk::FieldType::ArrayEnum:
+          fields[name] = enumArrayToLua(lua_view, ent.getArrayField<ldtk::EnumValue>(name));
           break;
-        }
-        case ldtk::FieldType::ArrayFilePath: {
-          const auto &arr = ent.getArrayField<ldtk::FilePath>(name);
-          sol::table t = lua_view.create_table();
-          for (size_t i = 0; i < arr.size(); ++i) {
-            if (!arr[i].is_null())
-              t[i + 1] = std::string(arr[i].value().c_str());
-          }
-          fields[name] = t;
+        case ldtk::FieldType::ArrayFilePath:
+          fields[name] = filePathArrayToLua(lua_view, ent.getArrayField<ldtk::FilePath>(name));
           break;
-        }
-        case ldtk::FieldType::ArrayEntityRef: {
-          const auto &arr = ent.getArrayField<ldtk::EntityRef>(name);
-          sol::table t = lua_view.create_table();
-          for (size_t i = 0; i < arr.size(); ++i) {
-            if (!arr[i].is_null()) {
-              sol::table ref = lua_view.create_table();
-              ref["entity_iid"] = arr[i].value().entity_iid.str();
-              ref["layer_iid"] = arr[i].value().layer_iid.str();
-              ref["level_iid"] = arr[i].value().level_iid.str();
-              ref["world_iid"] = arr[i].value().world_iid.str();
-              t[i + 1] = ref;
-            }
-          }
-          fields[name] = t;
+        case ldtk::FieldType::ArrayEntityRef:
+          fields[name] = arrayToLua(lua_view, ent.getArrayField<ldtk::EntityRef>(name), entityRefToLua);
           break;
-        }
         }
       } catch (const std::exception &e) {
-        spdlog::warn("LDtk field extraction error for '{}': {}", name,
-                     e.what());
+        spdlog::warn("LDtk field extraction error for '{}': {}", name, e.what());
       }
     }
-
     return fields;
   };
 

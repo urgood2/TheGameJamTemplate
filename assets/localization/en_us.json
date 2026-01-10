@@ -431,7 +431,22 @@
 		"pickup_gold_body": "Currency for shops",
 		"pickup_health_potion_title": "Health Potion",
 		"pickup_health_potion_body": "Restores 25 HP",
-		"wand_last_cast": "Last Cast"
+		"wand_last_cast": "Last Cast",
+		"settings_game_title": "Game Settings",
+		"settings_speed_normal": "Speed: Normal",
+		"settings_difficulty_medium": "Difficulty: Medium",
+		"settings_graphics_title": "Graphics Settings",
+		"settings_fullscreen_off": "Fullscreen: Off",
+		"settings_vsync_on": "VSync: On",
+		"settings_audio_title": "Audio Settings",
+		"settings_master_volume": "Master: 100%",
+		"settings_music_volume": "Music: 80%",
+		"settings_sfx_volume": "SFX: 100%",
+		"stats_invalid_tab": "Invalid tab",
+		"stats_no_data": "No data",
+		"stats_no_stats_category": "No stats in this category",
+		"stats_keybind_help": "C: toggle  1-5: tabs  Esc: close",
+		"cards_in_deck": "Cards in deck: {count}"
 	},
 	"joker": {
 		"pyromaniac": {

@@ -7766,16 +7766,38 @@ function startActionPhase()
     setLowPassTarget(0.0)           -- low pass filter off
 
     input.set_context("gameplay")   -- set input context to action phase.
+    print("[DEBUG ACTION] input context set to gameplay")
 
     PhysicsManager.enable_step("world", true)
+    print("[DEBUG ACTION] physics enabled")
 
-    loadWandsIntoExecutorFromBoards()
-    CastBlockFlashUI.clear()  -- Clear before init to prevent duplicate items
-    CastBlockFlashUI.init()
-    TriggerStripUI.show()
+    local wand_ok, wand_err = pcall(loadWandsIntoExecutorFromBoards)
+    if not wand_ok then
+        print("[DEBUG ACTION] ERROR in loadWandsIntoExecutorFromBoards: " .. tostring(wand_err))
+    else
+        print("[DEBUG ACTION] wands loaded successfully")
+    end
+    
+    local cast_ok, cast_err = pcall(function()
+        CastBlockFlashUI.clear()  -- Clear before init to prevent duplicate items
+        CastBlockFlashUI.init()
+    end)
+    if not cast_ok then
+        print("[DEBUG ACTION] ERROR in CastBlockFlashUI: " .. tostring(cast_err))
+    else
+        print("[DEBUG ACTION] CastBlockFlashUI initialized")
+    end
+    
+    local trigger_ok, trigger_err = pcall(function() TriggerStripUI.show() end)
+    if not trigger_ok then
+        print("[DEBUG ACTION] ERROR in TriggerStripUI.show: " .. tostring(trigger_err))
+    else
+        print("[DEBUG ACTION] TriggerStripUI shown")
+    end
 
     playStateTransition()
     oily_water_bg.apply_phase("action")
+    print("[DEBUG ACTION] phase transition complete")
 
     if record_telemetry then
         record_telemetry("phase_enter", { phase = "action", session_id = telemetry_session_id() })

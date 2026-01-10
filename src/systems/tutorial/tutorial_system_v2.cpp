@@ -187,11 +187,7 @@ namespace tutorial_system_v2 {
     // just resets the current coroutine for now
     auto resetTutorialSystem() -> void {
         currentTutorialCoroutine = sol::lua_nil;
-
-
-        // FIXME: testing, remove later
-        currentTutorialCoroutine = ai_system::masterStateLua["tutorials"]["sample"];
-        setTutorialModeActive(true);
+        setTutorialModeActive(false);
     }
 
     /** 

@@ -47,6 +47,7 @@ GAMESTATE = {
 shapeAnimationPhase = 0
 
 local currentGameState = GAMESTATE.MAIN_MENU -- Set the initial game state to IN_GAME
+local autoStartMainGameEnv = (os.getenv and ((os.getenv("AUTO_START_MAIN_GAME") == "1") or (os.getenv("AUTO_ACTION_PHASE") == "1"))) or false
 
 local telemetry_once_flags = {}
 local function record_telemetry(event, props)
@@ -974,6 +975,18 @@ function main.init()
     -- )
     
     changeGameState(GAMESTATE.MAIN_MENU) -- Initialize the game in the IN_GAME state
+
+    if autoStartMainGameEnv then
+        timer.after(0.25, function()
+            print("[DEBUG ACTION] AUTO_START_MAIN_GAME triggering startGameButtonCallback()")
+            if startGameButtonCallback then
+                startGameButtonCallback()
+            else
+                print("[DEBUG ACTION] AUTO_START_MAIN_GAME fallback state switch")
+                changeGameState(GAMESTATE.IN_GAME)
+            end
+        end, "auto_start_main_game")
+    end
     
 end
 

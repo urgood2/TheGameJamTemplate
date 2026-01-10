@@ -29,18 +29,23 @@ local function random_uid()
 end
 
 local function ensure_valid_tag(tag)
-  -- If nil/false, auto-generate a unique tag
-  if tag == nil or tag == false then
-    tag = random_uid()
-  end
+    if tag and type(tag) == "string" then
+        return tag
+    end
+    local randomTag = "timer_" .. tostring(math.random(1, 1000000000))
+    -- log_debug("[timer] Generated random tag:", randomTag)
+    return randomTag
+end
 
-  -- Coerce non-string/non-number keys safely
-  if type(tag) ~= "string" and type(tag) ~= "number" then
-    tag = tostring(tag)
-  end
-
-  -- Overwrite existing timers silently if tag already exists
-  return tag
+local function describe_timer_context(tag)
+    local context = { tag = tag }
+    local info = debug.getinfo(3, "Slfn")
+    if info then
+        context.source = info.source
+        context.currentline = info.currentline
+        context.name = info.name
+    end
+    return context
 end
 
 function timer.resolve_delay(delay)
@@ -708,7 +713,7 @@ function timer.update_physics_step()
             -- log_debug("[timer.every_physics_step] Running timer:", tag)
             local ok, err = pcall(t.fn)
             if not ok then
-                log_error("[timer.every_physics_step] Error:", err)
+                log_error(string.format("[timer.every_physics_step] Error (tag=%s): %s", tostring(tag), tostring(err)))
             end
         end
     end

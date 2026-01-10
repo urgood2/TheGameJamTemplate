@@ -63,13 +63,14 @@ end
 
 -- Consolidated config/state to stay under Lua's 200 local variable limit
 local gameplay_cfg = {
+    -- Required runtime state (DO NOT REMOVE)
     LEVEL_UP_MODAL_DELAY = 0.5,
     ENABLE_SURVIVOR_MASK = false,
     messageQueueHooksRegistered = false,
     avatarTestEventsFired = false,
     DEBUG_AVATAR_TEST_EVENTS = rawget(_G, "DEBUG_AVATAR_TEST_EVENTS") or (os.getenv("ENABLE_AVATAR_DEBUG_EVENTS") == "1"),
-    DEBUG_AUTO_EQUIP_AVATAR = "conduit",  -- Set to avatar ID to auto-equip, or nil to disable
-    cardW = 80,   -- card dimensions, reset on init
+    DEBUG_AUTO_EQUIP_AVATAR = "conduit",
+    cardW = 80,
     cardH = 112,
     isPlayerDying = false,
     DeathScreen = nil,
@@ -80,7 +81,99 @@ local gameplay_cfg = {
         "walk_1", "walk_2", "walk_3", "walk_4", "walk_5",
         "walk_6", "walk_7", "walk_8", "walk_9", "walk_10"
     },
+
+    -- Feature flags
+    enable_subcast_debug_ui = true,
+    enable_wave_test_init = false,
+    enable_joker_debug_panel = false,
+    enable_cast_debug_panel = false,
+    enable_entity_inspector = true,
+    enable_content_debug_panel = true,
+    enable_tag_synergy_panel = true,
+    enable_combat_debug_panel = true,
+    enable_trigger_strip = true,
+    enable_cast_block_flash_ui = true,
+    enable_cast_feed_ui = true,
+    enable_message_queue_ui = false,
+    enable_planning_board_ui = true,
+    enable_mouse_cursor = true,
+    enable_inventory_ui = true,
+    enable_avatar_strip_ui = true,
+    enable_status_indicator_ui = true,
+    enable_mark_system = true,
+    enable_shop_ui = true,
+    enable_shop_pack_ui = true,
+    enable_shop_stats_ui = true,
+    enable_shop_hint_ui = true,
+    enable_shop_interest_ui = true,
+    enable_shop_pack_rewards = true,
+    enable_shop_card_rewards = true,
+    enable_shop_stat_rolls = true,
+    enable_shop_modifier_rolls = true,
+    enable_shop_stat_modifiers = true,
+    enable_shop_stat_modifiers_ui = true,
+    enable_shop_modifier_preview = true,
+    enable_planning_phase_manabar = true,
+    enable_trigger_simulator = true,
+    enable_card_spawner_debug_ui = true,
+    enable_shop_debug_ui = true,
+    enable_wave_debug_ui = true,
+    enable_wave_visuals = true,
+    enable_wave_system = true,
+    enable_tag_evaluator = true,
+    enable_card_database = true,
+    enable_card_evaluator = true,
+    enable_card_modifier_system = true,
+    enable_card_modifier_database = true,
+    enable_card_modifier_evaluator = true,
+    enable_card_modifier_ui = true,
+    enable_card_modifier_tooltips = true,
+    enable_card_modifier_tooltips_ui = true,
+    enable_card_modifier_tooltips_debug_ui = true,
+    enable_card_modifier_tooltips_debug_ui_buttons = true,
+    enable_card_modifier_tooltips_debug_ui_labels = true,
+    enable_card_modifier_tooltips_debug_ui_data = true,
+    enable_card_modifier_tooltips_debug_ui_data_labels = true,
+    enable_card_modifier_tooltips_debug_ui_data_values = true,
+    enable_card_modifier_tooltips_debug_ui_data_tables = true,
+    enable_card_modifier_tooltips_debug_ui_data_tables_labels = true,
+    enable_card_modifier_tooltips_debug_ui_data_tables_values = true,
+    enable_card_modifier_tooltips_debug_ui_data_tables_rows = true,
+    enable_card_modifier_tooltips_debug_ui_data_tables_columns = true,
+    enable_card_modifier_tooltips_debug_ui_data_tables_headers = true,
+    enable_card_modifier_tooltips_debug_ui_data_tables_cells = true,
+    auto_action_env = (os.getenv and os.getenv("AUTO_ACTION_PHASE") == "1") or false,
 }
+
+gameplay_cfg.auto_action_state = gameplay_cfg.auto_action_state or {}
+if os.getenv then
+    gameplay_cfg.auto_action_state.env_raw = os.getenv("AUTO_ACTION_PHASE")
+end
+
+gameplay_cfg.debugQuickAccessState = gameplay_cfg.debugQuickAccessState or {}
+if gameplay_cfg.auto_action_state.env_raw then
+    gameplay_cfg.auto_action_state.env_normalized = string.lower(tostring(gameplay_cfg.auto_action_state.env_raw))
+    if gameplay_cfg.auto_action_state.env_normalized == "1"
+        or gameplay_cfg.auto_action_state.env_normalized == "true"
+        or gameplay_cfg.auto_action_state.env_normalized == "yes" then
+        gameplay_cfg.auto_action_env = true
+    else
+        gameplay_cfg.auto_action_env = false
+    end
+    if not gameplay_cfg.auto_action_state.reported_env_raw then
+        print(string.format("[DEBUG ACTION] AUTO_ACTION_PHASE env detected raw=%s normalized=%s enabled=%s",
+            tostring(gameplay_cfg.auto_action_state.env_raw),
+            tostring(gameplay_cfg.auto_action_state.env_normalized),
+            tostring(gameplay_cfg.auto_action_env)))
+        gameplay_cfg.auto_action_state.reported_env_raw = true
+    end
+else
+    if not gameplay_cfg.auto_action_state.reported_env_absent then
+        print("[DEBUG ACTION] AUTO_ACTION_PHASE env not set; export AUTO_ACTION_PHASE=1 to enable auto action testing")
+        gameplay_cfg.auto_action_state.reported_env_absent = true
+    end
+end
+
 
 function gameplay_cfg.getDeathScreen()
     if not gameplay_cfg.DeathScreen then
@@ -7289,6 +7382,97 @@ local function collectCardPoolForBoardSet(boardSet)
     return pool
 end
 
+function countTableEntries(t)
+    if type(t) ~= "table" then return 0 end
+    local count = 0
+    for _ in pairs(t) do
+        count = count + 1
+    end
+    return count
+end
+
+function describeBoardSet(index, boardSet)
+    if not boardSet then
+        return string.format("set %d: <nil>", index)
+    end
+
+    local actionBoard = boardSet.action_board_id and boards and boards[boardSet.action_board_id]
+    local triggerBoard = boardSet.trigger_board_id and boards and boards[boardSet.trigger_board_id]
+    local actionCardCount = actionBoard and actionBoard.cards and #actionBoard.cards or 0
+    local triggerCardCount = triggerBoard and triggerBoard.cards and #triggerBoard.cards or 0
+    local triggerCardEntity = triggerBoard and triggerBoard.cards and triggerBoard.cards[1]
+    local triggerScript = triggerCardEntity and getScriptTableFromEntityID and getScriptTableFromEntityID(triggerCardEntity)
+    local triggerId = triggerScript and (triggerScript.card_id or triggerScript.cardID or triggerScript.id) or "nil"
+    local wandId = boardSet.wandDef and boardSet.wandDef.id or "nil"
+    local currentMarker = (index == current_board_set_index) and "*" or " "
+
+    return string.format("%sset %d wand=%s actionCards=%d trigger=%s (triggerCards=%d)",
+        currentMarker, index, tostring(wandId), actionCardCount, tostring(triggerId), triggerCardCount)
+end
+
+function logBoardSetStatus(contextLabel)
+    if not board_sets or #board_sets == 0 then
+        print(string.format("[DEBUG ACTION] %s: board_sets empty", contextLabel))
+        return
+    end
+
+    print(string.format("[DEBUG ACTION] %s: total_sets=%d current_index=%s",
+        contextLabel, #board_sets, tostring(current_board_set_index)))
+
+    for index, boardSet in ipairs(board_sets) do
+        print(string.format("[DEBUG ACTION]   %s", describeBoardSet(index, boardSet)))
+    end
+end
+
+function maybeAutoEnterActionPhase()
+    gameplay_cfg.auto_action_state = gameplay_cfg.auto_action_state or {}
+
+    if not gameplay_cfg.auto_action_env then
+        if not gameplay_cfg.auto_action_state.reported_disabled then
+            print("[DEBUG ACTION] maybeAutoEnterActionPhase: AUTO_ACTION_PHASE not enabled")
+            gameplay_cfg.auto_action_state.reported_disabled = true
+        end
+        return
+    end
+    if gameplay_cfg.auto_action_state.scheduled then
+        return
+    end
+    gameplay_cfg.auto_action_state.scheduled = true
+
+    print("[DEBUG ACTION] AUTO_ACTION_PHASE enabled - scheduling startActionPhase() in 1s")
+
+    local function fireAction()
+        if startActionPhase then
+            print("[DEBUG ACTION] AUTO_ACTION_PHASE firing startActionPhase()")
+            startActionPhase()
+        else
+            print("[DEBUG ACTION] AUTO_ACTION_PHASE: startActionPhase not available")
+        end
+    end
+
+    if timer and timer.after then
+        timer.after(1.0, fireAction)
+    else
+        fireAction()
+    end
+end
+
+if gameplay_cfg.auto_action_env and timer and timer.after then
+    timer.after(5.0, function()
+        gameplay_cfg.auto_action_state = gameplay_cfg.auto_action_state or {}
+        if gameplay_cfg.auto_action_state.scheduled then
+            return
+        end
+        gameplay_cfg.auto_action_state.scheduled = true
+        print("[DEBUG ACTION] AUTO_ACTION_PHASE fallback triggering startActionPhase()")
+        if startActionPhase then
+            startActionPhase()
+        else
+            print("[DEBUG ACTION] AUTO_ACTION_PHASE fallback: startActionPhase not available")
+        end
+    end)
+end
+
 updateWandResourceBar = function()
     if not board_sets or #board_sets == 0 then 
         print("[MANABAR] No board_sets")
@@ -7414,6 +7598,14 @@ local function loadWandsIntoExecutorFromBoards()
     WandExecutor.init()
     virtualCardCounter = 0
 
+    local totalSets = board_sets and #board_sets or "nil"
+    print(string.format("[DEBUG ACTION] loadWandsIntoExecutorFromBoards: board_sets=%s", tostring(totalSets)))
+    if not board_sets then
+        print("[DEBUG ACTION] board_sets is nil - cannot load wands")
+        return
+    end
+    logBoardSetStatus("loadWands entry")
+
     -- Add default jokers for testing
     JokerSystem.clear_jokers()
     JokerSystem.add_joker("lightning_rod")  -- +15 damage & +1 chain for Lightning spells
@@ -7432,18 +7624,37 @@ local function loadWandsIntoExecutorFromBoards()
         return ctx
     end
 
+    local loadedCount = 0
     for index, boardSet in ipairs(board_sets) do
         local cardPool = collectCardPoolForBoardSet(boardSet)
         local triggerDef = buildTriggerDefForBoardSet(boardSet)
+        local wandId = boardSet and boardSet.wandDef and boardSet.wandDef.id or "nil"
+        local poolCount = cardPool and #cardPool or 0
+        local triggerId = triggerDef and triggerDef.id or "nil"
 
         if boardSet.wandDef and cardPool and #cardPool > 0 and triggerDef then
+            print(string.format("[DEBUG ACTION] Loading wand set %d -> wand=%s cards=%d trigger=%s", index,
+                tostring(wandId), poolCount, tostring(triggerId)))
             local wandDefCopy = util.deep_copy(boardSet.wandDef)
             WandExecutor.loadWand(wandDefCopy, cardPool, triggerDef)
+            loadedCount = loadedCount + 1
         else
+            local reasons = {}
+            if not boardSet.wandDef then table.insert(reasons, "missing wandDef") end
+            if not cardPool or #cardPool == 0 then table.insert(reasons, "no action cards") end
+            if not triggerDef then table.insert(reasons, "no trigger card") end
+            print(string.format("[DEBUG ACTION] Skipping wand set %d (wand=%s) reason=%s", index,
+                tostring(wandId), table.concat(reasons, ", ")))
             log_debug(string.format("Skipping wand load for set %d (cards: %s, trigger: %s)", index,
                 cardPool and #cardPool or 0, triggerDef and triggerDef.id or "none"))
         end
     end
+
+    print(string.format("[DEBUG ACTION] loadWands complete: loaded=%d activeWands=%d states=%d pendingSubCasts=%d",
+        loadedCount,
+        countTableEntries(WandExecutor.activeWands),
+        countTableEntries(WandExecutor.wandStates),
+        countTableEntries(WandExecutor.pendingSubCasts)))
 
     if reevaluateDeckTags then
         reevaluateDeckTags()
@@ -7726,6 +7937,13 @@ local oily_water_bg = require("core.oily_water_background")
 
 function startActionPhase()
     local previousState = is_state_active(PLANNING_STATE) and "PLANNING" or (is_state_active(SHOP_STATE) and "SHOP" or "default")
+
+    print(string.format("[DEBUG ACTION] startActionPhase requested (planning=%s action=%s shop=%s)",
+        tostring(is_state_active and is_state_active(PLANNING_STATE)),
+        tostring(is_state_active and is_state_active(ACTION_STATE)),
+        tostring(is_state_active and is_state_active(SHOP_STATE))))
+    logBoardSetStatus("startActionPhase before clear")
+
     clear_states()
     if setPlanningPeekMode then
         setPlanningPeekMode(false)
@@ -7761,6 +7979,13 @@ function startActionPhase()
     activate_state("default_state")
     signal.emit("game_state_changed", { previous = previousState, current = "SURVIVORS" })
 
+    if is_state_active then
+        print(string.format("[DEBUG ACTION] states after activation (planning=%s action=%s shop=%s)",
+            tostring(is_state_active(PLANNING_STATE)),
+            tostring(is_state_active(ACTION_STATE)),
+            tostring(is_state_active(SHOP_STATE))))
+    end
+
     add_layer_shader("sprites", "pixelate_image")
 
     setLowPassTarget(0.0)           -- low pass filter off
@@ -7777,6 +8002,14 @@ function startActionPhase()
     else
         print("[DEBUG ACTION] wands loaded successfully")
     end
+
+    if WandExecutor and WandExecutor.activeWands then
+        print(string.format("[DEBUG ACTION] WandExecutor summary (active=%d states=%d pending=%d)",
+            countTableEntries(WandExecutor.activeWands),
+            countTableEntries(WandExecutor.wandStates),
+            countTableEntries(WandExecutor.pendingSubCasts)))
+    end
+    logBoardSetStatus("startActionPhase after wand load")
     
     local cast_ok, cast_err = pcall(function()
         CastBlockFlashUI.clear()  -- Clear before init to prevent duplicate items
@@ -7950,6 +8183,8 @@ function startPlanningPhase()
     -- debug
 
     print("States active:", is_state_active(PLANNING_STATE), is_state_active(ACTION_STATE), is_state_active(SHOP_STATE))
+
+    maybeAutoEnterActionPhase()
 end
 
 function startShopPhase()
@@ -8030,7 +8265,8 @@ local cardSpawnerState = {
 
 local function rebuildCardSpawnerLists()
     local testedLookup = {}
-    for _, id in ipairs(gameplay_cfg.TESTED_CARD_IDS) do
+    local testedIds = gameplay_cfg.TESTED_CARD_IDS or {}
+    for _, id in ipairs(testedIds) do
         testedLookup[id] = true
     end
 

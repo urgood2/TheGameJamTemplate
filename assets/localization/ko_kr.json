@@ -740,6 +740,18 @@
 		"stats_no_stats_category": "이 카테고리에 능력치가 없어요",
 		"stats_keybind_help": "C: 전환  1-5: 탭  Esc: 닫기",
 		"cards_in_deck": "덱의 카드: {count}장",
+		"inventory": {
+			"title": "카드 인벤토리",
+			"tab_equipment": "장비",
+			"tab_wands": "완드",
+			"tab_triggers": "트리거",
+			"tab_actions": "액션",
+			"search_placeholder": "카드 검색...",
+			"sort_name": "이름",
+			"sort_cost": "비용",
+			"sort_all": "정렬",
+			"slot_count": "{current} / {max} 슬롯"
+		},
 		"wand_prefix": "완드: ",
 		"wave_label": "웨이브",
 		"weather_difficulty_text": "날씨 난이도: {difficulty}",

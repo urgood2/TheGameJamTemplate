@@ -962,7 +962,7 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         .mipmaps = 1,
         .format  = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8
     };
-    Color* pixels = (Color*)img.data;
+    Color* pixels = static_cast<Color*>(img.data);
 
     // Fill buffer
     for (int y = 0; y < h; ++y) {
@@ -1001,7 +1001,7 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
             .mipmaps = 1,
             .format  = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8
         };
-        Color* pixels = (Color*)img.data;
+        Color* pixels = static_cast<Color*>(img.data);
 
         for (int y = 0; y < h; ++y) {
             for (int x = 0; x < w; ++x) {

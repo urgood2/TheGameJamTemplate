@@ -828,10 +828,9 @@ namespace ui
         }
     }
 
-    std::optional<entt::entity> box::GetUIEByID(entt::registry &registry, const std::string &id);
+    std::optional<entt::entity> box::GetUIEByID(entt::registry &registry, const std::string &id) noexcept;
 
-    // Internal helper
-    static std::optional<entt::entity> SearchUIHierarchy(entt::registry &registry, entt::entity node, const std::string &id)
+    static std::optional<entt::entity> SearchUIHierarchy(entt::registry &registry, entt::entity node, const std::string &id) noexcept
     {
         if (!registry.valid(node))
             return std::nullopt;
@@ -859,9 +858,8 @@ namespace ui
         return std::nullopt;
     }
 
-    std::optional<entt::entity> box::GetUIEByID(entt::registry &registry, const std::string &id)
+    std::optional<entt::entity> box::GetUIEByID(entt::registry &registry, const std::string &id) noexcept
     {
-        // PERF: Use cached view instead of creating new one each call
         if (!uiBoxViewInitialized) {
             uiBoxViewInitialized = true;
             globalUIBoxView = registry.view<UIBoxComponent>();
@@ -885,7 +883,7 @@ namespace ui
         return std::nullopt;
     }
 
-    std::optional<entt::entity> box::GetUIEByID(entt::registry &registry, entt::entity node, const std::string &id)
+    std::optional<entt::entity> box::GetUIEByID(entt::registry &registry, entt::entity node, const std::string &id) noexcept
     {
         if (!registry.valid(node))
             return std::nullopt;

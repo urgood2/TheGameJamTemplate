@@ -48,8 +48,8 @@ namespace ui {
         auto TreeCalcSubContainer(entt::registry &registry, entt::entity uiElement, ui::LocalTransform parentUINodeRect,
                 bool forceRecalculateLayout, std::optional<float> scale, LocalTransform &calcCurrentNodeTransform, std::unordered_map<entt::entity, Vector2> &contentSizes) -> Vector2;
         auto SubCalculateContainerSize(ui::LocalTransform &calcCurrentNodeTransform, ui::LocalTransform &parentUINodeRect, ui::UIConfig &uiConfig, ui::LocalTransform &calcChildTransform, float padding, transform::GameObject &node, entt::registry &registry, float factor, std::unordered_map<entt::entity, Vector2> &contentSizes) ->void;
-        auto GetUIEByID(entt::registry &registry, entt::entity node, const std::string &id) -> std::optional<entt::entity>;
-        std::optional<entt::entity> GetUIEByID(entt::registry &registry, const std::string &id);
+        [[nodiscard]] auto GetUIEByID(entt::registry &registry, entt::entity node, const std::string &id) noexcept -> std::optional<entt::entity>;
+        [[nodiscard]] std::optional<entt::entity> GetUIEByID(entt::registry &registry, const std::string &id) noexcept;
         // Function to remove a group of elements from the UI system
         auto RemoveGroup(entt::registry &registry, entt::entity entity, const std::string &group) -> bool;
         auto GetGroup(entt::registry &registry, entt::entity entity, const std::string &group) -> std::vector<entt::entity>;

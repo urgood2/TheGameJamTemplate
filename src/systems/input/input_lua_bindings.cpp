@@ -13,6 +13,7 @@
 #include "input_functions.hpp"
 
 #include "systems/scripting/binding_recorder.hpp"
+#include "systems/scripting/sol2_helpers.hpp"
 
 #include <string>
 
@@ -830,8 +831,8 @@ namespace input::lua_bindings {
                 }
                 out["modifiers"] = mods;
 
-                // Call back into Lua: (ok, bindingTable)
-                cb(ok, out);
+                // Call back into Lua: (ok, bindingTable) - protected call
+                sol2_util::safe_call(cb, "input_rebind_callback", ok, out);
             });
         });
         

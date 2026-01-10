@@ -4,6 +4,7 @@
 #include "ldtk_combined.hpp"
 #include "sol/sol.hpp"
 #include "systems/scripting/binding_recorder.hpp"
+#include "systems/scripting/sol2_helpers.hpp"
 #include "core/game.hpp"
 #include "core/globals.hpp"
 #include "spdlog/spdlog.h"
@@ -26,10 +27,9 @@ void exposeToLua(sol::state& lua) {
         ldtk_loader::SetRegistry((globals::g_ctx) ? globals::g_ctx->registry : globals::getRegistry());
         ldtk_loader::ForEachEntity(
             levelName, [cb](const ldtk_loader::EntitySpawnInfo &info) {
-              if (cb.valid()) {
-                cb(info.name, info.position.x, info.position.y, info.layer,
+              sol2_util::safe_call(cb, "ldtk_spawn_entities_callback",
+                   info.name, info.position.x, info.position.y, info.layer,
                    info.grid.x, info.grid.y);
-              }
             });
       });
 
@@ -238,19 +238,12 @@ void exposeToLua(sol::state& lua) {
     stored = fn;
     ldtk_loader::SetEntitySpawner(
         [fn, &lua, entityFieldsToLua](const ldtk::Entity &ent, entt::registry & /*R*/) {
-          try {
-            if (!fn.valid())
-              return;
-            const auto pos = ent.getPosition();
-            const auto grid = ent.getGridPosition();
-            sol::table fields = entityFieldsToLua(lua, ent);
-            fn(ent.getName(), (float)pos.x, (float)pos.y, ent.layer->getName(),
+          const auto pos = ent.getPosition();
+          const auto grid = ent.getGridPosition();
+          sol::table fields = entityFieldsToLua(lua, ent);
+          sol2_util::safe_call(fn, "ldtk_entity_spawner",
+               ent.getName(), (float)pos.x, (float)pos.y, ent.layer->getName(),
                grid.x, grid.y, fields);
-          } catch (const std::exception &e) {
-            spdlog::error("LDtk entity spawner error for '{}': {}", ent.getName(), e.what());
-          } catch (...) {
-            spdlog::error("LDtk entity spawner unknown error for '{}'", ent.getName());
-          }
         });
     ldtk_loader::SetRegistry((globals::g_ctx) ? globals::g_ctx->registry : globals::getRegistry());
   });
@@ -260,8 +253,7 @@ void exposeToLua(sol::state& lua) {
                                        sol::function cb) {
     ldtk_loader::ForEachIntGrid(levelName, layerName,
                                 [cb](int x, int y, int value) {
-                                  if (cb.valid())
-                                    cb(x, y, value);
+                                  sol2_util::safe_call(cb, "ldtk_each_intgrid_callback", x, y, value);
                                 });
   });
 

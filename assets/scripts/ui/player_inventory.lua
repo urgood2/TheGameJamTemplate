@@ -98,6 +98,12 @@ local function getLocalizedText(key, fallback)
     return fallback or key
 end
 
+local SLOT_WIDTH = 48
+local SLOT_HEIGHT = 48
+local SLOT_SPACING = 4
+local PANEL_WIDTH = 400
+local PANEL_HEIGHT = 280
+
 local function createGridForTab(tabId, x, y, visible)
     local cfg = TAB_CONFIG[tabId]
     if not cfg then return nil end
@@ -108,16 +114,15 @@ local function createGridForTab(tabId, x, y, visible)
         id = cfg.id,
         rows = cfg.rows,
         cols = cfg.cols,
-        slotSize = { w = 64, h = 90 },
-        slotSpacing = 6,
+        slotSize = { w = SLOT_WIDTH, h = SLOT_HEIGHT },
+        slotSpacing = SLOT_SPACING,
         
         config = {
             allowDragIn = true,
             allowDragOut = true,
             stackable = false,
-            slotColor = "purple_slate",
-            slotEmboss = 2,
-            padding = 8,
+            slotSprite = "test-inventory-square-single.png",
+            padding = 4,
             backgroundColor = "blackberry",
         },
         
@@ -193,7 +198,7 @@ local function createHeader()
             emboss = 2,
         },
         children = {
-            dsl.text(getLocalizedText("ui.player_inventory.title", "Inventory"), {
+            dsl.text("Inventory", {
                 fontSize = 18,
                 color = "gold",
                 shadow = true,
@@ -221,13 +226,13 @@ local function createTabs()
     for _, tabId in ipairs(TAB_ORDER) do
         local cfg = TAB_CONFIG[tabId]
         local isActive = (tabId == state.activeTab)
-        local label = cfg.icon .. " " .. getLocalizedText("ui.player_inventory.tab_" .. tabId, cfg.label)
+        local label = cfg.icon .. " " .. cfg.label
         
         table.insert(tabChildren, dsl.button(label, {
             id = "tab_" .. tabId,
-            minWidth = 100,
-            minHeight = 32,
-            fontSize = 11,
+            minWidth = 80,
+            minHeight = 28,
+            fontSize = 10,
             color = isActive and "steel_blue" or "gray",
             hover = true,
             onClick = function()
@@ -256,11 +261,11 @@ local function createFooter()
             padding = 8,
         },
         children = {
-            dsl.button(getLocalizedText("ui.player_inventory.sort_name", "Name") .. " v", {
+            dsl.button("Name v", {
                 id = "sort_name_btn",
-                minWidth = 60,
-                minHeight = 24,
-                fontSize = 11,
+                minWidth = 50,
+                minHeight = 22,
+                fontSize = 10,
                 color = "purple_slate",
                 hover = true,
                 onClick = function()
@@ -268,11 +273,11 @@ local function createFooter()
                 end,
             }),
             dsl.spacer(4),
-            dsl.button(getLocalizedText("ui.player_inventory.sort_cost", "Cost") .. " v", {
+            dsl.button("Cost v", {
                 id = "sort_cost_btn",
-                minWidth = 60,
-                minHeight = 24,
-                fontSize = 11,
+                minWidth = 50,
+                minHeight = 22,
+                fontSize = 10,
                 color = "purple_slate",
                 hover = true,
                 onClick = function()
@@ -280,7 +285,7 @@ local function createFooter()
                 end,
             }),
             dsl.spacer(1),
-            dsl.text("0 / 21", { fontSize = 11, color = "light_gray" }),
+            dsl.text("0 / 21", { fontSize = 10, color = "light_gray" }),
         },
     }
 end
@@ -292,15 +297,18 @@ local function createPanelDefinition()
             color = "blackberry",
             padding = 0,
             emboss = 3,
-            minWidth = 540,
+            minWidth = PANEL_WIDTH,
+            maxWidth = PANEL_WIDTH,
+            minHeight = PANEL_HEIGHT,
+            maxHeight = PANEL_HEIGHT,
         },
         children = {
             createHeader(),
             createTabs(),
             dsl.vbox {
                 config = {
-                    padding = 8,
-                    minHeight = 310,
+                    padding = 4,
+                    minHeight = 180,
                     color = "blackberry",
                 },
                 children = {
@@ -318,10 +326,10 @@ function PlayerInventory.open()
     local screenW = globals.screenWidth()
     local screenH = globals.screenHeight()
     
-    state.panelX = (screenW - 540) / 2
-    state.panelY = screenH - 420
+    state.panelX = (screenW - PANEL_WIDTH) / 2
+    state.panelY = screenH - PANEL_HEIGHT - 20
     state.gridX = state.panelX + 10
-    state.gridY = state.panelY + 80
+    state.gridY = state.panelY + 70
     
     local panelDef = createPanelDefinition()
     state.panelEntity = dsl.spawn({ x = state.panelX, y = state.panelY }, panelDef, "ui", 100)
@@ -431,7 +439,48 @@ function PlayerInventory.getLockedCards()
 end
 
 function PlayerInventory.spawnDummyCards()
-    log_debug("[PlayerInventory] spawnDummyCards() - Phase 3")
+    if not state.isOpen then
+        log_warn("[PlayerInventory] spawnDummyCards: inventory not open")
+        return
+    end
+    
+    local activeGrid = state.grids[state.activeTab]
+    if not activeGrid then
+        log_warn("[PlayerInventory] spawnDummyCards: no active grid")
+        return
+    end
+    
+    local testCardIds = { "ACTION_CHAIN_LIGHTNING", "TEST_PROJECTILE", "TEST_DAMAGE_BOOST" }
+    local CardSpaceConverter = require("ui.card_space_converter")
+    
+    for i, cardId in ipairs(testCardIds) do
+        if createNewCard then
+            local card = createNewCard(cardId, -9999, -9999, nil)
+            if card and registry:valid(card) then
+                CardSpaceConverter.toScreenSpace(card)
+                
+                local go = component_cache.get(card, GameObject)
+                if go then
+                    go.state.dragEnabled = true
+                    go.state.collisionEnabled = true
+                    go.state.hoverEnabled = true
+                end
+                
+                local success, slotIndex = grid.addItem(activeGrid, card)
+                if success then
+                    local slotEntity = grid.getSlotEntity(activeGrid, slotIndex)
+                    if slotEntity then
+                        InventoryGridInit.centerItemOnSlot(card, slotEntity)
+                    end
+                    log_debug("[PlayerInventory] Added test card " .. cardId .. " to slot " .. slotIndex)
+                else
+                    log_warn("[PlayerInventory] Failed to add test card " .. cardId)
+                end
+            end
+        else
+            log_warn("[PlayerInventory] createNewCard not available")
+        end
+    end
 end
 
 log_debug("[PlayerInventory] Module loaded")

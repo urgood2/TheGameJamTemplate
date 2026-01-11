@@ -1,0 +1,32 @@
+{
+  "default_workdir": "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate",
+  "default_branch": "master",
+  "project_type": "gamejam",
+  "auto_spawn_location": true,
+  "override_behavior": "unless_otherwise_specified",
+  "git_context": true,
+  "capabilities": [
+    "Game development",
+    "C++ programming",
+    "Raylib framework",
+    "CMake builds",
+    "Lua scripting",
+    "Web deployment",
+    "Multiplayer features",
+    "UI development",
+    "Shader programming",
+    "Performance optimization"
+  ],
+  "project_structure": {
+    "src": "Source code",
+    "assets": "Game assets",
+    "build": "Build outputs",
+    "docs": "Documentation",
+    "tools": "Development tools",
+    "scripts": "Build and utility scripts",
+    "tests": "Unit tests"
+  },
+  "created": "2026-01-11",
+  "last_updated": "2026-01-11",
+  "version": "1.0"
+}

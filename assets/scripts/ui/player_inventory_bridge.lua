@@ -64,15 +64,19 @@ function Bridge.setupBoardAsDropTarget(boardEntity, boardId, acceptedCategories)
     go.state.collisionEnabled = true
     go.state.triggerOnReleaseEnabled = true
     
-    -- Store configuration
+    local existingOnRelease = go.methods.onRelease
+    
     registeredBoards[boardId] = {
         entity = boardEntity,
         acceptedCategories = acceptedCategories,
+        previousOnRelease = existingOnRelease,
     }
     
-    -- Set up onRelease handler
     go.methods.onRelease = function(reg, releasedOn, droppedEntity)
-        Bridge.handleDropOnBoard(boardId, droppedEntity)
+        local handled = Bridge.handleDropOnBoard(boardId, droppedEntity)
+        if not handled and existingOnRelease then
+            existingOnRelease(reg, releasedOn, droppedEntity)
+        end
     end
     
     log_debug("[Bridge] Registered board " .. tostring(boardId) .. " as drop target for: " .. table.concat(acceptedCategories, ", "))
@@ -113,29 +117,26 @@ end
 -- Drop Handlers
 --------------------------------------------------------------------------------
 
---- Handle a drop on a planning board (from inventory)
---- @param boardId number The board that received the drop
---- @param droppedEntity number The dropped card entity
+--- @return boolean handled Whether the bridge handled this drop
 function Bridge.handleDropOnBoard(boardId, droppedEntity)
     if not registry:valid(droppedEntity) then
-        log_debug("[Bridge] handleDropOnBoard: invalid dropped entity")
-        return
+        return false
     end
     
     local boardConfig = registeredBoards[boardId]
     if not boardConfig then
-        log_debug("[Bridge] handleDropOnBoard: board not registered")
-        return
+        return false
     end
     
-    -- Get card data
     local script = getScriptTableFromEntityID(droppedEntity)
     if not script then
-        log_debug("[Bridge] handleDropOnBoard: dropped entity has no script")
-        return
+        return false
     end
     
-    -- Check if card category is accepted
+    if not CardSpaceConverter.isScreenSpace(droppedEntity) then
+        return false
+    end
+    
     local category = script.category
     local accepted = false
     for _, cat in ipairs(boardConfig.acceptedCategories) do
@@ -147,34 +148,22 @@ function Bridge.handleDropOnBoard(boardId, droppedEntity)
     
     if not accepted then
         log_debug("[Bridge] handleDropOnBoard: rejected category " .. tostring(category))
-        -- TODO: Snap card back to original position
-        return
+        return false
     end
     
-    -- Check if card came from inventory (screen-space)
-    if CardSpaceConverter.isScreenSpace(droppedEntity) then
-        -- Card is from inventory - need to convert
-        log_debug("[Bridge] Moving card from inventory to board " .. tostring(boardId))
-        
-        -- 1. Remove from inventory grid
-        local PlayerInventory = require("ui.player_inventory")
-        PlayerInventory.removeCard(droppedEntity)
-        
-        -- 2. Convert to world-space
-        CardSpaceConverter.toWorldSpace(droppedEntity)
-        
-        -- 3. Add to board (uses existing gameplay.lua function)
-        if addCardToBoard then
-            addCardToBoard(droppedEntity, boardId)
-        end
-        
-        -- 4. Emit event
-        signal.emit("card_equipped_to_board", droppedEntity, boardId)
-    else
-        -- Card is already world-space (moving between boards)
-        log_debug("[Bridge] Moving card between boards")
-        -- Existing board-to-board logic in gameplay.lua handles this
+    log_debug("[Bridge] Moving card from inventory to board " .. tostring(boardId))
+    
+    local PlayerInventory = require("ui.player_inventory")
+    PlayerInventory.removeCard(droppedEntity)
+    
+    CardSpaceConverter.toWorldSpace(droppedEntity)
+    
+    if addCardToBoard then
+        addCardToBoard(droppedEntity, boardId)
     end
+    
+    signal.emit("card_equipped_to_board", droppedEntity, boardId)
+    return true
 end
 
 --- Handle a drop on inventory grid (from board)

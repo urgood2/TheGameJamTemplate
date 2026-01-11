@@ -19,12 +19,12 @@ CardSpaceConverter.toScreenSpace(cardEntity)
 COORDINATE SPACES:
 -----------------
 - Screen-space: Fixed to screen, ignores camera. Used for UI inventory.
-  - Has ObjectAttachedToUITag
+  - Has ScreenSpaceCollisionMarker (set by transform.set_space)
   - transform.set_space(entity, "screen")
   - Collision via UI quadtree
 
 - World-space: Follows camera. Used for planning boards.
-  - NO ObjectAttachedToUITag
+  - NO ScreenSpaceCollisionMarker
   - transform.set_space(entity, "world")
   - Collision via world quadtree
   - Has PLANNING_STATE tag
@@ -36,30 +36,16 @@ local CardSpaceConverter = {}
 
 local component_cache = require("core.component_cache")
 
---------------------------------------------------------------------------------
--- Convert to World Space (Inventory -> Board)
---------------------------------------------------------------------------------
-
---- Convert card from screen-space (inventory) to world-space (board)
---- @param cardEntity number Entity ID of the card
---- @return boolean success
 function CardSpaceConverter.toWorldSpace(cardEntity)
     if not registry:valid(cardEntity) then 
         log_warn("[CardSpaceConverter] toWorldSpace: invalid entity")
         return false 
     end
     
-    -- 1. Remove screen-space markers
-    if ObjectAttachedToUITag and registry:has(cardEntity, ObjectAttachedToUITag) then
-        registry:remove(cardEntity, ObjectAttachedToUITag)
-    end
-    
-    -- 2. Set transform to world space
     if transform and transform.set_space then
         transform.set_space(cardEntity, "world")
     end
     
-    -- 3. Update state tags for planning mode visibility
     if clear_state_tags then
         clear_state_tags(cardEntity)
     end
@@ -70,7 +56,6 @@ function CardSpaceConverter.toWorldSpace(cardEntity)
         remove_default_state_tag(cardEntity)
     end
     
-    -- 4. Ensure collision is enabled for world quadtree
     local go = component_cache.get(cardEntity, GameObject)
     if go then
         go.state.collisionEnabled = true
@@ -82,30 +67,16 @@ function CardSpaceConverter.toWorldSpace(cardEntity)
     return true
 end
 
---------------------------------------------------------------------------------
--- Convert to Screen Space (Board -> Inventory)
---------------------------------------------------------------------------------
-
---- Convert card from world-space (board) to screen-space (inventory)
---- @param cardEntity number Entity ID of the card
---- @return boolean success
 function CardSpaceConverter.toScreenSpace(cardEntity)
     if not registry:valid(cardEntity) then 
         log_warn("[CardSpaceConverter] toScreenSpace: invalid entity")
         return false 
     end
     
-    -- 1. Add screen-space markers
-    if ObjectAttachedToUITag and not registry:has(cardEntity, ObjectAttachedToUITag) then
-        registry:emplace(cardEntity, ObjectAttachedToUITag)
-    end
-    
-    -- 2. Set transform to screen space
     if transform and transform.set_space then
         transform.set_space(cardEntity, "screen")
     end
     
-    -- 3. Update state tags (screen-space UI uses default_state)
     if clear_state_tags then
         clear_state_tags(cardEntity)
     end
@@ -113,7 +84,6 @@ function CardSpaceConverter.toScreenSpace(cardEntity)
         add_state_tag(cardEntity, "default_state")
     end
     
-    -- 4. Ensure collision is enabled for UI quadtree
     local go = component_cache.get(cardEntity, GameObject)
     if go then
         go.state.collisionEnabled = true
@@ -125,22 +95,19 @@ function CardSpaceConverter.toScreenSpace(cardEntity)
     return true
 end
 
---------------------------------------------------------------------------------
--- Utility: Check Current Space
---------------------------------------------------------------------------------
-
---- Check if card is in screen-space
---- @param cardEntity number Entity ID
---- @return boolean
 function CardSpaceConverter.isScreenSpace(cardEntity)
     if not registry:valid(cardEntity) then return false end
-    return ObjectAttachedToUITag and registry:has(cardEntity, ObjectAttachedToUITag)
+    if transform and transform.is_screen_space then
+        return transform.is_screen_space(cardEntity)
+    end
+    if transform and transform.get_space then
+        return transform.get_space(cardEntity) == "screen"
+    end
+    return false
 end
 
---- Check if card is in world-space
---- @param cardEntity number Entity ID
---- @return boolean
 function CardSpaceConverter.isWorldSpace(cardEntity)
+    if not registry:valid(cardEntity) then return false end
     return not CardSpaceConverter.isScreenSpace(cardEntity)
 end
 

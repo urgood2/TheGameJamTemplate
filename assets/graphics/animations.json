@@ -1,469 +1,469 @@
 {
-    "sword_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "Buff n Debuff P3 01_0.png",
-                "duration_seconds": 0.05,
-                "fg_color": "WHITE",
-                "bg_color": "NONE"
-            },
-            {
-                "sprite_UUID": "Buff n Debuff P3 01_1.png",
-                "duration_seconds": 0.05,
-                "fg_color": "WHITE",
-                "bg_color": "NONE"
-            },
-            {
-                "sprite_UUID": "Buff n Debuff P3 01_2.png",
-                "duration_seconds": 0.05,
-                "fg_color": "WHITE",
-                "bg_color": "NONE"
-            },
-            {
-                "sprite_UUID": "Buff n Debuff P3 01_3.png",
-                "duration_seconds": 0.05,
-                "fg_color": "WHITE",
-                "bg_color": "NONE"
-            },
-            {
-                "sprite_UUID": "Buff n Debuff P3 01_4.png",
-                "duration_seconds": 0.05,
-                "fg_color": "WHITE",
-                "bg_color": "NONE"
-            },
-            {
-                "sprite_UUID": "Buff n Debuff P3 01_5.png",
-                "duration_seconds": 0.05,
-                "fg_color": "WHITE",
-                "bg_color": "NONE"
-            },
-            {
-                "sprite_UUID": "Buff n Debuff P3 01_6.png",
-                "duration_seconds": 0.05,
-                "fg_color": "WHITE",
-                "bg_color": "NONE"
-            },
-            {
-                "sprite_UUID": "Buff n Debuff P3 01_7.png",
-                "duration_seconds": 0.05,
-                "fg_color": "WHITE",
-                "bg_color": "NONE"
-            },
-            {
-                "sprite_UUID": "Buff n Debuff P3 01_8.png",
-                "duration_seconds": 0.05,
-                "fg_color": "WHITE",
-                "bg_color": "NONE"
-            },
-            {
-                "sprite_UUID": "Buff n Debuff P3 01_9.png",
-                "duration_seconds": 0.05,
-                "fg_color": "WHITE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "checkbox": {
-        "frames": [
-            {
-                "sprite_UUID": "1_10_4157_950_alpha_theroguelike",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "divider_anim_000": {
-        "frames": [
-            {
-                "sprite_UUID": "divider-000.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "divider_anim_001": {
-        "frames": [
-            {
-                "sprite_UUID": "divider-001.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "divider_anim_002": {
-        "frames": [
-            {
-                "sprite_UUID": "divider-002.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "divider_anim_003": {
-        "frames": [
-            {
-                "sprite_UUID": "divider-003.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "divider_anim_004": {
-        "frames": [
-            {
-                "sprite_UUID": "divider-004.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "divider_anim_005": {
-        "frames": [
-            {
-                "sprite_UUID": "divider-005.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "divider_anim_fade_000": {
-        "frames": [
-            {
-                "sprite_UUID": "divider-fade-000.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "divider_anim_fade_001": {
-        "frames": [
-            {
-                "sprite_UUID": "divider-fade-001.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "divider_anim_fade_002": {
-        "frames": [
-            {
-                "sprite_UUID": "divider-fade-002.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "divider_anim_fade_003": {
-        "frames": [
-            {
-                "sprite_UUID": "divider-fade-003.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "divider_anim_fade_004": {
-        "frames": [
-            {
-                "sprite_UUID": "divider-fade-004.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "divider_anim_fade_005": {
-        "frames": [
-            {
-                "sprite_UUID": "divider-fade-005.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "right_arrow": {
-        "frames": [
-            {
-                "sprite_UUID": "right.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "left_arrow": {
-        "frames": [
-            {
-                "sprite_UUID": "left.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "gear_icon_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "gear.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "mouse_left_outline_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "mouse_left_outline.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "mouse_right_outline_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "mouse_right_outline.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "keyboard_enter_outline_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "keyboard_enter_outline.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "keyboard_space_outline_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "keyboard_space_outline.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "krill_1_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "krill.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "krill_2_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "krill-1.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "krill_3_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "krill-2.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "krill_4_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "krill-3.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "whale_dust_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "4169-TheRoguelike_1_10_alpha_962.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "dream_weaver_antenna_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "3509-TheRoguelike_1_10_alpha_302.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "resonance_beacon_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "3973-TheRoguelike_1_10_alpha_766.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "whale_song_essence_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "3840-TheRoguelike_1_10_alpha_633.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "gathererMK2Anim": {
-        "frames": [
-            {
-                "sprite_UUID": "3639-TheRoguelike_1_10_alpha_432.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "krillHomeSmallAnim": {
-        "frames": [
-            {
-                "sprite_UUID": "3223-TheRoguelike_1_10_alpha_16.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "krillHomeLargeAnim": {
-        "frames": [
-            {
-                "sprite_UUID": "3246-TheRoguelike_1_10_alpha_39.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "dust_to_crystal_converterAnim": {
-        "frames": [
-            {
-                "sprite_UUID": "3961-TheRoguelike_1_10_alpha_754.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "crystal_to_wafer_converterAnim": {
-        "frames": [
-            {
-                "sprite_UUID": "3972-TheRoguelike_1_10_alpha_765.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "wafer_to_chip_converterAnim": {
-        "frames": [
-            {
-                "sprite_UUID": "3971-TheRoguelike_1_10_alpha_764.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "crystal_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "4037-TheRoguelike_1_10_alpha_830.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "wafer_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "4033-TheRoguelike_1_10_alpha_826.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "chip_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "4071-TheRoguelike_1_10_alpha_864.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "song_essence_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "4002-TheRoguelike_1_10_alpha_795.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "discord_icon_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "Socials 16x16_Discord.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "bluesky_icon_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "Socials 16x16_Bsky.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "blue_whale9_anim": {
+  "sword_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "Buff n Debuff P3 01_0.png",
+        "duration_seconds": 0.05,
+        "fg_color": "WHITE",
+        "bg_color": "NONE"
+      },
+      {
+        "sprite_UUID": "Buff n Debuff P3 01_1.png",
+        "duration_seconds": 0.05,
+        "fg_color": "WHITE",
+        "bg_color": "NONE"
+      },
+      {
+        "sprite_UUID": "Buff n Debuff P3 01_2.png",
+        "duration_seconds": 0.05,
+        "fg_color": "WHITE",
+        "bg_color": "NONE"
+      },
+      {
+        "sprite_UUID": "Buff n Debuff P3 01_3.png",
+        "duration_seconds": 0.05,
+        "fg_color": "WHITE",
+        "bg_color": "NONE"
+      },
+      {
+        "sprite_UUID": "Buff n Debuff P3 01_4.png",
+        "duration_seconds": 0.05,
+        "fg_color": "WHITE",
+        "bg_color": "NONE"
+      },
+      {
+        "sprite_UUID": "Buff n Debuff P3 01_5.png",
+        "duration_seconds": 0.05,
+        "fg_color": "WHITE",
+        "bg_color": "NONE"
+      },
+      {
+        "sprite_UUID": "Buff n Debuff P3 01_6.png",
+        "duration_seconds": 0.05,
+        "fg_color": "WHITE",
+        "bg_color": "NONE"
+      },
+      {
+        "sprite_UUID": "Buff n Debuff P3 01_7.png",
+        "duration_seconds": 0.05,
+        "fg_color": "WHITE",
+        "bg_color": "NONE"
+      },
+      {
+        "sprite_UUID": "Buff n Debuff P3 01_8.png",
+        "duration_seconds": 0.05,
+        "fg_color": "WHITE",
+        "bg_color": "NONE"
+      },
+      {
+        "sprite_UUID": "Buff n Debuff P3 01_9.png",
+        "duration_seconds": 0.05,
+        "fg_color": "WHITE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "checkbox": {
+    "frames": [
+      {
+        "sprite_UUID": "1_10_4157_950_alpha_theroguelike",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "divider_anim_000": {
+    "frames": [
+      {
+        "sprite_UUID": "divider-000.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "divider_anim_001": {
+    "frames": [
+      {
+        "sprite_UUID": "divider-001.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "divider_anim_002": {
+    "frames": [
+      {
+        "sprite_UUID": "divider-002.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "divider_anim_003": {
+    "frames": [
+      {
+        "sprite_UUID": "divider-003.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "divider_anim_004": {
+    "frames": [
+      {
+        "sprite_UUID": "divider-004.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "divider_anim_005": {
+    "frames": [
+      {
+        "sprite_UUID": "divider-005.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "divider_anim_fade_000": {
+    "frames": [
+      {
+        "sprite_UUID": "divider-fade-000.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "divider_anim_fade_001": {
+    "frames": [
+      {
+        "sprite_UUID": "divider-fade-001.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "divider_anim_fade_002": {
+    "frames": [
+      {
+        "sprite_UUID": "divider-fade-002.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "divider_anim_fade_003": {
+    "frames": [
+      {
+        "sprite_UUID": "divider-fade-003.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "divider_anim_fade_004": {
+    "frames": [
+      {
+        "sprite_UUID": "divider-fade-004.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "divider_anim_fade_005": {
+    "frames": [
+      {
+        "sprite_UUID": "divider-fade-005.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "right_arrow": {
+    "frames": [
+      {
+        "sprite_UUID": "right.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "left_arrow": {
+    "frames": [
+      {
+        "sprite_UUID": "left.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "gear_icon_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "gear.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "mouse_left_outline_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "mouse_left_outline.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "mouse_right_outline_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "mouse_right_outline.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "keyboard_enter_outline_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "keyboard_enter_outline.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "keyboard_space_outline_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "keyboard_space_outline.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "krill_1_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "krill.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "krill_2_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "krill-2.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "krill_3_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "krill-2.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "krill_4_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "krill-3.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "whale_dust_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "4169-TheRoguelike_1_10_alpha_962.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "dream_weaver_antenna_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "3509-TheRoguelike_1_10_alpha_302.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "resonance_beacon_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "3973-TheRoguelike_1_10_alpha_766.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "whale_song_essence_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "3840-TheRoguelike_1_10_alpha_633.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "gathererMK2Anim": {
+    "frames": [
+      {
+        "sprite_UUID": "3639-TheRoguelike_1_10_alpha_432.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "krillHomeSmallAnim": {
+    "frames": [
+      {
+        "sprite_UUID": "3223-TheRoguelike_1_10_alpha_16.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "krillHomeLargeAnim": {
+    "frames": [
+      {
+        "sprite_UUID": "3246-TheRoguelike_1_10_alpha_39.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "dust_to_crystal_converterAnim": {
+    "frames": [
+      {
+        "sprite_UUID": "3961-TheRoguelike_1_10_alpha_754.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "crystal_to_wafer_converterAnim": {
+    "frames": [
+      {
+        "sprite_UUID": "3972-TheRoguelike_1_10_alpha_765.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "wafer_to_chip_converterAnim": {
+    "frames": [
+      {
+        "sprite_UUID": "3971-TheRoguelike_1_10_alpha_764.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "crystal_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "4037-TheRoguelike_1_10_alpha_830.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "wafer_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "4033-TheRoguelike_1_10_alpha_826.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "chip_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "4071-TheRoguelike_1_10_alpha_864.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "song_essence_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "4002-TheRoguelike_1_10_alpha_795.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "discord_icon_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "Socials 16x16_Discord.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "bluesky_icon_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "Socials 16x16_Bsky.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "blue_whale9_anim": {
     "frames": [
       {
         "sprite_UUID": "blue-whale9.png",
@@ -477,16 +477,6 @@
     "frames": [
       {
         "sprite_UUID": "3654-TheRoguelike_1_10_alpha_447.png",
-        "duration_seconds": 5,
-        "fg_color": "NONE",
-        "bg_color": "NONE"
-      }
-    ]
-  },
-  "krill_2_anim": {
-    "frames": [
-      {
-        "sprite_UUID": "krill-2.png",
         "duration_seconds": 5,
         "fg_color": "NONE",
         "bg_color": "NONE"
@@ -752,5 +742,64 @@
         "bg_color": "NONE"
       }
     ]
+  },
+  "test_anim_no-tag": {
+    "frames": [
+      {
+        "sprite_UUID": "test_anim_no-tag_0000.png",
+        "duration_seconds": 0.1,
+        "fg_color": "WHITE",
+        "bg_color": "NONE"
+      },
+      {
+        "sprite_UUID": "test_anim_no-tag_0001.png",
+        "duration_seconds": 0.1,
+        "fg_color": "WHITE",
+        "bg_color": "NONE"
+      },
+      {
+        "sprite_UUID": "test_anim_no-tag_0002.png",
+        "duration_seconds": 0.1,
+        "fg_color": "WHITE",
+        "bg_color": "NONE"
+      },
+      {
+        "sprite_UUID": "test_anim_no-tag_0003.png",
+        "duration_seconds": 0.1,
+        "fg_color": "WHITE",
+        "bg_color": "NONE"
+      },
+      {
+        "sprite_UUID": "test_anim_no-tag_0004.png",
+        "duration_seconds": 0.1,
+        "fg_color": "WHITE",
+        "bg_color": "NONE"
+      },
+      {
+        "sprite_UUID": "test_anim_no-tag_0005.png",
+        "duration_seconds": 0.1,
+        "fg_color": "WHITE",
+        "bg_color": "NONE"
+      },
+      {
+        "sprite_UUID": "test_anim_no-tag_0006.png",
+        "duration_seconds": 0.1,
+        "fg_color": "WHITE",
+        "bg_color": "NONE"
+      },
+      {
+        "sprite_UUID": "test_anim_no-tag_0007.png",
+        "duration_seconds": 0.1,
+        "fg_color": "WHITE",
+        "bg_color": "NONE"
+      },
+      {
+        "sprite_UUID": "test_anim_no-tag_0008.png",
+        "duration_seconds": 0.1,
+        "fg_color": "WHITE",
+        "bg_color": "NONE"
+      }
+    ],
+    "aseDirection": "forward"
   }
 }

@@ -509,6 +509,7 @@ end
 function createInventoryTestButton()
     local dsl = require("ui.ui_syntax_sugar")
     local PlayerInventory = require("ui.player_inventory")
+    local timer = require("core.timer")
     
     local buttonDef = dsl.root {
         config = {
@@ -527,6 +528,17 @@ function createInventoryTestButton()
                     if playSoundEffect then playSoundEffect("effects", "button-click") end
                     PlayerInventory.toggle()
                     log_debug("[TEST] PlayerInventory.isOpen() = " .. tostring(PlayerInventory.isOpen()))
+                    
+                    if PlayerInventory.isOpen() then
+                        timer.after_opts({
+                            delay = 0.1,
+                            action = function()
+                                PlayerInventory.spawnDummyCards()
+                                log_debug("[TEST] Dummy cards spawned")
+                            end,
+                            tag = "spawn_dummy_cards"
+                        })
+                    end
                 end
             })
         }

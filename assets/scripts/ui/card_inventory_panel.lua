@@ -619,11 +619,11 @@ local function setupKeyboardHandler()
         tag = "inventory_keyboard",
         group = TIMER_GROUP,
         action = function()
-            if IsKeyPressed and IsKeyPressed(KEY_I) then
+            if isKeyPressed and isKeyPressed("KEY_I") then
                 CardInventoryPanel.toggle()
             end
             
-            if state.isOpen and IsKeyPressed and IsKeyPressed(KEY_ESCAPE) then
+            if state.isOpen and isKeyPressed and isKeyPressed("KEY_ESCAPE") then
                 CardInventoryPanel.close()
             end
         end,
@@ -637,8 +637,6 @@ end
 --- Open the inventory panel
 function CardInventoryPanel.open()
     if state.isOpen then return end
-    
-    log_debug("[CardInventoryPanel] Opening...")
     
     local screenW = globals.screenWidth()
     local screenH = globals.screenHeight()
@@ -829,6 +827,119 @@ end
 --- @return boolean
 function CardInventoryPanel.isCardLocked(cardEntity)
     return isCardLocked(cardEntity)
+end
+
+local function createDummyCard(spriteName, cardData)
+    local entity = animation_system.createAnimatedObjectWithTransform(
+        spriteName, true, 0, 0, nil, true
+    )
+    
+    if not entity or not registry:valid(entity) then
+        log_warn("[CardInventoryPanel] Failed to create dummy card: " .. tostring(spriteName))
+        return nil
+    end
+    
+    animation_system.resizeAnimationObjectsInEntityToFit(entity, 60, 84)
+    
+    if add_state_tag then
+        add_state_tag(entity, "default_state")
+    end
+    
+    if layer_order_system and layer_order_system.assignZIndexToEntity then
+        local z = (z_orders and z_orders.ui_tooltips or 800) + 500
+        layer_order_system.assignZIndexToEntity(entity, z)
+    end
+    
+    if ObjectAttachedToUITag and not registry:has(entity, ObjectAttachedToUITag) then
+        registry:emplace(entity, ObjectAttachedToUITag)
+    end
+    
+    if transform and transform.set_space then
+        transform.set_space(entity, "screen")
+    end
+    
+    local go = component_cache.get(entity, GameObject)
+    if go then
+        go.state.dragEnabled = true
+        go.state.collisionEnabled = true
+        go.state.hoverEnabled = true
+    end
+    
+    if shader_pipeline and shader_pipeline.ShaderPipelineComponent then
+        local shaderComp = registry:emplace(entity, shader_pipeline.ShaderPipelineComponent)
+        shaderComp:addPass("3d_skew")
+        
+        local skewSeed = math.random() * 10000
+        local passes = shaderComp.passes
+        if passes and #passes >= 1 then
+            local pass = passes[#passes]
+            if pass and pass.shaderName and pass.shaderName:sub(1, 7) == "3d_skew" then
+                pass.customPrePassFunction = function()
+                    if globalShaderUniforms then
+                        globalShaderUniforms:set(pass.shaderName, "rand_seed", skewSeed)
+                    end
+                end
+            end
+        end
+    end
+    
+    state.cardRegistry[entity] = cardData
+    
+    if setScriptTableForEntityID then
+        setScriptTableForEntityID(entity, cardData)
+    end
+    
+    return entity
+end
+
+function CardInventoryPanel.spawnDummyCards()
+    local dummyCards = {
+        { sprite = "card-new-test-action.png", name = "Fireball", element = "Fire", manaCost = 12, category = "wands" },
+        { sprite = "card-new-test-action.png", name = "Ice Shard", element = "Ice", manaCost = 8, category = "wands" },
+        { sprite = "card-new-test-action.png", name = "Lightning", element = "Lightning", manaCost = 15, category = "wands" },
+        { sprite = "card-new-test-trigger.png", name = "On Hit", element = nil, manaCost = 5, category = "triggers" },
+        { sprite = "card-new-test-trigger.png", name = "On Kill", element = nil, manaCost = 10, category = "triggers" },
+        { sprite = "card-new-test-modifier.png", name = "Damage Up", element = nil, manaCost = 3, category = "actions" },
+        { sprite = "card-new-test-modifier.png", name = "Speed Up", element = nil, manaCost = 4, category = "actions" },
+        { sprite = "frame0012.png", name = "Basic Sword", element = nil, manaCost = 0, category = "equipment" },
+        { sprite = "frame0012.png", name = "Shield", element = nil, manaCost = 0, category = "equipment" },
+    }
+    
+    for _, cardDef in ipairs(dummyCards) do
+        local entity = createDummyCard(cardDef.sprite, {
+            name = cardDef.name,
+            element = cardDef.element,
+            manaCost = cardDef.manaCost,
+            description = "A " .. cardDef.name .. " card.",
+        })
+        
+        if entity then
+            local gridEntity = state.grids[cardDef.category]
+            if gridEntity then
+                local slotIndex = grid.addItem(gridEntity, entity)
+                if slotIndex then
+                    log_debug("[CardInventoryPanel] Added " .. cardDef.name .. " to " .. cardDef.category .. " slot " .. slotIndex)
+                end
+            end
+        end
+    end
+    
+    log_debug("[CardInventoryPanel] Spawned dummy cards")
+end
+
+function CardInventoryPanel.init()
+    CardInventoryPanel.open()
+    
+    timer.after_opts({
+        delay = 0.5,
+        tag = "spawn_dummy_cards",
+        group = TIMER_GROUP,
+        action = function()
+            CardInventoryPanel.spawnDummyCards()
+        end,
+    })
+    
+    log_debug("[CardInventoryPanel] Init complete")
 end
 
 return CardInventoryPanel

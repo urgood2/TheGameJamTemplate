@@ -118,6 +118,8 @@ local component_cache, entity_cache, timer, signal = imports.core()
 | Add rarity-based text effects to tooltips | \pageref{recipe:tooltip-effects} |
 | Create grid layout | \pageref{recipe:ui-grid} |
 | Create tabbed UI panels | \pageref{recipe:tabs-ui} |
+| Show modal dialogs (alert/confirm) | \pageref{recipe:modal} |
+| Create inventory grid | \pageref{recipe:inventory-grid} |
 | Use styled localization for colored text | \pageref{recipe:styled-localization} |
 | Create localized tooltip with color codes | \pageref{recipe:localized-tooltip} |
 | **Combat** | |
@@ -5374,6 +5376,228 @@ local combined = TooltipEffects.combine("pop_in", "gentle_float")
 **Gotcha:** Effect strings are passed to the C++ text rendering system. Invalid effects are ignored.
 
 **Gotcha:** Use `TooltipEffects.combine()` to merge multiple effects into a single string.
+
+***
+
+## Modal Dialogs
+
+\label{recipe:modal}
+
+**When to use:** Show alerts, confirmations, or custom dialogs that overlay the game.
+
+```lua
+local modal = require("core.modal")
+
+-- Simple alert (one OK button)
+modal.alert("Something happened!")
+modal.alert("Error!", { title = "Warning", color = "red" })
+
+-- Confirm dialog (two buttons)
+modal.confirm("Are you sure?", {
+    onConfirm = function() doThing() end,
+    onCancel = function() print("cancelled") end,
+    confirmText = "Yes",
+    cancelText = "No"
+})
+
+-- Custom content modal
+modal.show({
+    title = "Custom Modal",
+    width = 600,
+    height = 400,
+    content = function(dsl)
+        return dsl.vbox {
+            children = {
+                dsl.text("Line 1"),
+                dsl.text("Line 2")
+            }
+        }
+    end,
+    buttons = {
+        { text = "Action", color = "blue", action = function() end },
+        { text = "Close" }
+    }
+})
+
+-- Close current modal
+modal.close()
+
+-- Check if modal is open
+if modal.isOpen() then ... end
+```
+
+*— from core/modal.lua:1-505*
+
+**API Reference:**
+
+| Function | Description |
+|----------|-------------|
+| `modal.alert(message, opts?)` | Simple alert with OK button |
+| `modal.confirm(message, opts)` | Confirm/Cancel dialog |
+| `modal.show(config)` | Custom modal with full config |
+| `modal.close()` | Close current modal |
+| `modal.isOpen()` | Check if a modal is open |
+| `modal.update(dt)` | Call from game loop for ESC handling |
+| `modal.draw(dt)` | Call from game loop for backdrop rendering |
+
+**Alert/Confirm Options:**
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `title` | string | Modal title |
+| `color` | string | Background color |
+| `onClose` | function | Callback when closed |
+| `onConfirm` | function | Callback on confirm (confirm only) |
+| `onCancel` | function | Callback on cancel (confirm only) |
+| `confirmText` | string | Confirm button text (default: "OK") |
+| `cancelText` | string | Cancel button text (default: "Cancel") |
+
+**Show Config:**
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `title` | string | Modal title |
+| `width` | number | Modal width (default: 400) |
+| `height` | number | Modal height (default: 250) |
+| `color` | string | Background color |
+| `content` | function/table | Content builder function or DSL table |
+| `buttons` | table | Array of button definitions |
+| `onClose` | function | Callback when closed |
+
+**Button Definition:**
+
+```lua
+{ text = "Action", color = "blue", action = function() end, closeOnClick = true }
+```
+
+**Gotcha:** Only one modal can be open at a time. Opening a new modal closes the previous one.
+
+**Gotcha:** ESC key and backdrop click close the modal. Use `_type = "confirm"` in config to disable backdrop dismiss.
+
+**Gotcha:** Call `modal.update(dt)` and `modal.draw(dt)` from your game loop for full functionality.
+
+***
+
+## Inventory Grid
+
+\label{recipe:inventory-grid}
+
+**When to use:** Create grid-based inventories for items, cards, or equipment.
+
+```lua
+local grid = require("core.inventory_grid")
+
+-- After creating grid with dsl.inventoryGrid():
+
+-- Get dimensions
+local rows, cols = grid.getDimensions(gridEntity)
+local capacity = grid.getCapacity(gridEntity)
+
+-- Item access
+local item = grid.getItemAtIndex(gridEntity, slotIndex)  -- By slot (1-based)
+local item = grid.getItemAt(gridEntity, row, col)        -- By row/col (1-based)
+local items = grid.getAllItems(gridEntity)               -- { [slotIndex] = item }
+
+-- Slot access
+local slotEntity = grid.getSlotEntity(gridEntity, slotIndex)
+local usedCount = grid.getUsedSlotCount(gridEntity)
+local emptyCount = grid.getEmptySlotCount(gridEntity)
+
+-- Find operations
+local slotIndex = grid.findSlotContaining(gridEntity, itemEntity)
+local slotIndex = grid.findEmptySlot(gridEntity)
+
+-- Item operations (emit events)
+local success, slot, action = grid.addItem(gridEntity, itemEntity, slotIndex?)
+local item = grid.removeItem(gridEntity, slotIndex)
+local success = grid.moveItem(gridEntity, fromSlot, toSlot)
+local success = grid.swapItems(gridEntity, slot1, slot2)
+
+-- Stack operations (for stackable grids)
+local count = grid.getStackCount(gridEntity, slotIndex)
+local success = grid.addToStack(gridEntity, slotIndex, amount)
+local success, transferred = grid.mergeStacks(gridEntity, fromSlot, toSlot)
+
+-- Slot state
+grid.setSlotLocked(gridEntity, slotIndex, true)
+local canAccept = grid.canSlotAccept(gridEntity, slotIndex, itemEntity)
+
+-- Cleanup
+grid.cleanup(gridEntity)  -- Call when destroying grid
+```
+
+*— from core/inventory_grid.lua:1-590*
+
+**Events (via hump.signal):**
+
+| Event | Parameters | Description |
+|-------|------------|-------------|
+| `"grid_item_added"` | gridEntity, slotIndex, itemEntity | Item placed in slot |
+| `"grid_item_removed"` | gridEntity, slotIndex, itemEntity | Item removed from slot |
+| `"grid_item_moved"` | gridEntity, fromSlot, toSlot, itemEntity | Item moved within grid |
+| `"grid_items_swapped"` | gridEntity, slot1, slot2, item1, item2 | Two items swapped |
+| `"grid_stack_changed"` | gridEntity, slotIndex, itemEntity, oldCount, newCount | Stack count changed |
+| `"grid_stack_split"` | gridEntity, slotIndex, amount, newItemEntity | Stack was split |
+
+**Listening to Events:**
+
+```lua
+local signal = require("external.hump.signal")
+
+signal.register("grid_item_added", function(gridEntity, slotIndex, itemEntity)
+    print("Item added to slot", slotIndex)
+end)
+
+signal.register("grid_items_swapped", function(gridEntity, s1, s2, item1, item2)
+    print("Swapped items between slots", s1, "and", s2)
+end)
+```
+
+**Grid Configuration (via DSL):**
+
+```lua
+local dsl = require("ui.ui_syntax_sugar")
+
+local gridDef = dsl.inventoryGrid {
+    rows = 3,
+    cols = 4,
+    slotSize = 64,
+    spacing = 4,
+    stackable = true,       -- Enable stacking
+    maxStackSize = 99,      -- Max items per stack
+    filter = function(item, slotIndex)
+        -- Return true if item can be placed in slot
+        return true
+    end,
+    onSlotClick = function(gridEntity, slotIndex, item)
+        print("Clicked slot", slotIndex)
+    end
+}
+```
+
+**Slot-Specific Configuration:**
+
+```lua
+-- Configure individual slots
+local slots = {
+    [1] = { locked = true },                    -- Locked slot
+    [5] = { filter = function(item) return item.type == "weapon" end },
+    [10] = { background = "slot_special.png" }  -- Custom background
+}
+
+dsl.inventoryGrid {
+    rows = 2, cols = 5,
+    slots = slots
+}
+```
+
+**Gotcha:** Slot indices are 1-based and sequential (1 to rows*cols).
+
+**Gotcha:** `addItem` without slotIndex auto-finds first empty slot.
+
+**Gotcha:** Stack operations require `stackable = true` in grid config.
+
+**Gotcha:** Call `grid.cleanup(gridEntity)` when destroying the grid to free internal data.
 
 \newpage
 

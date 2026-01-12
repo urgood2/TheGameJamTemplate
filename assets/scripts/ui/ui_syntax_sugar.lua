@@ -882,24 +882,36 @@ function dsl.inventoryGrid(opts)
             local slotConfig = slotsConfig[slotIndex] or {}
             local defaultSlotColor = gridConfig.slotColor and color(gridConfig.slotColor) or color("gray")
             local slotColor = slotConfig.color or defaultSlotColor
+            local slotSprite = slotConfig.sprite or gridConfig.slotSprite
+            
+            local slotNodeConfig = {
+                id = slotId,
+                color = slotColor,
+                minWidth = slotW,
+                minHeight = slotH,
+                maxWidth = slotW,
+                maxHeight = slotH,
+                hover = true,
+                canCollide = true,
+                emboss = gridConfig.slotEmboss or 1,
+                align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+                _slotIndex = slotIndex,
+                _gridId = gridId,
+                _isInventorySlot = true,
+            }
+            
+            if slotSprite then
+                slotNodeConfig._isSpritePanel = true
+                slotNodeConfig._spriteName = slotSprite
+                slotNodeConfig._sizing = "fixed"
+                slotNodeConfig._borders = { left = 0, top = 0, right = 0, bottom = 0 }
+                slotNodeConfig.color = nil
+                slotNodeConfig.emboss = nil
+            end
             
             local slotNode = def{
                 type = "HORIZONTAL_CONTAINER",
-                config = {
-                    id = slotId,
-                    color = slotColor,
-                    minWidth = slotW,
-                    minHeight = slotH,
-                    maxWidth = slotW,
-                    maxHeight = slotH,
-                    hover = true,
-                    canCollide = true,
-                    emboss = gridConfig.slotEmboss or 1,
-                    align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
-                    _slotIndex = slotIndex,
-                    _gridId = gridId,
-                    _isInventorySlot = true,
-                },
+                config = slotNodeConfig,
                 children = {}
             }
             

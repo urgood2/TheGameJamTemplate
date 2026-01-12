@@ -446,7 +446,19 @@
 		"stats_no_data": "No data",
 		"stats_no_stats_category": "No stats in this category",
 		"stats_keybind_help": "C: toggle  1-5: tabs  Esc: close",
-		"cards_in_deck": "Cards in deck: {count}"
+		"cards_in_deck": "Cards in deck: {count}",
+		"inventory": {
+			"title": "Card Inventory",
+			"tab_equipment": "Equipment",
+			"tab_wands": "Wands",
+			"tab_triggers": "Triggers",
+			"tab_actions": "Actions",
+			"search_placeholder": "Search cards...",
+			"sort_name": "Name",
+			"sort_cost": "Cost",
+			"sort_all": "Sort All",
+			"slot_count": "{current} / {max} slots"
+		}
 	},
 	"joker": {
 		"pyromaniac": {

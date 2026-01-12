@@ -96,6 +96,7 @@ function myCustomCallback()
 end
 
 function initMainMenu()
+    log_debug("[initMainMenu] Starting main menu initialization...")
     
     add_layer_shader("sprites", "pixelate_image")
     -- add_fullscreen_shader("pixelate_image")
@@ -502,6 +503,55 @@ function initMainMenu()
     PatchNotesModal.init()
     createPatchNotesButton()
     createTabDemo()
+    createInventoryTestButton()
+end
+
+function createInventoryTestButton()
+    local dsl = require("ui.ui_syntax_sugar")
+    local PlayerInventory = require("ui.player_inventory")
+    local timer = require("core.timer")
+    
+    local buttonDef = dsl.root {
+        config = {
+            color = util.getColor("jade_green"),
+            padding = 8,
+            emboss = 3,
+        },
+        children = {
+            dsl.button("Test Inventory", {
+                fontSize = 14,
+                color = "transparent",
+                textColor = "white",
+                shadow = true,
+                onClick = function()
+                    log_debug("[TEST] Inventory button clicked!")
+                    if playSoundEffect then playSoundEffect("effects", "button-click") end
+                    PlayerInventory.toggle()
+                    log_debug("[TEST] PlayerInventory.isOpen() = " .. tostring(PlayerInventory.isOpen()))
+                    
+                    if PlayerInventory.isOpen() then
+                        timer.after_opts({
+                            delay = 0.1,
+                            action = function()
+                                PlayerInventory.spawnDummyCards()
+                                log_debug("[TEST] Dummy cards spawned")
+                            end,
+                            tag = "spawn_dummy_cards"
+                        })
+                    end
+                end
+            })
+        }
+    }
+    
+    mainMenuEntities.inventory_test_button = dsl.spawn(
+        { x = 120, y = globals.screenHeight() - 60 },
+        buttonDef,
+        "ui",
+        100
+    )
+    ui.box.set_draw_layer(mainMenuEntities.inventory_test_button, "ui")
+    log_debug("[TRACE] Inventory test button created")
 end
 
 function createTabDemo()
@@ -575,26 +625,65 @@ function createTabDemo()
                             return SpriteShowcase.createShowcase()
                         end
                     },
+                    {
+                        id = "inventory",
+                        label = "Inventory",
+                        content = function()
+                            local PlayerInventory = require("ui.player_inventory")
+                            return dsl.vbox {
+                                config = { padding = 8 },
+                                children = {
+                                    dsl.text("Player Inventory Test", { fontSize = 16, color = "white", shadow = true }),
+                                    dsl.spacer(8),
+                                    dsl.text("Status: " .. (PlayerInventory.isOpen() and "OPEN" or "CLOSED"), { fontSize = 12, color = "lightgray" }),
+                                    dsl.spacer(12),
+                                    dsl.button("Open Inventory", {
+                                        fontSize = 14,
+                                        color = "jade_green",
+                                        textColor = "white",
+                                        minWidth = 140,
+                                        onClick = function()
+                                            if playSoundEffect then playSoundEffect("effects", "button-click") end
+                                            PlayerInventory.open()
+                                            print("[TEST] PlayerInventory.open() called")
+                                        end
+                                    }),
+                                    dsl.spacer(4),
+                                    dsl.button("Close Inventory", {
+                                        fontSize = 14,
+                                        color = "darkred",
+                                        textColor = "white",
+                                        minWidth = 140,
+                                        onClick = function()
+                                            if playSoundEffect then playSoundEffect("effects", "button-click") end
+                                            PlayerInventory.close()
+                                            print("[TEST] PlayerInventory.close() called")
+                                        end
+                                    }),
+                                    dsl.spacer(4),
+                                    dsl.button("Toggle Inventory", {
+                                        fontSize = 14,
+                                        color = "steel_blue",
+                                        textColor = "white",
+                                        minWidth = 140,
+                                        onClick = function()
+                                            if playSoundEffect then playSoundEffect("effects", "button-click") end
+                                            PlayerInventory.toggle()
+                                            print("[TEST] PlayerInventory.toggle() called - now " .. (PlayerInventory.isOpen() and "OPEN" or "CLOSED"))
+                                        end
+                                    }),
+                                }
+                            }
+                        end
+                    },
                 }
             }
         }
     }
     
-    mainMenuEntities.tab_demo_uibox = dsl.spawn({ x = 50, y = 50 }, tabDef)
+    local panelWidth = 220
+    mainMenuEntities.tab_demo_uibox = dsl.spawn({ x = globals.screenWidth() - panelWidth - 20, y = 20 }, tabDef)
     ui.box.set_draw_layer(mainMenuEntities.tab_demo_uibox, "ui")
-    
-    -- Initialize inventory grid demo
-    if InventoryGridDemo then
-        print("[TRACE] Initializing InventoryGridDemo...")
-        local ok, err = pcall(InventoryGridDemo.init)
-        if not ok then
-            print("[ERROR] InventoryGridDemo.init() failed: " .. tostring(err))
-        else
-            print("[TRACE] InventoryGridDemo initialized successfully")
-        end
-    else
-        print("[WARN] InventoryGridDemo module not loaded, skipping init")
-    end
 end
 
 function createPatchNotesButton()

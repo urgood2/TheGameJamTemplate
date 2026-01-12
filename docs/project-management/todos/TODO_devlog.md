@@ -562,3 +562,17 @@
   - Updated inventory grid API with improved documentation and demo.
   - Added modal system infrastructure and Lua analysis reports.
   - Documented debug key mappings/conflicts, RAII patterns, and memory management guidelines.
+
+01/10/2026
+  - Continued C++ refactoring: extracted LDTK field converters, added binding_helpers.hpp with common Lua conversion utilities, and completed Phase 1 quick wins for code quality.
+  - Fixed Lua type definitions (scaleX/scaleY → scale) for proper transform consistency.
+  - Updated refactoring plan documentation with implementation status.
+
+01/11/2026
+  - Implemented card inventory panel with 4-tab grid system (Equipment, Wands, Triggers, Actions) supporting drag-drop, hover tooltips, sort/filter, and lock functionality.
+  - Added localization keys (EN/KR) for inventory UI strings.
+  - Synced Lua cookbook with Modal and Inventory Grid API recipes.
+
+01/12/2026
+  - Implemented Phase 1-2 of player inventory: infrastructure with open/close/toggle API, card space converter for screen/world transforms, and inventory-board drag-drop bridge.
+  - Built visible inventory panel with header, tabs, footer, and grid area using dsl.inventoryGrid with proper tab switching and cleanup.

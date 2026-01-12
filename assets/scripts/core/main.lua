@@ -681,7 +681,8 @@ function createTabDemo()
         }
     }
     
-    mainMenuEntities.tab_demo_uibox = dsl.spawn({ x = 50, y = 50 }, tabDef)
+    local panelWidth = 220
+    mainMenuEntities.tab_demo_uibox = dsl.spawn({ x = globals.screenWidth() - panelWidth - 20, y = 20 }, tabDef)
     ui.box.set_draw_layer(mainMenuEntities.tab_demo_uibox, "ui")
 end
 

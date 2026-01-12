@@ -103,6 +103,7 @@ local SLOT_HEIGHT = 48
 local SLOT_SPACING = 4
 local PANEL_WIDTH = 400
 local PANEL_HEIGHT = 280
+local RENDER_LAYER = "sprites"
 
 local function createGridForTab(tabId, x, y, visible)
     local cfg = TAB_CONFIG[tabId]
@@ -143,9 +144,9 @@ local function createGridForTab(tabId, x, y, visible)
         end,
     }
     
-    local gridEntity = dsl.spawn({ x = spawnX, y = y }, gridDef, "ui", 150)
+    local gridEntity = dsl.spawn({ x = spawnX, y = y }, gridDef, RENDER_LAYER, 150)
     if ui and ui.box and ui.box.set_draw_layer then
-        ui.box.set_draw_layer(gridEntity, "ui")
+        ui.box.set_draw_layer(gridEntity, RENDER_LAYER)
     end
     
     local success = InventoryGridInit.initializeIfGrid(gridEntity, cfg.id)
@@ -323,19 +324,21 @@ end
 function PlayerInventory.open()
     if state.isOpen then return end
     
-    local screenW = globals.screenWidth()
-    local screenH = globals.screenHeight()
+    local camX, camY = 0, 0
+    if _G.camera and _G.camera.getPosition then
+        camX, camY = _G.camera.getPosition()
+    end
     
-    state.panelX = (screenW - PANEL_WIDTH) / 2
-    state.panelY = screenH - PANEL_HEIGHT - 20
+    state.panelX = camX - PANEL_WIDTH / 2
+    state.panelY = camY + 50
     state.gridX = state.panelX + 10
     state.gridY = state.panelY + 70
     
     local panelDef = createPanelDefinition()
-    state.panelEntity = dsl.spawn({ x = state.panelX, y = state.panelY }, panelDef, "ui", 100)
+    state.panelEntity = dsl.spawn({ x = state.panelX, y = state.panelY }, panelDef, RENDER_LAYER, 100)
     
     if ui and ui.box and ui.box.set_draw_layer then
-        ui.box.set_draw_layer(state.panelEntity, "ui")
+        ui.box.set_draw_layer(state.panelEntity, RENDER_LAYER)
     end
     
     state.tabButtons = {}
@@ -457,7 +460,7 @@ function PlayerInventory.spawnDummyCards()
         if createNewCard then
             local card = createNewCard(cardId, -9999, -9999, nil)
             if card and registry:valid(card) then
-                CardSpaceConverter.toScreenSpace(card)
+                CardSpaceConverter.toWorldSpace(card)
                 
                 local go = component_cache.get(card, GameObject)
                 if go then

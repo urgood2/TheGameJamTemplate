@@ -34,6 +34,7 @@ local component_cache = require("core.component_cache")
 local timer = require("core.timer")
 local InventoryGridInit = require("ui.inventory_grid_init")
 local shader_pipeline = _G.shader_pipeline
+local QuickEquip = require("ui.inventory_quick_equip")
 
 local TIMER_GROUP = "player_inventory"
 local PANEL_ID = "player_inventory_panel"
@@ -609,7 +610,10 @@ local function initializeInventory()
     
     setupSignalHandlers()
     setupCardRenderTimer()
-    
+
+    -- Initialize quick equip (right-click to equip cards to wand)
+    QuickEquip.init()
+
     state.initialized = true
     log_debug("[PlayerInventory] Initialized (hidden)")
 end
@@ -671,9 +675,12 @@ end
 
 function PlayerInventory.destroy()
     if not state.initialized then return end
-    
+
     log_debug("[PlayerInventory] Destroying...")
-    
+
+    -- Cleanup quick equip system
+    QuickEquip.destroy()
+
     cleanupSignalHandlers()
     timer.kill_group(TIMER_GROUP)
     

@@ -18,6 +18,9 @@ local grid = require("core.inventory_grid")
 local component_cache = require("core.component_cache")
 local signal = require("external.hump.signal")
 local z_orders = require("core.z_orders")
+local transfer = require("core.grid_transfer")
+local itemRegistry = require("core.item_location_registry")
+local UIDecorations = require("ui.ui_decorations")
 
 --------------------------------------------------------------------------------
 -- Z-Order constants for drag operations
@@ -78,7 +81,10 @@ function InventoryGridInit.initializeIfGrid(boxEntity, gridId)
         onSlotClick = gridData.onSlotClick,
         onItemStack = gridData.onItemStack,
     })
-    
+
+    -- Register grid for invalid drag target feedback (US-017)
+    InventoryGridInit.registerGridForDragFeedback(boxEntity, rows, cols)
+
     log_debug("[InventoryGridInit] Initialized grid: " .. tostring(gridId) .. " (" .. rows .. "x" .. cols .. ")")
     
     return true
@@ -187,12 +193,13 @@ function InventoryGridInit.handleItemDrop(gridEntity, slotIndex, droppedEntity)
         return false
     end
 
-    local sourceSlot = grid.findSlotContaining(gridEntity, droppedEntity)
+    -- Check if item is in THIS grid or a DIFFERENT grid
+    local sourceSlotInThisGrid = grid.findSlotContaining(gridEntity, droppedEntity)
     local success = false
 
-    if sourceSlot then
-        -- Item is already in this grid, move/swap/merge
-        if sourceSlot == slotIndex then
+    if sourceSlotInThisGrid then
+        -- Item is already in this grid, move/swap/merge (same-grid operation)
+        if sourceSlotInThisGrid == slotIndex then
             -- Dropped on same slot, mark as valid but no-op
             InventoryGridInit.markValidDrop(droppedEntity)
             return true
@@ -203,12 +210,12 @@ function InventoryGridInit.handleItemDrop(gridEntity, slotIndex, droppedEntity)
             local sourceStackId = InventoryGridInit._getStackId(droppedEntity)
             local targetStackId = InventoryGridInit._getStackId(targetItem)
             if sourceStackId and sourceStackId == targetStackId then
-                success = grid.mergeStacks(gridEntity, sourceSlot, slotIndex)
+                success = grid.mergeStacks(gridEntity, sourceSlotInThisGrid, slotIndex)
             else
-                success = grid.swapItems(gridEntity, sourceSlot, slotIndex)
+                success = grid.swapItems(gridEntity, sourceSlotInThisGrid, slotIndex)
             end
         else
-            success = grid.moveItem(gridEntity, sourceSlot, slotIndex)
+            success = grid.moveItem(gridEntity, sourceSlotInThisGrid, slotIndex)
         end
 
         if success then
@@ -217,20 +224,63 @@ function InventoryGridInit.handleItemDrop(gridEntity, slotIndex, droppedEntity)
             if slotEntity then
                 InventoryGridInit.centerItemOnSlot(droppedEntity, slotEntity)
             end
+            -- Update location registry for same-grid moves
+            itemRegistry.register(droppedEntity, gridEntity, slotIndex)
         end
     else
-        -- New item being dropped into grid
-        local slot, action
-        success, slot, action = grid.addItem(gridEntity, droppedEntity, slotIndex)
-        if success then
-            if action == "stacked" then
-                if registry:valid(droppedEntity) then
-                    registry:destroy(droppedEntity)
-                end
-            elseif action == "placed" then
-                local slotEntity = grid.getSlotEntity(gridEntity, slotIndex)
+        -- Item is NOT in this grid - check if it's coming from another grid (cross-grid transfer)
+        local sourceLocation = itemRegistry.getLocation(droppedEntity)
+
+        if sourceLocation and sourceLocation.grid and sourceLocation.grid ~= gridEntity then
+            -- CROSS-GRID TRANSFER: Use atomic transfer module
+            log_debug("[DRAG-DEBUG] Cross-grid transfer from grid=" .. tostring(sourceLocation.grid) ..
+                      " slot=" .. sourceLocation.slot .. " to grid=" .. tostring(gridEntity) .. " slot=" .. slotIndex)
+
+            local result = transfer.transferItem({
+                item = droppedEntity,
+                fromGrid = sourceLocation.grid,
+                fromSlot = sourceLocation.slot,
+                toGrid = gridEntity,
+                toSlot = slotIndex,
+                onSuccess = function(res)
+                    log_debug("[DRAG-DEBUG] Cross-grid transfer SUCCESS to slot " .. res.toSlot)
+                    -- Emit cross-grid transfer event for wand adapter integration
+                    signal.emit("grid_cross_transfer_success", droppedEntity, sourceLocation.grid, gridEntity, res.toSlot)
+                end,
+                onFail = function(reason)
+                    log_debug("[DRAG-DEBUG] Cross-grid transfer FAILED: " .. tostring(reason))
+                end,
+            })
+
+            success = result.success
+
+            if success then
+                -- Snap to new slot
+                local slotEntity = grid.getSlotEntity(gridEntity, result.toSlot or slotIndex)
                 if slotEntity then
                     InventoryGridInit.centerItemOnSlot(droppedEntity, slotEntity)
+                end
+                -- Update draggable reference to new grid
+                InventoryGridInit.updateDraggableGridRef(droppedEntity, gridEntity)
+            end
+        else
+            -- New item being dropped into grid (not from any registered grid)
+            local slot, action
+            success, slot, action = grid.addItem(gridEntity, droppedEntity, slotIndex)
+            if success then
+                if action == "stacked" then
+                    if registry:valid(droppedEntity) then
+                        registry:destroy(droppedEntity)
+                    end
+                elseif action == "placed" then
+                    local slotEntity = grid.getSlotEntity(gridEntity, slotIndex)
+                    if slotEntity then
+                        InventoryGridInit.centerItemOnSlot(droppedEntity, slotEntity)
+                    end
+                    -- Register new item in location registry
+                    itemRegistry.register(droppedEntity, gridEntity, slot)
+                    -- Update draggable reference
+                    InventoryGridInit.updateDraggableGridRef(droppedEntity, gridEntity)
                 end
             end
         end
@@ -344,6 +394,167 @@ function InventoryGridInit.getDragState(itemEntity)
 end
 
 --------------------------------------------------------------------------------
+-- Invalid Drag Target Feedback (US-017)
+-- Shows red border on slots that cannot accept the currently dragged item
+--------------------------------------------------------------------------------
+
+local _invalidSlotOverlays = {}  -- [gridEntityKey][slotIndex] = overlayId
+local _registeredGrids = {}      -- Track grids for drag feedback
+
+--- Register a grid for invalid slot feedback during drag operations.
+-- Called automatically during grid initialization.
+-- @param gridEntity The grid entity
+-- @param rows Number of rows
+-- @param cols Number of columns
+function InventoryGridInit.registerGridForDragFeedback(gridEntity, rows, cols)
+    if not gridEntity or not registry:valid(gridEntity) then return end
+
+    local gridKey = tostring(gridEntity)
+    if _registeredGrids[gridKey] then return end  -- Already registered
+
+    _registeredGrids[gridKey] = {
+        entity = gridEntity,
+        rows = rows,
+        cols = cols,
+    }
+    _invalidSlotOverlays[gridKey] = {}
+
+    -- Add invalid drag overlay to each slot
+    local slotCount = rows * cols
+    for i = 1, slotCount do
+        local slotEntity = grid.getSlotEntity(gridEntity, i)
+        if slotEntity and registry:valid(slotEntity) then
+            local overlayId = UIDecorations.addCustomOverlay(slotEntity, {
+                id = "invalid_drag_overlay_" .. gridKey .. "_" .. i,
+                z = 10,  -- Above normal hover overlays
+                visible = function(slotEid)
+                    return InventoryGridInit._isSlotInvalidForCurrentDrag(gridEntity, i, slotEid)
+                end,
+                onDraw = function(slotEid, x, y, w, h, z)
+                    InventoryGridInit._drawInvalidSlotFeedback(slotEid, x, y, w, h, z)
+                end,
+            })
+            _invalidSlotOverlays[gridKey][i] = overlayId
+        end
+    end
+
+    log_debug("[InventoryGridInit] Registered grid " .. gridKey .. " for drag feedback (" .. slotCount .. " slots)")
+end
+
+--- Unregister a grid from drag feedback (call during cleanup)
+-- @param gridEntity The grid entity
+function InventoryGridInit.unregisterGridForDragFeedback(gridEntity)
+    if not gridEntity then return end
+
+    local gridKey = tostring(gridEntity)
+    local gridInfo = _registeredGrids[gridKey]
+    if not gridInfo then return end
+
+    -- Remove overlays from slots
+    local overlays = _invalidSlotOverlays[gridKey]
+    if overlays then
+        for i, overlayId in pairs(overlays) do
+            local slotEntity = grid.getSlotEntity(gridEntity, i)
+            if slotEntity then
+                UIDecorations.remove(slotEntity, overlayId)
+            end
+        end
+    end
+
+    _invalidSlotOverlays[gridKey] = nil
+    _registeredGrids[gridKey] = nil
+
+    log_debug("[InventoryGridInit] Unregistered grid " .. gridKey .. " from drag feedback")
+end
+
+--- Check if a slot is invalid for the currently dragged item.
+-- Used by the visibility function of invalid drag overlays.
+-- @param gridEntity The grid entity
+-- @param slotIndex The slot index
+-- @param slotEntity The slot entity (for hover detection)
+-- @return true if slot should show invalid feedback
+function InventoryGridInit._isSlotInvalidForCurrentDrag(gridEntity, slotIndex, slotEntity)
+    -- Only show feedback during active drag
+    local inputState = input and input.getState and input.getState()
+    if not inputState then return false end
+
+    local draggedEntity = inputState.cursor_dragging_target
+    if not draggedEntity or not registry:valid(draggedEntity) then
+        return false
+    end
+
+    -- Only show feedback when hovering over this slot
+    local hoveredEntity = inputState.cursor_hovering_target
+    if hoveredEntity ~= slotEntity then
+        return false
+    end
+
+    -- Check if the dragged entity is a draggable item
+    local go = component_cache.get(draggedEntity, GameObject)
+    if not go or not go.state.dragEnabled then
+        return false
+    end
+
+    -- Check if this slot can accept the dragged item
+    local canAccept = grid.canSlotAccept(gridEntity, slotIndex, draggedEntity)
+
+    -- Show invalid feedback when canSlotAccept returns false
+    return not canAccept
+end
+
+--- Draw invalid slot feedback (red border/indicator).
+-- Called by the custom overlay's onDraw function.
+-- @param slotEntity The slot entity
+-- @param x Slot x position
+-- @param y Slot y position
+-- @param w Slot width
+-- @param h Slot height
+-- @param z Base z-order
+function InventoryGridInit._drawInvalidSlotFeedback(slotEntity, x, y, w, h, z)
+    if not command_buffer or not command_buffer.queueDrawRectangle then return end
+
+    local uiLayer = layers and layers.ui or "ui"
+    local space = layer and layer.DrawCommandSpace and layer.DrawCommandSpace.Screen
+
+    -- Draw red border indicating invalid drop target
+    local borderColor = Color.new(220, 60, 60, 200)  -- Semi-transparent red
+    local borderWidth = 3
+
+    -- Top border
+    command_buffer.queueDrawRectangle(uiLayer, function() end,
+        x, y, w, borderWidth, borderColor, z, space)
+    -- Bottom border
+    command_buffer.queueDrawRectangle(uiLayer, function() end,
+        x, y + h - borderWidth, w, borderWidth, borderColor, z, space)
+    -- Left border
+    command_buffer.queueDrawRectangle(uiLayer, function() end,
+        x, y, borderWidth, h, borderColor, z, space)
+    -- Right border
+    command_buffer.queueDrawRectangle(uiLayer, function() end,
+        x + w - borderWidth, y, borderWidth, h, borderColor, z, space)
+
+    -- Draw semi-transparent red overlay
+    local overlayColor = Color.new(180, 50, 50, 80)  -- Light red tint
+    command_buffer.queueDrawRectangle(uiLayer, function() end,
+        x + borderWidth, y + borderWidth,
+        w - borderWidth * 2, h - borderWidth * 2,
+        overlayColor, z - 1, space)
+end
+
+--- Get currently dragged entity (helper for external use)
+-- @return draggedEntity or nil
+function InventoryGridInit.getCurrentlyDraggedEntity()
+    local inputState = input and input.getState and input.getState()
+    if not inputState then return nil end
+
+    local dragged = inputState.cursor_dragging_target
+    if dragged and registry:valid(dragged) then
+        return dragged
+    end
+    return nil
+end
+
+--------------------------------------------------------------------------------
 -- Helper: Make an entity draggable with full drag support
 --------------------------------------------------------------------------------
 
@@ -382,27 +593,99 @@ function InventoryGridInit.centerItemOnSlot(itemEntity, slotEntity)
     if not registry:valid(itemEntity) or not registry:valid(slotEntity) then
         return
     end
-    
+
     local slotTransform = component_cache.get(slotEntity, Transform)
     local itemTransform = component_cache.get(itemEntity, Transform)
-    
+
     if not slotTransform or not itemTransform then
         return
     end
-    
+
     local slotX = slotTransform.visualX or slotTransform.actualX or 0
     local slotY = slotTransform.visualY or slotTransform.actualY or 0
     local slotW = slotTransform.actualW or 64
     local slotH = slotTransform.actualH or 64
-    
+
     local itemW = itemTransform.actualW or 64
     local itemH = itemTransform.actualH or 64
-    
+
     local centerX = slotX + (slotW - itemW) / 2
     local centerY = slotY + (slotH - itemH) / 2
-    
+
     itemTransform.actualX = centerX
     itemTransform.actualY = centerY
 end
+
+--------------------------------------------------------------------------------
+-- Item-to-grid reference tracking (for cross-grid drag updates)
+--------------------------------------------------------------------------------
+local _itemGridRef = {}  -- [entityKey] = gridEntity
+
+--- Update an item's grid reference after cross-grid transfer.
+-- This ensures future drags reference the correct source grid.
+-- @param itemEntity Entity ID of the item
+-- @param newGridEntity Entity ID of the new grid
+function InventoryGridInit.updateDraggableGridRef(itemEntity, newGridEntity)
+    if not itemEntity then return end
+
+    local key = tostring(itemEntity)
+    _itemGridRef[key] = newGridEntity
+
+    log_debug("[InventoryGridInit] Updated grid ref for entity=" .. key .. " to grid=" .. tostring(newGridEntity))
+end
+
+--- Get the grid reference for an item.
+-- @param itemEntity Entity ID of the item
+-- @return gridEntity or nil
+function InventoryGridInit.getItemGridRef(itemEntity)
+    if not itemEntity then return nil end
+    return _itemGridRef[tostring(itemEntity)]
+end
+
+--- Clear grid reference when item is destroyed or removed from all grids.
+-- @param itemEntity Entity ID of the item
+function InventoryGridInit.clearItemGridRef(itemEntity)
+    if not itemEntity then return end
+    _itemGridRef[tostring(itemEntity)] = nil
+end
+
+--------------------------------------------------------------------------------
+-- Inventory Full Feedback Handler
+--------------------------------------------------------------------------------
+
+local _inventoryFullHandlerRegistered = false
+
+--- Show user feedback when inventory is full.
+-- Displays popup message and plays error sound.
+-- @param gridEntity The grid that is full
+-- @param itemEntity The item that couldn't be added
+local function onInventoryFull(gridEntity, itemEntity)
+    log_debug("[InventoryGridInit] Inventory full - grid=" .. tostring(gridEntity) .. " item=" .. tostring(itemEntity))
+
+    -- Play error sound
+    if playSoundEffect then
+        playSoundEffect("effects", "error_buzz", 0.8)
+    end
+
+    -- Show popup above the item if it has a valid transform
+    if itemEntity and registry:valid(itemEntity) then
+        local popup = require("core.popup")
+        if popup and popup.above then
+            popup.above(itemEntity, "Inventory full!", { color = "red" })
+        end
+    end
+end
+
+--- Register the inventory full handler (called once at module load)
+function InventoryGridInit.registerInventoryFullHandler()
+    if _inventoryFullHandlerRegistered then return end
+
+    signal.register("inventory_full", onInventoryFull)
+    _inventoryFullHandlerRegistered = true
+    log_debug("[InventoryGridInit] Registered inventory_full handler")
+end
+
+-- Auto-register the handler when module loads
+InventoryGridInit.registerInventoryFullHandler()
 
 return InventoryGridInit

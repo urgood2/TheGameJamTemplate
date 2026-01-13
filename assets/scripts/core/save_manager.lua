@@ -14,7 +14,7 @@ local function log_warn(msg)  print("[SaveManager] WARN: " .. msg) end
 local function log_error(msg) print("[SaveManager] ERROR: " .. msg) end
 
 local SaveManager = {
-    SAVE_VERSION = 1,
+    SAVE_VERSION = 2,  -- v2 adds grid_inventory support
     SAVE_PATH = "saves/profile.json",
     BACKUP_PATH = "saves/profile.json.bak",
 

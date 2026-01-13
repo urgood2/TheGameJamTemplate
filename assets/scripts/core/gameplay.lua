@@ -5774,6 +5774,49 @@ function initPlanningPhase()
         log_debug("[gameplay] wandAdapter initialized with " .. #wandDefsForAdapter .. " wand definitions")
     end
 
+    -- ============ GRID INVENTORY SAVE/LOAD INTEGRATION ============
+    -- Set up references and card recreator for save/load system
+    if gameplay_cfg.USE_GRID_INVENTORY then
+        local GridInventorySave = require("core.grid_inventory_save")
+        local PlayerInventory = require("ui.player_inventory")
+        local WandLoadoutUI = require("ui.wand_loadout_ui")
+
+        -- Set references for save/load
+        GridInventorySave.setPlayerInventoryRef(PlayerInventory)
+        GridInventorySave.setWandLoadoutRef(WandLoadoutUI)
+        GridInventorySave.setWandAdapterRef(wandAdapter)
+
+        -- Card recreator function for loading saved cards
+        GridInventorySave.setCardRecreator(function(cardId, category)
+            if not cardId then return nil end
+
+            local cardEntity
+            if category == "trigger" or WandEngine.trigger_card_defs[cardId] then
+                -- Create trigger card
+                cardEntity = createNewTriggerSlotCard(cardId, -9999, -9999, PLANNING_STATE)
+            else
+                -- Create action/modifier card
+                cardEntity = createNewCard(cardId, -9999, -9999, PLANNING_STATE)
+            end
+
+            if cardEntity and registry:valid(cardEntity) then
+                -- Configure for grid inventory UI
+                if ObjectAttachedToUITag and not registry:has(cardEntity, ObjectAttachedToUITag) then
+                    registry:emplace(cardEntity, ObjectAttachedToUITag)
+                end
+                if transform and transform.set_space then
+                    transform.set_space(cardEntity, "screen")
+                end
+                log_debug("[GridInventorySave] Recreated card: " .. cardId)
+            end
+
+            return cardEntity
+        end)
+
+        log_debug("[gameplay] Grid inventory save/load integration configured")
+    end
+    -- ============ END GRID INVENTORY SAVE/LOAD INTEGRATION ============
+
     -- Card tooltips are built lazily on hover to avoid spawning hundreds of UI boxes up front.
 
     activate_state(WAND_TOOLTIP_STATE) -- keep activated at  all times.

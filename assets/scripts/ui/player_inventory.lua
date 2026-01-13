@@ -795,6 +795,16 @@ function PlayerInventory.getGrids()
     return state.grids
 end
 
+--- Get the grid entity for a specific tab/category.
+-- @param tabId string Tab identifier ("triggers", "actions", "modifiers", "equipment", "wands")
+-- @return number|nil Grid entity or nil if not found
+function PlayerInventory.getGridForTab(tabId)
+    if not state.initialized then
+        return nil
+    end
+    return state.grids[tabId]
+end
+
 function PlayerInventory.getLockedCards()
     return state.lockedCards
 end

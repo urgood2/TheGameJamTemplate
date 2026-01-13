@@ -950,6 +950,9 @@ function main.init()
     -- Load modules that register collectors
     Statistics = require("core.statistics") -- Global for C++ debug UI access
 
+    -- Register grid inventory save collector (registers itself with SaveManager on require)
+    local GridInventorySave = require("core.grid_inventory_save")
+
     math.randomseed(12345)
     if PROFILE_ENABLED then
         profile.start()

@@ -342,19 +342,19 @@ function UIDecorations.draw(entity, baseZ)
                 if overlayTransform then
                     overlayTransform.actualX = elementX + ox
                     overlayTransform.actualY = elementY + oy
-                    overlayTransform.z = baseZ + overlay.z
+                end
+                if layer_order_system and layer_order_system.assignZIndexToEntity then
+                    layer_order_system.assignZIndexToEntity(overlay.entity, baseZ + overlay.z)
                 end
                 
-                local go = component_cache.get(overlay.entity, GameObject)
-                if go then
-                    go.state.isActive = true
-                    go.state.alpha = overlay.opacity
+                if add_state_tag then
+                    add_state_tag(overlay.entity, "default_state")
                 end
             end
         elseif overlay.entity and registry:valid(overlay.entity) then
-            local go = component_cache.get(overlay.entity, GameObject)
-            if go then
-                go.state.isActive = false
+            local overlayTransform = component_cache.get(overlay.entity, Transform)
+            if overlayTransform then
+                overlayTransform.actualX = -9999
             end
         end
     end
@@ -378,12 +378,13 @@ function UIDecorations.draw(entity, baseZ)
                 if badgeTransform then
                     badgeTransform.actualX = elementX + ox
                     badgeTransform.actualY = elementY + oy
-                    badgeTransform.z = baseZ + 2
+                end
+                if layer_order_system and layer_order_system.assignZIndexToEntity then
+                    layer_order_system.assignZIndexToEntity(badge.entity, baseZ + 2)
                 end
                 
-                local go = component_cache.get(badge.entity, GameObject)
-                if go then
-                    go.state.isActive = true
+                if add_state_tag then
+                    add_state_tag(badge.entity, "default_state")
                 end
             end
         elseif visible and badge.text and badge.text ~= "" then
@@ -421,9 +422,9 @@ function UIDecorations.draw(entity, baseZ)
                 )
             end
         elseif badge.entity and registry:valid(badge.entity) then
-            local go = component_cache.get(badge.entity, GameObject)
-            if go then
-                go.state.isActive = false
+            local badgeTransform = component_cache.get(badge.entity, Transform)
+            if badgeTransform then
+                badgeTransform.actualX = -9999
             end
         end
     end

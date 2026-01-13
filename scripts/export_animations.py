@@ -130,7 +130,7 @@ def build_frame_data_for_tag(
 ) -> List[dict]:
     frame_data = []
     for frame_idx in range(tag_from, tag_to + 1):
-        frame_filename = f"{base_name}_{tag_name}_{frame_idx - tag_from:03d}.png"
+        frame_filename = f"{base_name}_{tag_name}_{frame_idx - tag_from:04d}.png"
         frame_meta = (
             frames_meta[frame_idx] if frame_idx < len(frames_meta) else frames_meta[0]
         )
@@ -151,7 +151,7 @@ def build_frame_data_for_tag(
 def build_frame_data_no_tag(base_name: str, frames_meta: list) -> List[dict]:
     frame_data = []
     for frame_idx, frame_meta in enumerate(frames_meta):
-        frame_filename = f"{base_name}_no-tag_{frame_idx:03d}.png"
+        frame_filename = f"{base_name}_no-tag_{frame_idx:04d}.png"
         duration_ms = frame_meta.get("duration", 100)
         duration_s = duration_ms / 1000.0
 
@@ -174,7 +174,7 @@ def export_tagged_frames(
         tag_from = tag["from"]
         tag_to = tag["to"]
 
-        output_pattern = str(EXPORT_DIR / f"{base_name}_{tag_name}_{{frame:03d}}.png")
+        output_pattern = str(EXPORT_DIR / f"{base_name}_{tag_name}_{{frame0000}}.png")
 
         cmd = [
             aseprite_exe,
@@ -200,7 +200,7 @@ def export_tagged_frames(
 def export_untagged_frames(
     aseprite_exe: str, source_file: Path, base_name: str, verbose: bool
 ) -> None:
-    output_pattern = str(EXPORT_DIR / f"{base_name}_no-tag_{{frame:03d}}.png")
+    output_pattern = str(EXPORT_DIR / f"{base_name}_no-tag_{{frame0000}}.png")
 
     cmd = [
         aseprite_exe,

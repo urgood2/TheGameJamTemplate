@@ -143,39 +143,36 @@ local function setGridItemsVisible(gridEntity, visible)
     end
 end
 
-local function createSimpleCard(spriteName, x, y, cardData)
+local function createSimpleCard(spriteName, x, y, cardData, gridEntity)
     local entity = animation_system.createAnimatedObjectWithTransform(
         spriteName, true, x or 0, y or 0, nil, true
     )
-    
+
     if not entity or not registry:valid(entity) then
         log_warn("[PlayerInventory] Failed to create card entity for: " .. tostring(spriteName))
         return nil
     end
-    
+
     animation_system.resizeAnimationObjectsInEntityToFit(entity, 56, 78)
-    
+
     if add_state_tag then
         add_state_tag(entity, "default_state")
     end
-    
+
+    -- Set normal z-order (not drag z-order); drag z-order is handled by InventoryGridInit
+    local UI_CARD_Z = (z_orders and z_orders.ui_tooltips or 800) - 100
     if layer_order_system and layer_order_system.assignZIndexToEntity then
-        local z = (z_orders and z_orders.ui_tooltips or 800) + 500
-        layer_order_system.assignZIndexToEntity(entity, z)
+        layer_order_system.assignZIndexToEntity(entity, UI_CARD_Z)
     end
-    
+
     if ObjectAttachedToUITag and not registry:has(entity, ObjectAttachedToUITag) then
         registry:emplace(entity, ObjectAttachedToUITag)
     end
-    
+
     transform.set_space(entity, "screen")
-    
-    local go = component_cache.get(entity, GameObject)
-    if go then
-        go.state.dragEnabled = true
-        go.state.collisionEnabled = true
-        go.state.hoverEnabled = true
-    end
+
+    -- Setup drag-drop with proper z-order management via InventoryGridInit
+    InventoryGridInit.makeItemDraggable(entity, gridEntity)
     
     if shader_pipeline and shader_pipeline.ShaderPipelineComponent then
         local shaderPipelineComp = registry:emplace(entity, shader_pipeline.ShaderPipelineComponent)
@@ -744,22 +741,18 @@ function PlayerInventory.addCard(cardEntity, category, cardData)
     if cardData then
         state.cardRegistry[cardEntity] = cardData
     end
-    
+
     if ObjectAttachedToUITag and not registry:has(cardEntity, ObjectAttachedToUITag) then
         registry:emplace(cardEntity, ObjectAttachedToUITag)
     end
-    
+
     if transform and transform.set_space then
         transform.set_space(cardEntity, "screen")
     end
-    
-    local go = component_cache.get(cardEntity, GameObject)
-    if go then
-        go.state.dragEnabled = true
-        go.state.collisionEnabled = true
-        go.state.hoverEnabled = true
-    end
-    
+
+    -- Setup drag-drop with proper z-order management via InventoryGridInit
+    InventoryGridInit.makeItemDraggable(cardEntity, gridEntity)
+
     local success, slotIndex = grid.addItem(gridEntity, cardEntity)
     if success then
         local slotEntity = grid.getSlotEntity(gridEntity, slotIndex)
@@ -803,31 +796,30 @@ function PlayerInventory.spawnDummyCards()
     if not state.initialized then
         initializeInventory()
     end
-    
+
     local cards = {
         { id = "fireball", name = "Fireball", sprite = "card-new-test-action.png", element = "Fire", stackId = "fireball" },
         { id = "ice_shard", name = "Ice Shard", sprite = "card-new-test-action.png", element = "Ice", stackId = "ice_shard" },
         { id = "trigger", name = "Trigger", sprite = "card-new-test-trigger.png", element = nil, stackId = "trigger" },
         { id = "modifier", name = "Modifier", sprite = "card-new-test-modifier.png", element = nil, stackId = "modifier" },
     }
-    
+
+    local activeGrid = state.grids[state.activeTab]
     for i, cardDef in ipairs(cards) do
-        local entity = createSimpleCard(cardDef.sprite, -9999, -9999, cardDef)
-        if entity then
-            local activeGrid = state.grids[state.activeTab]
-            if activeGrid then
-                local success, slotIndex = grid.addItem(activeGrid, entity)
-                if success then
-                    local slotEntity = grid.getSlotEntity(activeGrid, slotIndex)
-                    if slotEntity then
-                        InventoryGridInit.centerItemOnSlot(entity, slotEntity)
-                    end
-                    log_debug("[PlayerInventory] Added dummy card " .. cardDef.name .. " to slot " .. slotIndex)
+        -- Pass gridEntity to createSimpleCard for proper drag setup
+        local entity = createSimpleCard(cardDef.sprite, -9999, -9999, cardDef, activeGrid)
+        if entity and activeGrid then
+            local success, slotIndex = grid.addItem(activeGrid, entity)
+            if success then
+                local slotEntity = grid.getSlotEntity(activeGrid, slotIndex)
+                if slotEntity then
+                    InventoryGridInit.centerItemOnSlot(entity, slotEntity)
                 end
+                log_debug("[PlayerInventory] Added dummy card " .. cardDef.name .. " to slot " .. slotIndex)
             end
         end
     end
-    
+
     log_debug("[PlayerInventory] Spawned " .. #cards .. " dummy cards")
 end
 

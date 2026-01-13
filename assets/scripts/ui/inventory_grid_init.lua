@@ -17,6 +17,18 @@ local InventoryGridInit = {}
 local grid = require("core.inventory_grid")
 local component_cache = require("core.component_cache")
 local signal = require("external.hump.signal")
+local z_orders = require("core.z_orders")
+
+--------------------------------------------------------------------------------
+-- Z-Order constants for drag operations
+--------------------------------------------------------------------------------
+local UI_CARD_Z = z_orders.ui_tooltips - 100      -- Normal cards in inventory
+local DRAG_Z = z_orders.ui_tooltips + 500         -- Dragged cards (above everything)
+
+--------------------------------------------------------------------------------
+-- Drag state tracking for return-to-origin behavior
+--------------------------------------------------------------------------------
+local _dragState = {}  -- [entityKey] = { originSlot, originGrid, originX, originY }
 
 --------------------------------------------------------------------------------
 -- Check if entity is an inventory grid and initialize it
@@ -78,12 +90,22 @@ end
 
 function InventoryGridInit.registerSlotEntities(gridEntity, gridId, rows, cols)
     -- Find each slot entity by ID and register it
+    local gridZ = 0
+    if layer_order_system and layer_order_system.getZIndex then
+        gridZ = layer_order_system.getZIndex(gridEntity)
+    end
+
     for i = 1, rows * cols do
         local slotId = gridId .. "_slot_" .. i
         local slotEntity = ui.box.GetUIEByID(registry, gridEntity, slotId)
         
         if slotEntity then
             grid.setSlotEntity(gridEntity, i, slotEntity)
+            
+            if layer_order_system and layer_order_system.assignZIndexToEntity then
+                layer_order_system.assignZIndexToEntity(slotEntity, gridZ + 1)
+            end
+
             InventoryGridInit.setupSlotInteraction(gridEntity, slotEntity, i)
         else
             log_warn("[InventoryGridInit] Could not find slot entity: " .. slotId)
@@ -142,52 +164,64 @@ end
 --------------------------------------------------------------------------------
 
 function InventoryGridInit.handleItemDrop(gridEntity, slotIndex, droppedEntity)
-    log_debug("[DRAG-DEBUG] handleItemDrop: grid=" .. tostring(gridEntity) .. 
+    log_debug("[DRAG-DEBUG] handleItemDrop: grid=" .. tostring(gridEntity) ..
               " slot=" .. slotIndex .. " dropped=" .. tostring(droppedEntity))
-    
+
     if not registry:valid(droppedEntity) then
         log_debug("[DRAG-DEBUG] REJECTED: droppedEntity invalid")
-        return
+        return false
     end
-    
+
     local go = component_cache.get(droppedEntity, GameObject)
     if not go then
         log_debug("[DRAG-DEBUG] REJECTED: droppedEntity has no GameObject")
-        return
+        return false
     end
     if not go.state.dragEnabled then
         log_debug("[DRAG-DEBUG] REJECTED: dragEnabled=" .. tostring(go.state.dragEnabled))
-        return
+        return false
     end
-    
+
     if not grid.canSlotAccept(gridEntity, slotIndex, droppedEntity) then
         log_debug("[DRAG-DEBUG] REJECTED by canSlotAccept")
-        return
+        return false
     end
-    
+
     local sourceSlot = grid.findSlotContaining(gridEntity, droppedEntity)
-    
+    local success = false
+
     if sourceSlot then
         -- Item is already in this grid, move/swap/merge
         if sourceSlot == slotIndex then
-            return
+            -- Dropped on same slot, mark as valid but no-op
+            InventoryGridInit.markValidDrop(droppedEntity)
+            return true
         end
-        
+
         local targetItem = grid.getItemAtIndex(gridEntity, slotIndex)
         if targetItem then
             local sourceStackId = InventoryGridInit._getStackId(droppedEntity)
             local targetStackId = InventoryGridInit._getStackId(targetItem)
             if sourceStackId and sourceStackId == targetStackId then
-                grid.mergeStacks(gridEntity, sourceSlot, slotIndex)
+                success = grid.mergeStacks(gridEntity, sourceSlot, slotIndex)
             else
-                grid.swapItems(gridEntity, sourceSlot, slotIndex)
+                success = grid.swapItems(gridEntity, sourceSlot, slotIndex)
             end
         else
-            grid.moveItem(gridEntity, sourceSlot, slotIndex)
+            success = grid.moveItem(gridEntity, sourceSlot, slotIndex)
+        end
+
+        if success then
+            -- Snap moved/swapped item to new slot
+            local slotEntity = grid.getSlotEntity(gridEntity, slotIndex)
+            if slotEntity then
+                InventoryGridInit.centerItemOnSlot(droppedEntity, slotEntity)
+            end
         end
     else
         -- New item being dropped into grid
-        local success, slot, action = grid.addItem(gridEntity, droppedEntity, slotIndex)
+        local slot, action
+        success, slot, action = grid.addItem(gridEntity, droppedEntity, slotIndex)
         if success then
             if action == "stacked" then
                 if registry:valid(droppedEntity) then
@@ -201,6 +235,14 @@ function InventoryGridInit.handleItemDrop(gridEntity, slotIndex, droppedEntity)
             end
         end
     end
+
+    -- Mark drop as valid to prevent snap-back to origin
+    if success then
+        InventoryGridInit.markValidDrop(droppedEntity)
+        log_debug("[DRAG-DEBUG] Valid drop, marked to prevent snap-back")
+    end
+
+    return success
 end
 
 function InventoryGridInit._getStackId(entity)
@@ -209,15 +251,131 @@ function InventoryGridInit._getStackId(entity)
 end
 
 --------------------------------------------------------------------------------
--- Helper: Make an entity draggable and add to grid
+-- Drag state management: z-order and return-to-origin
 --------------------------------------------------------------------------------
 
-function InventoryGridInit.makeItemDraggable(itemEntity)
+--- Called when a drag starts on a card. Stores origin and raises z-order.
+function InventoryGridInit.onDragStart(itemEntity, gridEntity)
+    if not registry:valid(itemEntity) then return end
+
+    local key = tostring(itemEntity)
+    local t = component_cache.get(itemEntity, Transform)
+    local originSlot = gridEntity and grid.findSlotContaining(gridEntity, itemEntity) or nil
+
+    -- Store origin information for potential return
+    _dragState[key] = {
+        originSlot = originSlot,
+        originGrid = gridEntity,
+        originX = t and t.actualX or 0,
+        originY = t and t.actualY or 0,
+        wasDroppedOnValidSlot = false,
+    }
+
+    -- Raise z-order so dragged card appears above all other UI
+    if layer_order_system and layer_order_system.assignZIndexToEntity then
+        layer_order_system.assignZIndexToEntity(itemEntity, DRAG_Z)
+    end
+
+    signal.emit("grid_item_drag_start", gridEntity, itemEntity, originSlot)
+    log_debug("[DRAG] Started dragging entity=" .. key .. " from slot=" .. tostring(originSlot))
+end
+
+--- Called when a drag ends. Either snaps to new slot or returns to origin.
+function InventoryGridInit.onDragEnd(itemEntity)
+    if not registry:valid(itemEntity) then return end
+
+    local key = tostring(itemEntity)
+    local dragInfo = _dragState[key]
+
+    if not dragInfo then
+        -- No drag state, just reset z-order
+        if layer_order_system and layer_order_system.assignZIndexToEntity then
+            layer_order_system.assignZIndexToEntity(itemEntity, UI_CARD_Z)
+        end
+        return
+    end
+
+    -- Reset z-order back to normal
+    if layer_order_system and layer_order_system.assignZIndexToEntity then
+        layer_order_system.assignZIndexToEntity(itemEntity, UI_CARD_Z)
+    end
+
+    -- If dropped on invalid location, return to original position
+    if not dragInfo.wasDroppedOnValidSlot then
+        local originGrid = dragInfo.originGrid
+        local originSlot = dragInfo.originSlot
+
+        if originGrid and originSlot then
+            -- Snap back to original slot
+            local slotEntity = grid.getSlotEntity(originGrid, originSlot)
+            if slotEntity then
+                InventoryGridInit.centerItemOnSlot(itemEntity, slotEntity)
+                log_debug("[DRAG] Returned to original slot=" .. originSlot)
+            end
+        else
+            -- No grid origin, return to exact position
+            local t = component_cache.get(itemEntity, Transform)
+            if t then
+                t.actualX = dragInfo.originX
+                t.actualY = dragInfo.originY
+                log_debug("[DRAG] Returned to original position")
+            end
+        end
+
+        signal.emit("grid_item_drag_cancelled", dragInfo.originGrid, itemEntity, originSlot)
+    end
+
+    -- Clear drag state
+    _dragState[key] = nil
+    signal.emit("grid_item_drag_end", dragInfo.originGrid, itemEntity)
+end
+
+--- Marks an entity as having been dropped on a valid slot (prevents snap-back)
+function InventoryGridInit.markValidDrop(itemEntity)
+    local key = tostring(itemEntity)
+    if _dragState[key] then
+        _dragState[key].wasDroppedOnValidSlot = true
+    end
+end
+
+--- Gets drag state for an entity (for external inspection)
+function InventoryGridInit.getDragState(itemEntity)
+    return _dragState[tostring(itemEntity)]
+end
+
+--------------------------------------------------------------------------------
+-- Helper: Make an entity draggable with full drag support
+--------------------------------------------------------------------------------
+
+function InventoryGridInit.makeItemDraggable(itemEntity, gridEntity)
     local go = component_cache.get(itemEntity, GameObject)
     if not go then return end
-    
+
     go.state.dragEnabled = true
     go.state.collisionEnabled = true
+    go.state.hoverEnabled = true
+
+    -- Setup drag start handler
+    local existingOnDrag = go.methods.onDrag
+    go.methods.onDrag = function(reg, entity)
+        -- Only trigger drag start once (check if we already have state)
+        local key = tostring(entity)
+        if not _dragState[key] then
+            InventoryGridInit.onDragStart(entity, gridEntity)
+        end
+        if existingOnDrag then
+            existingOnDrag(reg, entity)
+        end
+    end
+
+    -- Setup drag end handler
+    local existingOnStopDrag = go.methods.onStopDrag
+    go.methods.onStopDrag = function(reg, entity)
+        InventoryGridInit.onDragEnd(entity)
+        if existingOnStopDrag then
+            existingOnStopDrag(reg, entity)
+        end
+    end
 end
 
 function InventoryGridInit.centerItemOnSlot(itemEntity, slotEntity)

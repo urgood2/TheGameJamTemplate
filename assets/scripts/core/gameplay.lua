@@ -85,6 +85,11 @@ local gameplay_cfg = {
     },
 
     -- Feature flags
+    -- USE_GRID_INVENTORY: Toggle between legacy board-based and new grid-based inventory
+    -- false = Legacy inventory boards (board_sets, world-space drag)
+    -- true  = New grid inventory UI (PlayerInventory, WandLoadoutUI)
+    USE_GRID_INVENTORY = false,  -- Phase 4: Default to false for safe rollback
+
     enable_subcast_debug_ui = true,
     enable_wave_test_init = false,
     enable_joker_debug_panel = false,
@@ -211,6 +216,15 @@ function gameplay_cfg.getShopPackUI()
     end
     return gameplay_cfg.ShopPackUI
 end
+
+--- Check if new grid inventory system is enabled
+-- @return boolean True if using new grid inventory, false for legacy boards
+function gameplay_cfg.isGridInventoryEnabled()
+    return gameplay_cfg.USE_GRID_INVENTORY == true
+end
+
+-- Expose flag globally for other modules to check without requiring gameplay.lua
+_G.USE_GRID_INVENTORY = gameplay_cfg.USE_GRID_INVENTORY
 
 require("core.type_defs") -- for Node customizations
 local BaseCreateExecutionContext = WandExecutor.createExecutionContext
@@ -5516,6 +5530,16 @@ function initPlanningPhase()
     -- =============================================================================
 
     -- -------------------------------------------------------------------------- --
+    --       INVENTORY SYSTEM TOGGLE (Feature Flag: USE_GRID_INVENTORY)          --
+    -- --------------------------------------------------------------------------
+    -- When USE_GRID_INVENTORY = false (default): Legacy board-based inventory
+    -- When USE_GRID_INVENTORY = true: New grid-based PlayerInventory + WandLoadoutUI
+    -- --------------------------------------------------------------------------
+
+    if not gameplay_cfg.USE_GRID_INVENTORY then
+    -- ============ LEGACY INVENTORY BOARDS (board_sets, world-space) ============
+
+    -- -------------------------------------------------------------------------- --
     --       make a large board at bottom that will serve as the inventory, with a trigger inventory on the left.       --
     -- --------------------------------------------------------------------------
 
@@ -5709,6 +5733,17 @@ function initPlanningPhase()
         -- add to navigation group as well.
         controller_nav.ud:add_entity("planning-phase", triggerCard)
     end
+
+    -- ============ END LEGACY INVENTORY BOARDS ============
+    else
+    -- ============ NEW GRID INVENTORY (PlayerInventory + WandLoadoutUI) ============
+    -- Grid-based inventory is initialized lazily when opened via keybind (Tab/E keys)
+    -- No upfront entity creation needed - modules self-initialize on first open()
+    log_debug("[gameplay] USE_GRID_INVENTORY=true: Using new grid inventory system")
+    log_debug("[gameplay] PlayerInventory will initialize on Tab key press")
+    log_debug("[gameplay] WandLoadoutUI will initialize on E key press")
+    -- ============ END NEW GRID INVENTORY ============
+    end -- USE_GRID_INVENTORY feature flag
 
     -- for each board set, we get a corresponding index wand def to save, or if the index is out of range, we loop around.
     for index, boardSet in ipairs(board_sets) do

@@ -464,7 +464,7 @@ local function isCardInActiveGrid(eid)
 end
 
 local function setupCardRenderTimer()
-    local UI_CARD_Z = (z_orders and z_orders.ui_tooltips or 900) + 500
+    local UI_CARD_Z = (z_orders and z_orders.ui_tooltips or 900) - 100
     
     timer.run_every_render_frame(function()
         if not state.isVisible then return end
@@ -517,7 +517,7 @@ local function setupCardRenderTimer()
                         cmd.registry = registry
                         cmd.entities = entityList
                         cmd.autoOptimize = true
-                    end, z, layer.DrawCommandSpace.World)
+                    end, z, layer.DrawCommandSpace.Screen)
                 end
             end
         end

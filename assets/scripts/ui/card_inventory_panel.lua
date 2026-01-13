@@ -560,7 +560,7 @@ end
 --------------------------------------------------------------------------------
 
 local function setupCardRenderTimer()
-    local UI_CARD_Z = (z_orders and z_orders.ui_tooltips or 900) + 500
+    local UI_CARD_Z = (z_orders and z_orders.ui_tooltips or 900) - 100
     
     timer.run_every_render_frame(function()
         if not state.isOpen then return end

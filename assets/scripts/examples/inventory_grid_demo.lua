@@ -1203,7 +1203,7 @@ local function isCardInActiveGrid(eid)
 end
 
 function InventoryGridDemo.setupCardRenderTimer()
-    local UI_CARD_Z = (z_orders and z_orders.ui_tooltips or 900) + 500
+    local UI_CARD_Z = (z_orders and z_orders.ui_tooltips or 900) - 100
     
     timer.run_every_render_frame(function()
         InventoryGridDemo.snapItemsToSlots()
@@ -1228,7 +1228,7 @@ function InventoryGridDemo.setupCardRenderTimer()
                 if hasPipeline and animComp and not animComp.noDraw then
                     local zToUse = UI_CARD_Z
                     if cardScript and cardScript.isBeingDragged then
-                        zToUse = UI_CARD_Z + 100
+                        zToUse = UI_CARD_Z + 50
                     end
                     cardZCache[eid] = zToUse
                     
@@ -1259,7 +1259,7 @@ function InventoryGridDemo.setupCardRenderTimer()
                         cmd.registry = registry
                         cmd.entities = entityList
                         cmd.autoOptimize = true
-                    end, z, layer.DrawCommandSpace.World)
+                    end, z, layer.DrawCommandSpace.Screen)
                 end
             end
         end

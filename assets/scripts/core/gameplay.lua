@@ -19,6 +19,8 @@ require("core.card_eval_order_test")
 local WandEngine = require("core.card_eval_order_test")
 local WandExecutor = require("wand.wand_executor")
 local WandTriggers = require("wand.wand_triggers")
+-- NOTE: wandAdapter accessed via _G to avoid local variable limit (Lua 200 local max)
+_G.wandAdapter = require("ui.wand_grid_adapter")
 local TagEvaluator = require("wand.tag_evaluator")
 local AvatarSystem = require("wand.avatar_system")
 local JokerSystem = require("wand.joker_system")
@@ -5724,6 +5726,19 @@ function initPlanningPhase()
         boardSet.wandDef.action_board_entity = boardSet.action_board_id
     end
 
+    -- Initialize wand grid adapter with wand definitions for combat sync
+    -- This must be done after board_sets have their wandDef assigned
+    local wandDefsForAdapter = {}
+    for _, boardSet in ipairs(board_sets) do
+        if boardSet.wandDef then
+            table.insert(wandDefsForAdapter, boardSet.wandDef)
+        end
+    end
+    if #wandDefsForAdapter > 0 then
+        wandAdapter.init(wandDefsForAdapter)
+        log_debug("[gameplay] wandAdapter initialized with " .. #wandDefsForAdapter .. " wand definitions")
+    end
+
     -- Card tooltips are built lazily on hover to avoid spawning hundreds of UI boxes up front.
 
     activate_state(WAND_TOOLTIP_STATE) -- keep activated at  all times.
@@ -7996,11 +8011,32 @@ function startActionPhase()
     PhysicsManager.enable_step("world", true)
     print("[DEBUG ACTION] physics enabled")
 
-    local wand_ok, wand_err = pcall(loadWandsIntoExecutorFromBoards)
-    if not wand_ok then
-        print("[DEBUG ACTION] ERROR in loadWandsIntoExecutorFromBoards: " .. tostring(wand_err))
-    else
-        print("[DEBUG ACTION] wands loaded successfully")
+    -- Sync wand grid adapter to executor BEFORE combat starts
+    -- This syncs the new grid-based loadout UI to WandExecutor
+    local sync_ok, sync_err = pcall(function()
+        if wandAdapter.anyDirty() then
+            WandExecutor.cleanup()
+            WandExecutor.init()
+            local syncCount = wandAdapter.syncToExecutor(WandExecutor)
+            print(string.format("[DEBUG ACTION] wandAdapter synced %d wands to executor", syncCount))
+            return syncCount > 0
+        end
+        return false
+    end)
+
+    local gridSyncedWands = sync_ok and sync_err or false
+    if not sync_ok then
+        print("[DEBUG ACTION] wandAdapter.syncToExecutor error: " .. tostring(sync_err))
+    end
+
+    -- Fallback: load from legacy board_sets if grid adapter didn't sync any wands
+    if not gridSyncedWands then
+        local wand_ok, wand_err = pcall(loadWandsIntoExecutorFromBoards)
+        if not wand_ok then
+            print("[DEBUG ACTION] ERROR in loadWandsIntoExecutorFromBoards: " .. tostring(wand_err))
+        else
+            print("[DEBUG ACTION] wands loaded from board_sets (legacy fallback)")
+        end
     end
 
     if WandExecutor and WandExecutor.activeWands then

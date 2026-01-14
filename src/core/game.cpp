@@ -105,6 +105,7 @@ using std::pair;
 #include "systems/input/input_functions.hpp"
 #include "systems/ui/ui.hpp"
 #include "systems/ui/util.hpp"
+#include "systems/ui/handlers/handler_registry.hpp"
 #include "systems/timer/timer.hpp"
 #include "systems/particles/particle.hpp"
 #include "systems/random/random.hpp"
@@ -1350,6 +1351,9 @@ world.SetBodyType(player, "kinematic");  // switch between static/kinematic/dyna
 world.SetDamping(player, 0.05f);      // velocity damping
 world.SetGlobalDamping(0.2f);         // world‑wide damping
         */
+
+        // Register UI element handlers (Strategy pattern for type-specific rendering)
+        ui::registerAllHandlers();
 
         SystemRegistry::global().initAll();
 

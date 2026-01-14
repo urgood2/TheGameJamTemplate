@@ -25,7 +25,7 @@
 // Feature flag to enable handler-based rendering (for testing)
 // Set to true to use handlers for RECT_SHAPE and TEXT types
 #ifndef UI_USE_HANDLERS
-#define UI_USE_HANDLERS 0
+#define UI_USE_HANDLERS 1
 #endif
 
 namespace ui
@@ -2074,8 +2074,8 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
 #if UI_USE_HANDLERS
         // Handler-based rendering (experimental)
         // Create UIDrawContext with all necessary rendering info
-        {
-            auto* handler = UIHandlerRegistry::instance().get(config->uiType);
+        if (config->uiType.has_value()) {
+            auto* handler = UIHandlerRegistry::instance().get(config->uiType.value());
             if (handler) {
                 UIDrawContext ctx;
                 ctx.layer = layerPtr;

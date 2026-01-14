@@ -2,6 +2,7 @@
 #include "rect_handler.hpp"
 #include "text_handler.hpp"
 #include "container_handler.hpp"
+#include "object_handler.hpp"
 #include <spdlog/spdlog.h>
 
 namespace ui {
@@ -38,12 +39,14 @@ void registerAllHandlers() {
     reg.registerHandler(UITypeEnum::VERTICAL_CONTAINER, std::make_unique<ContainerHandler>());
     reg.registerHandler(UITypeEnum::HORIZONTAL_CONTAINER, std::make_unique<ContainerHandler>());
 
+    // Object handler - renders focus highlight for attached objects
+    reg.registerHandler(UITypeEnum::OBJECT, std::make_unique<ObjectHandler>());
+
     // Future handlers to add:
-    // reg.registerHandler(UITypeEnum::OBJECT, std::make_unique<ObjectHandler>());
     // reg.registerHandler(UITypeEnum::SCROLL_PANE, std::make_unique<ScrollPaneHandler>());
     // etc.
 
-    SPDLOG_INFO("UI handler registration complete ({} handlers)", 5);
+    SPDLOG_INFO("UI handler registration complete ({} handlers)", 6);
 }
 
 } // namespace ui

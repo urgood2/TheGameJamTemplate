@@ -2625,4 +2625,6 @@ search_world.txt
 src_projectiles.txt
 nul
 CMakeUserPresets.json
-debug.log
+
+# Auto-generated files
+assets/all_uuids.json*

@@ -187,8 +187,6 @@ end)
 -- Run Tests
 --------------------------------------------------------------------------------
 
--- Only run if this file is the main script (not when running directory scan)
-if not arg or not arg[0] or not arg[0]:find("test_runner%.lua$") then
-    local success = t.run()
-    os.exit(success and 0 or 1)
-end
+-- Always run - this file is designed to be run directly
+local success = t.run()
+os.exit(success and 0 or 1)

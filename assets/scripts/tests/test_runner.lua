@@ -1038,8 +1038,8 @@ Examples:
 ]])
 end
 
--- Check if running as main script
-if arg and arg[0] and arg[0]:find("test_runner%.lua$") then
+-- Check if running as main script (not test_test_runner.lua or similar)
+if arg and arg[0] and arg[0]:match("[/\\]?test_runner%.lua$") and not arg[0]:find("test_test_runner") then
     local opts = parse_args(arg)
 
     if opts.help then

@@ -58,10 +58,15 @@ DATA-DRIVEN:
     dsl.list(data, mapperFn)         -- Generate nodes from array
     dsl.when(condition, node)        -- Conditional rendering
 
-SPAWNING:
+SPAWNING & DESTRUCTION:
     dsl.spawn(pos, defNode, layerName?, zIndex?, opts?)
         pos: { x = number, y = number }
         Returns: boxID (entity)
+
+    dsl.remove(boxEntity)
+        Properly destroys a UI box with cleanup of all registries
+        (tabs, grids, decorations, backgrounds, tooltips).
+        Returns: boolean success
 
 Dependencies: ui.definitions, ui.box, layer_order_system, animation_system
 ]]
@@ -277,6 +282,22 @@ function dsl.spawn(pos, defNode, layerName, zIndex, opts)
     end
 
     return box
+end
+
+------------------------------------------------------------
+-- 6b. Remove a UIBox with proper cleanup
+-- Cleans all registries (tabs, grids, decorations, etc.)
+-- then destroys the UI tree via ui.box.Remove.
+------------------------------------------------------------
+-- Example:
+-- local boxID = dsl.spawn({ x = 100, y = 100 }, myUI)
+-- -- later...
+-- dsl.remove(boxID)
+------------------------------------------------------------
+function dsl.remove(boxEntity)
+    -- Lazy-load UICleanup to avoid circular dependency
+    local UICleanup = require("ui.ui_cleanup")
+    return UICleanup.remove(boxEntity)
 end
 
 ------------------------------------------------------------

@@ -108,13 +108,15 @@ function CardUIPolicy.setupForScreenSpace(cardEntity)
     -- Board cards are ~288×384px; inventory slots are 64×64px
     -- CRITICAL: Must use resizeAnimationObjectsInEntityToFitAndCenterUI for UI rendering!
     -- The regular resize only sets intrinsincRenderScale, but shader pipeline uses uiRenderScale.
+    -- NOTE: Pass false for centering - centerItemOnSlot() handles positioning separately.
+    -- Using true would cause double-centering (offset + actualX/Y both applied).
     if animation_system and animation_system.resizeAnimationObjectsInEntityToFitAndCenterUI then
         animation_system.resizeAnimationObjectsInEntityToFitAndCenterUI(
             cardEntity,
             INVENTORY_SLOT_SIZE,
             INVENTORY_SLOT_SIZE,
-            true,  -- centerLaterally
-            true   -- centerVertically
+            false,  -- centerLaterally (handled by centerItemOnSlot)
+            false   -- centerVertically (handled by centerItemOnSlot)
         )
     elseif animation_system and animation_system.resizeAnimationObjectsInEntityToFit then
         -- Fallback if UI-specific resize not available

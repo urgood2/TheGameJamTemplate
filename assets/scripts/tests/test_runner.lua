@@ -5,6 +5,7 @@ TEST RUNNER: describe/it Test Framework
 ================================================================================
 A lightweight BDD-style test runner with:
 - describe() and it() for test structure
+- expect() fluent matchers for expressive assertions
 - Clear pass/fail output with colors
 - Stack traces for failed assertions
 - Directory-based test discovery
@@ -15,7 +16,16 @@ Usage:
 
     t.describe("MyModule", function()
         t.it("should do something", function()
-            t.assert_equals(1, 1)
+            t.expect(1).to_be(1)
+            t.expect({a = 1}).to_equal({a = 1})
+            t.expect("hello world").to_contain("world")
+            t.expect(true).to_be_truthy()
+            t.expect(nil).to_be_falsy()
+            t.expect(function() error("oops") end).to_throw("oops")
+        end)
+
+        t.it("supports negation with .never()", function()
+            t.expect(1).never().to_be(2)
         end)
     end)
 
@@ -161,7 +171,214 @@ function TestRunner.xit(name, fn)
 end
 
 --------------------------------------------------------------------------------
--- Assertions
+-- Expect Matchers (Fluent API)
+--------------------------------------------------------------------------------
+
+--- Create an expectation object for fluent assertions
+--- Usage: expect(value).to_be(expected), expect(fn).to_throw("pattern")
+--- @param value any The value to test
+--- @return table Expectation object with matcher methods
+function TestRunner.expect(value)
+    local _value = value
+    local _negated = false
+
+    local expectation = {}
+
+    --- Negate the next matcher
+    --- @return table Self for chaining
+    function expectation.never()
+        _negated = true
+        return expectation
+    end
+
+    --- Check for strict equality (===)
+    --- @param expected any Expected value
+    function expectation.to_be(expected)
+        local passes = _value == expected
+        if _negated then passes = not passes end
+
+        if not passes then
+            local msg = _negated
+                and string.format("expected %s NOT to be %s", tostring(_value), tostring(expected))
+                or string.format("expected %s to be %s\n    expected: %s\n    actual:   %s",
+                    tostring(_value), tostring(expected),
+                    tostring(expected), tostring(_value))
+            error(msg, 2)
+        end
+    end
+
+    --- Check for deep equality (tables)
+    --- @param expected any Expected value (recursively compared)
+    function expectation.to_equal(expected)
+        local function deep_eq(a, b, path)
+            path = path or ""
+            if type(a) ~= type(b) then
+                return false, path .. " type mismatch: " .. type(a) .. " vs " .. type(b)
+            end
+            if type(a) ~= "table" then
+                if a ~= b then
+                    return false, path .. " value mismatch: " .. tostring(a) .. " vs " .. tostring(b)
+                end
+                return true
+            end
+            for k, v in pairs(a) do
+                local ok, diff = deep_eq(v, b[k], path .. "." .. tostring(k))
+                if not ok then return false, diff end
+            end
+            for k, v in pairs(b) do
+                if a[k] == nil then
+                    return false, path .. "." .. tostring(k) .. " unexpected key"
+                end
+            end
+            return true
+        end
+
+        local is_equal, diff = deep_eq(expected, _value)
+        local passes = is_equal
+        if _negated then passes = not passes end
+
+        if not passes then
+            local msg
+            if _negated then
+                msg = "expected tables NOT to be deeply equal"
+            else
+                msg = "expected tables to be deeply equal\n    difference: " .. (diff or "unknown")
+            end
+            error(msg, 2)
+        end
+    end
+
+    --- Check if value contains substring or table element
+    --- @param needle any For strings: substring. For tables: value to find
+    function expectation.to_contain(needle)
+        local passes = false
+        local val_type = type(_value)
+
+        if val_type == "string" then
+            passes = _value:find(needle, 1, true) ~= nil
+        elseif val_type == "table" then
+            -- Check array elements first
+            for _, v in ipairs(_value) do
+                if v == needle then
+                    passes = true
+                    break
+                end
+            end
+            -- Also check keys (for key existence)
+            if not passes and _value[needle] ~= nil then
+                passes = true
+            end
+        else
+            error("to_contain() requires string or table, got " .. val_type, 2)
+        end
+
+        if _negated then passes = not passes end
+
+        if not passes then
+            local msg = _negated
+                and string.format("expected %s NOT to contain %s", tostring(_value), tostring(needle))
+                or string.format("expected %s to contain %s\n    actual:   %s\n    needle:   %s",
+                    val_type, tostring(needle), tostring(_value), tostring(needle))
+            error(msg, 2)
+        end
+    end
+
+    --- Check if value is truthy (not nil and not false)
+    function expectation.to_be_truthy()
+        local passes = _value ~= nil and _value ~= false
+        if _negated then passes = not passes end
+
+        if not passes then
+            local msg = _negated
+                and string.format("expected %s NOT to be truthy", tostring(_value))
+                or string.format("expected truthy value\n    actual: %s", tostring(_value))
+            error(msg, 2)
+        end
+    end
+
+    --- Check if value is falsy (nil or false)
+    function expectation.to_be_falsy()
+        local passes = _value == nil or _value == false
+        if _negated then passes = not passes end
+
+        if not passes then
+            local msg = _negated
+                and string.format("expected %s NOT to be falsy", tostring(_value))
+                or string.format("expected falsy value\n    actual: %s", tostring(_value))
+            error(msg, 2)
+        end
+    end
+
+    --- Check if function throws an error
+    --- @param pattern string? Optional pattern to match against error message
+    function expectation.to_throw(pattern)
+        if type(_value) ~= "function" then
+            error("to_throw() requires a function, got " .. type(_value), 2)
+        end
+
+        local ok, err = pcall(_value)
+        local threw = not ok
+        local pattern_matches = true
+
+        if threw and pattern then
+            pattern_matches = tostring(err):find(pattern) ~= nil
+        end
+
+        local passes = threw and pattern_matches
+        if _negated then passes = not passes end
+
+        if not passes then
+            local msg
+            if _negated then
+                msg = "expected function NOT to throw"
+                if threw then
+                    msg = msg .. "\n    thrown: " .. tostring(err)
+                end
+            else
+                if not threw then
+                    msg = "expected function to throw\n    actual: function did not throw"
+                else
+                    msg = string.format("expected error to match pattern: %s\n    actual: %s",
+                        tostring(pattern), tostring(err))
+                end
+            end
+            error(msg, 2)
+        end
+    end
+
+    --- Check if value is nil
+    function expectation.to_be_nil()
+        local passes = _value == nil
+        if _negated then passes = not passes end
+
+        if not passes then
+            local msg = _negated
+                and "expected value NOT to be nil"
+                or string.format("expected nil\n    actual: %s", tostring(_value))
+            error(msg, 2)
+        end
+    end
+
+    --- Check if value is of specific type
+    --- @param expected_type string Expected type name
+    function expectation.to_be_type(expected_type)
+        local actual_type = type(_value)
+        local passes = actual_type == expected_type
+        if _negated then passes = not passes end
+
+        if not passes then
+            local msg = _negated
+                and string.format("expected type NOT to be %s", expected_type)
+                or string.format("expected type %s\n    actual type: %s", expected_type, actual_type)
+            error(msg, 2)
+        end
+    end
+
+    return expectation
+end
+
+--------------------------------------------------------------------------------
+-- Legacy Assertions (for backwards compatibility)
 --------------------------------------------------------------------------------
 
 --- Assert two values are equal

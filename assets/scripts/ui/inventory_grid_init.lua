@@ -25,8 +25,10 @@ local UIDecorations = require("ui.ui_decorations")
 --------------------------------------------------------------------------------
 -- Z-Order constants for drag operations
 --------------------------------------------------------------------------------
-local UI_CARD_Z = z_orders.ui_tooltips - 100      -- Normal cards in inventory
-local DRAG_Z = z_orders.ui_tooltips + 500         -- Dragged cards (above everything)
+-- Cards must render ABOVE the panel (z=800) and grid slots (z=850).
+-- Using ui_tooltips + 100 (= 1000) ensures cards are above all panel elements.
+local UI_CARD_Z = z_orders.ui_tooltips + 100      -- Normal cards in inventory (= 1000)
+local DRAG_Z = z_orders.ui_tooltips + 500         -- Dragged cards (above everything) (= 1400)
 
 --------------------------------------------------------------------------------
 -- Drag state tracking for return-to-origin behavior

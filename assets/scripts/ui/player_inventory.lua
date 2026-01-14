@@ -35,6 +35,7 @@ local timer = require("core.timer")
 local InventoryGridInit = require("ui.inventory_grid_init")
 local shader_pipeline = _G.shader_pipeline
 local QuickEquip = require("ui.inventory_quick_equip")
+local z_orders = require("core.z_orders")
 
 local TIMER_GROUP = "player_inventory"
 local PANEL_ID = "player_inventory_panel"
@@ -104,7 +105,9 @@ local RENDER_LAYER = "ui"
 
 local PANEL_Z = 800
 local GRID_Z = 850
-local CARD_Z = 900
+-- Cards must render ABOVE the panel (z=800) and grid slots (z=850).
+-- Must match UI_CARD_Z in inventory_grid_init.lua to prevent z-order reset conflicts.
+local CARD_Z = z_orders.ui_tooltips + 100  -- = 1000, above grid (850), below tooltips
 local TAB_BUTTON_Z = 750
 
 local OFFSCREEN_Y_OFFSET = 600
@@ -245,8 +248,9 @@ local function createSimpleCard(spriteName, x, y, cardData, gridEntity)
         return nil
     end
 
-    local cardW = SLOT_WIDTH - 8
-    local cardH = SLOT_HEIGHT - 8
+    -- Size cards to match slot dimensions exactly (2x sprite = 64x64)
+    local cardW = SLOT_WIDTH
+    local cardH = SLOT_HEIGHT
     animation_system.resizeAnimationObjectsInEntityToFit(entity, cardW, cardH)
 
     if add_state_tag then
@@ -257,11 +261,15 @@ local function createSimpleCard(spriteName, x, y, cardData, gridEntity)
         layer_order_system.assignZIndexToEntity(entity, CARD_Z)
     end
 
-    if ObjectAttachedToUITag and not registry:has(entity, ObjectAttachedToUITag) then
-        registry:emplace(entity, ObjectAttachedToUITag)
-    end
+    -- NOTE: Do NOT add ObjectAttachedToUITag - it excludes entities from shader rendering pipeline!
+    -- Cards need to render via the normal sprite pipeline to respect z-ordering properly.
 
-    transform.set_space(entity, "screen")
+    -- CRITICAL: Set screen space using transform.set_space (adds ScreenSpaceCollisionMarker)
+    -- Without ScreenSpaceCollisionMarker, animated sprites render with DrawCommandSpace::World,
+    -- which sorts BEFORE DrawCommandSpace::Screen (used by UI boxes), ignoring z-index entirely!
+    if transform and transform.set_space then
+        transform.set_space(entity, "screen")
+    end
 
     -- Setup drag-drop with proper z-order management via InventoryGridInit
     InventoryGridInit.makeItemDraggable(entity, gridEntity)
@@ -342,10 +350,10 @@ local function createGridForTab(tabId, x, y, visible)
     }
     
     local gridEntity = dsl.spawn({ x = spawnX, y = y }, gridDef, RENDER_LAYER, GRID_Z)
-    if ui and ui.box and ui.box.set_draw_layer then
-        ui.box.set_draw_layer(gridEntity, RENDER_LAYER)
-    end
-    
+    -- NOTE: Do NOT call set_draw_layer() - it routes to "ui" layer which renders AFTER "sprites" layer,
+    -- making the panel always appear on top of cards regardless of z-order.
+    -- Cards render to "sprites" layer, so panel must also be on "sprites" layer for z-ordering to work.
+
     local success = InventoryGridInit.initializeIfGrid(gridEntity, cfg.id)
     if success then
         log_debug("[PlayerInventory] Grid '" .. tabId .. "' initialized at x=" .. spawnX)
@@ -423,10 +431,8 @@ local function createCloseButton(panelX, panelY, panelWidth)
     local closeY = panelY + PANEL_PADDING + 4
     
     local closeEntity = dsl.spawn({ x = closeX, y = closeY }, closeButtonDef, RENDER_LAYER, CARD_Z + 10)
-    if ui and ui.box and ui.box.set_draw_layer then
-        ui.box.set_draw_layer(closeEntity, RENDER_LAYER)
-    end
-    
+    -- NOTE: Do NOT call set_draw_layer() - keeps close button on sprites layer with cards
+
     return closeEntity
 end
 
@@ -727,37 +733,27 @@ local function createTabButton()
     if layer_order_system and layer_order_system.assignZIndexToEntity then
         layer_order_system.assignZIndexToEntity(tabEntity, TAB_BUTTON_Z)
     end
-    
-    if ObjectAttachedToUITag and not registry:has(tabEntity, ObjectAttachedToUITag) then
-        registry:emplace(tabEntity, ObjectAttachedToUITag)
-    end
-    
+
+    -- NOTE: Do NOT add ObjectAttachedToUITag - it excludes entities from shader rendering pipeline!
+
     transform.set_space(tabEntity, "screen")
     
     if add_state_tag then
         add_state_tag(tabEntity, "default_state")
     end
     
-    local collisionW = TAB_BUTTON_WIDTH
-    local collisionH = TAB_BUTTON_HEIGHT
-    if not registry:has(tabEntity, CollisionComponent) then
-        local col = registry:emplace(tabEntity, CollisionComponent)
-        col.width = collisionW
-        col.height = collisionH
-        col.offsetX = -collisionW / 2
-        col.offsetY = -collisionH / 2
-    end
-    
-    if not registry:has(tabEntity, ClickableComponent) then
-        registry:emplace(tabEntity, ClickableComponent)
-    end
-    
-    signal.register("entity_clicked", function(clickedEntity, button)
-        if clickedEntity == tabEntity and button == 1 then
+    -- Make the tab button clickable via GameObject component
+    local go = component_cache.get(tabEntity, GameObject)
+    if go then
+        go.state.collisionEnabled = true
+        go.state.clickEnabled = true
+        go.methods.onClick = function(reg, entity)
             PlayerInventory.toggle()
         end
-    end)
-    
+    else
+        log_warn("[PlayerInventory] Tab button has no GameObject component")
+    end
+
     return tabEntity
 end
 
@@ -779,11 +775,8 @@ local function initializeInventory()
     
     local panelDef = createPanelDefinition()
     state.panelEntity = dsl.spawn({ x = state.panelX, y = state.panelY + OFFSCREEN_Y_OFFSET }, panelDef, RENDER_LAYER, PANEL_Z)
-    
-    if ui and ui.box and ui.box.set_draw_layer then
-        ui.box.set_draw_layer(state.panelEntity, RENDER_LAYER)
-    end
-    
+    -- NOTE: Do NOT call set_draw_layer() - keeps panel on sprites layer with cards for proper z-ordering
+
     state.closeButtonEntity = createCloseButton(state.panelX, state.panelY, PANEL_WIDTH)
     setEntityVisible(state.closeButtonEntity, false, state.panelX + PANEL_WIDTH - 30, state.panelY + PANEL_PADDING + 4, "close")
     
@@ -953,10 +946,11 @@ function PlayerInventory.addCard(cardEntity, category, cardData)
         state.cardRegistry[cardEntity] = cardData
     end
 
-    if ObjectAttachedToUITag and not registry:has(cardEntity, ObjectAttachedToUITag) then
-        registry:emplace(cardEntity, ObjectAttachedToUITag)
-    end
+    -- NOTE: Do NOT add ObjectAttachedToUITag - it excludes entities from shader rendering pipeline!
 
+    -- CRITICAL: Set screen space using transform.set_space (adds ScreenSpaceCollisionMarker)
+    -- Without ScreenSpaceCollisionMarker, animated sprites render with DrawCommandSpace::World,
+    -- which sorts BEFORE DrawCommandSpace::Screen (used by UI boxes), ignoring z-index entirely!
     if transform and transform.set_space then
         transform.set_space(cardEntity, "screen")
     end

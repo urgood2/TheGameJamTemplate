@@ -1,6 +1,7 @@
 #include "handler_registry.hpp"
 #include "rect_handler.hpp"
 #include "text_handler.hpp"
+#include "container_handler.hpp"
 #include <spdlog/spdlog.h>
 
 namespace ui {
@@ -31,13 +32,18 @@ void registerAllHandlers() {
     reg.registerHandler(UITypeEnum::RECT_SHAPE, std::make_unique<RectHandler>());
     reg.registerHandler(UITypeEnum::TEXT, std::make_unique<TextHandler>());
 
+    // Container handlers (ROOT, VERTICAL_CONTAINER, HORIZONTAL_CONTAINER)
+    // All three use the same rendering logic - just styled rectangle backgrounds
+    reg.registerHandler(UITypeEnum::ROOT, std::make_unique<ContainerHandler>());
+    reg.registerHandler(UITypeEnum::VERTICAL_CONTAINER, std::make_unique<ContainerHandler>());
+    reg.registerHandler(UITypeEnum::HORIZONTAL_CONTAINER, std::make_unique<ContainerHandler>());
+
     // Future handlers to add:
     // reg.registerHandler(UITypeEnum::OBJECT, std::make_unique<ObjectHandler>());
-    // reg.registerHandler(UITypeEnum::VERTICAL_CONTAINER, std::make_unique<ContainerHandler>());
-    // reg.registerHandler(UITypeEnum::HORIZONTAL_CONTAINER, std::make_unique<ContainerHandler>());
+    // reg.registerHandler(UITypeEnum::SCROLL_PANE, std::make_unique<ScrollPaneHandler>());
     // etc.
 
-    SPDLOG_INFO("UI handler registration complete ({} handlers)", 2);
+    SPDLOG_INFO("UI handler registration complete ({} handlers)", 5);
 }
 
 } // namespace ui

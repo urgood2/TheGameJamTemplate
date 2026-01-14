@@ -41,7 +41,7 @@ void TextHandler::draw(
     const auto* interactionConfig = registry.try_get<UIInteractionConfig>(entity);
 
     // Get scale from layout config (required for text rendering)
-    const auto layoutScale = layoutConfig ? layoutConfig->scale : std::optional<float>{1.0f};
+    const auto layoutScale = layoutConfig ? layoutConfig->scale : std::nullopt;
     if (!layoutScale) {
         return; // Scale required for text rendering
     }
@@ -100,7 +100,7 @@ void TextHandler::draw(
             cmd->y = y;
         }, zIndex);
 
-        if (contentVerticalText) {
+        if (contentVerticalText.value_or(false)) {
             layer::QueueCommand<layer::CmdTranslate>(layerPtr, [h = ctx.actualH](layer::CmdTranslate *cmd) {
                 cmd->x = 0;
                 cmd->y = h;
@@ -151,7 +151,7 @@ void TextHandler::draw(
         cmd->y = y;
     }, zIndex);
 
-    if (contentVerticalText) {
+    if (contentVerticalText.value_or(false)) {
         layer::QueueCommand<layer::CmdTranslate>(layerPtr, [h = ctx.actualH](layer::CmdTranslate *cmd) {
             cmd->x = 0;
             cmd->y = h;

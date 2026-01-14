@@ -2074,6 +2074,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
 #if UI_USE_HANDLERS
         // Handler-based rendering (experimental)
         // Create UIDrawContext with all necessary rendering info
+        bool renderedByHandler = false;
         if (config->uiType.has_value()) {
             auto* handler = UIHandlerRegistry::instance().get(config->uiType.value());
             if (handler) {
@@ -2101,6 +2102,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                 ctx.buttonActive = buttonActive;
 
                 handler->draw(registry, entity, styleConfig, *transform, ctx);
+                renderedByHandler = true;
                 // Skip legacy rendering for handled types
                 // Note: Common rendering (outline, focus) still runs after this
             }
@@ -2108,7 +2110,11 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
 #endif
 
         // is it text?
+#if UI_USE_HANDLERS
+	        if (!renderedByHandler && config->uiType == UITypeEnum::TEXT && layoutScale)
+#else
 	        if (config->uiType == UITypeEnum::TEXT && layoutScale)
+#endif
 	        {
 	            ZONE_SCOPED("UI Element: Text Logic");
 	            const bool snapToPixels = config->pixelatedRectangle;
@@ -2230,7 +2236,11 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
 
             layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
         }
+#if UI_USE_HANDLERS
+        else if (!renderedByHandler && (config->uiType == UITypeEnum::RECT_SHAPE || config->uiType == UITypeEnum::VERTICAL_CONTAINER || config->uiType == UITypeEnum::HORIZONTAL_CONTAINER || config->uiType == UITypeEnum::ROOT || config->uiType == UITypeEnum::SCROLL_PANE || config->uiType == UITypeEnum::INPUT_TEXT))
+#else
         else if (config->uiType == UITypeEnum::RECT_SHAPE || config->uiType == UITypeEnum::VERTICAL_CONTAINER || config->uiType == UITypeEnum::HORIZONTAL_CONTAINER || config->uiType == UITypeEnum::ROOT || config->uiType == UITypeEnum::SCROLL_PANE || config->uiType == UITypeEnum::INPUT_TEXT)
+#endif
         {
             ZONE_SCOPED("UI Element: Rectangle/Container Logic");
             //TODO: need to apply scale and rotation to the rounded rectangle - make a prepdraw method that applies the transform's values

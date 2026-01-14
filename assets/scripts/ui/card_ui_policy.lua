@@ -8,6 +8,7 @@ Centralized module for applying UI-specific setup to cards. Manages:
 - Z-order for dragging and normal display
 - Collision quadtree assignment
 - Planning card elevation when inventory opens
+- Card resizing when transferring between board and inventory
 
 This provides consistent card rendering behavior across all inventory grids
 and planning boards.
@@ -54,6 +55,27 @@ local DRAG_Z = z_orders.ui_tooltips + 500     -- Dragged cards (above everything
 local NORMAL_CARD_Z = z_orders.card           -- Normal cards on planning board (= 101)
 local ELEVATED_CARD_Z = z_orders.ui_tooltips  -- Elevated planning cards (= 900, above grid at 850)
 
+--------------------------------------------------------------------------------
+-- SIZE CONSTANTS FOR CARD RESIZING
+--------------------------------------------------------------------------------
+-- When cards transfer between board and inventory, they need to be resized.
+-- Board cards use screen-percentage sizing (~288×384 at 1920px width).
+-- Inventory slots are fixed 64×64px.
+--------------------------------------------------------------------------------
+local INVENTORY_SLOT_SIZE = 64  -- Matches SLOT_WIDTH/HEIGHT in player_inventory.lua
+
+-- Get board card dimensions (computed same way as gameplay.lua)
+-- Uses 15% of screen width with 48:64 aspect ratio
+local function getBoardCardDimensions()
+    if globals and globals.screenWidth then
+        local cardW = globals.screenWidth() * 0.150
+        local cardH = cardW * (64 / 48)  -- Maintains 48:64 aspect ratio
+        return cardW, cardH
+    end
+    -- Fallback values matching gameplay_cfg defaults
+    return 80, 112
+end
+
 -- Track elevation state to avoid redundant operations
 local _planningCardsElevated = false
 
@@ -79,6 +101,27 @@ function CardUIPolicy.setupForScreenSpace(cardEntity)
     -- Set z-order for inventory display
     if layer_order_system and layer_order_system.assignZIndexToEntity then
         layer_order_system.assignZIndexToEntity(cardEntity, UI_CARD_Z)
+    end
+
+    -- Resize card to fit inventory slot (64×64)
+    -- Board cards are ~288×384px; inventory slots are 64×64px
+    -- CRITICAL: Must use resizeAnimationObjectsInEntityToFitAndCenterUI for UI rendering!
+    -- The regular resize only sets intrinsincRenderScale, but shader pipeline uses uiRenderScale.
+    if animation_system and animation_system.resizeAnimationObjectsInEntityToFitAndCenterUI then
+        animation_system.resizeAnimationObjectsInEntityToFitAndCenterUI(
+            cardEntity,
+            INVENTORY_SLOT_SIZE,
+            INVENTORY_SLOT_SIZE,
+            true,  -- centerLaterally
+            true   -- centerVertically
+        )
+    elseif animation_system and animation_system.resizeAnimationObjectsInEntityToFit then
+        -- Fallback if UI-specific resize not available
+        animation_system.resizeAnimationObjectsInEntityToFit(
+            cardEntity,
+            INVENTORY_SLOT_SIZE,
+            INVENTORY_SLOT_SIZE
+        )
     end
 
     -- Enable interaction states
@@ -119,6 +162,22 @@ function CardUIPolicy.setupForWorldSpace(cardEntity)
     local targetZ = _planningCardsElevated and ELEVATED_CARD_Z or NORMAL_CARD_Z
     if layer_order_system and layer_order_system.assignZIndexToEntity then
         layer_order_system.assignZIndexToEntity(cardEntity, targetZ)
+    end
+
+    -- Resize card back to board dimensions (~288×384 at 1920px)
+    -- Inventory slots are 64×64px; board cards use screen-percentage sizing
+    -- First, reset UI render scale (clears uiRenderScale set by inventory resize)
+    if animation_system and animation_system.resetAnimationUIRenderScale then
+        animation_system.resetAnimationUIRenderScale(cardEntity)
+    end
+    -- Then resize to board dimensions using regular resize (sets intrinsincRenderScale)
+    local boardW, boardH = getBoardCardDimensions()
+    if animation_system and animation_system.resizeAnimationObjectsInEntityToFit then
+        animation_system.resizeAnimationObjectsInEntityToFit(
+            cardEntity,
+            boardW,
+            boardH
+        )
     end
 
     -- Clear state tags and set to planning state (for board cards)
@@ -354,6 +413,10 @@ CardUIPolicy.Z_UI_CARD = UI_CARD_Z
 CardUIPolicy.Z_DRAG = DRAG_Z
 CardUIPolicy.Z_NORMAL_CARD = NORMAL_CARD_Z
 CardUIPolicy.Z_ELEVATED_CARD = ELEVATED_CARD_Z
+
+-- Size constants for card resizing
+CardUIPolicy.INVENTORY_SLOT_SIZE = INVENTORY_SLOT_SIZE
+CardUIPolicy.getBoardCardDimensions = getBoardCardDimensions
 
 log_debug("[CardUIPolicy] Module loaded")
 

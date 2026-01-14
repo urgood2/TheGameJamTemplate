@@ -270,36 +270,19 @@ local function createSimpleCard(spriteName, x, y, cardData, gridEntity)
         return nil
     end
 
-    -- Size cards to match slot dimensions exactly (2x sprite = 64x64)
-    local cardW = SLOT_WIDTH
-    local cardH = SLOT_HEIGHT
-    animation_system.resizeAnimationObjectsInEntityToFit(entity, cardW, cardH)
+    -- NOTE: Do NOT add ObjectAttachedToUITag - it excludes entities from shader rendering pipeline!
+    -- Cards need to render via the normal sprite pipeline to respect z-ordering properly.
 
+    -- Set initial state tag for visibility
     if add_state_tag then
         add_state_tag(entity, "default_state")
     end
 
-    if layer_order_system and layer_order_system.assignZIndexToEntity then
-        layer_order_system.assignZIndexToEntity(entity, CARD_Z)
-    end
-
-    -- NOTE: Do NOT add ObjectAttachedToUITag - it excludes entities from shader rendering pipeline!
-    -- Cards need to render via the normal sprite pipeline to respect z-ordering properly.
-
-    -- CRITICAL: Set screen space using transform.set_space (adds ScreenSpaceCollisionMarker)
-    -- Without ScreenSpaceCollisionMarker, animated sprites render with DrawCommandSpace::World,
-    -- which sorts BEFORE DrawCommandSpace::Screen (used by UI boxes), ignoring z-index entirely!
-    if transform and transform.set_space then
-        transform.set_space(entity, "screen")
-    end
-
-    -- Setup drag-drop with proper z-order management via InventoryGridInit
-    InventoryGridInit.makeItemDraggable(entity, gridEntity)
-    
+    -- Setup shader pipeline BEFORE resize (shader may affect rendering)
     if shader_pipeline and shader_pipeline.ShaderPipelineComponent then
         local shaderPipelineComp = registry:emplace(entity, shader_pipeline.ShaderPipelineComponent)
         shaderPipelineComp:addPass("3d_skew")
-        
+
         local skewSeed = math.random() * 10000
         local passes = shaderPipelineComp.passes
         if passes and #passes >= 1 then
@@ -313,7 +296,8 @@ local function createSimpleCard(spriteName, x, y, cardData, gridEntity)
             end
         end
     end
-    
+
+    -- Setup script data
     local scriptData = {
         entity = entity,
         id = cardData.id,
@@ -323,13 +307,21 @@ local function createSimpleCard(spriteName, x, y, cardData, gridEntity)
         category = "card",
         cardData = cardData,
     }
-    
+
     if setScriptTableForEntityID then
         setScriptTableForEntityID(entity, scriptData)
     end
-    
+
     state.cardRegistry[entity] = scriptData
-    
+
+    -- Use CardUIPolicy for screen-space setup AFTER all other setup is complete
+    -- This handles: transform space, z-order, resize to inventory slot size, interaction states
+    -- CRITICAL: Must happen AFTER shader pipeline is set up for correct uiRenderScale
+    CardUIPolicy.setupForScreenSpace(entity)
+
+    -- Setup drag-drop with proper z-order management via InventoryGridInit
+    InventoryGridInit.makeItemDraggable(entity, gridEntity)
+
     return entity
 end
 
@@ -1005,12 +997,9 @@ function PlayerInventory.addCard(cardEntity, category, cardData)
 
     -- NOTE: Do NOT add ObjectAttachedToUITag - it excludes entities from shader rendering pipeline!
 
-    -- CRITICAL: Set screen space using transform.set_space (adds ScreenSpaceCollisionMarker)
-    -- Without ScreenSpaceCollisionMarker, animated sprites render with DrawCommandSpace::World,
-    -- which sorts BEFORE DrawCommandSpace::Screen (used by UI boxes), ignoring z-index entirely!
-    if transform and transform.set_space then
-        transform.set_space(cardEntity, "screen")
-    end
+    -- Use CardUIPolicy for proper screen-space setup INCLUDING RESIZE
+    -- This handles: transform space, z-order, resize to inventory slot size, interaction states
+    CardUIPolicy.setupForScreenSpace(cardEntity)
 
     -- Setup drag-drop with proper z-order management via InventoryGridInit
     InventoryGridInit.makeItemDraggable(cardEntity, gridEntity)

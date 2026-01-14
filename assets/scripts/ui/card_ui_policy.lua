@@ -34,9 +34,10 @@ local z_orders = require("core.z_orders")
 local component_cache = require("core.component_cache")
 
 -- Z-order constants for UI cards
-local UI_CARD_Z = z_orders.ui_tooltips - 100  -- Normal cards in inventory
-local DRAG_Z = z_orders.ui_tooltips + 500     -- Dragged cards (above everything)
-local NORMAL_CARD_Z = z_orders.card           -- Normal cards on planning board
+local UI_CARD_Z = z_orders.ui_tooltips - 100  -- Normal cards in inventory (800)
+local DRAG_Z = z_orders.ui_tooltips + 500     -- Dragged cards (above everything, 1400)
+local NORMAL_CARD_Z = z_orders.card           -- Normal cards on planning board (101)
+local ELEVATED_CARD_Z = z_orders.ui_tooltips  -- Planning cards when inventory is open (900)
 
 --------------------------------------------------------------------------------
 -- SCREEN-SPACE SETUP
@@ -204,11 +205,77 @@ function CardUIPolicy.getZOrder(cardEntity)
 end
 
 --------------------------------------------------------------------------------
+-- PLANNING CARD Z-ORDER ELEVATION
+--------------------------------------------------------------------------------
+-- Elevates all planning board cards above the inventory panel.
+-- Call when inventory opens.
+--------------------------------------------------------------------------------
+function CardUIPolicy.elevatePlanningCards()
+    if not PLANNING_STATE then
+        log_warn("[CardUIPolicy] PLANNING_STATE not available")
+        return 0
+    end
+
+    local count = 0
+    local totalEntities = 0
+    local screenSpaceCount = 0
+    local view = registry:runtime_view(PLANNING_STATE)
+
+    view:each(function(entity)
+        totalEntities = totalEntities + 1
+        if registry:valid(entity) then
+            local isWorld = CardUIPolicy.isWorldSpace(entity)
+            if not isWorld then
+                screenSpaceCount = screenSpaceCount + 1
+            end
+            if isWorld then
+                if layer_order_system and layer_order_system.assignZIndexToEntity then
+                    layer_order_system.assignZIndexToEntity(entity, ELEVATED_CARD_Z)
+                    count = count + 1
+                end
+            end
+        end
+    end)
+
+    log_debug("[CardUIPolicy] Elevated " .. count .. "/" .. totalEntities .. " planning cards to z=" .. ELEVATED_CARD_Z .. " (screen-space: " .. screenSpaceCount .. ")")
+    return count
+end
+
+--------------------------------------------------------------------------------
+-- RESTORE PLANNING CARD Z-ORDER
+--------------------------------------------------------------------------------
+-- Restores all planning board cards to normal z-order.
+-- Call when inventory closes.
+--------------------------------------------------------------------------------
+function CardUIPolicy.restorePlanningCards()
+    if not PLANNING_STATE then
+        log_warn("[CardUIPolicy] PLANNING_STATE not available")
+        return 0
+    end
+
+    local count = 0
+    local view = registry:runtime_view(PLANNING_STATE)
+
+    view:each(function(entity)
+        if registry:valid(entity) and CardUIPolicy.isWorldSpace(entity) then
+            if layer_order_system and layer_order_system.assignZIndexToEntity then
+                layer_order_system.assignZIndexToEntity(entity, NORMAL_CARD_Z)
+                count = count + 1
+            end
+        end
+    end)
+
+    log_debug("[CardUIPolicy] Restored " .. count .. " planning cards to z=" .. NORMAL_CARD_Z)
+    return count
+end
+
+--------------------------------------------------------------------------------
 -- CONSTANTS (exposed for external use)
 --------------------------------------------------------------------------------
 CardUIPolicy.Z_UI_CARD = UI_CARD_Z
 CardUIPolicy.Z_DRAG = DRAG_Z
 CardUIPolicy.Z_NORMAL_CARD = NORMAL_CARD_Z
+CardUIPolicy.Z_ELEVATED_CARD = ELEVATED_CARD_Z
 
 log_debug("[CardUIPolicy] Module loaded")
 

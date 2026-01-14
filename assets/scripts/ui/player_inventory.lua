@@ -36,6 +36,7 @@ local InventoryGridInit = require("ui.inventory_grid_init")
 local shader_pipeline = _G.shader_pipeline
 local QuickEquip = require("ui.inventory_quick_equip")
 local z_orders = require("core.z_orders")
+local CardUIPolicy = require("ui.card_ui_policy")
 
 local TIMER_GROUP = "player_inventory"
 local PANEL_ID = "player_inventory_panel"
@@ -369,9 +370,10 @@ local function createGridForTab(tabId, x, y, visible)
     }
     
     local gridEntity = dsl.spawn({ x = spawnX, y = y }, gridDef, RENDER_LAYER, GRID_Z)
-    -- NOTE: Do NOT call set_draw_layer() - it routes to "ui" layer which renders AFTER "sprites" layer,
-    -- making the panel always appear on top of cards regardless of z-order.
-    -- Cards render to "sprites" layer, so panel must also be on "sprites" layer for z-ordering to work.
+    -- Explicitly set to sprites layer so z-ordering works with planning cards
+    if ui and ui.box and ui.box.set_draw_layer then
+        ui.box.set_draw_layer(gridEntity, "sprites")
+    end
 
     local success = InventoryGridInit.initializeIfGrid(gridEntity, cfg.id)
     if success then
@@ -469,7 +471,10 @@ local function createCloseButton(panelX, panelY, panelWidth)
     local closeY = panelY + PANEL_PADDING
 
     local closeEntity = dsl.spawn({ x = closeX, y = closeY }, closeButtonDef, RENDER_LAYER, CARD_Z + 10)
-    -- NOTE: Do NOT call set_draw_layer() - keeps close button on sprites layer with cards
+    -- Explicitly set to sprites layer so z-ordering works with planning cards
+    if ui and ui.box and ui.box.set_draw_layer then
+        ui.box.set_draw_layer(closeEntity, "sprites")
+    end
 
     return closeEntity
 end
@@ -610,7 +615,8 @@ local function setupCardRenderTimer()
         
         local batchedCardBuckets = {}
         
-        if not (command_buffer and command_buffer.queueDrawBatchedEntities and layers and layers.ui) then
+        -- Use sprites layer so planning cards (also on sprites) can z-sort correctly
+        if not (command_buffer and command_buffer.queueDrawBatchedEntities and layers and layers.sprites) then
             return
         end
         
@@ -650,7 +656,8 @@ local function setupCardRenderTimer()
             for _, z in ipairs(zKeys) do
                 local entityList = batchedCardBuckets[z]
                 if entityList and #entityList > 0 then
-                    command_buffer.queueDrawBatchedEntities(layers.ui, function(cmd)
+                    -- Render to sprites layer (not ui) so z-ordering works with planning cards
+                    command_buffer.queueDrawBatchedEntities(layers.sprites, function(cmd)
                         cmd.registry = registry
                         cmd.entities = entityList
                         cmd.autoOptimize = true
@@ -815,7 +822,10 @@ local function initializeInventory()
     
     local panelDef = createPanelDefinition()
     state.panelEntity = dsl.spawn({ x = state.panelX, y = state.panelY + OFFSCREEN_Y_OFFSET }, panelDef, RENDER_LAYER, PANEL_Z)
-    -- NOTE: Do NOT call set_draw_layer() - keeps panel on sprites layer with cards for proper z-ordering
+    -- Explicitly set to sprites layer so z-ordering works with planning cards
+    if ui and ui.box and ui.box.set_draw_layer then
+        ui.box.set_draw_layer(state.panelEntity, "sprites")
+    end
 
     -- Close button is now part of the header in the panel hierarchy
     state.closeButtonEntity = ui.box.GetUIEByID(registry, state.panelEntity, "close_btn")
@@ -868,11 +878,14 @@ function PlayerInventory.open()
 
     state.isVisible = true
     signal.emit("player_inventory_opened")
-    
+
+    -- Elevate planning cards above the inventory panel
+    CardUIPolicy.elevatePlanningCards()
+
     if playSoundEffect then
         playSoundEffect("effects", "button-click")
     end
-    
+
     log_debug("[PlayerInventory] Opened")
 end
 
@@ -890,7 +903,10 @@ function PlayerInventory.close()
 
     state.isVisible = false
     signal.emit("player_inventory_closed")
-    
+
+    -- Restore planning cards to normal z-order
+    CardUIPolicy.restorePlanningCards()
+
     log_debug("[PlayerInventory] Closed (hidden)")
 end
 

@@ -515,7 +515,8 @@ end
 function InventoryGridInit._drawInvalidSlotFeedback(slotEntity, x, y, w, h, z)
     if not command_buffer or not command_buffer.queueDrawRectangle then return end
 
-    local uiLayer = layers and layers.ui or "ui"
+    -- Use sprites layer (not ui) so z-ordering works with planning cards
+    local uiLayer = layers and layers.sprites or "sprites"
     local space = layer and layer.DrawCommandSpace and layer.DrawCommandSpace.Screen
 
     -- Draw red border indicating invalid drop target

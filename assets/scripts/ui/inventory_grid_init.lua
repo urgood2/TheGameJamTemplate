@@ -326,6 +326,7 @@ function InventoryGridInit.onDragStart(itemEntity, gridEntity)
     -- Raise z-order so dragged card appears above all other UI
     if layer_order_system and layer_order_system.assignZIndexToEntity then
         layer_order_system.assignZIndexToEntity(itemEntity, DRAG_Z)
+        log_debug("[DRAG-Z-ORDER] onDragStart: entity=" .. key .. " z-order raised to DRAG_Z=" .. DRAG_Z)
     end
 
     signal.emit("grid_item_drag_start", gridEntity, itemEntity, originSlot)
@@ -350,6 +351,7 @@ function InventoryGridInit.onDragEnd(itemEntity)
     -- Reset z-order back to normal
     if layer_order_system and layer_order_system.assignZIndexToEntity then
         layer_order_system.assignZIndexToEntity(itemEntity, UI_CARD_Z)
+        log_debug("[DRAG-Z-ORDER] onDragEnd: entity=" .. key .. " z-order reset to UI_CARD_Z=" .. UI_CARD_Z)
     end
 
     -- If dropped on invalid location, return to original position
@@ -628,8 +630,37 @@ function InventoryGridInit.centerItemOnSlot(itemEntity, slotEntity)
     local centerX = slotX + (slotW - itemW) / 2
     local centerY = slotY + (slotH - itemH) / 2
 
+    -- Debug logging (once per entity to avoid spam)
+    local itemKey = tostring(itemEntity)
+    if not _centerDebugLogged[itemKey] then
+        _centerDebugLogged[itemKey] = true
+        log_debug(string.format(
+            "[CENTER-DEBUG] Centering item=%s on slot=%s\n" ..
+            "  Slot: pos=(%.1f, %.1f) size=(%.1f, %.1f)\n" ..
+            "  Item: size=(%.1f, %.1f) [Expected: ~48x64 for resized card]\n" ..
+            "  Calculated center: (%.1f, %.1f)\n" ..
+            "  Offset applied: (%.1f, %.1f)",
+            itemKey, tostring(slotEntity),
+            slotX, slotY, slotW, slotH,
+            itemW, itemH,
+            centerX, centerY,
+            centerX - slotX, centerY - slotY
+        ))
+    end
+
     itemTransform.actualX = centerX
     itemTransform.actualY = centerY
+end
+
+--------------------------------------------------------------------------------
+-- Debug logging for centerItemOnSlot (debounced to avoid log spam)
+--------------------------------------------------------------------------------
+local _centerDebugLogged = {}  -- [entityKey] = true (debounce table)
+
+--- Clear debug log cache (useful for repeated testing)
+function InventoryGridInit.clearCenterDebugLog()
+    _centerDebugLogged = {}
+    log_debug("[InventoryGridInit] Cleared centerItemOnSlot debug log cache")
 end
 
 --------------------------------------------------------------------------------

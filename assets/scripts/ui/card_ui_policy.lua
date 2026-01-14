@@ -64,6 +64,12 @@ local ELEVATED_CARD_Z = z_orders.ui_tooltips  -- Elevated planning cards (= 900,
 -- Inventory slots are fixed 64×64px.
 --------------------------------------------------------------------------------
 local INVENTORY_SLOT_SIZE = 64  -- Matches SLOT_WIDTH/HEIGHT in player_inventory.lua
+-- Target size for card visual (smaller than slot to allow centering padding)
+-- A 48×64 aspect ratio card fitting in 52×52 target:
+--   scale = min(52/48, 52/64) = min(1.08, 0.81) = 0.81
+--   finalW = 48 * 0.81 = 39, finalH = 64 * 0.81 = 52
+-- This leaves (64-39)/2 = 12.5px horizontal padding and (64-52)/2 = 6px vertical padding
+local INVENTORY_CARD_TARGET_SIZE = 52  -- Card target size (leaves padding for centering)
 
 -- Get board card dimensions (computed same way as gameplay.lua)
 -- Uses 15% of screen width with 48:64 aspect ratio
@@ -104,8 +110,9 @@ function CardUIPolicy.setupForScreenSpace(cardEntity)
         layer_order_system.assignZIndexToEntity(cardEntity, UI_CARD_Z)
     end
 
-    -- Resize card to fit inventory slot (64×64)
-    -- Board cards are ~288×384px; inventory slots are 64×64px
+    -- Resize card to fit SMALLER than slot (52×52 target in 64×64 slot)
+    -- This leaves padding for proper centering both horizontally and vertically.
+    -- Board cards are ~288×384px; slot is 64×64px; we target 52×52 for visual size.
     -- CRITICAL: Must use resizeAnimationObjectsInEntityToFitAndCenterUI for UI rendering!
     -- The regular resize only sets intrinsincRenderScale, but shader pipeline uses uiRenderScale.
     -- NOTE: Pass false for centering - centerItemOnSlot() handles positioning separately.
@@ -113,8 +120,8 @@ function CardUIPolicy.setupForScreenSpace(cardEntity)
     if animation_system and animation_system.resizeAnimationObjectsInEntityToFitAndCenterUI then
         animation_system.resizeAnimationObjectsInEntityToFitAndCenterUI(
             cardEntity,
-            INVENTORY_SLOT_SIZE,
-            INVENTORY_SLOT_SIZE,
+            INVENTORY_CARD_TARGET_SIZE,
+            INVENTORY_CARD_TARGET_SIZE,
             false,  -- centerLaterally (handled by centerItemOnSlot)
             false   -- centerVertically (handled by centerItemOnSlot)
         )
@@ -122,8 +129,8 @@ function CardUIPolicy.setupForScreenSpace(cardEntity)
         -- Fallback if UI-specific resize not available
         animation_system.resizeAnimationObjectsInEntityToFit(
             cardEntity,
-            INVENTORY_SLOT_SIZE,
-            INVENTORY_SLOT_SIZE
+            INVENTORY_CARD_TARGET_SIZE,
+            INVENTORY_CARD_TARGET_SIZE
         )
     end
 

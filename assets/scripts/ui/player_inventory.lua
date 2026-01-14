@@ -619,14 +619,22 @@ local function setupCardRenderTimer()
                 local hasPipeline = shader_pipeline and shader_pipeline.ShaderPipelineComponent
                     and registry:has(eid, shader_pipeline.ShaderPipelineComponent)
                 local animComp = component_cache.get(eid, AnimationQueueComponent)
-                
+
                 if animComp then
                     animComp.drawWithLegacyPipeline = true
                 end
-                
+
                 if hasPipeline and animComp and not animComp.noDraw then
+                    -- Use entity's actual z-order (respects drag z-order changes)
+                    -- This ensures dragged cards render above other cards
                     local zToUse = UI_CARD_Z
-                    
+                    if layer_order_system and layer_order_system.getZIndex then
+                        local entityZ = layer_order_system.getZIndex(eid)
+                        if entityZ and entityZ > 0 then
+                            zToUse = entityZ
+                        end
+                    end
+
                     local bucket = batchedCardBuckets[zToUse]
                     if not bucket then
                         bucket = {}

@@ -1,5 +1,52 @@
 #pragma once
 
+/**
+ * @file ui_components.hpp
+ * @brief Split UI component system - the preferred way to access UI properties.
+ *
+ * ## Overview
+ *
+ * This file defines the split component architecture that replaces the monolithic
+ * UIConfig struct. Each component handles a specific concern:
+ *
+ * - UIElementCore: Identity and hierarchy (type, id, tree order)
+ * - UIStyleConfig: Visual appearance (colors, outlines, effects, textures)
+ * - UILayoutConfig: Positioning and dimensions (size, padding, alignment)
+ * - UIInteractionConfig: Input handling (collision, buttons, tooltips, callbacks)
+ * - UIContentConfig: Type-specific content (text, objects, progress bars)
+ *
+ * ## Usage in Handlers
+ *
+ * UI handlers receive split components via UIDrawContext:
+ *
+ * ```cpp
+ * void draw(Registry& reg, Entity e, const UIStyleConfig& style,
+ *           const Transform* transform) override {
+ *     // Access style.color, style.shadow, etc.
+ * }
+ * ```
+ *
+ * ## Migration from UIConfig
+ *
+ * Use extraction functions during the transition:
+ *
+ * ```cpp
+ * auto style = extractStyle(config);      // UIConfig -> UIStyleConfig
+ * auto layout = extractLayout(config);    // UIConfig -> UILayoutConfig
+ * ```
+ *
+ * ## Adding Split Components to Entities
+ *
+ * New code should add split components directly:
+ *
+ * ```cpp
+ * registry.emplace<UIStyleConfig>(entity, UIStyleConfig{
+ *     .color = RED,
+ *     .shadow = true
+ * });
+ * ```
+ */
+
 #include "entt/entity/fwd.hpp"
 #include "util/common_headers.hpp"
 #include "systems/transform/transform_functions.hpp"

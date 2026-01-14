@@ -186,6 +186,57 @@ namespace ui
     //TODO: Funnel to and funnel from can be boolean? What are they?
     // UIBox interprets this data as high-level container settings which affect all ui elements within
     // UIElement interprets config at a per-element level
+
+    /**
+     * @deprecated UIConfig is being phased out in favor of split components.
+     *
+     * ## Migration Guide
+     *
+     * Instead of using UIConfig fields directly, prefer the split components:
+     *
+     * | Old (UIConfig)           | New Component        | Notes                          |
+     * |--------------------------|----------------------|--------------------------------|
+     * | color, outlineColor      | UIStyleConfig        | Visual appearance              |
+     * | shadow, emboss, noFill   | UIStyleConfig        | Effects and styling            |
+     * | nPatchInfo, nPatchSource | UIStyleConfig        | 9-patch rendering              |
+     * | width, height, padding   | UILayoutConfig       | Dimensions and spacing         |
+     * | offset, scale            | UILayoutConfig       | Position and scaling           |
+     * | alignmentFlags           | UILayoutConfig       | Alignment settings             |
+     * | canCollide, hover        | UIInteractionConfig  | Input handling                 |
+     * | buttonCallback, tooltip  | UIInteractionConfig  | Callbacks and tooltips         |
+     * | focusArgs, choice        | UIInteractionConfig  | Focus and selection            |
+     * | text, fontSize, fontName | UIContentConfig      | Text content                   |
+     * | object, progressBar      | UIContentConfig      | Attached objects               |
+     * | ref_entity, ref_value    | UIContentConfig      | Reference system               |
+     *
+     * ## Handler System
+     *
+     * UI handlers (in src/systems/ui/handlers/) now use split components:
+     *
+     * ```cpp
+     * // Handler example - uses split components
+     * void MyHandler::draw(Registry& reg, Entity e, const UIStyleConfig& style,
+     *                      const Transform* transform) {
+     *     if (style.color) {
+     *         // use style.color
+     *     }
+     * }
+     * ```
+     *
+     * ## Extraction Functions
+     *
+     * During migration, use extraction functions (ui_components.hpp):
+     * - extractStyle(config) → UIStyleConfig
+     * - extractLayout(config) → UILayoutConfig
+     * - extractInteraction(config) → UIInteractionConfig
+     * - extractContent(config) → UIContentConfig
+     *
+     * ## Timeline
+     *
+     * Phase 1: Split components exist alongside UIConfig (current)
+     * Phase 2: New code should use split components
+     * Phase 3: UIConfig will be removed (breaking change)
+     */
     struct UIConfig
     {
         UIStylingType stylingType = UIStylingType::ROUNDED_RECTANGLE; // Determines how the UI element is drawn (rounded rectangle or 9-patch borders)

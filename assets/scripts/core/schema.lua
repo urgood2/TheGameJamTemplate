@@ -27,6 +27,84 @@ local Schema = {}
 Schema.ENABLED = true
 
 --------------------------------------------------------------------------------
+-- String Similarity (Levenshtein Distance)
+--------------------------------------------------------------------------------
+
+--- Calculate Levenshtein distance between two strings
+--- @param s1 string First string
+--- @param s2 string Second string
+--- @return number Distance (0 = identical)
+local function levenshtein(s1, s2)
+    local len1, len2 = #s1, #s2
+
+    -- Early exit for identical strings
+    if s1 == s2 then return 0 end
+    if len1 == 0 then return len2 end
+    if len2 == 0 then return len1 end
+
+    -- Create distance matrix (using two rows for memory efficiency)
+    local prev = {}
+    local curr = {}
+
+    -- Initialize first row
+    for j = 0, len2 do
+        prev[j] = j
+    end
+
+    -- Fill matrix
+    for i = 1, len1 do
+        curr[0] = i
+        for j = 1, len2 do
+            local cost = (s1:sub(i, i) == s2:sub(j, j)) and 0 or 1
+            curr[j] = math.min(
+                prev[j] + 1,      -- deletion
+                curr[j - 1] + 1,  -- insertion
+                prev[j - 1] + cost -- substitution
+            )
+        end
+        prev, curr = curr, prev
+    end
+
+    return prev[len2]
+end
+
+--- Calculate similarity ratio (0-1, higher = more similar)
+--- @param s1 string First string
+--- @param s2 string Second string
+--- @return number Similarity (0 = completely different, 1 = identical)
+local function similarity(s1, s2)
+    local maxLen = math.max(#s1, #s2)
+    if maxLen == 0 then return 1 end
+    return 1 - (levenshtein(s1, s2) / maxLen)
+end
+
+--- Find the best matching field name for a typo
+--- @param typo string The unknown field name
+--- @param validFields table Table of valid field names
+--- @param threshold number Minimum similarity (default 0.5)
+--- @return string|nil bestMatch The closest matching field, or nil if none close enough
+local function findBestMatch(typo, validFields, threshold)
+    threshold = threshold or 0.5
+    local bestMatch = nil
+    local bestSim = threshold
+
+    for fieldName, _ in pairs(validFields) do
+        local sim = similarity(typo:lower(), fieldName:lower())
+        if sim > bestSim then
+            bestSim = sim
+            bestMatch = fieldName
+        end
+    end
+
+    return bestMatch
+end
+
+-- Export for testing
+Schema._levenshtein = levenshtein
+Schema._similarity = similarity
+Schema._findBestMatch = findBestMatch
+
+--------------------------------------------------------------------------------
 -- Schema Definitions
 --------------------------------------------------------------------------------
 
@@ -188,10 +266,18 @@ function Schema.check(data, schema)
         end
     end
 
-    -- Check for unknown fields (typo detection)
+    -- Check for unknown fields (typo detection with suggestions)
     for key, _ in pairs(data) do
         if not fields[key] then
-            table.insert(warnings, string.format("unknown field '%s' (typo?)", key))
+            local suggestion = findBestMatch(key, fields, 0.5)
+            if suggestion then
+                table.insert(warnings, string.format(
+                    "unknown field '%s' - did you mean '%s'?",
+                    key, suggestion
+                ))
+            else
+                table.insert(warnings, string.format("unknown field '%s'", key))
+            end
         end
     end
 

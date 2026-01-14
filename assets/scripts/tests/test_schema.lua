@@ -91,13 +91,28 @@ local function test_schema()
         id = "TYPO_CARD",
         type = "action",
         tags = {},
-        mana_cosy = 10,  -- Typo!
-        damge = 25,      -- Typo!
+        mana_cosy = 10,  -- Typo! (should suggest mana_cost)
+        damge = 25,      -- Typo! (should suggest damage)
     }
     check_ok, errors, warnings = Schema.check(typo_card, Schema.CARD)
     assert(check_ok, "Card with typos should pass (warnings only)")
     assert(warnings and #warnings >= 2, "Should have at least 2 warnings for typos")
     print("  OK: Warns about unknown fields (typo detection)")
+
+    -- Test 6b: Typo suggestions are accurate
+    local found_mana_cost_suggestion = false
+    local found_damage_suggestion = false
+    for _, warn in ipairs(warnings) do
+        if warn:find("mana_cosy") and warn:find("mana_cost") then
+            found_mana_cost_suggestion = true
+        end
+        if warn:find("damge") and warn:find("damage") then
+            found_damage_suggestion = true
+        end
+    end
+    assert(found_mana_cost_suggestion, "Should suggest 'mana_cost' for 'mana_cosy'")
+    assert(found_damage_suggestion, "Should suggest 'damage' for 'damge'")
+    print("  OK: Typo suggestions are accurate")
 
     -- Test 7: validate() throws on error (with name context)
     local threw = false
@@ -136,6 +151,28 @@ local function test_schema()
     assert(check_ok, "Should pass when ENABLED=false")
     Schema.ENABLED = true  -- Re-enable for other tests
     print("  OK: ENABLED flag disables validation")
+
+    -- Test 11: String similarity functions
+    -- Test levenshtein distance
+    assert(Schema._levenshtein("", "") == 0, "Empty strings should have distance 0")
+    assert(Schema._levenshtein("abc", "abc") == 0, "Identical strings should have distance 0")
+    assert(Schema._levenshtein("abc", "abd") == 1, "One char difference should be distance 1")
+    assert(Schema._levenshtein("kitten", "sitting") == 3, "kitten->sitting should be 3")
+    print("  OK: Levenshtein distance works correctly")
+
+    -- Test similarity function
+    assert(Schema._similarity("abc", "abc") == 1, "Identical strings should have similarity 1")
+    assert(Schema._similarity("", "") == 1, "Empty strings should have similarity 1")
+    local sim = Schema._similarity("mana_cost", "mana_cosy")
+    assert(sim > 0.8, "mana_cost/mana_cosy should be highly similar: " .. sim)
+    print("  OK: Similarity function works correctly")
+
+    -- Test findBestMatch
+    local testFields = { mana_cost = true, damage = true, speed = true }
+    assert(Schema._findBestMatch("mana_cosy", testFields) == "mana_cost", "Should match mana_cost")
+    assert(Schema._findBestMatch("damge", testFields) == "damage", "Should match damage")
+    assert(Schema._findBestMatch("xyz_completely_different", testFields) == nil, "Should not match anything")
+    print("  OK: findBestMatch finds correct suggestions")
 
     print("PASS: All schema tests passed")
     return true

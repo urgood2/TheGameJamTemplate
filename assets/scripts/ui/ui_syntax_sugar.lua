@@ -1138,6 +1138,140 @@ function dsl.spriteButton(opts)
 end
 
 ------------------------------------------------------------
+-- STRICT VALIDATION API
+-- Usage: dsl.strict.vbox, dsl.strict.text, etc.
+-- Validates props before delegating to regular DSL functions.
+------------------------------------------------------------
+
+local Schema = require("core.schema")
+
+-- Helper: Get caller file location for error messages
+local function getCallerLocation(level)
+    level = level or 3  -- Caller of the strict function
+    local info = debug.getinfo(level, "Sl")
+    if info then
+        local source = info.source or "?"
+        -- Clean up source path (remove @, show just filename)
+        if source:sub(1, 1) == "@" then
+            source = source:sub(2)
+        end
+        return string.format("%s:%d", source, info.currentline or 0)
+    end
+    return "unknown:0"
+end
+
+-- Helper: Format validation errors with file location
+local function formatValidationError(componentName, errors, warnings, location)
+    local parts = {}
+    table.insert(parts, string.format("[dsl.strict.%s] Validation failed at %s:", componentName, location))
+
+    for _, err in ipairs(errors) do
+        table.insert(parts, "  ERROR: " .. err)
+    end
+
+    for _, warn in ipairs(warnings) do
+        table.insert(parts, "  WARNING: " .. warn)
+    end
+
+    return table.concat(parts, "\n")
+end
+
+-- Create strict namespace
+dsl.strict = {}
+
+-- Map DSL functions to their schemas
+local STRICT_MAPPINGS = {
+    -- Containers
+    { name = "root",     fn = dsl.root,         schema = Schema.UI_ROOT,         positional = {} },
+    { name = "vbox",     fn = dsl.vbox,         schema = Schema.UI_VBOX,         positional = {} },
+    { name = "hbox",     fn = dsl.hbox,         schema = Schema.UI_HBOX,         positional = {} },
+    { name = "section",  fn = dsl.section,      schema = Schema.UI_SECTION,      positional = { "title" } },
+    { name = "grid",     fn = dsl.grid,         schema = Schema.UI_GRID,         positional = { "rows", "cols", "gen" } },
+
+    -- Primitives
+    { name = "text",     fn = dsl.text,         schema = Schema.UI_TEXT,         positional = { "text" } },
+    { name = "richText", fn = dsl.richText,     schema = Schema.UI_RICH_TEXT,    positional = { "text" } },
+    { name = "dynamicText", fn = dsl.dynamicText, schema = Schema.UI_DYNAMIC_TEXT, positional = { "fn", "fontSize", "effect" } },
+    { name = "anim",     fn = dsl.anim,         schema = Schema.UI_ANIM,         positional = { "id" } },
+    { name = "spacer",   fn = dsl.spacer,       schema = Schema.UI_SPACER,       positional = { "w", "h" } },
+    { name = "divider",  fn = dsl.divider,      schema = Schema.UI_DIVIDER,      positional = { "direction" } },
+    { name = "iconLabel", fn = dsl.iconLabel,   schema = Schema.UI_ICON_LABEL,   positional = { "iconId", "label" } },
+
+    -- Interactive
+    { name = "button",   fn = dsl.button,       schema = Schema.UI_BUTTON,       positional = { "label" } },
+    { name = "spriteButton", fn = dsl.spriteButton, schema = Schema.UI_SPRITE_BUTTON, positional = {} },
+    { name = "progressBar", fn = dsl.progressBar, schema = Schema.UI_PROGRESS_BAR, positional = {} },
+
+    -- Panels
+    { name = "spritePanel", fn = dsl.spritePanel, schema = Schema.UI_SPRITE_PANEL, positional = {} },
+    { name = "spriteBox", fn = dsl.spriteBox,   schema = Schema.UI_SPRITE_BOX,   positional = {} },
+    { name = "customPanel", fn = dsl.customPanel, schema = Schema.UI_CUSTOM_PANEL, positional = {} },
+
+    -- Complex
+    { name = "tabs",     fn = dsl.tabs,         schema = Schema.UI_TABS,         positional = {} },
+    { name = "inventoryGrid", fn = dsl.inventoryGrid, schema = Schema.UI_INVENTORY_GRID, positional = {} },
+}
+
+-- Create strict wrapper for each DSL function
+for _, mapping in ipairs(STRICT_MAPPINGS) do
+    local name = mapping.name
+    local originalFn = mapping.fn
+    local schema = mapping.schema
+    local positional = mapping.positional
+
+    dsl.strict[name] = function(...)
+        local args = { ... }
+        local opts = {}
+
+        -- Handle positional arguments by mapping them to opts
+        if #positional > 0 then
+            for i, argName in ipairs(positional) do
+                if args[i] ~= nil then
+                    opts[argName] = args[i]
+                end
+            end
+            -- Last arg might be an opts table
+            local lastArg = args[#positional + 1]
+            if type(lastArg) == "table" then
+                for k, v in pairs(lastArg) do
+                    opts[k] = v
+                end
+            end
+        else
+            -- Functions that take a single table argument
+            if type(args[1]) == "table" then
+                opts = args[1]
+            end
+        end
+
+        -- Validate against schema
+        local ok, errors, warnings = Schema.check(opts, schema)
+
+        -- Get caller location
+        local location = getCallerLocation(3)
+
+        -- Always log warnings
+        if warnings and #warnings > 0 then
+            local warnMsg = formatValidationError(name, {}, warnings, location)
+            if rawget(_G, "log_warn") then
+                log_warn(warnMsg)
+            else
+                print("WARN: " .. warnMsg)
+            end
+        end
+
+        -- Throw on errors
+        if not ok then
+            local errMsg = formatValidationError(name, errors, warnings or {}, location)
+            error(errMsg, 2)
+        end
+
+        -- Delegate to original function
+        return originalFn(...)
+    end
+end
+
+------------------------------------------------------------
 -- Return DSL module
 ------------------------------------------------------------
 return dsl

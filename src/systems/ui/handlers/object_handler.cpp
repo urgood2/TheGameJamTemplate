@@ -66,6 +66,9 @@ void ObjectHandler::draw(
     if (config->focusWithObject && objectNode->state.isBeingFocused) {
         // Initialize or update the focus timer
         if (state) {
+            // Balance matrix stack: push before drawing highlight primitives
+            layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
+
             state->object_focus_timer = state->object_focus_timer.value_or(main_loop::mainLoop.realtimeTimer);
 
             // Calculate highlight intensity based on time (animated fade)

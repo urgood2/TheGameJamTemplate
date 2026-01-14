@@ -2236,8 +2236,17 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
 
             layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
         }
+// Rectangle/container style rendering (backgrounds). INPUT_TEXT still needs its
+// background even if its handler already drew the text/caret.
 #if UI_USE_HANDLERS
-        else if (!renderedByHandler && (config->uiType == UITypeEnum::RECT_SHAPE || config->uiType == UITypeEnum::VERTICAL_CONTAINER || config->uiType == UITypeEnum::HORIZONTAL_CONTAINER || config->uiType == UITypeEnum::ROOT || config->uiType == UITypeEnum::SCROLL_PANE || config->uiType == UITypeEnum::INPUT_TEXT))
+        else if (
+            (config->uiType == UITypeEnum::INPUT_TEXT) ||
+            (!renderedByHandler && (config->uiType == UITypeEnum::RECT_SHAPE ||
+                                    config->uiType == UITypeEnum::VERTICAL_CONTAINER ||
+                                    config->uiType == UITypeEnum::HORIZONTAL_CONTAINER ||
+                                    config->uiType == UITypeEnum::ROOT ||
+                                    config->uiType == UITypeEnum::SCROLL_PANE))
+        )
 #else
         else if (config->uiType == UITypeEnum::RECT_SHAPE || config->uiType == UITypeEnum::VERTICAL_CONTAINER || config->uiType == UITypeEnum::HORIZONTAL_CONTAINER || config->uiType == UITypeEnum::ROOT || config->uiType == UITypeEnum::SCROLL_PANE || config->uiType == UITypeEnum::INPUT_TEXT)
 #endif
@@ -2535,8 +2544,13 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             }
         }
         
+#if UI_USE_HANDLERS
+        // Legacy INPUT_TEXT rendering (text + caret). Skip when a handler already drew it.
+        if (!renderedByHandler && config->uiType == UITypeEnum::INPUT_TEXT)
+#else
         // draw input text
         if (config->uiType == UITypeEnum::INPUT_TEXT)
+#endif
         {
             // Text source: ui::TextInput on the same entity
             auto &textInput = registry.get<ui::TextInput>(entity);

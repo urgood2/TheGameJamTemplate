@@ -7,6 +7,7 @@ Centralized module for applying UI-specific setup to cards. Manages:
 - Screen-space vs world-space tags
 - Z-order for dragging and normal display
 - Collision quadtree assignment
+- Planning card elevation when inventory opens
 
 This provides consistent card rendering behavior across all inventory grids
 and planning boards.
@@ -25,6 +26,19 @@ CardUIPolicy.setupForWorldSpace(cardEntity)
 CardUIPolicy.setDragZOrder(cardEntity)    -- Card being dragged
 CardUIPolicy.resetZOrder(cardEntity)      -- Card dropped
 
+-- Planning card elevation (auto-registered via signals):
+CardUIPolicy.elevatePlanningCards()       -- Called on player_inventory_opened
+CardUIPolicy.resetPlanningCards()         -- Called on player_inventory_closed
+CardUIPolicy.arePlanningCardsElevated()   -- Check current state
+
+Z-ORDER HIERARCHY:
+-----------------
+- NORMAL_CARD_Z    = 101   (planning cards on board, below grid)
+- UI_CARD_Z        = 800   (inventory cards)
+- GRID_Z           = 850   (inventory grid slots)
+- ELEVATED_CARD_Z  = 900   (elevated planning cards, above grid)
+- DRAG_Z           = 1400  (dragged cards, above everything)
+
 ================================================================================
 ]]
 
@@ -32,12 +46,16 @@ local CardUIPolicy = {}
 
 local z_orders = require("core.z_orders")
 local component_cache = require("core.component_cache")
+local signal = require("external.hump.signal")
 
 -- Z-order constants for UI cards
-local UI_CARD_Z = z_orders.ui_tooltips - 100  -- Normal cards in inventory (800)
-local DRAG_Z = z_orders.ui_tooltips + 500     -- Dragged cards (above everything, 1400)
-local NORMAL_CARD_Z = z_orders.card           -- Normal cards on planning board (101)
-local ELEVATED_CARD_Z = z_orders.ui_tooltips  -- Planning cards when inventory is open (900)
+local UI_CARD_Z = z_orders.ui_tooltips - 100  -- Normal cards in inventory (= 800)
+local DRAG_Z = z_orders.ui_tooltips + 500     -- Dragged cards (above everything) (= 1400)
+local NORMAL_CARD_Z = z_orders.card           -- Normal cards on planning board (= 101)
+local ELEVATED_CARD_Z = z_orders.ui_tooltips  -- Elevated planning cards (= 900, above grid at 850)
+
+-- Track elevation state to avoid redundant operations
+local _planningCardsElevated = false
 
 --------------------------------------------------------------------------------
 -- SCREEN-SPACE SETUP
@@ -82,6 +100,8 @@ end
 -- - Sets transform space to "world" (removes ScreenSpaceCollisionMarker)
 -- - Card will use world quadtree for collision
 -- - Sets appropriate z-order for board display
+-- NOTE: If planning cards are currently elevated (inventory is open), uses
+--       ELEVATED_CARD_Z instead of NORMAL_CARD_Z to maintain visibility.
 --------------------------------------------------------------------------------
 function CardUIPolicy.setupForWorldSpace(cardEntity)
     if not registry:valid(cardEntity) then
@@ -95,8 +115,10 @@ function CardUIPolicy.setupForWorldSpace(cardEntity)
     end
 
     -- Set z-order for board display
+    -- Use elevated z-order if inventory is currently open (Cause #7 fix)
+    local targetZ = _planningCardsElevated and ELEVATED_CARD_Z or NORMAL_CARD_Z
     if layer_order_system and layer_order_system.assignZIndexToEntity then
-        layer_order_system.assignZIndexToEntity(cardEntity, NORMAL_CARD_Z)
+        layer_order_system.assignZIndexToEntity(cardEntity, targetZ)
     end
 
     -- Clear state tags and set to planning state (for board cards)
@@ -149,6 +171,7 @@ end
 -- Resets a card's z-order to normal display level.
 -- Use when drag ends. Defaults to screen-space z-order; use optional space
 -- parameter to specify "world" for board cards.
+-- NOTE: If space="world" and planning cards are elevated, uses ELEVATED_CARD_Z.
 --------------------------------------------------------------------------------
 function CardUIPolicy.resetZOrder(cardEntity, space)
     if not registry:valid(cardEntity) then
@@ -158,7 +181,8 @@ function CardUIPolicy.resetZOrder(cardEntity, space)
 
     local targetZ
     if space == "world" then
-        targetZ = NORMAL_CARD_Z
+        -- Use elevated z-order if inventory is currently open (Cause #7 fix)
+        targetZ = _planningCardsElevated and ELEVATED_CARD_Z or NORMAL_CARD_Z
     else
         -- Default to screen-space (inventory) z-order
         targetZ = UI_CARD_Z
@@ -205,69 +229,123 @@ function CardUIPolicy.getZOrder(cardEntity)
 end
 
 --------------------------------------------------------------------------------
--- PLANNING CARD Z-ORDER ELEVATION
+-- PLANNING CARD ELEVATION
 --------------------------------------------------------------------------------
--- Elevates all planning board cards above the inventory panel.
--- Call when inventory opens.
+-- When the inventory grid opens, planning cards on the board need to be
+-- elevated to render ABOVE the grid slots (z=850) but BELOW inventory cards (z=1000).
+-- This prevents world-space planning cards from being hidden by the grid panel.
 --------------------------------------------------------------------------------
+
+--- Elevate all world-space planning cards to render above the inventory grid.
+-- Called when player_inventory_opened signal fires.
+-- @return number Count of elevated cards
 function CardUIPolicy.elevatePlanningCards()
+    if _planningCardsElevated then
+        log_debug("[CardUIPolicy] Planning cards already elevated, skipping")
+        return 0
+    end
+
     if not PLANNING_STATE then
-        log_warn("[CardUIPolicy] PLANNING_STATE not available")
+        log_warn("[CardUIPolicy] PLANNING_STATE not available, cannot elevate cards")
+        return 0
+    end
+
+    -- Access the global cards table from gameplay.lua
+    local cardsTable = rawget(_G, "cards")
+    if not cardsTable then
+        log_debug("[CardUIPolicy] No cards table found, nothing to elevate")
         return 0
     end
 
     local count = 0
-    local totalEntities = 0
-    local screenSpaceCount = 0
-    local view = registry:runtime_view(PLANNING_STATE)
-
-    view:each(function(entity)
-        totalEntities = totalEntities + 1
-        if registry:valid(entity) then
-            local isWorld = CardUIPolicy.isWorldSpace(entity)
-            if not isWorld then
-                screenSpaceCount = screenSpaceCount + 1
-            end
-            if isWorld then
+    for entity, cardScript in pairs(cardsTable) do
+        if entity and registry:valid(entity) then
+            -- Only elevate cards that are in world-space (on the planning board)
+            local isWorldSpace = CardUIPolicy.isWorldSpace(entity)
+            if isWorldSpace then
                 if layer_order_system and layer_order_system.assignZIndexToEntity then
                     layer_order_system.assignZIndexToEntity(entity, ELEVATED_CARD_Z)
                     count = count + 1
                 end
             end
         end
-    end)
+    end
 
-    log_debug("[CardUIPolicy] Elevated " .. count .. "/" .. totalEntities .. " planning cards to z=" .. ELEVATED_CARD_Z .. " (screen-space: " .. screenSpaceCount .. ")")
+    _planningCardsElevated = true
+    log_debug("[CardUIPolicy] Elevated " .. count .. " planning cards to z=" .. ELEVATED_CARD_Z)
     return count
 end
 
---------------------------------------------------------------------------------
--- RESTORE PLANNING CARD Z-ORDER
---------------------------------------------------------------------------------
--- Restores all planning board cards to normal z-order.
--- Call when inventory closes.
---------------------------------------------------------------------------------
-function CardUIPolicy.restorePlanningCards()
-    if not PLANNING_STATE then
-        log_warn("[CardUIPolicy] PLANNING_STATE not available")
+--- Reset all world-space planning cards to their normal z-order.
+-- Called when player_inventory_closed signal fires.
+-- @return number Count of reset cards
+function CardUIPolicy.resetPlanningCards()
+    if not _planningCardsElevated then
+        log_debug("[CardUIPolicy] Planning cards not elevated, skipping reset")
+        return 0
+    end
+
+    -- Access the global cards table from gameplay.lua
+    local cardsTable = rawget(_G, "cards")
+    if not cardsTable then
+        log_debug("[CardUIPolicy] No cards table found, nothing to reset")
+        _planningCardsElevated = false
         return 0
     end
 
     local count = 0
-    local view = registry:runtime_view(PLANNING_STATE)
-
-    view:each(function(entity)
-        if registry:valid(entity) and CardUIPolicy.isWorldSpace(entity) then
-            if layer_order_system and layer_order_system.assignZIndexToEntity then
-                layer_order_system.assignZIndexToEntity(entity, NORMAL_CARD_Z)
-                count = count + 1
+    for entity, cardScript in pairs(cardsTable) do
+        if entity and registry:valid(entity) then
+            -- Only reset cards that are in world-space (on the planning board)
+            local isWorldSpace = CardUIPolicy.isWorldSpace(entity)
+            if isWorldSpace then
+                if layer_order_system and layer_order_system.assignZIndexToEntity then
+                    layer_order_system.assignZIndexToEntity(entity, NORMAL_CARD_Z)
+                    count = count + 1
+                end
             end
         end
-    end)
+    end
 
-    log_debug("[CardUIPolicy] Restored " .. count .. " planning cards to z=" .. NORMAL_CARD_Z)
+    _planningCardsElevated = false
+    log_debug("[CardUIPolicy] Reset " .. count .. " planning cards to z=" .. NORMAL_CARD_Z)
     return count
 end
+
+--- Check if planning cards are currently elevated
+-- @return boolean True if cards are elevated
+function CardUIPolicy.arePlanningCardsElevated()
+    return _planningCardsElevated
+end
+
+--------------------------------------------------------------------------------
+-- SIGNAL HANDLERS FOR INVENTORY INTEGRATION
+--------------------------------------------------------------------------------
+-- Automatically elevate/reset planning cards when inventory opens/closes.
+-- This ensures world-space planning cards render above the grid panel.
+--------------------------------------------------------------------------------
+
+local _signalHandlersRegistered = false
+
+--- Register signal handlers for automatic elevation.
+-- Safe to call multiple times; handlers are only registered once.
+function CardUIPolicy.registerInventorySignalHandlers()
+    if _signalHandlersRegistered then return end
+
+    signal.register("player_inventory_opened", function()
+        CardUIPolicy.elevatePlanningCards()
+    end)
+
+    signal.register("player_inventory_closed", function()
+        CardUIPolicy.resetPlanningCards()
+    end)
+
+    _signalHandlersRegistered = true
+    log_debug("[CardUIPolicy] Registered inventory signal handlers")
+end
+
+-- Auto-register handlers when module loads
+CardUIPolicy.registerInventorySignalHandlers()
 
 --------------------------------------------------------------------------------
 -- CONSTANTS (exposed for external use)

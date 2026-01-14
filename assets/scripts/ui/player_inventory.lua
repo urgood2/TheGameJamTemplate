@@ -36,6 +36,8 @@ local InventoryGridInit = require("ui.inventory_grid_init")
 local shader_pipeline = _G.shader_pipeline
 local QuickEquip = require("ui.inventory_quick_equip")
 local z_orders = require("core.z_orders")
+-- CardUIPolicy required to register signal handlers for planning card elevation
+-- This ensures world-space planning cards render above the inventory grid
 local CardUIPolicy = require("ui.card_ui_policy")
 
 local TIMER_GROUP = "player_inventory"

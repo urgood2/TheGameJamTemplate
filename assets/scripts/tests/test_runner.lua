@@ -10,8 +10,12 @@ A lightweight BDD-style test runner with:
 - Stack traces for failed assertions
 - Directory-based test discovery
 - Exit codes (0 = pass, 1 = fail)
+- Filter tests by name pattern
+- Watch mode for auto-rerun on file changes
+- Verbose mode for detailed assertion output
+- Timing statistics per test and total
 
-Usage:
+Usage (programmatic):
     local t = require("tests.test_runner")
 
     t.describe("MyModule", function()
@@ -31,8 +35,23 @@ Usage:
 
     t.run()  -- Returns true if all pass, exits with code 1 on failure
 
-Run all tests in directory:
-    lua assets/scripts/tests/test_runner.lua [directory]
+Configuration:
+    t.set_filter("vbox")     -- Only run tests matching "vbox"
+    t.set_verbose(true)      -- Show detailed output
+    t.set_timing(false)      -- Hide timing info
+
+CLI Usage:
+    lua test_runner.lua [options] [directory]
+
+    Options:
+      -f, --filter PATTERN   Filter tests by name pattern
+      -v, --verbose          Show detailed assertion output
+      -w, --watch            Watch mode - re-run on file changes
+      -h, --help             Show help
+
+Examples:
+    lua test_runner.lua --filter "vbox"
+    lua test_runner.lua --verbose --watch
 ]]
 
 local TestRunner = {}
@@ -40,7 +59,15 @@ local TestRunner = {}
 -- State
 local suites = {}           -- Registered describe blocks
 local current_suite = nil   -- Current suite being defined
-local results = { passed = 0, failed = 0, skipped = 0, errors = {} }
+local results = { passed = 0, failed = 0, skipped = 0, errors = {}, timings = {}, total_time = 0 }
+
+-- Configuration
+local config = {
+    filter = nil,           -- Pattern to filter tests by name
+    verbose = false,        -- Show detailed assertion output
+    watch = false,          -- Watch mode (re-run on file changes)
+    show_timing = true,     -- Show timing statistics
+}
 
 -- ANSI colors (disable if not supported)
 local COLORS = {
@@ -60,6 +87,69 @@ end
 
 if not supports_colors() then
     for k in pairs(COLORS) do COLORS[k] = "" end
+end
+
+--------------------------------------------------------------------------------
+-- Configuration API
+--------------------------------------------------------------------------------
+
+--- Set test filter pattern
+--- @param pattern string? Lua pattern to match test names (nil to clear)
+function TestRunner.set_filter(pattern)
+    config.filter = pattern
+end
+
+--- Get current filter pattern
+--- @return string? Current filter pattern
+function TestRunner.get_filter()
+    return config.filter
+end
+
+--- Enable/disable verbose mode
+--- @param enabled boolean Whether to show detailed assertion output
+function TestRunner.set_verbose(enabled)
+    config.verbose = enabled
+end
+
+--- Check if verbose mode is enabled
+--- @return boolean Whether verbose mode is enabled
+function TestRunner.is_verbose()
+    return config.verbose
+end
+
+--- Enable/disable timing display
+--- @param enabled boolean Whether to show timing statistics
+function TestRunner.set_timing(enabled)
+    config.show_timing = enabled
+end
+
+--- Configure the test runner
+--- @param opts table Configuration options
+function TestRunner.configure(opts)
+    if opts.filter ~= nil then config.filter = opts.filter end
+    if opts.verbose ~= nil then config.verbose = opts.verbose end
+    if opts.watch ~= nil then config.watch = opts.watch end
+    if opts.show_timing ~= nil then config.show_timing = opts.show_timing end
+end
+
+--------------------------------------------------------------------------------
+-- Timing Utilities
+--------------------------------------------------------------------------------
+
+--- High-precision timer using os.clock()
+local function get_time()
+    return os.clock()
+end
+
+--- Format duration in human-readable format
+local function format_duration(seconds)
+    if seconds < 0.001 then
+        return string.format("%.2fμs", seconds * 1000000)
+    elseif seconds < 1 then
+        return string.format("%.2fms", seconds * 1000)
+    else
+        return string.format("%.2fs", seconds)
+    end
 end
 
 --------------------------------------------------------------------------------
@@ -472,24 +562,56 @@ end
 -- Test Execution
 --------------------------------------------------------------------------------
 
+--- Check if a test matches the current filter
+--- @param suite_name string Suite name
+--- @param test_name string Test name
+--- @return boolean True if test matches filter or no filter set
+local function matches_filter(suite_name, test_name)
+    if not config.filter then return true end
+    local full_name = suite_name .. " " .. test_name
+    return full_name:lower():find(config.filter:lower()) ~= nil
+end
+
 --- Run a single test suite
 function TestRunner._run_suite(suite, indent)
     indent = indent or ""
+    local suite_start = get_time()
+    local suite_has_matching_tests = false
+
+    -- Pre-check if any tests match the filter
+    if config.filter then
+        for _, test in ipairs(suite.tests) do
+            if test.is_suite or matches_filter(suite.name, test.name) then
+                suite_has_matching_tests = true
+                break
+            end
+        end
+        if not suite_has_matching_tests then
+            return -- Skip entire suite if no tests match
+        end
+    end
+
     print(indent .. COLORS.cyan .. "● " .. suite.name .. COLORS.reset)
 
     for _, test in ipairs(suite.tests) do
         if test.is_suite then
             -- Nested suite
             test.fn()
+        elseif not matches_filter(suite.name, test.name) then
+            -- Filtered out - don't count or display
+            -- (filtered tests are simply not run, not counted as skipped)
         elseif test.skip then
             -- Skipped test
             results.skipped = results.skipped + 1
             print(indent .. "  " .. COLORS.yellow .. "○ " .. test.name .. " (skipped)" .. COLORS.reset)
         else
+            local test_start = get_time()
+
             -- Run before_each
             if suite.before_each then
                 local ok, err = pcall(suite.before_each)
                 if not ok then
+                    local test_duration = get_time() - test_start
                     print(indent .. "  " .. COLORS.red .. "✗ " .. test.name .. " (before_each failed)" .. COLORS.reset)
                     print(indent .. "    " .. COLORS.dim .. tostring(err) .. COLORS.reset)
                     results.failed = results.failed + 1
@@ -499,16 +621,37 @@ function TestRunner._run_suite(suite, indent)
                         error = err,
                         trace = format_stack_trace(err),
                     })
+                    table.insert(results.timings, {
+                        suite = suite.name,
+                        name = test.name,
+                        duration = test_duration,
+                        passed = false,
+                    })
                     goto continue
                 end
             end
 
             -- Run test
             local ok, err = pcall(test.fn)
+            local test_duration = get_time() - test_start
+
+            -- Record timing
+            table.insert(results.timings, {
+                suite = suite.name,
+                name = test.name,
+                duration = test_duration,
+                passed = ok,
+            })
 
             if ok then
                 results.passed = results.passed + 1
-                print(indent .. "  " .. COLORS.green .. "✓ " .. test.name .. COLORS.reset)
+                local timing_str = config.show_timing and (" " .. COLORS.dim .. "(" .. format_duration(test_duration) .. ")" .. COLORS.reset) or ""
+                print(indent .. "  " .. COLORS.green .. "✓ " .. test.name .. COLORS.reset .. timing_str)
+
+                -- Verbose mode: show that assertions passed
+                if config.verbose then
+                    print(indent .. "    " .. COLORS.dim .. "(all assertions passed)" .. COLORS.reset)
+                end
             else
                 results.failed = results.failed + 1
                 local trace = format_stack_trace(err)
@@ -518,10 +661,22 @@ function TestRunner._run_suite(suite, indent)
                     error = err,
                     trace = trace,
                 })
-                print(indent .. "  " .. COLORS.red .. "✗ " .. test.name .. COLORS.reset)
-                -- Show inline error summary
-                local err_line = tostring(err):match("^[^\n]+") or tostring(err)
-                print(indent .. "    " .. COLORS.dim .. err_line .. COLORS.reset)
+                local timing_str = config.show_timing and (" " .. COLORS.dim .. "(" .. format_duration(test_duration) .. ")" .. COLORS.reset) or ""
+                print(indent .. "  " .. COLORS.red .. "✗ " .. test.name .. COLORS.reset .. timing_str)
+
+                -- Show inline error (always shown, but more detail in verbose mode)
+                if config.verbose then
+                    print(indent .. "    " .. COLORS.dim .. tostring(err) .. COLORS.reset)
+                    if trace and trace ~= "" then
+                        for line in trace:gmatch("[^\n]+") do
+                            print(indent .. "    " .. COLORS.dim .. line .. COLORS.reset)
+                        end
+                    end
+                else
+                    -- Show just first line of error
+                    local err_line = tostring(err):match("^[^\n]+") or tostring(err)
+                    print(indent .. "    " .. COLORS.dim .. err_line .. COLORS.reset)
+                end
             end
 
             -- Run after_each
@@ -532,21 +687,39 @@ function TestRunner._run_suite(suite, indent)
             ::continue::
         end
     end
+
+    -- Show suite timing in verbose mode
+    if config.verbose and config.show_timing then
+        local suite_duration = get_time() - suite_start
+        print(indent .. COLORS.dim .. "  Suite completed in " .. format_duration(suite_duration) .. COLORS.reset)
+    end
 end
 
 --- Run all registered test suites
 --- @return boolean True if all tests passed
 function TestRunner.run()
-    results = { passed = 0, failed = 0, skipped = 0, errors = {} }
+    results = { passed = 0, failed = 0, skipped = 0, errors = {}, timings = {}, total_time = 0 }
+    local run_start = get_time()
 
     print("\n" .. COLORS.cyan .. "═══════════════════════════════════════════════════════════════" .. COLORS.reset)
     print(COLORS.cyan .. "                         TEST RESULTS" .. COLORS.reset)
-    print(COLORS.cyan .. "═══════════════════════════════════════════════════════════════" .. COLORS.reset .. "\n")
+    print(COLORS.cyan .. "═══════════════════════════════════════════════════════════════" .. COLORS.reset)
+
+    -- Show active filter if set
+    if config.filter then
+        print(COLORS.yellow .. "  Filter: " .. config.filter .. COLORS.reset)
+    end
+    if config.verbose then
+        print(COLORS.yellow .. "  Mode: verbose" .. COLORS.reset)
+    end
+    print("")
 
     for _, suite in ipairs(suites) do
         TestRunner._run_suite(suite)
         print("")
     end
+
+    results.total_time = get_time() - run_start
 
     -- Summary
     print(COLORS.cyan .. "───────────────────────────────────────────────────────────────" .. COLORS.reset)
@@ -559,6 +732,32 @@ function TestRunner.run()
     if results.skipped > 0 then
         print(string.format("  " .. COLORS.yellow .. "Skipped: %d" .. COLORS.reset, results.skipped))
     end
+
+    -- Timing summary
+    if config.show_timing then
+        print(string.format("  " .. COLORS.dim .. "Time:    %s" .. COLORS.reset, format_duration(results.total_time)))
+
+        -- In verbose mode, show slowest tests
+        if config.verbose and #results.timings > 0 then
+            -- Sort by duration descending
+            local sorted_timings = {}
+            for _, t in ipairs(results.timings) do
+                table.insert(sorted_timings, t)
+            end
+            table.sort(sorted_timings, function(a, b) return a.duration > b.duration end)
+
+            print("")
+            print(COLORS.dim .. "  Slowest tests:" .. COLORS.reset)
+            for i = 1, math.min(5, #sorted_timings) do
+                local t = sorted_timings[i]
+                local status = t.passed and COLORS.green or COLORS.red
+                print(string.format("    %s%s%s %s › %s",
+                    status, format_duration(t.duration), COLORS.reset,
+                    t.suite, t.name))
+            end
+        end
+    end
+
     print(COLORS.cyan .. "───────────────────────────────────────────────────────────────" .. COLORS.reset)
 
     -- Detailed failures
@@ -586,7 +785,22 @@ TestRunner.run_all = TestRunner.run
 function TestRunner.reset()
     suites = {}
     current_suite = nil
-    results = { passed = 0, failed = 0, skipped = 0, errors = {} }
+    results = { passed = 0, failed = 0, skipped = 0, errors = {}, timings = {}, total_time = 0 }
+    -- Also reset config to defaults
+    config.filter = nil
+    config.verbose = false
+end
+
+--- Get the results of the last test run
+--- @return table Results with passed, failed, skipped, errors, timings, total_time
+function TestRunner.get_results()
+    return results
+end
+
+--- Get timing information for all tests
+--- @return table Array of {suite, name, duration, passed}
+function TestRunner.get_timings()
+    return results.timings
 end
 
 --------------------------------------------------------------------------------
@@ -634,6 +848,15 @@ function TestRunner.run_directory(dir)
 
     print(COLORS.cyan .. "Found " .. #files .. " test file(s)" .. COLORS.reset)
 
+    -- Build extra args for subprocess
+    local extra_args = ""
+    if config.filter then
+        extra_args = extra_args .. ' --filter "' .. config.filter .. '"'
+    end
+    if config.verbose then
+        extra_args = extra_args .. " --verbose"
+    end
+
     local all_passed = true
 
     for _, filepath in ipairs(files) do
@@ -645,7 +868,7 @@ function TestRunner.run_directory(dir)
         print("\n" .. COLORS.cyan .. "Running: " .. filepath .. COLORS.reset)
 
         -- Execute test file as a separate Lua process
-        local cmd = 'lua "' .. filepath .. '"'
+        local cmd = 'lua "' .. filepath .. '"' .. extra_args
         local exit_code = os.execute(cmd)
 
         -- os.execute returns different values in different Lua versions
@@ -669,20 +892,188 @@ function TestRunner.run_directory(dir)
 end
 
 --------------------------------------------------------------------------------
+-- Watch Mode
+--------------------------------------------------------------------------------
+
+--- Get modification times for all test files
+--- @param dir string Directory to scan
+--- @return table Map of filepath -> modification time
+local function get_file_mtimes(dir)
+    local mtimes = {}
+    local files = list_test_files(dir)
+
+    for _, filepath in ipairs(files) do
+        local f = io.open(filepath, "r")
+        if f then
+            f:close()
+            -- Use os.execute with stat to get mtime (portable)
+            local cmd
+            if package.config:sub(1, 1) == "\\" then
+                -- Windows - use forfiles
+                cmd = 'forfiles /P "' .. filepath:match("(.+)[\\/]") .. '" /M "' .. filepath:match("[\\/]([^\\/]+)$") .. '" /C "cmd /c echo @fdate @ftime" 2>nul'
+            else
+                -- Unix - use stat
+                cmd = 'stat -f "%m" "' .. filepath .. '" 2>/dev/null || stat -c "%Y" "' .. filepath .. '" 2>/dev/null'
+            end
+            local handle = io.popen(cmd)
+            if handle then
+                local mtime = handle:read("*l")
+                handle:close()
+                mtimes[filepath] = mtime
+            end
+        end
+    end
+
+    return mtimes
+end
+
+--- Run tests in watch mode (re-run on file changes)
+--- @param dir string Directory to watch
+--- @param interval number Polling interval in seconds (default 1)
+function TestRunner.watch(dir, interval)
+    dir = dir or "./assets/scripts/tests"
+    interval = interval or 1
+
+    print(COLORS.cyan .. "═══════════════════════════════════════════════════════════════" .. COLORS.reset)
+    print(COLORS.cyan .. "                     WATCH MODE" .. COLORS.reset)
+    print(COLORS.cyan .. "═══════════════════════════════════════════════════════════════" .. COLORS.reset)
+    print("Watching: " .. dir)
+    print("Press Ctrl+C to exit\n")
+
+    local last_mtimes = get_file_mtimes(dir)
+
+    -- Initial run
+    TestRunner.run_directory(dir)
+
+    while true do
+        -- Sleep for interval
+        os.execute("sleep " .. interval)
+
+        -- Check for changes
+        local current_mtimes = get_file_mtimes(dir)
+        local changed = false
+
+        for filepath, mtime in pairs(current_mtimes) do
+            if last_mtimes[filepath] ~= mtime then
+                changed = true
+                print("\n" .. COLORS.yellow .. "File changed: " .. filepath .. COLORS.reset)
+                break
+            end
+        end
+
+        -- Check for new files
+        if not changed then
+            for filepath, _ in pairs(current_mtimes) do
+                if not last_mtimes[filepath] then
+                    changed = true
+                    print("\n" .. COLORS.yellow .. "New file: " .. filepath .. COLORS.reset)
+                    break
+                end
+            end
+        end
+
+        if changed then
+            print(COLORS.cyan .. "\n--- Re-running tests ---\n" .. COLORS.reset)
+            last_mtimes = current_mtimes
+            TestRunner.run_directory(dir)
+        end
+    end
+end
+
+--------------------------------------------------------------------------------
 -- CLI Entry Point
 --------------------------------------------------------------------------------
 
+--- Parse command-line arguments
+--- @param args table Argument array (e.g., arg)
+--- @return table Parsed options with dir, filter, verbose, watch flags
+local function parse_args(args)
+    local opts = {
+        dir = "./assets/scripts/tests",
+        filter = nil,
+        verbose = false,
+        watch = false,
+        help = false,
+    }
+
+    local i = 1
+    while i <= #args do
+        local a = args[i]
+        if a == "--filter" or a == "-f" then
+            i = i + 1
+            opts.filter = args[i]
+        elseif a == "--verbose" or a == "-v" then
+            opts.verbose = true
+        elseif a == "--watch" or a == "-w" then
+            opts.watch = true
+        elseif a == "--help" or a == "-h" then
+            opts.help = true
+        elseif not a:match("^%-") then
+            -- Positional argument = directory
+            opts.dir = a
+        end
+        i = i + 1
+    end
+
+    return opts
+end
+
+--- Print CLI usage help
+local function print_help()
+    print([[
+Usage: lua test_runner.lua [options] [directory]
+
+Options:
+  -f, --filter PATTERN   Filter tests by name pattern (case-insensitive)
+  -v, --verbose          Show detailed assertion output and timing
+  -w, --watch            Watch mode - re-run tests on file changes
+  -h, --help             Show this help message
+
+Examples:
+  lua test_runner.lua                          # Run all tests in default directory
+  lua test_runner.lua ./my_tests               # Run tests in specific directory
+  lua test_runner.lua --filter "vbox"          # Run only tests matching "vbox"
+  lua test_runner.lua --verbose --filter text  # Verbose output for "text" tests
+  lua test_runner.lua --watch                  # Watch mode with auto-rerun
+]])
+end
+
 -- Check if running as main script
 if arg and arg[0] and arg[0]:find("test_runner%.lua$") then
-    local dir = arg[1] or "./assets/scripts/tests"
+    local opts = parse_args(arg)
+
+    if opts.help then
+        print_help()
+        os.exit(0)
+    end
+
+    -- Apply configuration
+    TestRunner.configure({
+        filter = opts.filter,
+        verbose = opts.verbose,
+    })
 
     print(COLORS.cyan .. "═══════════════════════════════════════════════════════════════" .. COLORS.reset)
     print(COLORS.cyan .. "                     TEST RUNNER" .. COLORS.reset)
     print(COLORS.cyan .. "═══════════════════════════════════════════════════════════════" .. COLORS.reset)
-    print("Directory: " .. dir .. "\n")
+    print("Directory: " .. opts.dir)
+    if opts.filter then
+        print("Filter:    " .. opts.filter)
+    end
+    if opts.verbose then
+        print("Mode:      verbose")
+    end
+    if opts.watch then
+        print("Mode:      watch")
+    end
+    print("")
 
-    local success = TestRunner.run_directory(dir)
-    os.exit(success and 0 or 1)
+    if opts.watch then
+        TestRunner.watch(opts.dir)
+    else
+        local success = TestRunner.run_directory(opts.dir)
+        os.exit(success and 0 or 1)
+    end
 end
 
 return TestRunner

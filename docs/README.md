@@ -37,6 +37,7 @@ Welcome to the comprehensive documentation for the Game Jam Template. This index
 - **[Combat Systems API](api/combat-systems.md)** - Triggers, status effects, and equipment
 - [Quadtree API](api/lua_quadtree_api.md) - Spatial partitioning
 - [UI Helper Reference](api/ui_helper_reference.md) - UI building utilities
+- [UI DSL Reference](api/ui-dsl-reference.md) - Comprehensive guide to the UI DSL system
 - [Sprite Panels & Decorations](api/sprite-panels.md) - Custom sprite panels, buttons, and decorations
 - [Sol2 Integration](api/working_with_sol.md) - C++/Lua binding guide
 
@@ -168,6 +169,6 @@ When adding new documentation:
 
 ---
 
-**Last Updated**: 2025-12-09
+**Last Updated**: 2026-01-13
 
 

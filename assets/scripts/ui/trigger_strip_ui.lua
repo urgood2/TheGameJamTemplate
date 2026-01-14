@@ -215,37 +215,66 @@ end
 -- SYNC WITH WAND TRIGGERS
 --------------------------------------------------------------------------------
 
+-- NOTE: Updated for grid inventory (Phase 5)
+-- Now checks wand_grid_adapter first, then falls back to board_sets for legacy wand boards
 local function collectEquippedTriggers()
     local triggers = {}
-
-    -- Access the board_sets from gameplay which contains wandDef with the actual wandId
-    if not board_sets then return triggers end
-
     local index = 1
-    for _, boardSet in ipairs(board_sets) do
-        local triggerBoardID = boardSet.trigger_board_id
-        local actionBoardID = boardSet.action_board_id
-        local wandDef = boardSet.wandDef
 
-        if triggerBoardID and ensure_entity(triggerBoardID) and boards then
-            local triggerBoard = boards[triggerBoardID]
-            if triggerBoard and triggerBoard.cards and #triggerBoard.cards > 0 then
-                local cardEntity = triggerBoard.cards[1]
+    -- Try grid adapter first (Phase 5 grid inventory)
+    local ok, wandAdapter = pcall(require, "ui.wand_grid_adapter")
+    if ok and wandAdapter and wandAdapter.getWandCount then
+        local wandCount = wandAdapter.getWandCount()
+        for wandIndex = 1, wandCount do
+            local loadout = wandAdapter.getLoadout(wandIndex)
+            if loadout and loadout.trigger then
+                local cardEntity = loadout.trigger
                 if ensure_entity(cardEntity) then
                     local script = getScriptTableFromEntityID(cardEntity)
-                    local triggerId = script and script.cardID or "unknown"
-
-                    -- Use wandDef.id as wandId to match WandTriggers registration key
-                    local wandId = wandDef and wandDef.id or tostring(actionBoardID)
+                    local triggerId = script and (script.cardID or script.card_id) or "unknown"
+                    local wandDef = wandAdapter.getWandDef(wandIndex)
+                    local wandId = wandDef and wandDef.id or ("wand_" .. wandIndex)
 
                     table.insert(triggers, {
                         cardEntity = cardEntity,
-                        wandId = wandId,  -- Use wand definition ID to match WandTriggers
-                        actionBoardId = actionBoardID,  -- Keep for UI positioning
+                        wandId = wandId,
+                        actionBoardId = nil,  -- Grid inventory doesn't use board IDs
                         triggerId = triggerId,
                         index = index,
                     })
                     index = index + 1
+                end
+            end
+        end
+    end
+
+    -- Fallback: check board_sets for legacy wand boards (still used for action/trigger boards)
+    if #triggers == 0 and board_sets then
+        for _, boardSet in ipairs(board_sets) do
+            local triggerBoardID = boardSet.trigger_board_id
+            local actionBoardID = boardSet.action_board_id
+            local wandDef = boardSet.wandDef
+
+            if triggerBoardID and ensure_entity(triggerBoardID) and boards then
+                local triggerBoard = boards[triggerBoardID]
+                if triggerBoard and triggerBoard.cards and #triggerBoard.cards > 0 then
+                    local cardEntity = triggerBoard.cards[1]
+                    if ensure_entity(cardEntity) then
+                        local script = getScriptTableFromEntityID(cardEntity)
+                        local triggerId = script and script.cardID or "unknown"
+
+                        -- Use wandDef.id as wandId to match WandTriggers registration key
+                        local wandId = wandDef and wandDef.id or tostring(actionBoardID)
+
+                        table.insert(triggers, {
+                            cardEntity = cardEntity,
+                            wandId = wandId,
+                            actionBoardId = actionBoardID,
+                            triggerId = triggerId,
+                            index = index,
+                        })
+                        index = index + 1
+                    end
                 end
             end
         end
@@ -500,17 +529,32 @@ local TOOLTIP_TITLE_SIZE = 16
 local TOOLTIP_BODY_SIZE = 12
 local TOOLTIP_GAP = 3
 
--- Helper to get wandDef from entry's actionBoardId
+-- Helper to get wandDef from entry's wandId
+-- NOTE: Updated for grid inventory (Phase 5)
 local function getWandDefForEntry(entry)
     if not entry then return nil end
-    if not board_sets then return nil end
 
-    for _, boardSet in ipairs(board_sets) do
-        -- Match by actionBoardId (entity) or wandId (definition ID)
-        if boardSet.action_board_id == entry.actionBoardId then
-            return boardSet.wandDef
-        elseif boardSet.wandDef and boardSet.wandDef.id == entry.wandId then
-            return boardSet.wandDef
+    -- Try grid adapter first (Phase 5)
+    local ok, wandAdapter = pcall(require, "ui.wand_grid_adapter")
+    if ok and wandAdapter and wandAdapter.getWandCount then
+        local wandCount = wandAdapter.getWandCount()
+        for wandIndex = 1, wandCount do
+            local wandDef = wandAdapter.getWandDef(wandIndex)
+            if wandDef and wandDef.id == entry.wandId then
+                return wandDef
+            end
+        end
+    end
+
+    -- Fallback to board_sets
+    if board_sets then
+        for _, boardSet in ipairs(board_sets) do
+            -- Match by actionBoardId (entity) or wandId (definition ID)
+            if boardSet.action_board_id == entry.actionBoardId then
+                return boardSet.wandDef
+            elseif boardSet.wandDef and boardSet.wandDef.id == entry.wandId then
+                return boardSet.wandDef
+            end
         end
     end
     return nil

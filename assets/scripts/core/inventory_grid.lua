@@ -51,6 +51,11 @@ canAccept = grid.canSlotAccept(gridEntity, slotIndex, itemEntity)
 -- Cleanup
 grid.cleanup(gridEntity)  -- Call when destroying grid
 
+-- Grid Resize (with overflow detection)
+result = grid.resizeGrid(gridEntity, newRows, newCols)
+    -- Returns: { success = bool, overflow = { {item=entity, oldSlot=N}, ... } }
+overflowCount = grid.getOverflowCount(gridEntity, newRows, newCols)
+
 EVENTS (via hump.signal):
 ------------------------
 "grid_item_added"     (gridEntity, slotIndex, itemEntity)
@@ -59,6 +64,8 @@ EVENTS (via hump.signal):
 "grid_items_swapped"  (gridEntity, slot1, slot2, item1, item2)
 "grid_stack_changed"  (gridEntity, slotIndex, itemEntity, oldCount, newCount)
 "grid_stack_split"    (gridEntity, slotIndex, amount, newItemEntity)
+"grid_resized"        (gridEntity, newRows, newCols, overflowItems)
+"inventory_full"      (gridEntity, itemEntity)  -- emitted when grid has no empty slots
 
 ================================================================================
 ]]
@@ -66,6 +73,7 @@ EVENTS (via hump.signal):
 local grid = {}
 
 local signal = require("external.hump.signal")
+local itemRegistry = require("core.item_location_registry")
 
 local _gridDataRegistry = {}
 
@@ -299,12 +307,14 @@ end
 function grid.addItem(gridEntity, itemEntity, slotIndex)
     local data = getGridComponent(gridEntity)
     if not data then return false, nil end
-    
+
     -- Find first empty slot if not specified
     if not slotIndex then
         slotIndex = grid.findEmptySlot(gridEntity)
         if not slotIndex then
-            return false, nil  -- Grid is full
+            -- Grid is full - emit signal for user feedback
+            signal.emit("inventory_full", gridEntity, itemEntity)
+            return false, nil
         end
     end
     
@@ -349,80 +359,97 @@ function grid.addItem(gridEntity, itemEntity, slotIndex)
     
     slot.item = itemEntity
     slot.stackCount = 1
-    
+
+    -- Register item location in the registry
+    itemRegistry.register(itemEntity, gridEntity, slotIndex)
+
     signal.emit("grid_item_added", gridEntity, slotIndex, itemEntity)
-    
+
     return true, slotIndex, "placed"
 end
 
 function grid.removeItem(gridEntity, slotIndex)
     local data = getGridComponent(gridEntity)
     if not data or not data.slots[slotIndex] then return nil end
-    
+
     local slot = data.slots[slotIndex]
-    
+
     if slot.locked then
         return nil
     end
-    
+
     local item = slot.item
     if not item then return nil end
-    
+
     slot.item = nil
     slot.stackCount = 0
-    
+
+    -- Unregister item from location registry
+    itemRegistry.unregister(item)
+
     signal.emit("grid_item_removed", gridEntity, slotIndex, item)
-    
+
     return item
 end
 
 function grid.moveItem(gridEntity, fromSlot, toSlot)
     local data = getGridComponent(gridEntity)
     if not data then return false end
-    
+
     local sourceSlot = data.slots[fromSlot]
     local targetSlot = data.slots[toSlot]
-    
+
     if not sourceSlot or not targetSlot then return false end
     if not sourceSlot.item then return false end
     if sourceSlot.locked or targetSlot.locked then return false end
     if targetSlot.item then return false end  -- Target must be empty
-    
+
     local item = sourceSlot.item
     local stackCount = sourceSlot.stackCount
-    
+
     sourceSlot.item = nil
     sourceSlot.stackCount = 0
-    
+
     targetSlot.item = item
     targetSlot.stackCount = stackCount
-    
+
+    -- Update item location in registry (same grid, new slot)
+    itemRegistry.register(item, gridEntity, toSlot)
+
     signal.emit("grid_item_moved", gridEntity, fromSlot, toSlot, item)
-    
+
     return true
 end
 
 function grid.swapItems(gridEntity, slot1, slot2)
     local data = getGridComponent(gridEntity)
     if not data then return false end
-    
+
     local s1 = data.slots[slot1]
     local s2 = data.slots[slot2]
-    
+
     if not s1 or not s2 then return false end
     if s1.locked or s2.locked then return false end
-    
+
     local tempItem = s1.item
     local tempCount = s1.stackCount
-    
+
     s1.item = s2.item
     s1.stackCount = s2.stackCount
-    
+
     s2.item = tempItem
     s2.stackCount = tempCount
-    
+
+    -- Update item locations in registry for both swapped items
+    if s1.item then
+        itemRegistry.register(s1.item, gridEntity, slot1)
+    end
+    if s2.item then
+        itemRegistry.register(s2.item, gridEntity, slot2)
+    end
+
     signal.emit("grid_items_swapped", gridEntity, slot1, slot2, s2.item, s1.item)
-    
+
     return true
 end
 
@@ -585,6 +612,93 @@ function grid.getCallbacks(gridEntity)
     local data = getGridComponent(gridEntity)
     if not data then return nil end
     return data.callbacks
+end
+
+--------------------------------------------------------------------------------
+-- Grid Resize (with overflow detection)
+--------------------------------------------------------------------------------
+
+--- Resize a grid, returning items that no longer fit (overflow).
+-- Items in slots beyond the new capacity are removed and returned.
+-- This does NOT update UI slot entities - caller must handle that.
+-- @param gridEntity The grid entity to resize
+-- @param newRows New number of rows
+-- @param newCols New number of columns
+-- @return table { success = bool, overflow = { {item=entity, oldSlot=N}, ... } }
+function grid.resizeGrid(gridEntity, newRows, newCols)
+    local data = getGridComponent(gridEntity)
+    if not data then
+        return { success = false, overflow = {} }
+    end
+
+    local oldCapacity = data.rows * data.cols
+    local newCapacity = newRows * newCols
+
+    local overflow = {}
+
+    -- Collect items in slots that will be removed (slots > newCapacity)
+    if newCapacity < oldCapacity then
+        for slotIndex = newCapacity + 1, oldCapacity do
+            local slot = data.slots[slotIndex]
+            if slot and slot.item then
+                local item = slot.item
+                -- Remove from grid (this will emit grid_item_removed signal)
+                local removedItem = grid.removeItem(gridEntity, slotIndex)
+                if removedItem then
+                    table.insert(overflow, {
+                        item = removedItem,
+                        oldSlot = slotIndex,
+                    })
+                end
+            end
+        end
+    end
+
+    -- Update dimensions
+    data.rows = newRows
+    data.cols = newCols
+
+    -- Clean up slot data beyond new capacity
+    for slotIndex = newCapacity + 1, oldCapacity do
+        data.slots[slotIndex] = nil
+    end
+
+    -- Initialize any new slots (if grid expanded)
+    for slotIndex = oldCapacity + 1, newCapacity do
+        data.slots[slotIndex] = {
+            entity = nil,
+            item = nil,
+            stackCount = 0,
+            locked = false,
+            filter = nil,
+        }
+    end
+
+    -- Emit resize event with overflow info
+    signal.emit("grid_resized", gridEntity, data.rows, data.cols, overflow)
+
+    return { success = true, overflow = overflow }
+end
+
+--- Check if resizing would cause overflow (items would be displaced).
+-- @param gridEntity The grid entity to check
+-- @param newRows Proposed new rows
+-- @param newCols Proposed new columns
+-- @return number Count of items that would overflow
+function grid.getOverflowCount(gridEntity, newRows, newCols)
+    local data = getGridComponent(gridEntity)
+    if not data then return 0 end
+
+    local newCapacity = newRows * newCols
+    local count = 0
+
+    for slotIndex, slot in pairs(data.slots) do
+        if slotIndex > newCapacity and slot.item then
+            count = count + 1
+        end
+    end
+
+    return count
 end
 
 return grid

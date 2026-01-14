@@ -18,16 +18,13 @@ local Projectiles = nil
 local ProjectileSystem = nil
 local component_cache = nil
 
--- State
 local state = {
     initialized = false,
-    current_tab = 1,  -- 1=Jokers, 2=Projectiles, 3=Tags, 4=Cards
+    current_tab = 1,
 
-    -- Joker tab state
     joker_list = {},
     joker_test_result = nil,
 
-    -- Projectile tab state
     projectile_presets = {},
     selected_preset = 1,
     spawn_params = {
@@ -38,15 +35,13 @@ local state = {
     },
     last_spawned = nil,
 
-    -- Tag tab state
     tag_counts = {},
     spell_type_info = nil,
 
-    -- Cards tab state (Tab 4)
     card_list = {},
     card_filter_text = "",
-    card_filter_tag = nil,      -- nil = all, or specific tag
-    card_sort_by = "name",      -- "name", "mana", "damage", "type"
+    card_filter_tag = nil,
+    card_sort_by = "name",
     card_sort_asc = true,
     selected_card = nil,
     available_tags = {},
@@ -798,16 +793,61 @@ local function render_tag_tab()
     end
 end
 
---===========================================================================
--- MAIN RENDER
---===========================================================================
+local function render_settings_tab()
+    ImGui.Text("Feature Flags")
+    ImGui.Separator()
+
+    local gameplay_cfg = _G.gameplay_cfg
+    if not gameplay_cfg then
+        ImGui.TextDisabled("gameplay_cfg not loaded")
+        return
+    end
+
+    local gridEnabled = gameplay_cfg.USE_GRID_INVENTORY == true
+    ImGui.Text("USE_GRID_INVENTORY: " .. (gridEnabled and "ON" or "OFF"))
+    ImGui.TextDisabled("(Requires restart to take effect)")
+
+    ImGui.Spacing()
+    if ImGui.Button(gridEnabled and "Disable Grid Inventory" or "Enable Grid Inventory") then
+        gameplay_cfg.USE_GRID_INVENTORY = not gridEnabled
+        _G.USE_GRID_INVENTORY = gameplay_cfg.USE_GRID_INVENTORY
+        print("[ContentDebugPanel] USE_GRID_INVENTORY set to " .. tostring(gameplay_cfg.USE_GRID_INVENTORY))
+        print("[ContentDebugPanel] Restart required for changes to take effect")
+    end
+
+    ImGui.Separator()
+    ImGui.Text("Wand System")
+
+    local WandLoadoutUI = nil
+    local ok, mod = pcall(require, "ui.wand_loadout_ui")
+    if ok then WandLoadoutUI = mod end
+
+    if WandLoadoutUI then
+        local wandCount = WandLoadoutUI.getWandCount and WandLoadoutUI.getWandCount() or 1
+        local currentWand = WandLoadoutUI.getCurrentWandIndex and WandLoadoutUI.getCurrentWandIndex() or 1
+        ImGui.Text(string.format("Wands: %d/%d", currentWand, wandCount))
+
+        if wandCount > 1 then
+            ImGui.SameLine()
+            if ImGui.Button("<##wand") then
+                WandLoadoutUI.selectWand(currentWand - 1)
+            end
+            ImGui.SameLine()
+            if ImGui.Button(">##wand") then
+                WandLoadoutUI.selectWand(currentWand + 1)
+            end
+        end
+    else
+        ImGui.TextDisabled("WandLoadoutUI not loaded")
+    end
+end
+
 function ContentDebugPanel.render()
     if not ImGui or not ImGui.Begin then return end
 
     ContentDebugPanel.init()
 
     if ImGui.Begin("Content Debug Panel") then
-        -- Tab buttons
         if ImGui.Button(state.current_tab == 1 and "[Jokers]" or "Jokers") then
             state.current_tab = 1
         end
@@ -823,10 +863,13 @@ function ContentDebugPanel.render()
         if ImGui.Button(state.current_tab == 4 and "[Cards]" or "Cards") then
             state.current_tab = 4
         end
+        ImGui.SameLine()
+        if ImGui.Button(state.current_tab == 5 and "[Settings]" or "Settings") then
+            state.current_tab = 5
+        end
 
         ImGui.Separator()
 
-        -- Render current tab
         if state.current_tab == 1 then
             render_joker_tab()
         elseif state.current_tab == 2 then
@@ -835,9 +878,10 @@ function ContentDebugPanel.render()
             render_tag_tab()
         elseif state.current_tab == 4 then
             render_cards_tab()
+        elseif state.current_tab == 5 then
+            render_settings_tab()
         end
 
-        -- Misc section
         ImGui.Separator()
         ImGui.Text("Misc:")
         if ImGui.Button("Init New Item Reward") then

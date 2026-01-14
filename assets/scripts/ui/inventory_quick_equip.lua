@@ -236,7 +236,7 @@ local hoveredCard = nil
 local function updateHoverTracking()
     -- Get current hovered entity from input system
     local inputState = input and input.getState and input.getState()
-    local currentHovered = inputState and inputState.cursor_over_target
+    local currentHovered = inputState and inputState.cursor_hovering_target
 
     -- Only track if it's a card in player inventory
     if currentHovered and registry:valid(currentHovered) then

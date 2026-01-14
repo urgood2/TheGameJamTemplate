@@ -548,6 +548,19 @@ function createInventoryTestButton()
     )
     ui.box.set_draw_layer(mainMenuEntities.inventory_test_button, "ui")
     log_debug("[TRACE] Inventory test button created")
+
+    if os.getenv and os.getenv("AUTO_TEST_INVENTORY") == "1" then
+        timer.after_opts({
+            delay = 0.1,
+            action = function()
+                PlayerInventory.toggle()
+                if PlayerInventory.isOpen() then
+                    PlayerInventory.spawnDummyCards()
+                end
+            end,
+            tag = "auto_open_test_inventory"
+        })
+    end
 end
 
 function createTabDemo()

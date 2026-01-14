@@ -1,89 +1,101 @@
 {
-  "version": 6,
-  "cmakeMinimumRequired": {
-    "major": 3,
-    "minor": 21,
-    "patch": 0
-  },
-  "configurePresets": [
-    {
-      "name": "windows-base",
-      "hidden": true,
-      "generator": "Ninja",
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Windows"
-      },
-      "cacheVariables": {
-        "CMAKE_C_COMPILER": "D:/mingw64/bin/gcc.exe",
-        "CMAKE_CXX_COMPILER": "D:/mingw64/bin/g++.exe",
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-        "TRACY_ENABLE": "OFF"
-      }
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 21,
+        "patch": 0
     },
-    {
-      "name": "windows-debug",
-      "displayName": "Windows Debug (D:/mingw64)",
-      "inherits": "windows-base",
-      "binaryDir": "${sourceDir}/build-debug-ninja",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "ENABLE_LTO": "OFF"
-      }
-    },
-    {
-      "name": "windows-release",
-      "displayName": "Windows Release (D:/mingw64)",
-      "inherits": "windows-base",
-      "binaryDir": "${sourceDir}/build-release",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "ENABLE_LTO": "ON"
-      }
-    },
-    {
-      "name": "windows-relwithdebinfo",
-      "displayName": "Windows RelWithDebInfo (D:/mingw64) - Optimized Size",
-      "inherits": "windows-base",
-      "binaryDir": "${sourceDir}/build",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "ENABLE_LTO": "OFF",
-        "ENABLE_SIZE_OPTIMIZATION": "ON"
-      }
-    },
-    {
-      "name": "windows-minsizerel",
-      "displayName": "Windows MinSizeRel (D:/mingw64) - Smallest Binary",
-      "inherits": "windows-base",
-      "binaryDir": "${sourceDir}/build-minsize",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "MinSizeRel",
-        "ENABLE_LTO": "ON",
-        "ENABLE_SIZE_OPTIMIZATION": "ON",
-        "ENABLE_SPINE": "OFF",
-        "ENABLE_IMGUI_CONSOLE": "OFF",
-        "ENABLE_TELEMETRY": "OFF"
-      }
-    }
-  ],
-  "buildPresets": [
-    {
-      "name": "windows-debug",
-      "configurePreset": "windows-debug"
-    },
-    {
-      "name": "windows-release",
-      "configurePreset": "windows-release"
-    },
-    {
-      "name": "windows-relwithdebinfo",
-      "configurePreset": "windows-relwithdebinfo"
-    },
-    {
-      "name": "windows-minsizerel",
-      "configurePreset": "windows-minsizerel"
-    }
-  ]
+    "configurePresets": [
+        {
+            "name": "windows-base",
+            "hidden": true,
+            "generator": "Ninja",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            },
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "D:/mingw64/bin/gcc.exe",
+                "CMAKE_CXX_COMPILER": "D:/mingw64/bin/g++.exe",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "TRACY_ENABLE": "OFF"
+            }
+        },
+        {
+            "name": "windows-debug",
+            "displayName": "Windows Debug (D:/mingw64)",
+            "inherits": "windows-base",
+            "binaryDir": "${sourceDir}/build-debug-ninja",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "ENABLE_LTO": "OFF"
+            }
+        },
+        {
+            "name": "windows-release",
+            "displayName": "Windows Release (D:/mingw64)",
+            "inherits": "windows-base",
+            "binaryDir": "${sourceDir}/build-release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "ENABLE_LTO": "ON"
+            }
+        },
+        {
+            "name": "windows-relwithdebinfo",
+            "displayName": "Windows RelWithDebInfo (D:/mingw64) - Optimized Size",
+            "inherits": "windows-base",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "ENABLE_LTO": "OFF",
+                "ENABLE_SIZE_OPTIMIZATION": "ON"
+            }
+        },
+        {
+            "name": "windows-minsizerel",
+            "displayName": "Windows MinSizeRel (D:/mingw64) - Smallest Binary",
+            "inherits": "windows-base",
+            "binaryDir": "${sourceDir}/build-minsize",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "MinSizeRel",
+                "ENABLE_LTO": "ON",
+                "ENABLE_SIZE_OPTIMIZATION": "ON",
+                "ENABLE_SPINE": "OFF",
+                "ENABLE_IMGUI_CONSOLE": "OFF",
+                "ENABLE_TELEMETRY": "OFF"
+            }
+        },
+        {
+            "name": "Configure preset using toolchain file",
+            "displayName": "Configure preset using toolchain file",
+            "description": "Sets Ninja generator, build and install directory",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_TOOLCHAIN_FILE": "",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "windows-debug",
+            "configurePreset": "windows-debug"
+        },
+        {
+            "name": "windows-release",
+            "configurePreset": "windows-release"
+        },
+        {
+            "name": "windows-relwithdebinfo",
+            "configurePreset": "windows-relwithdebinfo"
+        },
+        {
+            "name": "windows-minsizerel",
+            "configurePreset": "windows-minsizerel"
+        }
+    ]
 }

@@ -566,13 +566,26 @@ function InventoryGridInit.makeItemDraggable(itemEntity, gridEntity)
     go.state.collisionEnabled = true
     go.state.hoverEnabled = true
 
+    -- Store initial grid reference
+    InventoryGridInit.updateDraggableGridRef(itemEntity, gridEntity)
+
     -- Setup drag start handler
     local existingOnDrag = go.methods.onDrag
     go.methods.onDrag = function(reg, entity)
         -- Only trigger drag start once (check if we already have state)
         local key = tostring(entity)
         if not _dragState[key] then
-            InventoryGridInit.onDragStart(entity, gridEntity)
+            -- CRITICAL: Resolve current grid from registry or ref, NOT from captured closure
+            -- This ensures correct origin after cross-grid transfers
+            local currentGrid = nil
+            local location = itemRegistry.getLocation(entity)
+            if location and location.grid then
+                currentGrid = location.grid
+            else
+                -- Fallback to tracked grid ref (updated after cross-grid transfer)
+                currentGrid = InventoryGridInit.getItemGridRef(entity)
+            end
+            InventoryGridInit.onDragStart(entity, currentGrid)
         end
         if existingOnDrag then
             existingOnDrag(reg, entity)

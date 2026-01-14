@@ -859,7 +859,14 @@ function dsl.inventoryGrid(opts)
     local gridId = opts.id or ("grid_" .. tostring(math.random(100000, 999999)))
     local gridConfig = opts.config or {}
     local slotsConfig = opts.slots or {}
-    
+    local outerPadding = gridConfig.padding or 4
+
+    -- Calculate total grid dimensions for explicit sizing
+    local contentW = (cols * slotW) + ((cols - 1) * spacing)
+    local contentH = (rows * slotH) + ((rows - 1) * spacing)
+    local totalW = contentW + (outerPadding * 2)
+    local totalH = contentH + (outerPadding * 2)
+
     _gridRegistry[gridId] = {
         rows = rows,
         cols = cols,
@@ -923,7 +930,10 @@ function dsl.inventoryGrid(opts)
         
         local rowNode = def{
             type = "HORIZONTAL_CONTAINER",
-            config = { align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER) },
+            config = {
+                align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+                padding = 0,  -- No padding to prevent overlap
+            },
             children = rowChildren
         }
         
@@ -938,7 +948,11 @@ function dsl.inventoryGrid(opts)
         config = {
             id = gridId,
             color = gridConfig.backgroundColor and color(gridConfig.backgroundColor) or nil,
-            padding = gridConfig.padding or 4,
+            padding = outerPadding,
+            minWidth = totalW,    -- Explicit sizing to prevent overlap
+            maxWidth = totalW,
+            minHeight = totalH,
+            maxHeight = totalH,
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
             _isInventoryGrid = true,
             _gridConfig = gridConfig,

@@ -79,30 +79,45 @@ local TAB_CONFIG = {
 
 local TAB_ORDER = { "equipment", "wands", "triggers", "actions", "modifiers" }
 
-local SLOT_WIDTH = 64
-local SLOT_HEIGHT = 64
+local SPRITE_BASE_W = 32
+local SPRITE_BASE_H = 32
+local SPRITE_SCALE = 2
+local SLOT_WIDTH = SPRITE_BASE_W * SPRITE_SCALE
+local SLOT_HEIGHT = SPRITE_BASE_H * SPRITE_SCALE
 local SLOT_SPACING = 4
 local GRID_ROWS = 4
-local GRID_COLS = 4
-local GRID_PADDING = 8
+local GRID_COLS = 5
+local GRID_PADDING = 6
+
 local GRID_WIDTH = GRID_COLS * SLOT_WIDTH + (GRID_COLS - 1) * SLOT_SPACING + GRID_PADDING * 2
 local GRID_HEIGHT = GRID_ROWS * SLOT_HEIGHT + (GRID_ROWS - 1) * SLOT_SPACING + GRID_PADDING * 2
-local HEADER_HEIGHT = 40
-local TABS_HEIGHT = 40
-local FOOTER_HEIGHT = 50
-local VERTICAL_MARGINS = 30
-local PANEL_WIDTH = GRID_WIDTH + 60
-local PANEL_HEIGHT = HEADER_HEIGHT + TABS_HEIGHT + GRID_HEIGHT + FOOTER_HEIGHT + VERTICAL_MARGINS
-local RENDER_LAYER = "sprites"
+
+local HEADER_HEIGHT = 32
+local TABS_HEIGHT = 32
+local FOOTER_HEIGHT = 36
+local TAB_BUTTON_HEIGHT = 32
+local TAB_BUTTON_WIDTH = 48
+local PANEL_PADDING = 10
+local PANEL_WIDTH = GRID_WIDTH + PANEL_PADDING * 2
+local PANEL_HEIGHT = HEADER_HEIGHT + TABS_HEIGHT + GRID_HEIGHT + FOOTER_HEIGHT + PANEL_PADDING * 2
+local RENDER_LAYER = "ui"
+
+local PANEL_Z = 800
+local GRID_Z = 850
+local CARD_Z = 900
+local TAB_BUTTON_Z = 750
+
+local OFFSCREEN_Y_OFFSET = 600
 
 local state = {
     initialized = false,
     isVisible = false,
     panelEntity = nil,
     closeButtonEntity = nil,
+    tabButtonEntity = nil,  -- Always-visible protruding tab
     grids = {},
     tabButtons = {},
-    activeTab = "actions",
+    activeTab = "equipment",
     searchFilter = "",
     sortField = nil,
     sortAsc = true,
@@ -110,9 +125,11 @@ local state = {
     cardRegistry = {},
     signalHandlers = {},
     panelX = 0,
-    panelY = nil,
+    panelY = 0,
     gridX = 0,
-    gridY = nil,
+    gridY = 0,
+    tabButtonX = 0,
+    tabButtonY = 0,
 }
 
 local function getLocalizedText(key, fallback)
@@ -125,12 +142,79 @@ local function getLocalizedText(key, fallback)
     return fallback or key
 end
 
-local function setEntityVisible(entity, visible, onscreenX)
+--------------------------------------------------------------------------------
+-- Debug Helper: Log box and root bounds
+--------------------------------------------------------------------------------
+
+local function logBoxBounds(label, entity)
+    if not (os.getenv and os.getenv("INVENTORY_BOUNDS_DEBUG") == "1") then
+        return
+    end
+
+    if not entity or not registry:valid(entity) then
+        return
+    end
+
+    local t = component_cache.get(entity, Transform)
+    local boxComp = component_cache.get(entity, UIBoxComponent)
+    local rt = (boxComp and boxComp.uiRoot and registry:valid(boxComp.uiRoot) and component_cache.get(boxComp.uiRoot, Transform)) or nil
+
+    if t and rt then
+        log_debug(string.format(
+            "[INV-BNDS] %s box=(%.1f,%.1f,%.1f,%.1f) root=(%.1f,%.1f,%.1f,%.1f)",
+            tostring(label),
+            t.actualX or -1, t.actualY or -1, t.actualW or -1, t.actualH or -1,
+            rt.actualX or -1, rt.actualY or -1, rt.actualW or -1, rt.actualH or -1
+        ))
+    end
+end
+
+--------------------------------------------------------------------------------
+-- Bidirectional Box/Root Synchronization
+--------------------------------------------------------------------------------
+
+local function syncBoxAndRoot(box)
+    local boxComp = component_cache.get(box, UIBoxComponent)
+    if not (boxComp and boxComp.uiRoot and registry:valid(boxComp.uiRoot)) then
+        return
+    end
+
+    local bt = component_cache.get(box, Transform)
+    local rt = component_cache.get(boxComp.uiRoot, Transform)
+    if bt and rt then
+        rt.actualX = bt.actualX  -- Sync root X FROM box
+        rt.actualY = bt.actualY  -- Sync root Y FROM box
+        bt.actualW = rt.actualW  -- Sync box width FROM root
+        bt.actualH = rt.actualH  -- Sync box height FROM root
+    end
+end
+
+--------------------------------------------------------------------------------
+-- Visibility Control with Y-coordinate Support
+--------------------------------------------------------------------------------
+
+local function setEntityVisible(entity, visible, onscreenX, onscreenY, dbgLabel)
     if not entity or not registry:valid(entity) then return end
+
+    local targetX = onscreenX
+    local targetY = visible and onscreenY or (onscreenY + OFFSCREEN_Y_OFFSET)
+
     local t = component_cache.get(entity, Transform)
     if t then
-        t.actualX = visible and onscreenX or -9999
+        t.actualX = targetX
+        t.actualY = targetY
     end
+
+    local boxComp = component_cache.get(entity, UIBoxComponent)
+    if boxComp and boxComp.uiRoot and registry:valid(boxComp.uiRoot) then
+        local rt = component_cache.get(boxComp.uiRoot, Transform)
+        if rt then
+            rt.actualX = targetX
+            rt.actualY = targetY
+        end
+    end
+
+    logBoxBounds(tostring(visible and "show" or "hide") .. ":" .. tostring(dbgLabel or ""), entity)
 end
 
 local function setGridItemsVisible(gridEntity, visible)
@@ -161,16 +245,16 @@ local function createSimpleCard(spriteName, x, y, cardData, gridEntity)
         return nil
     end
 
-    animation_system.resizeAnimationObjectsInEntityToFit(entity, 56, 78)
+    local cardW = SLOT_WIDTH - 8
+    local cardH = SLOT_HEIGHT - 8
+    animation_system.resizeAnimationObjectsInEntityToFit(entity, cardW, cardH)
 
     if add_state_tag then
         add_state_tag(entity, "default_state")
     end
 
-    -- Set normal z-order (not drag z-order); drag z-order is handled by InventoryGridInit
-    local UI_CARD_Z = (z_orders and z_orders.ui_tooltips or 800) - 100
     if layer_order_system and layer_order_system.assignZIndexToEntity then
-        layer_order_system.assignZIndexToEntity(entity, UI_CARD_Z)
+        layer_order_system.assignZIndexToEntity(entity, CARD_Z)
     end
 
     if ObjectAttachedToUITag and not registry:has(entity, ObjectAttachedToUITag) then
@@ -257,7 +341,7 @@ local function createGridForTab(tabId, x, y, visible)
         end,
     }
     
-    local gridEntity = dsl.spawn({ x = spawnX, y = y }, gridDef, RENDER_LAYER, 150)
+    local gridEntity = dsl.spawn({ x = spawnX, y = y }, gridDef, RENDER_LAYER, GRID_Z)
     if ui and ui.box and ui.box.set_draw_layer then
         ui.box.set_draw_layer(gridEntity, RENDER_LAYER)
     end
@@ -276,14 +360,17 @@ end
 
 local function switchTab(tabId)
     if state.activeTab == tabId then return end
-    
+
     local oldTab = state.activeTab
     state.activeTab = tabId
-    
+
     for id, gridEntity in pairs(state.grids) do
         local isActive = (id == tabId)
-        setEntityVisible(gridEntity, isActive and state.isVisible, state.gridX)
+        setEntityVisible(gridEntity, isActive and state.isVisible, state.gridX, state.gridY, "grid:" .. tostring(id))
         setGridItemsVisible(gridEntity, isActive and state.isVisible)
+        if isActive and state.isVisible then
+            syncBoxAndRoot(gridEntity)
+        end
     end
     
     for id, btnEntity in pairs(state.tabButtons or {}) do
@@ -303,12 +390,14 @@ local function createHeader()
     return dsl.hbox {
         config = {
             color = "dark_lavender",
-            padding = { 12, 8 },
+            padding = { 8, 6 },
             emboss = 2,
+            minWidth = GRID_WIDTH,
+            minHeight = HEADER_HEIGHT,
         },
         children = {
             dsl.text("Inventory", {
-                fontSize = 18,
+                fontSize = 14,
                 color = "gold",
                 shadow = true,
             }),
@@ -320,9 +409,9 @@ end
 local function createCloseButton(panelX, panelY, panelWidth)
     local closeButtonDef = dsl.button("X", {
         id = "close_btn",
-        minWidth = 28,
-        minHeight = 28,
-        fontSize = 16,
+        minWidth = 24,
+        minHeight = 24,
+        fontSize = 12,
         color = "darkred",
         hover = true,
         onClick = function()
@@ -330,10 +419,10 @@ local function createCloseButton(panelX, panelY, panelWidth)
         end,
     })
     
-    local closeX = panelX + panelWidth - 36
-    local closeY = panelY + 6
+    local closeX = panelX + panelWidth - 30
+    local closeY = panelY + PANEL_PADDING + 4
     
-    local closeEntity = dsl.spawn({ x = closeX, y = closeY }, closeButtonDef, RENDER_LAYER, 200)
+    local closeEntity = dsl.spawn({ x = closeX, y = closeY }, closeButtonDef, RENDER_LAYER, CARD_Z + 10)
     if ui and ui.box and ui.box.set_draw_layer then
         ui.box.set_draw_layer(closeEntity, RENDER_LAYER)
     end
@@ -347,12 +436,11 @@ local function createTabs()
     for _, tabId in ipairs(TAB_ORDER) do
         local cfg = TAB_CONFIG[tabId]
         local isActive = (tabId == state.activeTab)
-        local label = cfg.icon .. " " .. cfg.label
         
-        table.insert(tabChildren, dsl.button(label, {
+        table.insert(tabChildren, dsl.button(cfg.icon, {
             id = "tab_" .. tabId,
-            minWidth = 80,
-            minHeight = 28,
+            minWidth = 28,
+            minHeight = 24,
             fontSize = 10,
             color = isActive and "steel_blue" or "gray",
             hover = true,
@@ -369,7 +457,9 @@ local function createTabs()
     return dsl.hbox {
         config = {
             color = "blackberry",
-            padding = 4,
+            padding = { 4, 2 },
+            minWidth = GRID_WIDTH,
+            minHeight = TABS_HEIGHT,
         },
         children = tabChildren,
     }
@@ -379,15 +469,16 @@ local function createFooter()
     return dsl.hbox {
         config = {
             color = "dark_lavender",
-            padding = 8,
-            minWidth = PANEL_WIDTH - 20,
+            padding = { 6, 4 },
+            minWidth = GRID_WIDTH,
+            minHeight = FOOTER_HEIGHT,
         },
         children = {
-            dsl.button("Name v", {
+            dsl.button("Name", {
                 id = "sort_name_btn",
-                minWidth = 60,
-                minHeight = 26,
-                fontSize = 11,
+                minWidth = 50,
+                minHeight = 24,
+                fontSize = 10,
                 color = "purple_slate",
                 hover = true,
                 onClick = function()
@@ -395,11 +486,11 @@ local function createFooter()
                 end,
             }),
             dsl.spacer(4),
-            dsl.button("Cost v", {
+            dsl.button("Cost", {
                 id = "sort_cost_btn",
-                minWidth = 60,
-                minHeight = 26,
-                fontSize = 11,
+                minWidth = 50,
+                minHeight = 24,
+                fontSize = 10,
                 color = "purple_slate",
                 hover = true,
                 onClick = function()
@@ -407,7 +498,7 @@ local function createFooter()
                 end,
             }),
             dsl.spacer(1),
-            dsl.text("0 / 16", { id = "slot_count_text", fontSize = 11, color = "light_gray" }),
+            dsl.text("0 / 20", { id = "slot_count_text", fontSize = 10, color = "light_gray" }),
         },
     }
 end
@@ -417,17 +508,17 @@ local function createPanelDefinition()
         config = {
             id = PANEL_ID,
             color = "blackberry",
-            padding = 10,
+            padding = PANEL_PADDING,
             emboss = 3,
             minWidth = PANEL_WIDTH,
             maxWidth = PANEL_WIDTH,
             minHeight = PANEL_HEIGHT,
+            maxHeight = PANEL_HEIGHT,
         },
         children = {
             createHeader(),
-            dsl.spacer(PANEL_WIDTH - 20, 5),
             createTabs(),
-            dsl.spacer(PANEL_WIDTH - 20, GRID_HEIGHT + 30),
+            dsl.spacer(GRID_WIDTH, GRID_HEIGHT),
             createFooter(),
         },
     }
@@ -469,7 +560,7 @@ local function isCardInActiveGrid(eid)
 end
 
 local function setupCardRenderTimer()
-    local UI_CARD_Z = (z_orders and z_orders.ui_tooltips or 900) - 100
+    local UI_CARD_Z = CARD_Z
     
     timer.run_every_render_frame(function()
         if not state.isVisible then return end
@@ -600,12 +691,11 @@ local function setupInputHandler()
             log_debug("[PlayerInventory] Input handler callback is running")
         end
 
-        -- Tab key toggle (try both string and numeric constant)
-        -- Also support 'I' key as fallback (common inventory keybind)
-        local tabPressed = isKeyPressed and (isKeyPressed("KEY_TAB") or isKeyPressed(258))
+        -- 'I' key to toggle inventory (standard keybind)
+        -- Note: KEY_TAB not available in isKeyPressed enum
         local iPressed = isKeyPressed and isKeyPressed("KEY_I")
 
-        if tabPressed or iPressed then
+        if iPressed then
             log_debug("[PlayerInventory] Inventory key pressed - toggling")
             PlayerInventory.toggle()
         end
@@ -622,26 +712,80 @@ function PlayerInventory.ensureInputHandler()
     setupInputHandler()
 end
 
+local function createTabButton()
+    local tabEntity = animation_system.createAnimatedObjectWithTransform(
+        "inventory-tab-marker.png", true, state.tabButtonX, state.tabButtonY, nil, true
+    )
+    
+    if not tabEntity or not registry:valid(tabEntity) then
+        log_warn("[PlayerInventory] Failed to create tab button entity")
+        return nil
+    end
+    
+    animation_system.resizeAnimationObjectsInEntityToFit(tabEntity, TAB_BUTTON_WIDTH, TAB_BUTTON_HEIGHT)
+    
+    if layer_order_system and layer_order_system.assignZIndexToEntity then
+        layer_order_system.assignZIndexToEntity(tabEntity, TAB_BUTTON_Z)
+    end
+    
+    if ObjectAttachedToUITag and not registry:has(tabEntity, ObjectAttachedToUITag) then
+        registry:emplace(tabEntity, ObjectAttachedToUITag)
+    end
+    
+    transform.set_space(tabEntity, "screen")
+    
+    if add_state_tag then
+        add_state_tag(tabEntity, "default_state")
+    end
+    
+    local collisionW = TAB_BUTTON_WIDTH
+    local collisionH = TAB_BUTTON_HEIGHT
+    if not registry:has(tabEntity, CollisionComponent) then
+        local col = registry:emplace(tabEntity, CollisionComponent)
+        col.width = collisionW
+        col.height = collisionH
+        col.offsetX = -collisionW / 2
+        col.offsetY = -collisionH / 2
+    end
+    
+    if not registry:has(tabEntity, ClickableComponent) then
+        registry:emplace(tabEntity, ClickableComponent)
+    end
+    
+    signal.register("entity_clicked", function(clickedEntity, button)
+        if clickedEntity == tabEntity and button == 1 then
+            PlayerInventory.toggle()
+        end
+    end)
+    
+    return tabEntity
+end
+
 local function initializeInventory()
     if state.initialized then return end
-    
+
     local screenW = globals.screenWidth()
     local screenH = globals.screenHeight()
+
+    state.panelX = (screenW - PANEL_WIDTH) / 2
+    state.panelY = screenH - PANEL_HEIGHT - 10
+    state.gridX = state.panelX + PANEL_PADDING
+    state.gridY = state.panelY + HEADER_HEIGHT + TABS_HEIGHT + PANEL_PADDING
     
-    state.panelX = 0 --(screenW - PANEL_WIDTH) / 2
-    state.panelY = 0 -- (screenH - PANEL_HEIGHT) / 2
-    state.gridX = state.panelX + 20
-    state.gridY = state.panelY + HEADER_HEIGHT + TABS_HEIGHT + 25
+    state.tabButtonX = screenW / 2
+    state.tabButtonY = state.panelY - TAB_BUTTON_HEIGHT / 2 + 4
+    
+    state.tabButtonEntity = createTabButton()
     
     local panelDef = createPanelDefinition()
-    state.panelEntity = dsl.spawn({ x = -9999, y = state.panelY }, panelDef, RENDER_LAYER, 100)
+    state.panelEntity = dsl.spawn({ x = state.panelX, y = state.panelY + OFFSCREEN_Y_OFFSET }, panelDef, RENDER_LAYER, PANEL_Z)
     
     if ui and ui.box and ui.box.set_draw_layer then
         ui.box.set_draw_layer(state.panelEntity, RENDER_LAYER)
     end
     
     state.closeButtonEntity = createCloseButton(state.panelX, state.panelY, PANEL_WIDTH)
-    setEntityVisible(state.closeButtonEntity, false, state.panelX + PANEL_WIDTH - 36)
+    setEntityVisible(state.closeButtonEntity, false, state.panelX + PANEL_WIDTH - 30, state.panelY + PANEL_PADDING + 4, "close")
     
     state.tabButtons = {}
     for _, tabId in ipairs(TAB_ORDER) do
@@ -660,7 +804,6 @@ local function initializeInventory()
     setupSignalHandlers()
     setupCardRenderTimer()
 
-    -- Initialize quick equip (right-click to equip cards to wand)
     QuickEquip.init()
 
     state.initialized = true
@@ -674,15 +817,19 @@ function PlayerInventory.open()
     
     if state.isVisible then return end
     
-    setEntityVisible(state.panelEntity, true, state.panelX)
-    setEntityVisible(state.closeButtonEntity, true, state.panelX + PANEL_WIDTH - 36)
-    
+    setEntityVisible(state.panelEntity, true, state.panelX, state.panelY, "panel")
+    setEntityVisible(state.closeButtonEntity, true, state.panelX + PANEL_WIDTH - 30, state.panelY + PANEL_PADDING + 4, "close")
+    setEntityVisible(state.tabButtonEntity, false, state.tabButtonX, state.tabButtonY, "tab_btn")
+
     for tabId, gridEntity in pairs(state.grids) do
         local isActive = (tabId == state.activeTab)
-        setEntityVisible(gridEntity, isActive, state.gridX)
+        setEntityVisible(gridEntity, isActive, state.gridX, state.gridY, "grid:" .. tostring(tabId))
         setGridItemsVisible(gridEntity, isActive)
+        if isActive then
+            syncBoxAndRoot(gridEntity)
+        end
     end
-    
+
     state.isVisible = true
     signal.emit("player_inventory_opened")
     
@@ -695,15 +842,16 @@ end
 
 function PlayerInventory.close()
     if not state.isVisible then return end
-    
-    setEntityVisible(state.panelEntity, false, state.panelX)
-    setEntityVisible(state.closeButtonEntity, false, state.panelX + PANEL_WIDTH - 36)
-    
+
+    setEntityVisible(state.panelEntity, false, state.panelX, state.panelY, "panel")
+    setEntityVisible(state.closeButtonEntity, false, state.panelX + PANEL_WIDTH - 30, state.panelY + PANEL_PADDING + 4, "close")
+    setEntityVisible(state.tabButtonEntity, true, state.tabButtonX, state.tabButtonY, "tab_btn")
+
     for tabId, gridEntity in pairs(state.grids) do
-        setEntityVisible(gridEntity, false, state.gridX)
+        setEntityVisible(gridEntity, false, state.gridX, state.gridY, "grid:" .. tostring(tabId))
         setGridItemsVisible(gridEntity, false)
     end
-    
+
     state.isVisible = false
     signal.emit("player_inventory_closed")
     
@@ -767,6 +915,13 @@ function PlayerInventory.destroy()
         end
     end
     state.closeButtonEntity = nil
+    
+    if state.tabButtonEntity and registry:valid(state.tabButtonEntity) then
+        if ui and ui.box and ui.box.Remove then
+            ui.box.Remove(registry, state.tabButtonEntity)
+        end
+    end
+    state.tabButtonEntity = nil
     
     if state.panelEntity and registry:valid(state.panelEntity) then
         if ui and ui.box and ui.box.Remove then

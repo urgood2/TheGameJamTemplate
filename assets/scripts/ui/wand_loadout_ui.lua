@@ -21,6 +21,14 @@ EVENTS (via hump.signal):
 "wand_loadout_closed"          -- Panel closed
 "wand_trigger_changed"         -- Trigger card changed
 "wand_action_changed"          -- Action card changed
+"wand_slots_reduced"           -- (newRows, newCols, overflowItems) Wand slots reduced
+"wand_slots_overflow"          -- (overflowItems, transferredCount) Cards returned to inventory
+
+SLOT MANAGEMENT:
+---------------
+WandLoadoutUI.reduceActionSlots(newRows, newCols)  -- Reduce slots, overflow → inventory
+WandLoadoutUI.getActionGridDimensions()            -- Get current (rows, cols)
+WandLoadoutUI.previewOverflowCount(newRows, newCols)  -- Check overflow before resize
 
 LAYOUT:
 -------
@@ -40,12 +48,15 @@ local WandLoadoutUI = {}
 
 local dsl = require("ui.ui_syntax_sugar")
 local grid = require("core.inventory_grid")
+local transfer = require("core.grid_transfer")
 local signal = require("external.hump.signal")
 local signal_group = require("core.signal_group")
 local component_cache = require("core.component_cache")
 local timer = require("core.timer")
 local InventoryGridInit = require("ui.inventory_grid_init")
 local z_orders = require("core.z_orders")
+local wandAdapter = require("ui.wand_grid_adapter")
+local popup = require("core.popup")
 
 --------------------------------------------------------------------------------
 -- Constants
@@ -88,6 +99,8 @@ local state = {
     panelX = 0,
     panelY = 0,
     handlers = nil,  -- signal_group for cleanup
+    currentWandIndex = 1,  -- Currently selected wand (1-based)
+    wandCount = 1,  -- Total number of wands available
 }
 
 --------------------------------------------------------------------------------
@@ -134,7 +147,45 @@ end
 -- UI Creation: Header
 --------------------------------------------------------------------------------
 
+local function getWandTitle()
+    if state.wandCount <= 1 then
+        return getLocalizedText("ui.wand_loadout.title", "Wand Loadout")
+    end
+    return string.format("%s %d/%d", getLocalizedText("ui.wand_loadout.title", "Wand"), state.currentWandIndex, state.wandCount)
+end
+
 local function createHeader()
+    local children = {
+        dsl.text(getWandTitle(), {
+            id = "wand_title_text",
+            fontSize = 16,
+            color = "gold",
+            shadow = true,
+        }),
+        dsl.spacer(1),
+    }
+
+    if state.wandCount > 1 then
+        table.insert(children, 1, dsl.button("<", {
+            id = "prev_wand_btn",
+            fontSize = 14,
+            color = "light_gray",
+            padding = { 6, 4 },
+            onClick = function()
+                WandLoadoutUI.selectWand(state.currentWandIndex - 1)
+            end,
+        }))
+        table.insert(children, dsl.button(">", {
+            id = "next_wand_btn",
+            fontSize = 14,
+            color = "light_gray",
+            padding = { 6, 4 },
+            onClick = function()
+                WandLoadoutUI.selectWand(state.currentWandIndex + 1)
+            end,
+        }))
+    end
+
     return dsl.hbox {
         config = {
             color = "dark_lavender",
@@ -142,14 +193,7 @@ local function createHeader()
             emboss = 2,
             minWidth = PANEL_WIDTH - PANEL_PADDING * 2,
         },
-        children = {
-            dsl.text(getLocalizedText("ui.wand_loadout.title", "Wand Loadout"), {
-                fontSize = 16,
-                color = "gold",
-                shadow = true,
-            }),
-            dsl.spacer(1),
-        },
+        children = children,
     }
 end
 
@@ -329,20 +373,56 @@ local function setupSignalHandlers()
     -- Create signal group for automatic cleanup
     state.handlers = signal_group.new("wand_loadout_ui")
 
-    -- Grid item events
+    -- Helper to check if a grid belongs to this wand loadout
+    local function isOurGrid(gridEntity)
+        return gridEntity == state.triggerGridEntity or gridEntity == state.actionGridEntity
+    end
+
     state.handlers:on("grid_item_added", function(gridEntity, slotIndex, itemEntity)
         if gridEntity == state.triggerGridEntity then
-            log_debug("[WandLoadoutUI] Trigger card added")
+            log_debug("[WandLoadoutUI] Trigger card added for wand " .. state.currentWandIndex)
+            wandAdapter.setTrigger(state.currentWandIndex, itemEntity)
+            signal.emit("wand_trigger_changed", itemEntity, nil, state.currentWandIndex)
         elseif gridEntity == state.actionGridEntity then
-            log_debug("[WandLoadoutUI] Action card added to slot " .. slotIndex)
+            log_debug("[WandLoadoutUI] Action card added to slot " .. slotIndex .. " for wand " .. state.currentWandIndex)
+            wandAdapter.setAction(state.currentWandIndex, slotIndex, itemEntity)
+            signal.emit("wand_action_changed", slotIndex, itemEntity, nil, state.currentWandIndex)
         end
     end)
 
     state.handlers:on("grid_item_removed", function(gridEntity, slotIndex, itemEntity)
         if gridEntity == state.triggerGridEntity then
-            log_debug("[WandLoadoutUI] Trigger card removed")
+            log_debug("[WandLoadoutUI] Trigger card removed from wand " .. state.currentWandIndex)
+            wandAdapter.clearSlot(state.currentWandIndex, nil)
+            signal.emit("wand_trigger_changed", nil, itemEntity, state.currentWandIndex)
         elseif gridEntity == state.actionGridEntity then
-            log_debug("[WandLoadoutUI] Action card removed from slot " .. slotIndex)
+            log_debug("[WandLoadoutUI] Action card removed from slot " .. slotIndex .. " for wand " .. state.currentWandIndex)
+            wandAdapter.clearSlot(state.currentWandIndex, slotIndex)
+            signal.emit("wand_action_changed", slotIndex, nil, itemEntity, state.currentWandIndex)
+        end
+    end)
+
+    state.handlers:on("grid_cross_transfer_success", function(itemEntity, fromGrid, toGrid, toSlot)
+        if toGrid == state.triggerGridEntity then
+            log_debug("[WandLoadoutUI] Cross-grid transfer: card equipped to trigger slot for wand " .. state.currentWandIndex)
+            wandAdapter.setTrigger(state.currentWandIndex, itemEntity)
+            signal.emit("wand_trigger_changed", itemEntity, nil, state.currentWandIndex)
+        elseif toGrid == state.actionGridEntity then
+            log_debug("[WandLoadoutUI] Cross-grid transfer: card equipped to action slot " .. toSlot .. " for wand " .. state.currentWandIndex)
+            wandAdapter.setAction(state.currentWandIndex, toSlot, itemEntity)
+            signal.emit("wand_action_changed", toSlot, itemEntity, nil, state.currentWandIndex)
+        end
+    end)
+
+    state.handlers:on("grid_transfer_success", function(itemEntity, fromGrid, fromSlot, toGrid, toSlot)
+        if not isOurGrid(toGrid) then return end
+
+        if toGrid == state.triggerGridEntity then
+            log_debug("[WandLoadoutUI] Transfer success: card to trigger slot for wand " .. state.currentWandIndex)
+            wandAdapter.setTrigger(state.currentWandIndex, itemEntity)
+        elseif toGrid == state.actionGridEntity then
+            log_debug("[WandLoadoutUI] Transfer success: card to action slot " .. toSlot .. " for wand " .. state.currentWandIndex)
+            wandAdapter.setAction(state.currentWandIndex, toSlot, itemEntity)
         end
     end)
 end
@@ -582,6 +662,257 @@ function WandLoadoutUI.destroy()
     state.actionGridEntity = nil
 
     log_debug("[WandLoadoutUI] Destroyed")
+end
+
+--------------------------------------------------------------------------------
+-- Wand Slot Resize & Overflow Handling
+--------------------------------------------------------------------------------
+
+--- Get the player inventory grid to return overflow cards to.
+-- Tries to get the "actions" tab grid as the default destination.
+-- @return number|nil Grid entity for player inventory, or nil if unavailable
+local function getPlayerInventoryGrid()
+    -- Lazy-load PlayerInventory to avoid circular dependency
+    local ok, PlayerInventory = pcall(require, "ui.player_inventory")
+    if not ok or not PlayerInventory then
+        log_warn("[WandLoadoutUI] Could not load PlayerInventory module")
+        return nil
+    end
+
+    -- Try to get the actions grid (default destination for overflow cards)
+    if PlayerInventory.getGridForTab then
+        local actionsGrid = PlayerInventory.getGridForTab("actions")
+        if actionsGrid then
+            return actionsGrid
+        end
+    end
+
+    -- Fall back to getting any available grid
+    if PlayerInventory.getGrids then
+        local grids = PlayerInventory.getGrids()
+        if grids then
+            -- Return first available grid
+            for _, gridEntity in pairs(grids) do
+                if gridEntity then
+                    return gridEntity
+                end
+            end
+        end
+    end
+
+    return nil
+end
+
+--- Transfer overflow items to player inventory using atomic grid_transfer.
+-- @param overflowItems table Array of { item = entity, oldSlot = N }
+-- @return number Number of items successfully transferred
+local function transferOverflowToInventory(overflowItems)
+    if not overflowItems or #overflowItems == 0 then
+        return 0
+    end
+
+    local inventoryGrid = getPlayerInventoryGrid()
+    if not inventoryGrid then
+        log_warn("[WandLoadoutUI] No player inventory grid available for overflow")
+        return 0
+    end
+
+    local successCount = 0
+
+    for _, overflow in ipairs(overflowItems) do
+        local itemEntity = overflow.item
+
+        if itemEntity and registry:valid(itemEntity) then
+            -- Use transferItemTo for atomic transfer (finds item location automatically)
+            local result = transfer.transferItemTo({
+                item = itemEntity,
+                toGrid = inventoryGrid,
+                onSuccess = function(res)
+                    log_debug("[WandLoadoutUI] Overflow card transferred to inventory slot " .. res.toSlot)
+                    successCount = successCount + 1
+
+                    -- Center item on new slot
+                    local slotEntity = grid.getSlotEntity(inventoryGrid, res.toSlot)
+                    if slotEntity then
+                        InventoryGridInit.centerItemOnSlot(itemEntity, slotEntity)
+                    end
+                end,
+                onFail = function(reason)
+                    log_warn("[WandLoadoutUI] Failed to transfer overflow card: " .. reason)
+
+                    -- Show feedback to player
+                    if popup and popup.above then
+                        popup.above(itemEntity, "No space!", { color = "red" })
+                    end
+                end,
+            })
+
+            if result.success then
+                successCount = successCount + 1
+            end
+        end
+    end
+
+    return successCount
+end
+
+--- Reduce the number of action slots on the wand.
+-- Cards in removed slots are automatically transferred to player inventory.
+-- @param newRows number New row count (must be >= 1)
+-- @param newCols number New column count (must be >= 1)
+-- @return table { success = bool, overflowCount = N, transferredCount = N }
+function WandLoadoutUI.reduceActionSlots(newRows, newCols)
+    if not state.initialized or not state.actionGridEntity then
+        log_warn("[WandLoadoutUI] Cannot reduce slots - not initialized")
+        return { success = false, overflowCount = 0, transferredCount = 0 }
+    end
+
+    -- Validate minimum size
+    newRows = math.max(1, newRows or 1)
+    newCols = math.max(1, newCols or 1)
+
+    -- Check how many items would overflow
+    local overflowCount = grid.getOverflowCount(state.actionGridEntity, newRows, newCols)
+
+    log_debug(string.format(
+        "[WandLoadoutUI] Reducing action slots to %dx%d (%d items will overflow)",
+        newRows, newCols, overflowCount
+    ))
+
+    -- Resize grid - this removes items from overflow slots and returns them
+    local result = grid.resizeGrid(state.actionGridEntity, newRows, newCols)
+
+    if not result.success then
+        log_warn("[WandLoadoutUI] Grid resize failed")
+        return { success = false, overflowCount = overflowCount, transferredCount = 0 }
+    end
+
+    -- Transfer overflow items to player inventory
+    local transferredCount = 0
+    if result.overflow and #result.overflow > 0 then
+        transferredCount = transferOverflowToInventory(result.overflow)
+
+        for _, overflow in ipairs(result.overflow) do
+            wandAdapter.clearSlot(state.currentWandIndex, overflow.oldSlot)
+        end
+
+        -- Emit event for external listeners
+        signal.emit("wand_slots_overflow", result.overflow, transferredCount)
+
+        -- Show player feedback
+        if transferredCount > 0 and popup and popup.above and state.panelEntity then
+            popup.above(state.panelEntity,
+                string.format("%d card(s) returned to inventory", transferredCount),
+                { color = "gold" }
+            )
+        end
+    end
+
+    -- Emit slot reduction event
+    signal.emit("wand_slots_reduced", newRows, newCols, result.overflow)
+
+    log_debug(string.format(
+        "[WandLoadoutUI] Slot reduction complete: %d/%d items transferred to inventory",
+        transferredCount, overflowCount
+    ))
+
+    return {
+        success = true,
+        overflowCount = overflowCount,
+        transferredCount = transferredCount,
+    }
+end
+
+--- Get the current action grid dimensions.
+-- @return number, number Current rows and columns
+function WandLoadoutUI.getActionGridDimensions()
+    if not state.actionGridEntity then
+        return ACTION_ROWS, ACTION_COLS  -- Return defaults
+    end
+    return grid.getDimensions(state.actionGridEntity)
+end
+
+function WandLoadoutUI.previewOverflowCount(newRows, newCols)
+    if not state.actionGridEntity then
+        return 0
+    end
+    return grid.getOverflowCount(state.actionGridEntity, newRows, newCols)
+end
+
+function WandLoadoutUI.getWandCount()
+    return state.wandCount
+end
+
+function WandLoadoutUI.getCurrentWandIndex()
+    return state.currentWandIndex
+end
+
+function WandLoadoutUI.setWandCount(count)
+    state.wandCount = math.max(1, count or 1)
+    log_debug("[WandLoadoutUI] Wand count set to " .. state.wandCount)
+end
+
+local function loadCardsFromAdapter()
+    if not state.initialized then return 0 end
+
+    local loadout = wandAdapter.getLoadout(state.currentWandIndex)
+    if not loadout then return 0 end
+
+    local count = 0
+
+    if state.triggerGridEntity then
+        grid.clearGrid(state.triggerGridEntity)
+        if loadout.trigger and registry:valid(loadout.trigger) then
+            local ok = grid.addItemToSlot(state.triggerGridEntity, 1, loadout.trigger)
+            if ok then count = count + 1 end
+        end
+    end
+
+    if state.actionGridEntity then
+        grid.clearGrid(state.actionGridEntity)
+        if loadout.actions then
+            for slotIndex, itemEntity in pairs(loadout.actions) do
+                if itemEntity and registry:valid(itemEntity) then
+                    local ok = grid.addItemToSlot(state.actionGridEntity, slotIndex, itemEntity)
+                    if ok then count = count + 1 end
+                end
+            end
+        end
+    end
+
+    return count
+end
+
+function WandLoadoutUI.selectWand(wandIndex)
+    if not state.initialized then
+        log_warn("[WandLoadoutUI] Cannot select wand - not initialized")
+        return false
+    end
+
+    local newIndex = wandIndex
+    if newIndex < 1 then
+        newIndex = state.wandCount
+    elseif newIndex > state.wandCount then
+        newIndex = 1
+    end
+
+    if newIndex == state.currentWandIndex then
+        return true
+    end
+
+    local oldIndex = state.currentWandIndex
+    state.currentWandIndex = newIndex
+
+    log_debug("[WandLoadoutUI] Switched from wand " .. oldIndex .. " to wand " .. newIndex)
+
+    local loadedFromAdapter = loadCardsFromAdapter()
+    if loadedFromAdapter then
+        log_debug("[WandLoadoutUI] Loaded " .. loadedFromAdapter .. " cards from wand adapter")
+    end
+
+    signal.emit("wand_selected", newIndex, oldIndex)
+
+    return true
 end
 
 --------------------------------------------------------------------------------

@@ -216,6 +216,19 @@ local function distributePlayerInventory(inventoryData)
 
     local PlayerInventory = _playerInventoryRef
 
+    local function normalizeCategory(tabName)
+        if tabName == "triggers" or tabName == "trigger" then
+            return "trigger"
+        end
+        if tabName == "actions" or tabName == "action" then
+            return "action"
+        end
+        if tabName == "modifiers" or tabName == "modifier" then
+            return "modifier"
+        end
+        return tabName
+    end
+
     for tabName, tabData in pairs(inventoryData) do
         if type(tabData) == "table" then
             local gridEntity = PlayerInventory.getGridForTab and PlayerInventory.getGridForTab(tabName)
@@ -229,7 +242,7 @@ local function distributePlayerInventory(inventoryData)
 
                     if cardId and slotIndex then
                         -- Recreate card entity from ID
-                        local cardEntity = _cardRecreatorFn(cardId, tabName)
+                        local cardEntity = _cardRecreatorFn(cardId, normalizeCategory(tabName))
 
                         if cardEntity then
                             -- Add to specific slot

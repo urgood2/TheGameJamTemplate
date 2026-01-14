@@ -120,7 +120,10 @@ def clean_existing_frames(
 
     if not dry_run:
         for f in matching_files:
-            os.unlink(f)
+            try:
+                os.unlink(f)
+            except FileNotFoundError:
+                pass  # File already deleted (race condition or stale glob)
 
     return len(matching_files)
 

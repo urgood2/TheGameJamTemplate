@@ -1,28 +1,23 @@
 --[[
 ================================================================================
-PLAYER INVENTORY BRIDGE
+PLAYER INVENTORY BRIDGE (DEPRECATED - Phase 5 Cleanup)
 ================================================================================
 
-Handles drag-drop between PlayerInventory (screen-space) and Planning Boards 
-(world-space). This is the "glue" that makes cards transferable between the 
-two coordinate systems.
+NOTE: This module is DEPRECATED as of Phase 5 cleanup.
 
-RESPONSIBILITIES:
-----------------
-1. Setup planning boards as drop targets for inventory cards
-2. Handle drops from boards onto inventory
-3. Coordinate with CardSpaceConverter for coordinate transforms
-4. Emit signals for external systems
+The legacy inventory board system (inventory_board_id, trigger_inventory_board_id)
+has been removed. The new grid inventory system (PlayerInventory + WandLoadoutUI)
+handles card management internally.
 
-USAGE:
-------
-local Bridge = require("ui.player_inventory_bridge")
+This bridge was designed to handle drag-drop between:
+- PlayerInventory (screen-space) and Planning Boards (world-space)
 
--- Call during planning phase initialization:
-Bridge.setupBoardDropTargets(board_sets)
+With the new system:
+- Card space conversion is handled by WandLoadoutUI
+- Drop targets are managed by inventory_grid_init.lua
+- Signals are emitted directly by the grid/loadout modules
 
--- Call when inventory grid receives a drop:
-Bridge.handleDropOnInventory(gridEntity, slotIndex, droppedEntity)
+This file is kept for backwards compatibility but all functions are no-ops.
 
 ================================================================================
 ]]
@@ -84,33 +79,11 @@ end
 
 --- Setup all planning boards as drop targets
 --- @param board_sets table Array of board sets from gameplay.lua
+--- NOTE: DEPRECATED - No-op in Phase 5 (grid inventory handles drops internally)
 function Bridge.setupBoardDropTargets(board_sets)
-    if not board_sets then
-        log_warn("[Bridge] setupBoardDropTargets: no board_sets provided")
-        return
-    end
-    
-    for _, boardSet in ipairs(board_sets) do
-        -- Trigger board accepts only triggers
-        if boardSet.trigger_board_id then
-            Bridge.setupBoardAsDropTarget(
-                boardSet.trigger_board_id,
-                boardSet.trigger_board_id,
-                { "trigger" }
-            )
-        end
-        
-        -- Action board accepts actions and modifiers
-        if boardSet.action_board_id then
-            Bridge.setupBoardAsDropTarget(
-                boardSet.action_board_id,
-                boardSet.action_board_id,
-                { "action", "modifier" }
-            )
-        end
-    end
-    
-    log_debug("[Bridge] Setup drop targets for " .. #board_sets .. " board sets")
+    log_debug("[Bridge] setupBoardDropTargets: DEPRECATED - no-op in Phase 5")
+    -- Legacy board drop targets are no longer used
+    -- WandLoadoutUI handles card equipping via the wand_grid_adapter
 end
 
 --------------------------------------------------------------------------------

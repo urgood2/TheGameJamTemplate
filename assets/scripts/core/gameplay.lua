@@ -85,10 +85,10 @@ local gameplay_cfg = {
     },
 
     -- Feature flags
-    -- USE_GRID_INVENTORY: Toggle between legacy board-based and new grid-based inventory
-    -- false = Legacy inventory boards (board_sets, world-space drag)
-    -- true  = New grid inventory UI (PlayerInventory, WandLoadoutUI)
-    USE_GRID_INVENTORY = false,  -- Phase 4: Default to false for safe rollback
+    -- USE_GRID_INVENTORY: Toggle between new grid-based inventory and legacy board system
+    -- When true: Uses PlayerInventory (screen-space grid) + WandLoadoutUI for card management
+    -- When false: Uses legacy board_sets with inventory_board for card management
+    USE_GRID_INVENTORY = true,  -- Set to false to use legacy board-based inventory
 
     enable_subcast_debug_ui = true,
     enable_wave_test_init = false,
@@ -365,7 +365,8 @@ survivorEntity = nil
 survivorMaskEntity = nil
 boards = {}
 cards = {}
-inventory_board_id = nil
+-- NOTE: inventory_board_id and trigger_inventory_board_id removed (Phase 5 cleanup)
+-- The new grid inventory system uses PlayerInventory and WandLoadoutUI modules
 trigger_board_id_to_action_board_id = {} -- map trigger boards to action boards
 trigger_board_id = nil
 action_board_id = nil
@@ -1361,10 +1362,8 @@ local function isCardOverCapacity(cardScript, cardEntityID)
     local boardEntity = cardScript.currentBoardEntity
     if not boardEntity or not entity_cache.valid(boardEntity) then return false end
 
-    -- inventory boards have no capacity cap
-    if boardEntity == inventory_board_id or boardEntity == trigger_inventory_board_id then
-        return false
-    end
+    -- NOTE: Legacy inventory_board_id check removed (Phase 5)
+    -- Grid inventory handles capacity via inventory_grid.lua
 
     local board = boards[boardEntity]
     if not board or not board.cards then return false end
@@ -1449,12 +1448,12 @@ function removeCardFromBoard(cardEntityID, boardEntityID)
 end
 
 -- Get the appropriate inventory board for a card type
+-- NOTE: Legacy function - returns nil since inventory_board_id removed in Phase 5
+-- New grid inventory uses PlayerInventory module instead
 local function getInventoryForCardType(cardScript)
-    if cardScript.cardType == "trigger" then
-        return trigger_inventory_board_id
-    else
-        return inventory_board_id
-    end
+    -- Legacy inventory boards no longer exist
+    -- Use PlayerInventory.addCard() for grid inventory instead
+    return nil
 end
 
 -- Get the appropriate active board for a card type
@@ -1470,14 +1469,11 @@ local function getActiveBoardForCardType(cardScript)
 end
 
 -- Check if a board can accept another card
+-- NOTE: Legacy inventory_board_id checks removed (Phase 5)
+-- Grid inventory handles capacity via inventory_grid.lua
 local function canBoardAcceptCard(boardEntityID, cardScript)
     if not boardEntityID or not entity_cache.valid(boardEntityID) then
         return false
-    end
-
-    -- Inventory boards have unlimited capacity
-    if boardEntityID == inventory_board_id or boardEntityID == trigger_inventory_board_id then
-        return true
     end
 
     -- Check against wand capacity
@@ -1506,16 +1502,19 @@ local function canBoardAcceptCard(boardEntityID, cardScript)
 end
 
 -- Transfer card via right-click
+-- NOTE: Legacy function - inventory_board_id references removed (Phase 5)
+-- Right-click equip now handled by wand_loadout_ui.lua for grid inventory
 local function transferCardViaRightClick(cardEntity, cardScript)
     local currentBoard = cardScript.currentBoardEntity
-    log_debug("[Transfer] currentBoard:", currentBoard, "inventory_board_id:", inventory_board_id)
+    log_debug("[Transfer] currentBoard:", currentBoard)
     if not currentBoard or not entity_cache.valid(currentBoard) then
         log_debug("[Transfer] No valid current board, aborting")
         return
     end
 
     local targetBoard
-    local isFromInventory = (currentBoard == inventory_board_id or currentBoard == trigger_inventory_board_id)
+    -- Legacy inventory boards no longer exist - cards on wand boards only
+    local isFromInventory = false  -- Grid inventory cards aren't tracked here
     log_debug("[Transfer] isFromInventory:", isFromInventory)
 
     if isFromInventory then
@@ -1554,36 +1553,13 @@ local function transferCardViaRightClick(cardEntity, cardScript)
 end
 
 -- Moves all selected cards from the inventory board to the current set's action board.
+-- NOTE: Legacy function - inventory_board_id removed in Phase 5
+-- Grid inventory uses WandLoadoutUI for card equipping
 function sendSelectedInventoryCardsToActiveActionBoard()
-    if not inventory_board_id or inventory_board_id == entt_null or not entity_cache.valid(inventory_board_id) then
-        return false
-    end
-
-    local inventoryBoard = boards[inventory_board_id]
-    if not inventoryBoard or not inventoryBoard.cards or #inventoryBoard.cards == 0 then
-        return false
-    end
-
-    local activeSet = board_sets and board_sets[current_board_set_index]
-    if not activeSet or not activeSet.action_board_id or not entity_cache.valid(activeSet.action_board_id) then
-        return false
-    end
-
-    local moved = false
-    for i = #inventoryBoard.cards, 1, -1 do
-        local cardEid = inventoryBoard.cards[i]
-        if cardEid and entity_cache.valid(cardEid) then
-            local script = getScriptTableFromEntityID(cardEid)
-            if script and script.selected then
-                removeCardFromBoard(cardEid, inventory_board_id)
-                addCardToBoard(cardEid, activeSet.action_board_id)
-                script.selected = false
-                moved = true
-            end
-        end
-    end
-
-    return moved
+    -- Legacy inventory board no longer exists
+    -- Use WandLoadoutUI for equipping cards from grid inventory
+    log_debug("[Transfer] sendSelectedInventoryCardsToActiveActionBoard: Legacy function, no-op")
+    return false
 end
 
 function resetCardStackZOrder(rootCardEntityID)
@@ -5111,18 +5087,18 @@ function initPlanningPhase()
 
             -- is it a trigger card?
 
+            -- NOTE: Legacy inventory_board_id references removed (Phase 5)
+            -- Card toggle between wand boards and inventory now handled by WandLoadoutUI
+            -- This controller nav code only handles wand board card swapping now
+
             if script and script.type == "trigger" then
-                -- add to current trigger board, if not already on it. otherwise send it back to trigger inventory.
+                -- add to current trigger board, if not already on it
                 if board_sets and #board_sets > 0 then
                     local currentSet = board_sets[current_board_set_index]
 
-
                     if currentSet and currentSet.trigger_board_id then
-                        -- if already on trigger board, send back to inventory
+                        -- if already on trigger board, just deselect (legacy inventory removed)
                         if belongsToCurrentSet and script.currentBoardEntity == currentSet.trigger_board_id then
-                            -- already on trigger board, send back to inventory
-                            removeCardFromBoard(e, script.currentBoardEntity)
-                            addCardToBoard(e, trigger_inventory_board_id)
                             playSoundEffect("effects", "card_pick_up", 0.9 + math.random() * 0.2)
                             script.selected = false
                             return
@@ -5139,13 +5115,9 @@ function initPlanningPhase()
                 if board_sets and #board_sets > 0 then
                     local currentSet = board_sets[current_board_set_index]
                     if currentSet and currentSet.action_board_id then
-                        -- if already on action board, send back to inventory
+                        -- if already on action board, just deselect (legacy inventory removed)
                         if belongsToCurrentSet and script.currentBoardEntity == currentSet.action_board_id then
-                            -- already on action board, send back to inventory
-                            removeCardFromBoard(e, script.currentBoardEntity)
-                            addCardToBoard(e, inventory_board_id)
                             playSoundEffect("effects", "card_pick_up", 0.9 + math.random() * 0.2)
-                            -- set selected to false
                             script.selected = false
                             return
                         end
@@ -5289,28 +5261,18 @@ function initPlanningPhase()
     for _, card in ipairs(cardsToChange) do
         if ensure_entity(card) then
             timer.after(cardDelay, function()
-                print("[gameplay] Card deal timer fired, inventory_board_id:", inventory_board_id)
-                local t = component_cache.get(card, Transform)
-
-                local inventoryBoardTransform = component_cache.get(inventory_board_id, Transform)
-                if not inventoryBoardTransform then
-                    print("[gameplay] ERROR: inventoryBoardTransform is nil!")
-                    return
-                end
-
-                -- slide it into place at x, y (offset random)
-                local targetX = globals.screenWidth() * 0.8
-                local targetY = inventoryBoardTransform.actualY
-                t.actualX = targetX
-                t.actualY = targetY
-                t.visualY = targetY - 100               -- start offscreen slightly above wanted pos
-                t.visualX = globals.screenWidth() * 1.2 -- start offscreen right
-
-                -- play sound with randomized pitch
+                print("[gameplay] Card deal timer fired")
                 playSoundEffect("effects", "card_deal", 0.7 + math.random() * 0.3)
 
-                -- add to board
-                addCardToBoard(card, inventory_board_id)
+                if gameplay_cfg.isGridInventoryEnabled() then
+                    local PlayerInventory = require("ui.player_inventory")
+                    local success = PlayerInventory.addCard(card)
+                    if not success then
+                        log_warn("[gameplay] Failed to add card to PlayerInventory")
+                    end
+                else
+                    log_debug("[gameplay] Legacy mode: card spawned (no auto-add to inventory)")
+                end
                 -- give physics
                 -- local info = { shape = "rectangle", tag = "card", sensor = false, density = 1.0, inflate_px = 15 } -- inflate so cards will not stick to each other when dealt.
                 -- physics.create_physics_for_transform(registry,
@@ -5530,220 +5492,14 @@ function initPlanningPhase()
     -- =============================================================================
 
     -- -------------------------------------------------------------------------- --
-    --       INVENTORY SYSTEM TOGGLE (Feature Flag: USE_GRID_INVENTORY)          --
-    -- --------------------------------------------------------------------------
-    -- When USE_GRID_INVENTORY = false (default): Legacy board-based inventory
-    -- When USE_GRID_INVENTORY = true: New grid-based PlayerInventory + WandLoadoutUI
-    -- --------------------------------------------------------------------------
-
-    if not gameplay_cfg.USE_GRID_INVENTORY then
-    -- ============ LEGACY INVENTORY BOARDS (board_sets, world-space) ============
-
+    --       GRID INVENTORY SYSTEM (Phase 5 Cleanup - Legacy Code Removed)       --
     -- -------------------------------------------------------------------------- --
-    --       make a large board at bottom that will serve as the inventory, with a trigger inventory on the left.       --
-    -- --------------------------------------------------------------------------
-
-    local triggerInventoryWidth  = planningRegionWidth * 0.2
-    local triggerInventoryHeight = (screenH - runningYValue) * 0.80
-
-    local inventoryBoardWidth    = planningRegionWidth * 0.65
-    local inventoryBoardHeight   = triggerInventoryHeight
-    local boardPadding           = boardPadding or 20 -- just in case
-
-    -- Center both panels as a group
-    local totalWidth             = triggerInventoryWidth + boardPadding + inventoryBoardWidth
-    local offsetX                = (planningRegionWidth - totalWidth) / 2
-
-    -- Left (trigger) panel
-    local triggerInventoryX      = offsetX
-    local triggerInventoryY      = runningYValue + boardPadding * 2
-
-    -- Right (inventory) panel
-    local inventoryBoardX        = triggerInventoryX + triggerInventoryWidth + boardPadding
-    local inventoryBoardY        = triggerInventoryY
-
-    -- Create
-    local inventoryBoardID       = createNewBoard(inventoryBoardX, inventoryBoardY, inventoryBoardWidth,
-        inventoryBoardHeight)
-    local inventoryBoard         = boards[inventoryBoardID]
-    inventoryBoard.borderColor   = util.getColor("white")
-    inventoryBoard.isInventoryBoard = true
-    inventory_board_id           = inventoryBoardID
-
-
-    -- give a text label above the board
-    inventoryBoard.textEntity = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("ui.inventory_area") end, -- initial text
-        20.0,                                                        -- font size
-        "color=apricot_cream"                                        -- animation spec
-    ).config.object
-    -- make the text world space
-    transform.set_space(inventoryBoard.textEntity, "world")
-    -- state tags
-    add_state_tag(inventoryBoard.textEntity, PLANNING_STATE)
-    add_state_tag(inventoryBoardID, PLANNING_STATE)
-    -- remove default state tags
-    remove_default_state_tag(inventoryBoard.textEntity)
-    remove_default_state_tag(inventoryBoardID)
-
-    -- let's anchor to top of the trigger board
-    transform.AssignRole(registry, inventoryBoard.textEntity, InheritedPropertiesType.PermanentAttachment,
-        inventoryBoard:handle(),
-        InheritedPropertiesSync.Strong,
-        InheritedPropertiesSync.Weak,
-        InheritedPropertiesSync.Strong,
-        InheritedPropertiesSync.Weak,
-        Vec2(0, -10) -- offset it a bit upwards
-    );
-    local roleComp = component_cache.get(inventoryBoard.textEntity, InheritedProperties)
-    roleComp.flags = AlignmentFlag.VERTICAL_TOP
-
-    -- map
-    inventory_board_id = inventoryBoardID
-
-    local function createInventoryLayoutToggle()
-        local rowIcon = ui.definitions.getTextFromString("[=](color=white;fontSize=16;shadow=false)")
-        local gridIcon = ui.definitions.getTextFromString("[#](color=white;fontSize=16;shadow=false)")
-
-        local rowButtonTemplate = UIElementTemplateNodeBuilder.create()
-            :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-            :addConfig(
-                UIConfigBuilder.create()
-                :addId("inventory_row_toggle")
-                :addColor(util.getColor("gray"))
-                :addPadding(6.0)
-                :addEmboss(2.0)
-                :addHover(true)
-                :addMinWidth(28)
-                :addMinHeight(28)
-                :addButtonCallback(function()
-                    playSoundEffect("effects", "button-click")
-                    local board = boards[inventory_board_id]
-                    if board then
-                        board.layoutMode = "row"
-                    end
-                end)
-                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER))
-                :build()
-            )
-            :addChild(rowIcon)
-            :build()
-
-        local gridButtonTemplate = UIElementTemplateNodeBuilder.create()
-            :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-            :addConfig(
-                UIConfigBuilder.create()
-                :addId("inventory_grid_toggle")
-                :addColor(util.getColor("dark_gray_slate"))
-                :addPadding(6.0)
-                :addEmboss(2.0)
-                :addHover(true)
-                :addMinWidth(28)
-                :addMinHeight(28)
-                :addButtonCallback(function()
-                    playSoundEffect("effects", "button-click")
-                    local board = boards[inventory_board_id]
-                    if board then
-                        board.layoutMode = "grid"
-                    end
-                end)
-                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER))
-                :build()
-            )
-            :addChild(gridIcon)
-            :build()
-
-        local toggleContainer = UIElementTemplateNodeBuilder.create()
-            :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-            :addConfig(
-                UIConfigBuilder.create()
-                :addId("inventory_layout_toggle_container")
-                :addColor(util.getColor("blank"))
-                :addPadding(4.0)
-                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER))
-                :build()
-            )
-            :addChild(rowButtonTemplate)
-            :addChild(gridButtonTemplate)
-            :build()
-
-        local toggleRoot = UIElementTemplateNodeBuilder.create()
-            :addType(UITypeEnum.ROOT)
-            :addConfig(
-                UIConfigBuilder.create()
-                :addColor(util.getColor("blank"))
-                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_RIGHT, AlignmentFlag.VERTICAL_TOP))
-                :build()
-            )
-            :addChild(toggleContainer)
-            :build()
-
-        local toggleBox = ui.box.Initialize({ x = inventoryBoardX + inventoryBoardWidth - 70, y = inventoryBoardY - 35 }, toggleRoot)
-        ui.box.AssignStateTagsToUIBox(toggleBox, PLANNING_STATE)
-        remove_default_state_tag(toggleBox)
-
-        planningUIEntities.inventory_layout_toggle = toggleBox
-    end
-
-    createInventoryLayoutToggle()
-
-    -- -------------------------------------------------------------------------- --
-    --       make a separate trigger inventory on the left of the inventory.      --
-    -- --------------------------------------------------------------------------
-
-    local triggerInventoryBoardID = createNewBoard(triggerInventoryX, triggerInventoryY, triggerInventoryWidth,
-        triggerInventoryHeight)
-    local triggerInventoryBoard = boards[triggerInventoryBoardID]
-    triggerInventoryBoard.borderColor = util.getColor("cyan")
-    trigger_inventory_board_id = triggerInventoryBoardID -- save in global
-
-    -- give a text label above the board
-    triggerInventoryBoard.textEntity = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("ui.trigger_inventory_area") end, -- initial text
-        20.0,                                                                -- font size
-        "color=cyan"                                                         -- animation spec
-    ).config.object
-    -- make the text world space
-    transform.set_space(triggerInventoryBoard.textEntity, "world")
-    -- give state tags
-    add_state_tag(triggerInventoryBoard.textEntity, PLANNING_STATE)
-    add_state_tag(triggerInventoryBoardID, PLANNING_STATE)
-    -- remove default state tags
-    remove_default_state_tag(triggerInventoryBoard.textEntity)
-    remove_default_state_tag(triggerInventoryBoardID)
-    -- let's anchor to top of the trigger board
-    transform.AssignRole(registry, triggerInventoryBoard.textEntity, InheritedPropertiesType.PermanentAttachment,
-        triggerInventoryBoard:handle(),
-        InheritedPropertiesSync.Strong,
-        InheritedPropertiesSync.Weak,
-        InheritedPropertiesSync.Strong,
-        InheritedPropertiesSync.Weak,
-        Vec2(0, -10) -- offset it a bit upwards
-    );
-    local roleComp = component_cache.get(triggerInventoryBoard.textEntity, InheritedProperties)
-    roleComp.flags = AlignmentFlag.VERTICAL_TOP
-
-
-
-
-    -- add every trigger defined so we can test them all
-    for id, def in pairs(WandEngine.trigger_card_defs) do
-        local triggerCard = createNewTriggerSlotCard(id, 4000, 4000, PLANNING_STATE)
-        addCardToBoard(triggerCard, triggerInventoryBoardID)
-        -- add to navigation group as well.
-        controller_nav.ud:add_entity("planning-phase", triggerCard)
-    end
-
-    -- ============ END LEGACY INVENTORY BOARDS ============
-    else
-    -- ============ NEW GRID INVENTORY (PlayerInventory + WandLoadoutUI) ============
     -- Grid-based inventory is initialized lazily when opened via keybind (Tab/E keys)
     -- No upfront entity creation needed - modules self-initialize on first open()
-    log_debug("[gameplay] USE_GRID_INVENTORY=true: Using new grid inventory system")
+    -- Legacy inventory_board_id and trigger_inventory_board_id have been removed
+    log_debug("[gameplay] Using new grid inventory system (legacy boards removed)")
     log_debug("[gameplay] PlayerInventory will initialize on Tab key press")
     log_debug("[gameplay] WandLoadoutUI will initialize on E key press")
-    -- ============ END NEW GRID INVENTORY ============
-    end -- USE_GRID_INVENTORY feature flag
 
     -- for each board set, we get a corresponding index wand def to save, or if the index is out of range, we loop around.
     for index, boardSet in ipairs(board_sets) do
@@ -5774,33 +5530,28 @@ function initPlanningPhase()
         log_debug("[gameplay] wandAdapter initialized with " .. #wandDefsForAdapter .. " wand definitions")
     end
 
-    -- ============ GRID INVENTORY SAVE/LOAD INTEGRATION ============
-    -- Set up references and card recreator for save/load system
-    if gameplay_cfg.USE_GRID_INVENTORY then
+    if gameplay_cfg.isGridInventoryEnabled() then
         local GridInventorySave = require("core.grid_inventory_save")
         local PlayerInventory = require("ui.player_inventory")
         local WandLoadoutUI = require("ui.wand_loadout_ui")
 
-        -- Set references for save/load
+        WandLoadoutUI.setWandCount(#wandDefsForAdapter)
+
         GridInventorySave.setPlayerInventoryRef(PlayerInventory)
         GridInventorySave.setWandLoadoutRef(WandLoadoutUI)
         GridInventorySave.setWandAdapterRef(wandAdapter)
 
-        -- Card recreator function for loading saved cards
         GridInventorySave.setCardRecreator(function(cardId, category)
             if not cardId then return nil end
 
             local cardEntity
             if category == "trigger" or WandEngine.trigger_card_defs[cardId] then
-                -- Create trigger card
                 cardEntity = createNewTriggerSlotCard(cardId, -9999, -9999, PLANNING_STATE)
             else
-                -- Create action/modifier card
                 cardEntity = createNewCard(cardId, -9999, -9999, PLANNING_STATE)
             end
 
             if cardEntity and registry:valid(cardEntity) then
-                -- Configure for grid inventory UI
                 if ObjectAttachedToUITag and not registry:has(cardEntity, ObjectAttachedToUITag) then
                     registry:emplace(cardEntity, ObjectAttachedToUITag)
                 end
@@ -5814,8 +5565,9 @@ function initPlanningPhase()
         end)
 
         log_debug("[gameplay] Grid inventory save/load integration configured")
+    else
+        log_debug("[gameplay] Grid inventory disabled - using legacy board system")
     end
-    -- ============ END GRID INVENTORY SAVE/LOAD INTEGRATION ============
 
     -- Card tooltips are built lazily on hover to avoid spawning hundreds of UI boxes up front.
 
@@ -6027,8 +5779,13 @@ local function resetGameToStart()
             end
         end
     end
-    clearInventoryBoard(inventory_board_id, "inventory_board")
-    clearInventoryBoard(trigger_inventory_board_id, "trigger_inventory_board")
+    if gameplay_cfg.isGridInventoryEnabled() then
+        local PlayerInventory = require("ui.player_inventory")
+        if PlayerInventory.clearAll then
+            PlayerInventory.clearAll()
+            log_debug("[gameplay] Cleared PlayerInventory grid")
+        end
+    end
 
     -- 5. Reset player to baseline (level 1, full HP, no accumulated stats)
     if survivorEntity and entity_cache.valid(survivorEntity) then
@@ -6128,8 +5885,8 @@ local function resetGameToStart()
         log_debug("[gameplay] Re-added starting cards with fly-in animation")
     end
 
-    -- 5c. Re-spawn inventory cards from catalog
-    if inventory_board_id and entity_cache.valid(inventory_board_id) then
+    if gameplay_cfg.isGridInventoryEnabled() then
+        local PlayerInventory = require("ui.player_inventory")
         local catalog = WandEngine.card_defs
         local inventoryCardsToAnimate = {}
 
@@ -6147,48 +5904,15 @@ local function resetGameToStart()
         local inventoryCardDelay = 0.5
         for _, card in ipairs(inventoryCardsToAnimate) do
             if entity_cache.valid(card) then
-                local t = component_cache.get(card, Transform)
-                if t then
-                    t.actualX = -500
-                    t.actualY = -500
-                    t.visualX = t.actualX
-                    t.visualY = t.actualY
-                end
-
                 timer.after(inventoryCardDelay, function()
                     if not entity_cache.valid(card) then return end
-                    local transform = component_cache.get(card, Transform)
-                    local inventoryBoardTransform = component_cache.get(inventory_board_id, Transform)
-
-                    if transform and inventoryBoardTransform then
-                        local targetX = globals.screenWidth() * 0.8
-                        local targetY = inventoryBoardTransform.actualY
-                        transform.actualX = targetX
-                        transform.actualY = targetY
-                        transform.visualY = targetY - 100
-                        transform.visualX = globals.screenWidth() * 1.2
-
-                        playSoundEffect("effects", "card_deal", 0.7 + math.random() * 0.3)
-                    end
-                    addCardToBoard(card, inventory_board_id)
+                    playSoundEffect("effects", "card_deal", 0.7 + math.random() * 0.3)
+                    PlayerInventory.addCard(card)
                 end)
                 inventoryCardDelay = inventoryCardDelay + 0.1
             end
         end
-        log_debug("[gameplay] Re-spawned", #inventoryCardsToAnimate, "inventory cards")
-    end
-
-    -- 5d. Re-spawn trigger inventory cards
-    if trigger_inventory_board_id and entity_cache.valid(trigger_inventory_board_id) then
-        for id, def in pairs(WandEngine.trigger_card_defs) do
-            local triggerCard = createNewTriggerSlotCard(id, 4000, 4000, PLANNING_STATE)
-            addCardToBoard(triggerCard, trigger_inventory_board_id)
-
-            if controller_nav and controller_nav.ud and controller_nav.ud.add_entity then
-                controller_nav.ud:add_entity("planning-phase", triggerCard)
-            end
-        end
-        log_debug("[gameplay] Re-spawned trigger inventory cards")
+        log_debug("[gameplay] Re-spawned " .. #inventoryCardsToAnimate .. " inventory cards to grid")
     end
 
     -- 6. Cleanup wand executor (destroys projectiles and wand state)
@@ -8422,13 +8146,13 @@ local function rebuildCardSpawnerLists()
     cardSpawnerState.built = true
 end
 
+-- NOTE: Legacy function updated for grid inventory (Phase 5)
+-- Now returns "inventory" special value for grid inventory, or board ID for wand boards
 local function resolveCardSpawnTarget(entry)
     if not entry then return nil end
 
     if entry.type == "trigger" then
-        if trigger_inventory_board_id and entity_cache.valid(trigger_inventory_board_id) then
-            return trigger_inventory_board_id
-        end
+        -- Triggers go to wand board only (no trigger inventory in grid system)
         local set = board_sets and board_sets[current_board_set_index]
         if set and set.trigger_board_id and entity_cache.valid(set.trigger_board_id) then
             return set.trigger_board_id
@@ -8440,9 +8164,8 @@ local function resolveCardSpawnTarget(entry)
                 return set.action_board_id
             end
         end
-        if inventory_board_id and entity_cache.valid(inventory_board_id) then
-            return inventory_board_id
-        end
+        -- Fallback to grid inventory (Phase 5)
+        return "inventory"  -- Special value indicating PlayerInventory
     end
 
     return nil
@@ -8451,9 +8174,9 @@ end
 local function spawnCardEntry(entry)
     if not entry or not entry.id then return end
 
-    local boardId = resolveCardSpawnTarget(entry)
-    if not boardId then
-        print("[CardSpawner] No valid target board for " .. tostring(entry.id))
+    local target = resolveCardSpawnTarget(entry)
+    if not target then
+        print("[CardSpawner] No valid target for " .. tostring(entry.id))
         return
     end
 
@@ -8477,7 +8200,13 @@ local function spawnCardEntry(entry)
         CardMetadata.enrich(script)
     end
 
-    addCardToBoard(eid, boardId)
+    -- Handle "inventory" special value for grid inventory (Phase 5)
+    if target == "inventory" then
+        local PlayerInventory = require("ui.player_inventory")
+        PlayerInventory.addCard(eid)
+    else
+        addCardToBoard(eid, target)
+    end
 end
 
 local function renderCardList(entries, childId)
@@ -8656,58 +8385,11 @@ local function shuffleActiveActionBoard()
     return true, #actionBoard.cards
 end
 
+-- NOTE: Legacy function - inventory_board_id removed in Phase 5
+-- Grid inventory uses WandLoadoutUI for equipping cards
 local function moveRandomInventoryCardsToActiveActionBoard(count)
-    local actionBoard, set = getActiveActionBoard()
-    if not actionBoard or not set then
-        return false, "No active action board"
-    end
-
-    local inventoryBoard = inventory_board_id and boards[inventory_board_id]
-    if not inventoryBoard or not inventoryBoard.cards or #inventoryBoard.cards == 0 then
-        return false, "Inventory is empty"
-    end
-
-    local candidates = {}
-    for _, cardEid in ipairs(inventoryBoard.cards) do
-        if cardEid and entity_cache.valid(cardEid) then
-            local script = getScriptTableFromEntityID(cardEid)
-            if script and script.type ~= "trigger" and not script.isStackChild then
-                table.insert(candidates, cardEid)
-            end
-        end
-    end
-
-    if #candidates == 0 then
-        return false, "No usable cards in inventory"
-    end
-
-    shuffleList(candidates)
-
-    local targetCount = math.min(count or 1, #candidates)
-    if set.wandDef and set.wandDef.total_card_slots then
-        local capacity = set.wandDef.total_card_slots
-        local currentCount = (actionBoard.cards and #actionBoard.cards) or 0
-        local openSlots = math.max(0, capacity - currentCount)
-        targetCount = math.min(targetCount, openSlots)
-    end
-
-    if targetCount <= 0 then
-        return false, "No free slots on action board"
-    end
-
-    local moved = 0
-    for i = 1, targetCount do
-        local cardEid = candidates[i]
-        removeCardFromBoard(cardEid, inventory_board_id)
-        addCardToBoard(cardEid, set.action_board_id)
-        local script = getScriptTableFromEntityID(cardEid)
-        if script then
-            script.selected = false
-        end
-        moved = moved + 1
-    end
-
-    return true, moved
+    log_debug("[moveRandomInventoryCardsToActiveActionBoard] Legacy function, returning false")
+    return false, "Legacy inventory board removed - use WandLoadoutUI"
 end
 
 -- call every frame
@@ -9393,30 +9075,27 @@ local function refreshShopUIFromInstance(shop)
     end
 end
 
+-- NOTE: Updated for grid inventory (Phase 5) - legacy inventory_board_id removed
 local function addPurchasedCardToInventory(cardInstance)
     if not cardInstance then return end
     local cardId = cardInstance.id or cardInstance.card_id or cardInstance.cardID
     if not cardId then return end
 
-    local dropX, dropY = globals.screenWidth() * 0.74, globals.screenHeight() * 0.78
-    local inventoryBoard = boards[inventory_board_id]
-    if inventoryBoard then
-        local t = component_cache.get(inventory_board_id, Transform)
-        if t then
-            dropX = t.actualX + t.actualW * 0.5
-            dropY = t.actualY + t.actualH * 0.2
-        end
-    end
-
-    local eid = createNewCard(cardId, dropX, dropY, PLANNING_STATE)
+    -- Create card offscreen (grid inventory doesn't need visible spawn position)
+    local eid = createNewCard(cardId, -500, -500, PLANNING_STATE)
     local script = getScriptTableFromEntityID(eid)
     if script then
         script.selected = false
     end
-    addCardToBoard(eid, inventory_board_id)
+
+    -- Add to grid inventory instead of legacy board
+    local PlayerInventory = require("ui.player_inventory")
+    PlayerInventory.addCard(eid)
     return eid
 end
 
+-- NOTE: Updated for grid inventory (Phase 5) - legacy inventory boards removed
+-- Now only collects wand board entities (board_sets still used for wand boards)
 local function collectPlanningPeekTargets()
     local targets = {}
     local function add(eid)
@@ -9425,14 +9104,9 @@ local function collectPlanningPeekTargets()
         end
     end
 
-    add(inventory_board_id)
-    local invBoard = boards[inventory_board_id]
-    if invBoard and invBoard.textEntity then add(invBoard.textEntity) end
+    -- Legacy inventory boards removed - grid inventory is screen-space UI
 
-    add(trigger_inventory_board_id)
-    local trigInv = boards[trigger_inventory_board_id]
-    if trigInv and trigInv.textEntity then add(trigInv.textEntity) end
-
+    -- Wand boards (action/trigger) are still world-space
     if board_sets then
         for _, set in ipairs(board_sets) do
             add(set.trigger_board_id)
@@ -9443,8 +9117,6 @@ local function collectPlanningPeekTargets()
             if actBoard and actBoard.textEntity then add(actBoard.textEntity) end
         end
     end
-
-
 
     return targets
 end

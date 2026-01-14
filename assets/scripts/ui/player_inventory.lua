@@ -48,36 +48,36 @@ local TAB_CONFIG = {
         id = "inv_equipment",
         label = "Equipment",
         icon = "E",
-        rows = 4,
-        cols = 4,
+        rows = 3,
+        cols = 6,
     },
     wands = {
         id = "inv_wands",
         label = "Wands",
         icon = "W",
-        rows = 4,
-        cols = 4,
+        rows = 3,
+        cols = 6,
     },
     triggers = {
         id = "inv_triggers",
         label = "Triggers",
         icon = "T",
-        rows = 4,
-        cols = 4,
+        rows = 3,
+        cols = 6,
     },
     actions = {
         id = "inv_actions",
         label = "Actions",
         icon = "A",
-        rows = 4,
-        cols = 4,
+        rows = 3,
+        cols = 6,
     },
     modifiers = {
         id = "inv_modifiers",
         label = "Modifiers",
         icon = "M",
-        rows = 4,
-        cols = 4,
+        rows = 3,
+        cols = 6,
     },
 }
 
@@ -89,8 +89,8 @@ local SPRITE_SCALE = 2
 local SLOT_WIDTH = SPRITE_BASE_W * SPRITE_SCALE
 local SLOT_HEIGHT = SPRITE_BASE_H * SPRITE_SCALE
 local SLOT_SPACING = 4
-local GRID_ROWS = 4
-local GRID_COLS = 5
+local GRID_ROWS = 3
+local GRID_COLS = 6
 local GRID_PADDING = 6
 
 local GRID_WIDTH = GRID_COLS * SLOT_WIDTH + (GRID_COLS - 1) * SLOT_SPACING + GRID_PADDING * 2
@@ -545,8 +545,8 @@ local function createFooter()
                     log_debug("[PlayerInventory] Sort by cost clicked")
                 end,
             }),
-            dsl.strict.spacer(1),
-            dsl.strict.text("0 / 20", { id = "slot_count_text", fontSize = 10, color = "light_gray" }),
+            dsl.spacer(1),
+            dsl.text("0 / 18", { id = "slot_count_text", fontSize = 10, color = "light_gray" }),
         },
     }
 end

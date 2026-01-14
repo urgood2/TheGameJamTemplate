@@ -1770,8 +1770,63 @@ dsl.root {
 -- Category: Patterns
 --------------------------------------------------------------------------------
 
+--[[
+================================================================================
+PATTERN SHOWCASES
+================================================================================
+Demonstrates common UI patterns that can be copied and adapted for real use.
+Patterns combine primitives and layouts into reusable, proven solutions.
+
+TOOLTIP PATTERN:
+  Displays contextual information on hover. Structure:
+  - Title (header)
+  - Description (body text)
+  - Stats grid (optional)
+  - Tag pills (optional)
+
+MODAL/DIALOG PATTERN:
+  Overlays that capture focus. Structure:
+  - Backdrop (semi-transparent)
+  - Modal box (centered)
+  - Header with close button
+  - Content area
+  - Action buttons
+
+INVENTORY GRID PATTERN:
+  Grid of interactive slots. Structure:
+  - Container with grid layout
+  - Slots with borders
+  - Item icons in slots
+  - Empty slot indicators
+
+BUTTON WITH ICON PATTERN:
+  Buttons that combine icon + label for clear actions.
+
+PANEL WITH DECORATIONS PATTERN:
+  Sprite panels with corner badges, icons, or other decorative elements.
+================================================================================
+]]
+
 ShowcaseRegistry._showcases.patterns = {
-    order = { "button_basic", "sprite_panel", "sprite_button", "form_layout", "card_layout" },
+    order = {
+        -- Basic patterns
+        "button_basic",
+        "button_icon_label",
+        "sprite_panel",
+        "sprite_button",
+        -- Complex patterns
+        "tooltip_pattern",
+        "modal_dialog",
+        "inventory_grid",
+        "panel_with_decorations",
+        "form_layout",
+        "card_layout",
+    },
+
+    --[[--------------------------------------------------------------------
+    BUTTON SHOWCASES
+    Demonstrates: basic buttons and icon+label buttons
+    ----------------------------------------------------------------------]]
 
     button_basic = {
         name = "Button (Basic)",
@@ -1794,6 +1849,97 @@ dsl.button("Click Me", {
                 textColor = "white",
                 emboss = 2
             })
+        end,
+    },
+
+    button_icon_label = {
+        name = "Button with Icon + Label",
+        description = "Button combining icon and text for clear, visual actions",
+        -- PATTERN: Icon + text in horizontal container with button styling
+        source = [[
+-- Button with icon and label (common action button pattern)
+dsl.hbox {
+    config = {
+        padding = 8,
+        spacing = 6,
+        color = "blue",
+        hover = true,
+        canCollide = true,
+        emboss = 2,
+        buttonCallback = function() print("Save clicked!") end,
+        align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+    },
+    children = {
+        dsl.anim("test-gem-ui-decor.png", { w = 20, h = 20, shadow = false }),
+        dsl.text("Save Game", { fontSize = 14, color = "white", shadow = true }),
+    }
+}
+
+-- Multiple icon buttons in a row:
+dsl.hbox {
+    config = { spacing = 8 },
+    children = {
+        -- Play button
+        dsl.hbox {
+            config = { padding = 6, color = "green", hover = true, canCollide = true, emboss = 2 },
+            children = {
+                dsl.anim("ui-decor-test-1.png", { w = 16, h = 16, shadow = false }),
+                dsl.text("Play", { fontSize = 12, color = "white" }),
+            }
+        },
+        -- Settings button
+        dsl.hbox {
+            config = { padding = 6, color = "gray", hover = true, canCollide = true, emboss = 2 },
+            children = {
+                dsl.anim("ui-decor-test-1.png", { w = 16, h = 16, shadow = false }),
+                dsl.text("Settings", { fontSize = 12, color = "white" }),
+            }
+        },
+    }
+}]],
+        create = function()
+            return dsl.vbox {
+                config = { spacing = 12 },
+                children = {
+                    -- Single icon+label button
+                    dsl.hbox {
+                        config = {
+                            padding = 8,
+                            spacing = 6,
+                            color = "blue",
+                            hover = true,
+                            canCollide = true,
+                            emboss = 2,
+                            buttonCallback = function() print("Save clicked!") end,
+                            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+                        },
+                        children = {
+                            dsl.anim("test-gem-ui-decor.png", { w = 20, h = 20, shadow = false }),
+                            dsl.text("Save Game", { fontSize = 14, color = "white", shadow = true }),
+                        }
+                    },
+                    -- Row of icon buttons
+                    dsl.hbox {
+                        config = { spacing = 8 },
+                        children = {
+                            dsl.hbox {
+                                config = { padding = 6, color = "green", hover = true, canCollide = true, emboss = 2 },
+                                children = {
+                                    dsl.anim("ui-decor-test-1.png", { w = 16, h = 16, shadow = false }),
+                                    dsl.text("Play", { fontSize = 12, color = "white" }),
+                                }
+                            },
+                            dsl.hbox {
+                                config = { padding = 6, color = "gray", hover = true, canCollide = true, emboss = 2 },
+                                children = {
+                                    dsl.anim("ui-decor-test-1.png", { w = 16, h = 16, shadow = false }),
+                                    dsl.text("Settings", { fontSize = 12, color = "white" }),
+                                }
+                            },
+                        }
+                    },
+                }
+            }
         end,
     },
 
@@ -1853,6 +1999,572 @@ dsl.spriteButton {
                 onClick = function()
                     print("Sprite button clicked!")
                 end
+            }
+        end,
+    },
+
+    --[[--------------------------------------------------------------------
+    TOOLTIP PATTERN
+    Demonstrates: standard tooltip structure with title, body, stats, tags
+    Reference: ui/tooltip_v2.lua for production implementation
+    ----------------------------------------------------------------------]]
+
+    tooltip_pattern = {
+        name = "Tooltip Pattern",
+        description = "Contextual info panel with title, description, stats, and tags",
+        -- PATTERN: 3-box vertical stack - Name, Description, Info
+        source = [[
+-- Tooltip pattern: 3-box vertical stack
+-- Box 1: Title (larger font, distinct background)
+-- Box 2: Description (body text)
+-- Box 3: Info (stats + tags)
+
+dsl.vbox {
+    config = { spacing = 4 },
+    children = {
+        -- Box 1: Title
+        dsl.vbox {
+            config = { padding = 6, color = "navy", minWidth = 180 },
+            children = {
+                dsl.text("Fireball", { fontSize = 14, color = "gold", shadow = true })
+            }
+        },
+        -- Box 2: Description
+        dsl.vbox {
+            config = { padding = 8, color = "darkslategray", minWidth = 180 },
+            children = {
+                dsl.text("Deal 25 fire damage to target enemy.", {
+                    fontSize = 11, color = "white"
+                })
+            }
+        },
+        -- Box 3: Stats + Tags
+        dsl.vbox {
+            config = { padding = 6, spacing = 4, color = "dimgray", minWidth = 180 },
+            children = {
+                -- Stats row
+                dsl.hbox {
+                    config = { spacing = 16 },
+                    children = {
+                        dsl.hbox {
+                            children = {
+                                dsl.text("Damage: ", { fontSize = 10, color = "lightgray" }),
+                                dsl.text("25", { fontSize = 10, color = "red" }),
+                            }
+                        },
+                        dsl.hbox {
+                            children = {
+                                dsl.text("Mana: ", { fontSize = 10, color = "lightgray" }),
+                                dsl.text("12", { fontSize = 10, color = "cyan" }),
+                            }
+                        },
+                    }
+                },
+                -- Tags row
+                dsl.hbox {
+                    config = { spacing = 4 },
+                    children = {
+                        dsl.vbox {
+                            config = { padding = 2, color = "firebrick" },
+                            children = { dsl.text("Fire", { fontSize = 9, color = "white" }) }
+                        },
+                        dsl.vbox {
+                            config = { padding = 2, color = "steelblue" },
+                            children = { dsl.text("Projectile", { fontSize = 9, color = "white" }) }
+                        },
+                    }
+                },
+            }
+        },
+    }
+}]],
+        create = function()
+            return dsl.vbox {
+                config = { spacing = 4 },
+                children = {
+                    -- Box 1: Title
+                    dsl.vbox {
+                        config = { padding = 6, color = "navy", minWidth = 180 },
+                        children = {
+                            dsl.text("Fireball", { fontSize = 14, color = "gold", shadow = true })
+                        }
+                    },
+                    -- Box 2: Description
+                    dsl.vbox {
+                        config = { padding = 8, color = "darkslategray", minWidth = 180 },
+                        children = {
+                            dsl.text("Deal 25 fire damage to target enemy.", {
+                                fontSize = 11, color = "white"
+                            })
+                        }
+                    },
+                    -- Box 3: Stats + Tags
+                    dsl.vbox {
+                        config = { padding = 6, spacing = 4, color = "dimgray", minWidth = 180 },
+                        children = {
+                            -- Stats row
+                            dsl.hbox {
+                                config = { spacing = 16 },
+                                children = {
+                                    dsl.hbox {
+                                        children = {
+                                            dsl.text("Damage: ", { fontSize = 10, color = "lightgray" }),
+                                            dsl.text("25", { fontSize = 10, color = "red" }),
+                                        }
+                                    },
+                                    dsl.hbox {
+                                        children = {
+                                            dsl.text("Mana: ", { fontSize = 10, color = "lightgray" }),
+                                            dsl.text("12", { fontSize = 10, color = "cyan" }),
+                                        }
+                                    },
+                                }
+                            },
+                            -- Tags row
+                            dsl.hbox {
+                                config = { spacing = 4 },
+                                children = {
+                                    dsl.vbox {
+                                        config = { padding = 2, color = "firebrick" },
+                                        children = { dsl.text("Fire", { fontSize = 9, color = "white" }) }
+                                    },
+                                    dsl.vbox {
+                                        config = { padding = 2, color = "steelblue" },
+                                        children = { dsl.text("Projectile", { fontSize = 9, color = "white" }) }
+                                    },
+                                }
+                            },
+                        }
+                    },
+                }
+            }
+        end,
+    },
+
+    --[[--------------------------------------------------------------------
+    MODAL/DIALOG PATTERN
+    Demonstrates: centered modal box with header, content, and actions
+    Reference: ui/patch_notes_modal.lua for production implementation
+    ----------------------------------------------------------------------]]
+
+    modal_dialog = {
+        name = "Modal/Dialog Pattern",
+        description = "Centered dialog with header, content, close button, and actions",
+        -- PATTERN: Layered structure - backdrop, modal container, header with X, content, buttons
+        source = [[
+-- Modal dialog pattern
+-- Structure: Modal box with header (title + close), content, action buttons
+-- Note: Backdrop handling is done at spawn time (separate entity)
+
+dsl.vbox {
+    config = { padding = 0, color = "darkslategray", minWidth = 250 },
+    children = {
+        -- Header with title and close button
+        dsl.hbox {
+            config = {
+                padding = 8,
+                color = "slategray",
+                align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER)
+            },
+            children = {
+                dsl.text("Confirm Action", { fontSize = 14, color = "white", shadow = true }),
+                dsl.spacer(40),
+                -- Close button (X)
+                dsl.vbox {
+                    config = {
+                        padding = 4,
+                        color = "red",
+                        hover = true,
+                        canCollide = true,
+                        buttonCallback = function() print("Close clicked") end
+                    },
+                    children = { dsl.text("X", { fontSize = 12, color = "white" }) }
+                },
+            }
+        },
+        -- Content area
+        dsl.vbox {
+            config = { padding = 16, spacing = 8 },
+            children = {
+                dsl.text("Are you sure you want to", { fontSize = 12, color = "white" }),
+                dsl.text("delete this item?", { fontSize = 12, color = "white" }),
+                dsl.spacer(10, 8),
+            }
+        },
+        -- Action buttons
+        dsl.hbox {
+            config = { padding = 10, spacing = 8, color = "dimgray" },
+            children = {
+                dsl.button("Delete", {
+                    color = "red",
+                    textColor = "white",
+                    onClick = function() print("Delete confirmed") end
+                }),
+                dsl.button("Cancel", {
+                    color = "gray",
+                    textColor = "white",
+                    onClick = function() print("Cancelled") end
+                }),
+            }
+        },
+    }
+}]],
+        create = function()
+            return dsl.vbox {
+                config = { padding = 0, color = "darkslategray", minWidth = 250 },
+                children = {
+                    -- Header with title and close button
+                    dsl.hbox {
+                        config = {
+                            padding = 8,
+                            color = "slategray",
+                            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER)
+                        },
+                        children = {
+                            dsl.text("Confirm Action", { fontSize = 14, color = "white", shadow = true }),
+                            dsl.spacer(40),
+                            -- Close button (X)
+                            dsl.vbox {
+                                config = {
+                                    padding = 4,
+                                    color = "red",
+                                    hover = true,
+                                    canCollide = true,
+                                    buttonCallback = function() print("Close clicked") end
+                                },
+                                children = { dsl.text("X", { fontSize = 12, color = "white" }) }
+                            },
+                        }
+                    },
+                    -- Content area
+                    dsl.vbox {
+                        config = { padding = 16, spacing = 8 },
+                        children = {
+                            dsl.text("Are you sure you want to", { fontSize = 12, color = "white" }),
+                            dsl.text("delete this item?", { fontSize = 12, color = "white" }),
+                            dsl.spacer(10, 8),
+                        }
+                    },
+                    -- Action buttons
+                    dsl.hbox {
+                        config = { padding = 10, spacing = 8, color = "dimgray" },
+                        children = {
+                            dsl.button("Delete", {
+                                color = "red",
+                                textColor = "white",
+                                onClick = function() print("Delete confirmed") end
+                            }),
+                            dsl.button("Cancel", {
+                                color = "gray",
+                                textColor = "white",
+                                onClick = function() print("Cancelled") end
+                            }),
+                        }
+                    },
+                }
+            }
+        end,
+    },
+
+    --[[--------------------------------------------------------------------
+    INVENTORY GRID PATTERN
+    Demonstrates: grid of interactive slots for item management
+    Reference: ui/inventory_grid_init.lua for production implementation
+    ----------------------------------------------------------------------]]
+
+    inventory_grid = {
+        name = "Inventory Grid Pattern",
+        description = "Grid of slots for items with empty/filled states",
+        -- PATTERN: Grid layout with uniform slot styling and item icons
+        source = [[
+-- Inventory grid pattern (3x3 example)
+-- Each slot: colored box with border, optional item icon
+-- Use dsl.grid() for data-driven generation
+
+-- Manual construction (for control):
+dsl.vbox {
+    config = { padding = 8, spacing = 4, color = "darkslategray" },
+    children = {
+        dsl.text("Inventory", { fontSize = 14, color = "gold" }),
+        dsl.spacer(10, 4),
+        -- Grid rows
+        dsl.hbox {
+            config = { spacing = 4 },
+            children = {
+                -- Slot with item
+                dsl.vbox {
+                    config = { padding = 4, color = "dimgray", minWidth = 48, minHeight = 48, emboss = 1 },
+                    children = { dsl.anim("test-gem-ui-decor.png", { w = 36, h = 36 }) }
+                },
+                -- Empty slot
+                dsl.vbox {
+                    config = { padding = 4, color = "dimgray", minWidth = 48, minHeight = 48, emboss = 1 },
+                    children = {}
+                },
+                -- Slot with item
+                dsl.vbox {
+                    config = { padding = 4, color = "dimgray", minWidth = 48, minHeight = 48, emboss = 1 },
+                    children = { dsl.anim("ui-decor-test-1.png", { w = 36, h = 36 }) }
+                },
+            }
+        },
+        dsl.hbox {
+            config = { spacing = 4 },
+            children = {
+                dsl.vbox {
+                    config = { padding = 4, color = "dimgray", minWidth = 48, minHeight = 48, emboss = 1 },
+                    children = {}
+                },
+                dsl.vbox {
+                    config = { padding = 4, color = "dimgray", minWidth = 48, minHeight = 48, emboss = 1 },
+                    children = { dsl.anim("test-gem-ui-decor.png", { w = 36, h = 36 }) }
+                },
+                dsl.vbox {
+                    config = { padding = 4, color = "dimgray", minWidth = 48, minHeight = 48, emboss = 1 },
+                    children = {}
+                },
+            }
+        },
+        dsl.hbox {
+            config = { spacing = 4 },
+            children = {
+                dsl.vbox {
+                    config = { padding = 4, color = "dimgray", minWidth = 48, minHeight = 48, emboss = 1 },
+                    children = { dsl.anim("ui-decor-test-1.png", { w = 36, h = 36 }) }
+                },
+                dsl.vbox {
+                    config = { padding = 4, color = "dimgray", minWidth = 48, minHeight = 48, emboss = 1 },
+                    children = {}
+                },
+                dsl.vbox {
+                    config = { padding = 4, color = "dimgray", minWidth = 48, minHeight = 48, emboss = 1 },
+                    children = { dsl.anim("test-gem-ui-decor.png", { w = 36, h = 36 }) }
+                },
+            }
+        },
+    }
+}
+
+-- Using dsl.grid() helper for generation:
+dsl.vbox {
+    config = { padding = 8, color = "darkslategray" },
+    children = dsl.grid(3, 3, function(row, col)
+        -- Generate slot content based on row/col
+        local hasItem = (row + col) % 2 == 0
+        return dsl.vbox {
+            config = { padding = 4, color = "dimgray", minWidth = 48, minHeight = 48, emboss = 1 },
+            children = hasItem and { dsl.anim("test-gem-ui-decor.png", { w = 36, h = 36 }) } or {}
+        }
+    end)
+}]],
+        create = function()
+            return dsl.vbox {
+                config = { padding = 8, spacing = 4, color = "darkslategray" },
+                children = {
+                    dsl.text("Inventory", { fontSize = 14, color = "gold" }),
+                    dsl.spacer(10, 4),
+                    -- Grid rows
+                    dsl.hbox {
+                        config = { spacing = 4 },
+                        children = {
+                            -- Slot with item
+                            dsl.vbox {
+                                config = { padding = 4, color = "dimgray", minWidth = 48, minHeight = 48, emboss = 1 },
+                                children = { dsl.anim("test-gem-ui-decor.png", { w = 36, h = 36 }) }
+                            },
+                            -- Empty slot
+                            dsl.vbox {
+                                config = { padding = 4, color = "dimgray", minWidth = 48, minHeight = 48, emboss = 1 },
+                                children = {}
+                            },
+                            -- Slot with item
+                            dsl.vbox {
+                                config = { padding = 4, color = "dimgray", minWidth = 48, minHeight = 48, emboss = 1 },
+                                children = { dsl.anim("ui-decor-test-1.png", { w = 36, h = 36 }) }
+                            },
+                        }
+                    },
+                    dsl.hbox {
+                        config = { spacing = 4 },
+                        children = {
+                            dsl.vbox {
+                                config = { padding = 4, color = "dimgray", minWidth = 48, minHeight = 48, emboss = 1 },
+                                children = {}
+                            },
+                            dsl.vbox {
+                                config = { padding = 4, color = "dimgray", minWidth = 48, minHeight = 48, emboss = 1 },
+                                children = { dsl.anim("test-gem-ui-decor.png", { w = 36, h = 36 }) }
+                            },
+                            dsl.vbox {
+                                config = { padding = 4, color = "dimgray", minWidth = 48, minHeight = 48, emboss = 1 },
+                                children = {}
+                            },
+                        }
+                    },
+                    dsl.hbox {
+                        config = { spacing = 4 },
+                        children = {
+                            dsl.vbox {
+                                config = { padding = 4, color = "dimgray", minWidth = 48, minHeight = 48, emboss = 1 },
+                                children = { dsl.anim("ui-decor-test-1.png", { w = 36, h = 36 }) }
+                            },
+                            dsl.vbox {
+                                config = { padding = 4, color = "dimgray", minWidth = 48, minHeight = 48, emboss = 1 },
+                                children = {}
+                            },
+                            dsl.vbox {
+                                config = { padding = 4, color = "dimgray", minWidth = 48, minHeight = 48, emboss = 1 },
+                                children = { dsl.anim("test-gem-ui-decor.png", { w = 36, h = 36 }) }
+                            },
+                        }
+                    },
+                }
+            }
+        end,
+    },
+
+    --[[--------------------------------------------------------------------
+    PANEL WITH DECORATIONS PATTERN
+    Demonstrates: sprite panel with corner badges and decorative elements
+    Reference: docs/api/sprite-panels.md for full documentation
+    ----------------------------------------------------------------------]]
+
+    panel_with_decorations = {
+        name = "Panel with Decorations",
+        description = "Sprite panel with corner badges, icons, and decorative overlays",
+        -- PATTERN: spritePanel with decorations array
+        source = [[
+-- Panel with decorations pattern
+-- decorations: array of {sprite, position, offset, scale, rotation, flip, opacity, tint}
+-- positions: top_left, top_center, top_right, middle_left, center, middle_right,
+--            bottom_left, bottom_center, bottom_right
+
+dsl.spritePanel {
+    sprite = "ui-decor-test-1.png",
+    borders = { 8, 8, 8, 8 },
+    minWidth = 200,
+    padding = 16,
+    decorations = {
+        -- Top left corner gem
+        {
+            sprite = "test-gem-ui-decor.png",
+            position = "top_left",
+            offset = { -8, -8 }
+        },
+        -- Top right corner gem
+        {
+            sprite = "test-gem-ui-decor.png",
+            position = "top_right",
+            offset = { 8, -8 }
+        },
+        -- Bottom center decoration
+        {
+            sprite = "ui-decor-test-1.png",
+            position = "bottom_center",
+            offset = { 0, 4 },
+            scale = { 0.5, 0.5 }
+        },
+    },
+    children = {
+        dsl.vbox {
+            config = { spacing = 4 },
+            children = {
+                dsl.text("Decorated Panel", { fontSize = 14, color = "gold", shadow = true }),
+                dsl.text("Corner gems and bottom decoration", { fontSize = 10, color = "lightgray" }),
+            }
+        }
+    }
+}
+
+-- Alternative: Manual decoration (without spritePanel)
+dsl.vbox {
+    config = { padding = 12, color = "darkslategray" },
+    children = {
+        -- Content with badge overlay (stacked)
+        dsl.hbox {
+            children = {
+                dsl.vbox {
+                    config = { padding = 8, color = "dimgray", minWidth = 120 },
+                    children = {
+                        dsl.text("Item Card", { fontSize = 12, color = "white" }),
+                        dsl.anim("ui-decor-test-1.png", { w = 48, h = 48 }),
+                    }
+                },
+                -- Notification badge (offset to corner)
+                dsl.vbox {
+                    config = {
+                        padding = 4,
+                        color = "red",
+                        -- Use negative margin to overlay
+                    },
+                    children = { dsl.text("3", { fontSize = 10, color = "white" }) }
+                },
+            }
+        },
+    }
+}]],
+        create = function()
+            return dsl.vbox {
+                config = { spacing = 16 },
+                children = {
+                    -- Sprite panel with decorations (if spritePanel supports it)
+                    dsl.spritePanel {
+                        sprite = "ui-decor-test-1.png",
+                        borders = { 8, 8, 8, 8 },
+                        minWidth = 200,
+                        padding = 16,
+                        decorations = {
+                            {
+                                sprite = "test-gem-ui-decor.png",
+                                position = "top_left",
+                                offset = { -8, -8 }
+                            },
+                            {
+                                sprite = "test-gem-ui-decor.png",
+                                position = "top_right",
+                                offset = { 8, -8 }
+                            },
+                            {
+                                sprite = "ui-decor-test-1.png",
+                                position = "bottom_center",
+                                offset = { 0, 4 },
+                                scale = { 0.5, 0.5 }
+                            },
+                        },
+                        children = {
+                            dsl.vbox {
+                                config = { spacing = 4 },
+                                children = {
+                                    dsl.text("Decorated Panel", { fontSize = 14, color = "gold", shadow = true }),
+                                    dsl.text("Corner gems and bottom decoration", { fontSize = 10, color = "lightgray" }),
+                                }
+                            }
+                        }
+                    },
+                    -- Manual badge overlay example
+                    dsl.vbox {
+                        config = { padding = 8, color = "darkslategray" },
+                        children = {
+                            dsl.text("Manual Badge Overlay", { fontSize = 12, color = "gold" }),
+                            dsl.hbox {
+                                children = {
+                                    dsl.vbox {
+                                        config = { padding = 8, color = "dimgray", minWidth = 100 },
+                                        children = {
+                                            dsl.text("Item", { fontSize = 11, color = "white" }),
+                                            dsl.anim("ui-decor-test-1.png", { w = 40, h = 40 }),
+                                        }
+                                    },
+                                    -- Badge in adjacent container
+                                    dsl.vbox {
+                                        config = { padding = 3, color = "red" },
+                                        children = { dsl.text("5", { fontSize = 10, color = "white" }) }
+                                    },
+                                }
+                            },
+                        }
+                    },
+                }
             }
         end,
     },

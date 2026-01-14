@@ -550,12 +550,71 @@ dsl.iconLabel("coin.png", "100 Gold", {
 -- Category: Layouts
 --------------------------------------------------------------------------------
 
+--[[
+================================================================================
+LAYOUT SHOWCASES
+================================================================================
+Demonstrates layout containers (vbox, hbox, root) with various configuration
+options for spacing, padding, alignment, and nested compositions.
+
+VBOX/HBOX CONFIG PROPS:
+  spacing    - (number) Gap between children in pixels (default: 0)
+  padding    - (number) Inner padding around all children (default: 0)
+  color      - (string|Color) Background color (default: transparent)
+  align      - (number) Child alignment using AlignmentFlag bitmask
+  minWidth   - (number) Minimum container width
+  minHeight  - (number) Minimum container height
+  id         - (string) Unique identifier for the element
+
+ROOT CONFIG PROPS:
+  padding    - (number) Outer padding around content
+  color      - (string|Color) Background color
+  align      - (number) Content alignment using AlignmentFlag bitmask
+  id         - (string) Unique identifier for the root
+
+ALIGNMENT FLAGS (use with bit.bor):
+  Horizontal: HORIZONTAL_LEFT (1), HORIZONTAL_CENTER (2), HORIZONTAL_RIGHT (4)
+  Vertical: VERTICAL_TOP (8), VERTICAL_CENTER (16), VERTICAL_BOTTOM (32)
+
+Example alignment: bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP)
+================================================================================
+]]
+
 ShowcaseRegistry._showcases.layouts = {
-    order = { "vbox_basic", "hbox_basic", "vbox_styled", "nested_layout", "root_container" },
+    order = {
+        -- VBox showcases
+        "vbox_basic",
+        "vbox_spacing",
+        "vbox_align_horizontal",
+        "vbox_align_vertical",
+        "vbox_full_config",
+        -- HBox showcases
+        "hbox_basic",
+        "hbox_spacing",
+        "hbox_align_horizontal",
+        "hbox_align_vertical",
+        "hbox_full_config",
+        -- Nested layouts
+        "nested_columns",
+        "nested_rows",
+        "nested_complex",
+        "nested_deep",
+        -- Root showcases
+        "root_basic",
+        "root_padding",
+        "root_alignment",
+        "root_full_config",
+    },
+
+    --[[--------------------------------------------------------------------
+    VBOX SHOWCASES
+    Demonstrates: vertical stacking with spacing and alignment options
+    ----------------------------------------------------------------------]]
 
     vbox_basic = {
         name = "VBox (Basic)",
-        description = "Vertical stack of elements",
+        description = "Simple vertical stack of elements",
+        -- PROPS: children (required), config (optional)
         source = [[
 dsl.vbox {
     children = {
@@ -575,9 +634,310 @@ dsl.vbox {
         end,
     },
 
+    vbox_spacing = {
+        name = "VBox Spacing",
+        description = "Vertical boxes with different spacing values (0, 4, 8, 16)",
+        -- PROPS: spacing controls gap between children
+        source = [[
+dsl.hbox {
+    config = { spacing = 20 },
+    children = {
+        dsl.vbox {
+            config = { spacing = 0, padding = 4, color = "dimgray" },
+            children = {
+                dsl.text("spacing=0", { fontSize = 10, color = "gold" }),
+                dsl.text("A", { color = "white" }),
+                dsl.text("B", { color = "white" }),
+                dsl.text("C", { color = "white" }),
+            }
+        },
+        dsl.vbox {
+            config = { spacing = 4, padding = 4, color = "dimgray" },
+            children = {
+                dsl.text("spacing=4", { fontSize = 10, color = "gold" }),
+                dsl.text("A", { color = "white" }),
+                dsl.text("B", { color = "white" }),
+                dsl.text("C", { color = "white" }),
+            }
+        },
+        dsl.vbox {
+            config = { spacing = 8, padding = 4, color = "dimgray" },
+            children = {
+                dsl.text("spacing=8", { fontSize = 10, color = "gold" }),
+                dsl.text("A", { color = "white" }),
+                dsl.text("B", { color = "white" }),
+                dsl.text("C", { color = "white" }),
+            }
+        },
+        dsl.vbox {
+            config = { spacing = 16, padding = 4, color = "dimgray" },
+            children = {
+                dsl.text("spacing=16", { fontSize = 10, color = "gold" }),
+                dsl.text("A", { color = "white" }),
+                dsl.text("B", { color = "white" }),
+                dsl.text("C", { color = "white" }),
+            }
+        },
+    }
+}]],
+        create = function()
+            return dsl.hbox {
+                config = { spacing = 20 },
+                children = {
+                    dsl.vbox {
+                        config = { spacing = 0, padding = 4, color = "dimgray" },
+                        children = {
+                            dsl.text("spacing=0", { fontSize = 10, color = "gold" }),
+                            dsl.text("A", { color = "white" }),
+                            dsl.text("B", { color = "white" }),
+                            dsl.text("C", { color = "white" }),
+                        }
+                    },
+                    dsl.vbox {
+                        config = { spacing = 4, padding = 4, color = "dimgray" },
+                        children = {
+                            dsl.text("spacing=4", { fontSize = 10, color = "gold" }),
+                            dsl.text("A", { color = "white" }),
+                            dsl.text("B", { color = "white" }),
+                            dsl.text("C", { color = "white" }),
+                        }
+                    },
+                    dsl.vbox {
+                        config = { spacing = 8, padding = 4, color = "dimgray" },
+                        children = {
+                            dsl.text("spacing=8", { fontSize = 10, color = "gold" }),
+                            dsl.text("A", { color = "white" }),
+                            dsl.text("B", { color = "white" }),
+                            dsl.text("C", { color = "white" }),
+                        }
+                    },
+                    dsl.vbox {
+                        config = { spacing = 16, padding = 4, color = "dimgray" },
+                        children = {
+                            dsl.text("spacing=16", { fontSize = 10, color = "gold" }),
+                            dsl.text("A", { color = "white" }),
+                            dsl.text("B", { color = "white" }),
+                            dsl.text("C", { color = "white" }),
+                        }
+                    },
+                }
+            }
+        end,
+    },
+
+    vbox_align_horizontal = {
+        name = "VBox Horizontal Align",
+        description = "VBox with left, center, right horizontal alignment",
+        -- PROPS: align with HORIZONTAL_* flags
+        source = [[
+dsl.hbox {
+    config = { spacing = 16 },
+    children = {
+        dsl.vbox {
+            config = {
+                minWidth = 80, padding = 6, color = "dimgray",
+                align = AlignmentFlag.HORIZONTAL_LEFT
+            },
+            children = {
+                dsl.text("LEFT", { fontSize = 10, color = "gold" }),
+                dsl.text("Short", { color = "white" }),
+                dsl.text("Longer text", { color = "white" }),
+            }
+        },
+        dsl.vbox {
+            config = {
+                minWidth = 80, padding = 6, color = "dimgray",
+                align = AlignmentFlag.HORIZONTAL_CENTER
+            },
+            children = {
+                dsl.text("CENTER", { fontSize = 10, color = "gold" }),
+                dsl.text("Short", { color = "white" }),
+                dsl.text("Longer text", { color = "white" }),
+            }
+        },
+        dsl.vbox {
+            config = {
+                minWidth = 80, padding = 6, color = "dimgray",
+                align = AlignmentFlag.HORIZONTAL_RIGHT
+            },
+            children = {
+                dsl.text("RIGHT", { fontSize = 10, color = "gold" }),
+                dsl.text("Short", { color = "white" }),
+                dsl.text("Longer text", { color = "white" }),
+            }
+        },
+    }
+}]],
+        create = function()
+            return dsl.hbox {
+                config = { spacing = 16 },
+                children = {
+                    dsl.vbox {
+                        config = {
+                            minWidth = 80, padding = 6, color = "dimgray",
+                            align = AlignmentFlag.HORIZONTAL_LEFT
+                        },
+                        children = {
+                            dsl.text("LEFT", { fontSize = 10, color = "gold" }),
+                            dsl.text("Short", { color = "white" }),
+                            dsl.text("Longer text", { color = "white" }),
+                        }
+                    },
+                    dsl.vbox {
+                        config = {
+                            minWidth = 80, padding = 6, color = "dimgray",
+                            align = AlignmentFlag.HORIZONTAL_CENTER
+                        },
+                        children = {
+                            dsl.text("CENTER", { fontSize = 10, color = "gold" }),
+                            dsl.text("Short", { color = "white" }),
+                            dsl.text("Longer text", { color = "white" }),
+                        }
+                    },
+                    dsl.vbox {
+                        config = {
+                            minWidth = 80, padding = 6, color = "dimgray",
+                            align = AlignmentFlag.HORIZONTAL_RIGHT
+                        },
+                        children = {
+                            dsl.text("RIGHT", { fontSize = 10, color = "gold" }),
+                            dsl.text("Short", { color = "white" }),
+                            dsl.text("Longer text", { color = "white" }),
+                        }
+                    },
+                }
+            }
+        end,
+    },
+
+    vbox_align_vertical = {
+        name = "VBox Vertical Align",
+        description = "VBox with top, center, bottom vertical alignment",
+        -- PROPS: align with VERTICAL_* flags affects content placement
+        source = [[
+dsl.hbox {
+    config = { spacing = 16 },
+    children = {
+        dsl.vbox {
+            config = {
+                minHeight = 80, padding = 6, color = "dimgray",
+                align = AlignmentFlag.VERTICAL_TOP
+            },
+            children = {
+                dsl.text("TOP", { fontSize = 10, color = "gold" }),
+                dsl.text("Content", { color = "white" }),
+            }
+        },
+        dsl.vbox {
+            config = {
+                minHeight = 80, padding = 6, color = "dimgray",
+                align = AlignmentFlag.VERTICAL_CENTER
+            },
+            children = {
+                dsl.text("CENTER", { fontSize = 10, color = "gold" }),
+                dsl.text("Content", { color = "white" }),
+            }
+        },
+        dsl.vbox {
+            config = {
+                minHeight = 80, padding = 6, color = "dimgray",
+                align = AlignmentFlag.VERTICAL_BOTTOM
+            },
+            children = {
+                dsl.text("BOTTOM", { fontSize = 10, color = "gold" }),
+                dsl.text("Content", { color = "white" }),
+            }
+        },
+    }
+}]],
+        create = function()
+            return dsl.hbox {
+                config = { spacing = 16 },
+                children = {
+                    dsl.vbox {
+                        config = {
+                            minHeight = 80, padding = 6, color = "dimgray",
+                            align = AlignmentFlag.VERTICAL_TOP
+                        },
+                        children = {
+                            dsl.text("TOP", { fontSize = 10, color = "gold" }),
+                            dsl.text("Content", { color = "white" }),
+                        }
+                    },
+                    dsl.vbox {
+                        config = {
+                            minHeight = 80, padding = 6, color = "dimgray",
+                            align = AlignmentFlag.VERTICAL_CENTER
+                        },
+                        children = {
+                            dsl.text("CENTER", { fontSize = 10, color = "gold" }),
+                            dsl.text("Content", { color = "white" }),
+                        }
+                    },
+                    dsl.vbox {
+                        config = {
+                            minHeight = 80, padding = 6, color = "dimgray",
+                            align = AlignmentFlag.VERTICAL_BOTTOM
+                        },
+                        children = {
+                            dsl.text("BOTTOM", { fontSize = 10, color = "gold" }),
+                            dsl.text("Content", { color = "white" }),
+                        }
+                    },
+                }
+            }
+        end,
+    },
+
+    vbox_full_config = {
+        name = "VBox (Full Config)",
+        description = "VBox using all available config options",
+        -- PROPS: Complete example with spacing, padding, align, color, id
+        source = [[
+dsl.vbox {
+    config = {
+        spacing = 8,
+        padding = 12,
+        color = "darkslategray",
+        align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
+        minWidth = 150,
+        id = "styled_vbox"
+    },
+    children = {
+        dsl.text("Header", { fontSize = 16, color = "gold" }),
+        dsl.divider("horizontal", { color = "gray" }),
+        dsl.text("Body content", { color = "white" }),
+        dsl.text("More content", { color = "lightgray" }),
+    }
+}]],
+        create = function()
+            return dsl.vbox {
+                config = {
+                    spacing = 8,
+                    padding = 12,
+                    color = "darkslategray",
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
+                    minWidth = 150,
+                    id = "styled_vbox"
+                },
+                children = {
+                    dsl.text("Header", { fontSize = 16, color = "gold" }),
+                    dsl.divider("horizontal", { color = "gray" }),
+                    dsl.text("Body content", { color = "white" }),
+                    dsl.text("More content", { color = "lightgray" }),
+                }
+            }
+        end,
+    },
+
+    --[[--------------------------------------------------------------------
+    HBOX SHOWCASES
+    Demonstrates: horizontal row with spacing and alignment options
+    ----------------------------------------------------------------------]]
+
     hbox_basic = {
         name = "HBox (Basic)",
-        description = "Horizontal row of elements",
+        description = "Simple horizontal row of elements",
         source = [[
 dsl.hbox {
     children = {
@@ -601,41 +961,342 @@ dsl.hbox {
         end,
     },
 
-    vbox_styled = {
-        name = "VBox (Styled)",
-        description = "Vertical box with padding, spacing, and background",
+    hbox_spacing = {
+        name = "HBox Spacing",
+        description = "Horizontal boxes with different spacing values (0, 8, 16, 24)",
+        -- PROPS: spacing controls gap between children
         source = [[
 dsl.vbox {
-    config = {
-        padding = 12,
-        spacing = 8,
-        color = "darkgray"
-    },
+    config = { spacing = 12 },
     children = {
-        dsl.text("Header", { fontSize = 16, color = "gold" }),
-        dsl.text("Content line 1", { color = "white" }),
-        dsl.text("Content line 2", { color = "white" })
+        dsl.vbox {
+            children = {
+                dsl.text("spacing=0", { fontSize = 10, color = "gold" }),
+                dsl.hbox {
+                    config = { spacing = 0, padding = 4, color = "dimgray" },
+                    children = {
+                        dsl.text("A", { color = "white" }),
+                        dsl.text("B", { color = "white" }),
+                        dsl.text("C", { color = "white" }),
+                    }
+                },
+            }
+        },
+        dsl.vbox {
+            children = {
+                dsl.text("spacing=8", { fontSize = 10, color = "gold" }),
+                dsl.hbox {
+                    config = { spacing = 8, padding = 4, color = "dimgray" },
+                    children = {
+                        dsl.text("A", { color = "white" }),
+                        dsl.text("B", { color = "white" }),
+                        dsl.text("C", { color = "white" }),
+                    }
+                },
+            }
+        },
+        dsl.vbox {
+            children = {
+                dsl.text("spacing=16", { fontSize = 10, color = "gold" }),
+                dsl.hbox {
+                    config = { spacing = 16, padding = 4, color = "dimgray" },
+                    children = {
+                        dsl.text("A", { color = "white" }),
+                        dsl.text("B", { color = "white" }),
+                        dsl.text("C", { color = "white" }),
+                    }
+                },
+            }
+        },
+        dsl.vbox {
+            children = {
+                dsl.text("spacing=24", { fontSize = 10, color = "gold" }),
+                dsl.hbox {
+                    config = { spacing = 24, padding = 4, color = "dimgray" },
+                    children = {
+                        dsl.text("A", { color = "white" }),
+                        dsl.text("B", { color = "white" }),
+                        dsl.text("C", { color = "white" }),
+                    }
+                },
+            }
+        },
     }
 }]],
         create = function()
             return dsl.vbox {
-                config = {
-                    padding = 12,
-                    spacing = 8,
-                    color = "darkgray"
-                },
+                config = { spacing = 12 },
                 children = {
-                    dsl.text("Header", { fontSize = 16, color = "gold" }),
-                    dsl.text("Content line 1", { color = "white" }),
-                    dsl.text("Content line 2", { color = "white" })
+                    dsl.vbox {
+                        children = {
+                            dsl.text("spacing=0", { fontSize = 10, color = "gold" }),
+                            dsl.hbox {
+                                config = { spacing = 0, padding = 4, color = "dimgray" },
+                                children = {
+                                    dsl.text("A", { color = "white" }),
+                                    dsl.text("B", { color = "white" }),
+                                    dsl.text("C", { color = "white" }),
+                                }
+                            },
+                        }
+                    },
+                    dsl.vbox {
+                        children = {
+                            dsl.text("spacing=8", { fontSize = 10, color = "gold" }),
+                            dsl.hbox {
+                                config = { spacing = 8, padding = 4, color = "dimgray" },
+                                children = {
+                                    dsl.text("A", { color = "white" }),
+                                    dsl.text("B", { color = "white" }),
+                                    dsl.text("C", { color = "white" }),
+                                }
+                            },
+                        }
+                    },
+                    dsl.vbox {
+                        children = {
+                            dsl.text("spacing=16", { fontSize = 10, color = "gold" }),
+                            dsl.hbox {
+                                config = { spacing = 16, padding = 4, color = "dimgray" },
+                                children = {
+                                    dsl.text("A", { color = "white" }),
+                                    dsl.text("B", { color = "white" }),
+                                    dsl.text("C", { color = "white" }),
+                                }
+                            },
+                        }
+                    },
+                    dsl.vbox {
+                        children = {
+                            dsl.text("spacing=24", { fontSize = 10, color = "gold" }),
+                            dsl.hbox {
+                                config = { spacing = 24, padding = 4, color = "dimgray" },
+                                children = {
+                                    dsl.text("A", { color = "white" }),
+                                    dsl.text("B", { color = "white" }),
+                                    dsl.text("C", { color = "white" }),
+                                }
+                            },
+                        }
+                    },
                 }
             }
         end,
     },
 
-    nested_layout = {
-        name = "Nested Layout",
-        description = "HBox containing VBox columns",
+    hbox_align_horizontal = {
+        name = "HBox Horizontal Align",
+        description = "HBox with left, center, right horizontal alignment",
+        -- PROPS: align with HORIZONTAL_* flags
+        source = [[
+dsl.vbox {
+    config = { spacing = 8 },
+    children = {
+        dsl.hbox {
+            config = {
+                minWidth = 200, padding = 6, color = "dimgray",
+                align = AlignmentFlag.HORIZONTAL_LEFT
+            },
+            children = {
+                dsl.text("LEFT", { color = "gold" }),
+                dsl.text("items", { color = "white" }),
+            }
+        },
+        dsl.hbox {
+            config = {
+                minWidth = 200, padding = 6, color = "dimgray",
+                align = AlignmentFlag.HORIZONTAL_CENTER
+            },
+            children = {
+                dsl.text("CENTER", { color = "gold" }),
+                dsl.text("items", { color = "white" }),
+            }
+        },
+        dsl.hbox {
+            config = {
+                minWidth = 200, padding = 6, color = "dimgray",
+                align = AlignmentFlag.HORIZONTAL_RIGHT
+            },
+            children = {
+                dsl.text("RIGHT", { color = "gold" }),
+                dsl.text("items", { color = "white" }),
+            }
+        },
+    }
+}]],
+        create = function()
+            return dsl.vbox {
+                config = { spacing = 8 },
+                children = {
+                    dsl.hbox {
+                        config = {
+                            minWidth = 200, padding = 6, color = "dimgray",
+                            align = AlignmentFlag.HORIZONTAL_LEFT
+                        },
+                        children = {
+                            dsl.text("LEFT", { color = "gold" }),
+                            dsl.text("items", { color = "white" }),
+                        }
+                    },
+                    dsl.hbox {
+                        config = {
+                            minWidth = 200, padding = 6, color = "dimgray",
+                            align = AlignmentFlag.HORIZONTAL_CENTER
+                        },
+                        children = {
+                            dsl.text("CENTER", { color = "gold" }),
+                            dsl.text("items", { color = "white" }),
+                        }
+                    },
+                    dsl.hbox {
+                        config = {
+                            minWidth = 200, padding = 6, color = "dimgray",
+                            align = AlignmentFlag.HORIZONTAL_RIGHT
+                        },
+                        children = {
+                            dsl.text("RIGHT", { color = "gold" }),
+                            dsl.text("items", { color = "white" }),
+                        }
+                    },
+                }
+            }
+        end,
+    },
+
+    hbox_align_vertical = {
+        name = "HBox Vertical Align",
+        description = "HBox with top, center, bottom vertical alignment (mixed heights)",
+        -- PROPS: align with VERTICAL_* flags aligns children vertically
+        source = [[
+dsl.vbox {
+    config = { spacing = 8 },
+    children = {
+        dsl.hbox {
+            config = {
+                padding = 6, color = "dimgray",
+                align = AlignmentFlag.VERTICAL_TOP
+            },
+            children = {
+                dsl.text("TOP", { fontSize = 10, color = "gold" }),
+                dsl.text("Small", { fontSize = 12, color = "white" }),
+                dsl.text("Large", { fontSize = 20, color = "cyan" }),
+            }
+        },
+        dsl.hbox {
+            config = {
+                padding = 6, color = "dimgray",
+                align = AlignmentFlag.VERTICAL_CENTER
+            },
+            children = {
+                dsl.text("CENTER", { fontSize = 10, color = "gold" }),
+                dsl.text("Small", { fontSize = 12, color = "white" }),
+                dsl.text("Large", { fontSize = 20, color = "cyan" }),
+            }
+        },
+        dsl.hbox {
+            config = {
+                padding = 6, color = "dimgray",
+                align = AlignmentFlag.VERTICAL_BOTTOM
+            },
+            children = {
+                dsl.text("BOTTOM", { fontSize = 10, color = "gold" }),
+                dsl.text("Small", { fontSize = 12, color = "white" }),
+                dsl.text("Large", { fontSize = 20, color = "cyan" }),
+            }
+        },
+    }
+}]],
+        create = function()
+            return dsl.vbox {
+                config = { spacing = 8 },
+                children = {
+                    dsl.hbox {
+                        config = {
+                            padding = 6, color = "dimgray",
+                            align = AlignmentFlag.VERTICAL_TOP
+                        },
+                        children = {
+                            dsl.text("TOP", { fontSize = 10, color = "gold" }),
+                            dsl.text("Small", { fontSize = 12, color = "white" }),
+                            dsl.text("Large", { fontSize = 20, color = "cyan" }),
+                        }
+                    },
+                    dsl.hbox {
+                        config = {
+                            padding = 6, color = "dimgray",
+                            align = AlignmentFlag.VERTICAL_CENTER
+                        },
+                        children = {
+                            dsl.text("CENTER", { fontSize = 10, color = "gold" }),
+                            dsl.text("Small", { fontSize = 12, color = "white" }),
+                            dsl.text("Large", { fontSize = 20, color = "cyan" }),
+                        }
+                    },
+                    dsl.hbox {
+                        config = {
+                            padding = 6, color = "dimgray",
+                            align = AlignmentFlag.VERTICAL_BOTTOM
+                        },
+                        children = {
+                            dsl.text("BOTTOM", { fontSize = 10, color = "gold" }),
+                            dsl.text("Small", { fontSize = 12, color = "white" }),
+                            dsl.text("Large", { fontSize = 20, color = "cyan" }),
+                        }
+                    },
+                }
+            }
+        end,
+    },
+
+    hbox_full_config = {
+        name = "HBox (Full Config)",
+        description = "HBox using all available config options",
+        -- PROPS: Complete example with spacing, padding, align, color, id
+        source = [[
+dsl.hbox {
+    config = {
+        spacing = 12,
+        padding = 10,
+        color = "darkslategray",
+        align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
+        minHeight = 50,
+        id = "toolbar_hbox"
+    },
+    children = {
+        dsl.anim("ui-decor-test-1.png", { w = 24, h = 24 }),
+        dsl.text("Toolbar Item", { color = "white" }),
+        dsl.spacer(20),
+        dsl.button("Action", { color = "blue", textColor = "white" }),
+    }
+}]],
+        create = function()
+            return dsl.hbox {
+                config = {
+                    spacing = 12,
+                    padding = 10,
+                    color = "darkslategray",
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
+                    minHeight = 50,
+                    id = "toolbar_hbox"
+                },
+                children = {
+                    dsl.anim("ui-decor-test-1.png", { w = 24, h = 24 }),
+                    dsl.text("Toolbar Item", { color = "white" }),
+                    dsl.spacer(20),
+                    dsl.button("Action", { color = "blue", textColor = "white" }),
+                }
+            }
+        end,
+    },
+
+    --[[--------------------------------------------------------------------
+    NESTED LAYOUT SHOWCASES
+    Demonstrates: complex compositions using nested containers
+    ----------------------------------------------------------------------]]
+
+    nested_columns = {
+        name = "Nested Columns",
+        description = "HBox containing VBox columns (common 2-column layout)",
         source = [[
 dsl.hbox {
     config = { spacing = 16 },
@@ -683,29 +1344,420 @@ dsl.hbox {
         end,
     },
 
-    root_container = {
-        name = "Root Container",
-        description = "Top-level container with config",
+    nested_rows = {
+        name = "Nested Rows",
+        description = "VBox containing HBox rows (common stacked layout)",
+        source = [[
+dsl.vbox {
+    config = { spacing = 8, padding = 8, color = "darkgray" },
+    children = {
+        dsl.hbox {
+            config = { spacing = 10, padding = 4, color = "slategray" },
+            children = {
+                dsl.text("Row 1:", { color = "gold" }),
+                dsl.text("Left", { color = "white" }),
+                dsl.text("Right", { color = "white" }),
+            }
+        },
+        dsl.hbox {
+            config = { spacing = 10, padding = 4, color = "slategray" },
+            children = {
+                dsl.text("Row 2:", { color = "gold" }),
+                dsl.text("A", { color = "cyan" }),
+                dsl.text("B", { color = "cyan" }),
+                dsl.text("C", { color = "cyan" }),
+            }
+        },
+        dsl.hbox {
+            config = { spacing = 10, padding = 4, color = "slategray" },
+            children = {
+                dsl.text("Row 3:", { color = "gold" }),
+                dsl.button("OK", { color = "green", textColor = "white" }),
+            }
+        },
+    }
+}]],
+        create = function()
+            return dsl.vbox {
+                config = { spacing = 8, padding = 8, color = "darkgray" },
+                children = {
+                    dsl.hbox {
+                        config = { spacing = 10, padding = 4, color = "slategray" },
+                        children = {
+                            dsl.text("Row 1:", { color = "gold" }),
+                            dsl.text("Left", { color = "white" }),
+                            dsl.text("Right", { color = "white" }),
+                        }
+                    },
+                    dsl.hbox {
+                        config = { spacing = 10, padding = 4, color = "slategray" },
+                        children = {
+                            dsl.text("Row 2:", { color = "gold" }),
+                            dsl.text("A", { color = "cyan" }),
+                            dsl.text("B", { color = "cyan" }),
+                            dsl.text("C", { color = "cyan" }),
+                        }
+                    },
+                    dsl.hbox {
+                        config = { spacing = 10, padding = 4, color = "slategray" },
+                        children = {
+                            dsl.text("Row 3:", { color = "gold" }),
+                            dsl.button("OK", { color = "green", textColor = "white" }),
+                        }
+                    },
+                }
+            }
+        end,
+    },
+
+    nested_complex = {
+        name = "Nested Complex",
+        description = "Sidebar + main content layout (common app structure)",
+        source = [[
+dsl.hbox {
+    config = { spacing = 0 },
+    children = {
+        -- Sidebar
+        dsl.vbox {
+            config = { padding = 10, spacing = 6, color = "navy", minWidth = 80 },
+            children = {
+                dsl.text("Menu", { fontSize = 14, color = "gold" }),
+                dsl.divider("horizontal", { color = "gray" }),
+                dsl.text("Home", { color = "cyan" }),
+                dsl.text("Settings", { color = "white" }),
+                dsl.text("Help", { color = "white" }),
+            }
+        },
+        -- Main content
+        dsl.vbox {
+            config = { padding = 10, spacing = 8, color = "darkgray", minWidth = 150 },
+            children = {
+                dsl.text("Main Content", { fontSize = 16, color = "gold" }),
+                dsl.divider("horizontal", { color = "gray" }),
+                dsl.text("Welcome to the app!", { color = "white" }),
+                dsl.hbox {
+                    config = { spacing = 8 },
+                    children = {
+                        dsl.button("Save", { color = "green", textColor = "white" }),
+                        dsl.button("Cancel", { color = "red", textColor = "white" }),
+                    }
+                },
+            }
+        },
+    }
+}]],
+        create = function()
+            return dsl.hbox {
+                config = { spacing = 0 },
+                children = {
+                    -- Sidebar
+                    dsl.vbox {
+                        config = { padding = 10, spacing = 6, color = "navy", minWidth = 80 },
+                        children = {
+                            dsl.text("Menu", { fontSize = 14, color = "gold" }),
+                            dsl.divider("horizontal", { color = "gray" }),
+                            dsl.text("Home", { color = "cyan" }),
+                            dsl.text("Settings", { color = "white" }),
+                            dsl.text("Help", { color = "white" }),
+                        }
+                    },
+                    -- Main content
+                    dsl.vbox {
+                        config = { padding = 10, spacing = 8, color = "darkgray", minWidth = 150 },
+                        children = {
+                            dsl.text("Main Content", { fontSize = 16, color = "gold" }),
+                            dsl.divider("horizontal", { color = "gray" }),
+                            dsl.text("Welcome to the app!", { color = "white" }),
+                            dsl.hbox {
+                                config = { spacing = 8 },
+                                children = {
+                                    dsl.button("Save", { color = "green", textColor = "white" }),
+                                    dsl.button("Cancel", { color = "red", textColor = "white" }),
+                                }
+                            },
+                        }
+                    },
+                }
+            }
+        end,
+    },
+
+    nested_deep = {
+        name = "Nested Deep",
+        description = "Four levels of nesting (root > vbox > hbox > vbox)",
         source = [[
 dsl.root {
-    config = { padding = 16, color = "darkslategray" },
+    config = { padding = 12, color = "darkslategray" },
     children = {
         dsl.vbox {
+            config = { spacing = 8 },
             children = {
-                dsl.text("Root Container", { fontSize = 18, color = "white" }),
-                dsl.text("With padding and background", { color = "lightgray" })
+                dsl.text("Level 1: Root > VBox", { color = "gold" }),
+                dsl.hbox {
+                    config = { spacing = 12, padding = 8, color = "dimgray" },
+                    children = {
+                        dsl.text("L2: HBox", { fontSize = 10, color = "cyan" }),
+                        dsl.vbox {
+                            config = { padding = 6, color = "navy" },
+                            children = {
+                                dsl.text("L3: VBox", { fontSize = 10, color = "gold" }),
+                                dsl.text("Deep content", { color = "white" }),
+                            }
+                        },
+                        dsl.vbox {
+                            config = { padding = 6, color = "darkgreen" },
+                            children = {
+                                dsl.text("L3: VBox", { fontSize = 10, color = "gold" }),
+                                dsl.text("More content", { color = "white" }),
+                            }
+                        },
+                    }
+                },
             }
         }
     }
 }]],
         create = function()
             return dsl.root {
-                config = { padding = 16, color = "darkslategray" },
+                config = { padding = 12, color = "darkslategray" },
+                children = {
+                    dsl.vbox {
+                        config = { spacing = 8 },
+                        children = {
+                            dsl.text("Level 1: Root > VBox", { color = "gold" }),
+                            dsl.hbox {
+                                config = { spacing = 12, padding = 8, color = "dimgray" },
+                                children = {
+                                    dsl.text("L2: HBox", { fontSize = 10, color = "cyan" }),
+                                    dsl.vbox {
+                                        config = { padding = 6, color = "navy" },
+                                        children = {
+                                            dsl.text("L3: VBox", { fontSize = 10, color = "gold" }),
+                                            dsl.text("Deep content", { color = "white" }),
+                                        }
+                                    },
+                                    dsl.vbox {
+                                        config = { padding = 6, color = "darkgreen" },
+                                        children = {
+                                            dsl.text("L3: VBox", { fontSize = 10, color = "gold" }),
+                                            dsl.text("More content", { color = "white" }),
+                                        }
+                                    },
+                                }
+                            },
+                        }
+                    }
+                }
+            }
+        end,
+    },
+
+    --[[--------------------------------------------------------------------
+    ROOT SHOWCASES
+    Demonstrates: top-level container with various config options
+    ----------------------------------------------------------------------]]
+
+    root_basic = {
+        name = "Root (Basic)",
+        description = "Minimal root container",
+        source = [[
+dsl.root {
+    children = {
+        dsl.text("Simple root container", { color = "white" })
+    }
+}]],
+        create = function()
+            return dsl.root {
+                children = {
+                    dsl.text("Simple root container", { color = "white" })
+                }
+            }
+        end,
+    },
+
+    root_padding = {
+        name = "Root Padding",
+        description = "Root containers with different padding values",
+        source = [[
+dsl.hbox {
+    config = { spacing = 16 },
+    children = {
+        dsl.vbox {
+            children = {
+                dsl.text("padding=0", { fontSize = 10, color = "gold" }),
+                dsl.root {
+                    config = { padding = 0, color = "dimgray" },
+                    children = { dsl.text("Content", { color = "white" }) }
+                }
+            }
+        },
+        dsl.vbox {
+            children = {
+                dsl.text("padding=8", { fontSize = 10, color = "gold" }),
+                dsl.root {
+                    config = { padding = 8, color = "dimgray" },
+                    children = { dsl.text("Content", { color = "white" }) }
+                }
+            }
+        },
+        dsl.vbox {
+            children = {
+                dsl.text("padding=16", { fontSize = 10, color = "gold" }),
+                dsl.root {
+                    config = { padding = 16, color = "dimgray" },
+                    children = { dsl.text("Content", { color = "white" }) }
+                }
+            }
+        },
+    }
+}]],
+        create = function()
+            return dsl.hbox {
+                config = { spacing = 16 },
                 children = {
                     dsl.vbox {
                         children = {
-                            dsl.text("Root Container", { fontSize = 18, color = "white" }),
-                            dsl.text("With padding and background", { color = "lightgray" })
+                            dsl.text("padding=0", { fontSize = 10, color = "gold" }),
+                            dsl.root {
+                                config = { padding = 0, color = "dimgray" },
+                                children = { dsl.text("Content", { color = "white" }) }
+                            }
+                        }
+                    },
+                    dsl.vbox {
+                        children = {
+                            dsl.text("padding=8", { fontSize = 10, color = "gold" }),
+                            dsl.root {
+                                config = { padding = 8, color = "dimgray" },
+                                children = { dsl.text("Content", { color = "white" }) }
+                            }
+                        }
+                    },
+                    dsl.vbox {
+                        children = {
+                            dsl.text("padding=16", { fontSize = 10, color = "gold" }),
+                            dsl.root {
+                                config = { padding = 16, color = "dimgray" },
+                                children = { dsl.text("Content", { color = "white" }) }
+                            }
+                        }
+                    },
+                }
+            }
+        end,
+    },
+
+    root_alignment = {
+        name = "Root Alignment",
+        description = "Root with different alignment options",
+        source = [[
+dsl.hbox {
+    config = { spacing = 12 },
+    children = {
+        dsl.root {
+            config = {
+                padding = 8, color = "dimgray",
+                minWidth = 100, minHeight = 60,
+                align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP)
+            },
+            children = { dsl.text("Top-Left", { fontSize = 10, color = "white" }) }
+        },
+        dsl.root {
+            config = {
+                padding = 8, color = "dimgray",
+                minWidth = 100, minHeight = 60,
+                align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
+            },
+            children = { dsl.text("Center", { fontSize = 10, color = "white" }) }
+        },
+        dsl.root {
+            config = {
+                padding = 8, color = "dimgray",
+                minWidth = 100, minHeight = 60,
+                align = bit.bor(AlignmentFlag.HORIZONTAL_RIGHT, AlignmentFlag.VERTICAL_BOTTOM)
+            },
+            children = { dsl.text("Bottom-Right", { fontSize = 10, color = "white" }) }
+        },
+    }
+}]],
+        create = function()
+            return dsl.hbox {
+                config = { spacing = 12 },
+                children = {
+                    dsl.root {
+                        config = {
+                            padding = 8, color = "dimgray",
+                            minWidth = 100, minHeight = 60,
+                            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP)
+                        },
+                        children = { dsl.text("Top-Left", { fontSize = 10, color = "white" }) }
+                    },
+                    dsl.root {
+                        config = {
+                            padding = 8, color = "dimgray",
+                            minWidth = 100, minHeight = 60,
+                            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
+                        },
+                        children = { dsl.text("Center", { fontSize = 10, color = "white" }) }
+                    },
+                    dsl.root {
+                        config = {
+                            padding = 8, color = "dimgray",
+                            minWidth = 100, minHeight = 60,
+                            align = bit.bor(AlignmentFlag.HORIZONTAL_RIGHT, AlignmentFlag.VERTICAL_BOTTOM)
+                        },
+                        children = { dsl.text("Bottom-Right", { fontSize = 10, color = "white" }) }
+                    },
+                }
+            }
+        end,
+    },
+
+    root_full_config = {
+        name = "Root (Full Config)",
+        description = "Root container with all config options",
+        source = [[
+dsl.root {
+    config = {
+        padding = 16,
+        color = "darkslategray",
+        align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
+        minWidth = 200,
+        id = "main_root"
+    },
+    children = {
+        dsl.vbox {
+            config = { spacing = 8 },
+            children = {
+                dsl.text("Full Root Config", { fontSize = 18, color = "gold" }),
+                dsl.divider("horizontal", { color = "gray" }),
+                dsl.text("padding: 16", { color = "lightgray" }),
+                dsl.text("color: darkslategray", { color = "lightgray" }),
+                dsl.text("align: center-top", { color = "lightgray" }),
+                dsl.text("minWidth: 200", { color = "lightgray" }),
+            }
+        }
+    }
+}]],
+        create = function()
+            return dsl.root {
+                config = {
+                    padding = 16,
+                    color = "darkslategray",
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
+                    minWidth = 200,
+                    id = "main_root"
+                },
+                children = {
+                    dsl.vbox {
+                        config = { spacing = 8 },
+                        children = {
+                            dsl.text("Full Root Config", { fontSize = 18, color = "gold" }),
+                            dsl.divider("horizontal", { color = "gray" }),
+                            dsl.text("padding: 16", { color = "lightgray" }),
+                            dsl.text("color: darkslategray", { color = "lightgray" }),
+                            dsl.text("align: center-top", { color = "lightgray" }),
+                            dsl.text("minWidth: 200", { color = "lightgray" }),
                         }
                     }
                 }

@@ -35,9 +35,10 @@ CardUIPolicy.arePlanningCardsElevated()   -- Check current state
 Z-ORDER HIERARCHY:
 -----------------
 - NORMAL_CARD_Z    = 101   (planning cards on board, below grid)
-- UI_CARD_Z        = 800   (inventory cards)
+- PANEL_Z          = 800   (inventory panel background)
 - GRID_Z           = 850   (inventory grid slots)
 - ELEVATED_CARD_Z  = 900   (elevated planning cards, above grid)
+- UI_CARD_Z        = 1000  (inventory cards, above panel and grid)
 - DRAG_Z           = 1400  (dragged cards, above everything)
 
 ================================================================================
@@ -50,7 +51,7 @@ local component_cache = require("core.component_cache")
 local signal = require("external.hump.signal")
 
 -- Z-order constants for UI cards
-local UI_CARD_Z = z_orders.ui_tooltips - 100  -- Normal cards in inventory (= 800)
+local UI_CARD_Z = z_orders.ui_tooltips + 100  -- Normal cards in inventory (= 1000, above panel at 800 and grid at 850)
 local DRAG_Z = z_orders.ui_tooltips + 500     -- Dragged cards (above everything) (= 1400)
 local NORMAL_CARD_Z = z_orders.card           -- Normal cards on planning board (= 101)
 local ELEVATED_CARD_Z = z_orders.ui_tooltips  -- Elevated planning cards (= 900, above grid at 850)

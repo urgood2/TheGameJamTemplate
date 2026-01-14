@@ -68,9 +68,16 @@ local TAB_CONFIG = {
         rows = 4,
         cols = 4,
     },
+    modifiers = {
+        id = "inv_modifiers",
+        label = "Modifiers",
+        icon = "M",
+        rows = 4,
+        cols = 4,
+    },
 }
 
-local TAB_ORDER = { "equipment", "wands", "triggers", "actions" }
+local TAB_ORDER = { "equipment", "wands", "triggers", "actions", "modifiers" }
 
 local SLOT_WIDTH = 64
 local SLOT_HEIGHT = 64
@@ -573,6 +580,48 @@ local function cleanupSignalHandlers()
     state.signalHandlers = {}
 end
 
+--------------------------------------------------------------------------------
+-- Input Handling: Tab Key Toggle
+--------------------------------------------------------------------------------
+
+local inputHandlerInitialized = false
+
+local function setupInputHandler()
+    if inputHandlerInitialized then return end
+    inputHandlerInitialized = true
+
+    log_debug("[PlayerInventory] Setting up input handler for Tab key")
+
+    local callbackRunOnce = false
+    timer.run_every_render_frame(function()
+        -- One-time verification that callback runs
+        if not callbackRunOnce then
+            callbackRunOnce = true
+            log_debug("[PlayerInventory] Input handler callback is running")
+        end
+
+        -- Tab key toggle (try both string and numeric constant)
+        -- Also support 'I' key as fallback (common inventory keybind)
+        local tabPressed = isKeyPressed and (isKeyPressed("KEY_TAB") or isKeyPressed(258))
+        local iPressed = isKeyPressed and isKeyPressed("KEY_I")
+
+        if tabPressed or iPressed then
+            log_debug("[PlayerInventory] Inventory key pressed - toggling")
+            PlayerInventory.toggle()
+        end
+
+        -- ESC to close (if open)
+        if state.isVisible and isKeyPressed and isKeyPressed("KEY_ESCAPE") then
+            PlayerInventory.close()
+        end
+    end, nil, "player_inventory_input", TIMER_GROUP)
+end
+
+-- Also expose a way to manually trigger setup after game systems are ready
+function PlayerInventory.ensureInputHandler()
+    setupInputHandler()
+end
+
 local function initializeInventory()
     if state.initialized then return end
     
@@ -839,6 +888,22 @@ function PlayerInventory.spawnDummyCards()
 
     log_debug("[PlayerInventory] Spawned " .. #cards .. " dummy cards")
 end
+
+-- Setup input handler via signal after game systems are ready
+signal.register("game_state_changed", function(data)
+    if data and data.current == "PLANNING" then
+        setupInputHandler()
+    end
+end)
+
+-- Also setup immediately in case we're already in planning phase
+timer.after_opts({
+    delay = 0.1,
+    action = function()
+        setupInputHandler()
+    end,
+    tag = "player_inventory_input_setup"
+})
 
 log_debug("[PlayerInventory] Module loaded")
 

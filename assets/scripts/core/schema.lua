@@ -209,6 +209,474 @@ Schema.ENEMY = {
 }
 
 --------------------------------------------------------------------------------
+-- UI Component Schemas
+--------------------------------------------------------------------------------
+-- These schemas validate props passed to ui_syntax_sugar (DSL) components.
+-- Note: The DSL wraps these into internal definitions, so validation happens
+-- on the opts/config tables passed by users.
+
+--[[
+PRIMITIVE COMPONENTS
+These are leaf nodes that display content but don't contain children.
+]]
+
+Schema.UI_TEXT = {
+    _name = "UI_TEXT",
+    _fields = {
+        -- Content (first positional arg becomes text)
+        text        = { type = "string",   required = false }, -- Can be passed positionally
+
+        -- Styling
+        fontSize    = { type = "number",   required = false },
+        fontName    = { type = "string",   required = false },
+        color       = { type = "string",   required = false }, -- Color name or table
+        shadow      = { type = "boolean",  required = false },
+        align       = { type = "number",   required = false }, -- AlignmentFlag bitmask
+
+        -- Interaction
+        onClick     = { type = "function", required = false },
+        hover       = { type = "table",    required = false }, -- { title, body }
+        tooltip     = { type = "table",    required = false },
+
+        -- Identity
+        id          = { type = "string",   required = false },
+    }
+}
+
+Schema.UI_RICH_TEXT = {
+    _name = "UI_RICH_TEXT",
+    _fields = {
+        -- Content (markup string like "[Health](color=red): 100")
+        text        = { type = "string",   required = false },
+
+        -- Styling defaults
+        fontSize    = { type = "number",   required = false },
+        fontName    = { type = "string",   required = false },
+        color       = { type = "string",   required = false },
+        shadow      = { type = "boolean",  required = false },
+    }
+}
+
+Schema.UI_DYNAMIC_TEXT = {
+    _name = "UI_DYNAMIC_TEXT",
+    _fields = {
+        -- Content (function that returns text)
+        fn          = { type = "function", required = false }, -- Value getter
+
+        -- Styling
+        fontSize    = { type = "number",   required = false },
+        effect      = { type = "string",   required = false },
+        color       = { type = "string",   required = false },
+
+        -- Auto-alignment
+        autoAlign   = { type = "boolean",  required = false },
+        alignRate   = { type = "number",   required = false },
+
+        -- Identity
+        id          = { type = "string",   required = false },
+    }
+}
+
+Schema.UI_ANIM = {
+    _name = "UI_ANIM",
+    _fields = {
+        -- Content (sprite/animation ID passed as first arg)
+        id          = { type = "string",   required = false },
+
+        -- Dimensions
+        w           = { type = "number",   required = false },
+        h           = { type = "number",   required = false },
+
+        -- Display
+        shadow      = { type = "boolean",  required = false },
+        isAnimation = { type = "boolean",  required = false }, -- true = existing anim, false = sprite
+    }
+}
+
+Schema.UI_SPACER = {
+    _name = "UI_SPACER",
+    _fields = {
+        -- Dimensions (positional: w, h)
+        w           = { type = "number",   required = false },
+        h           = { type = "number",   required = false },
+    }
+}
+
+Schema.UI_DIVIDER = {
+    _name = "UI_DIVIDER",
+    _fields = {
+        -- Direction (positional: "horizontal" or "vertical")
+        direction   = { type = "string",   required = false, enum = { "horizontal", "vertical" } },
+
+        -- Styling
+        color       = { type = "string",   required = false },
+        thickness   = { type = "number",   required = false },
+        length      = { type = "number",   required = false },
+    }
+}
+
+Schema.UI_ICON_LABEL = {
+    _name = "UI_ICON_LABEL",
+    _fields = {
+        -- Content (positional: iconId, label)
+        iconId      = { type = "string",   required = false },
+        label       = { type = "string",   required = false },
+
+        -- Dimensions
+        iconSize    = { type = "number",   required = false },
+
+        -- Styling
+        fontSize    = { type = "number",   required = false },
+        textColor   = { type = "string",   required = false },
+        shadow      = { type = "boolean",  required = false },
+        padding     = { type = "number",   required = false },
+        align       = { type = "number",   required = false },
+
+        -- Identity
+        id          = { type = "string",   required = false },
+    }
+}
+
+--[[
+LAYOUT COMPONENTS
+These are container nodes that organize children.
+]]
+
+Schema.UI_ROOT = {
+    _name = "UI_ROOT",
+    _fields = {
+        -- Structure
+        children    = { type = "table",    required = false },
+        config      = { type = "table",    required = false },
+
+        -- Config fields (can also be in config table)
+        color       = { type = "string",   required = false },
+        padding     = { type = "number",   required = false },
+        align       = { type = "number",   required = false },
+
+        -- Identity
+        id          = { type = "string",   required = false },
+    }
+}
+
+Schema.UI_VBOX = {
+    _name = "UI_VBOX",
+    _fields = {
+        -- Structure
+        children    = { type = "table",    required = false },
+        config      = { type = "table",    required = false },
+
+        -- Layout
+        spacing     = { type = "number",   required = false },
+        padding     = { type = "number",   required = false },
+        align       = { type = "number",   required = false },
+
+        -- Styling
+        color       = { type = "string",   required = false },
+
+        -- Identity
+        id          = { type = "string",   required = false },
+    }
+}
+
+Schema.UI_HBOX = {
+    _name = "UI_HBOX",
+    _fields = {
+        -- Structure
+        children    = { type = "table",    required = false },
+        config      = { type = "table",    required = false },
+
+        -- Layout
+        spacing     = { type = "number",   required = false },
+        padding     = { type = "number",   required = false },
+        align       = { type = "number",   required = false },
+
+        -- Styling
+        color       = { type = "string",   required = false },
+
+        -- Identity
+        id          = { type = "string",   required = false },
+    }
+}
+
+Schema.UI_SECTION = {
+    _name = "UI_SECTION",
+    _fields = {
+        -- Content (positional: title)
+        title       = { type = "string",   required = false },
+
+        -- Structure
+        children    = { type = "table",    required = false },
+
+        -- Title styling
+        titleSize   = { type = "number",   required = false },
+        titleColor  = { type = "string",   required = false },
+        titleBg     = { type = "string",   required = false },
+        titlePadding = { type = "number",  required = false },
+
+        -- Content styling
+        color       = { type = "string",   required = false },
+        padding     = { type = "number",   required = false },
+        emboss      = { type = "number",   required = false },
+
+        -- Identity
+        id          = { type = "string",   required = false },
+    }
+}
+
+Schema.UI_GRID = {
+    _name = "UI_GRID",
+    _fields = {
+        -- Dimensions (positional: rows, cols)
+        rows        = { type = "number",   required = false },
+        cols        = { type = "number",   required = false },
+
+        -- Generator function (positional: gen)
+        gen         = { type = "function", required = false },
+    }
+}
+
+--[[
+INTERACTIVE COMPONENTS
+These handle user input.
+]]
+
+Schema.UI_BUTTON = {
+    _name = "UI_BUTTON",
+    _fields = {
+        -- Content (positional: label)
+        label       = { type = "string",   required = false },
+
+        -- Interaction
+        onClick     = { type = "function", required = false },
+        disabled    = { type = "boolean",  required = false },
+        hover       = { type = "table",    required = false },
+        tooltip     = { type = "table",    required = false },
+
+        -- Styling
+        color       = { type = "string",   required = false },
+        textColor   = { type = "string",   required = false },
+        fontSize    = { type = "number",   required = false },
+        shadow      = { type = "boolean",  required = false },
+        emboss      = { type = "number",   required = false },
+
+        -- Dimensions
+        minWidth    = { type = "number",   required = false },
+        minHeight   = { type = "number",   required = false },
+        align       = { type = "number",   required = false },
+
+        -- Identity
+        id          = { type = "string",   required = false },
+    }
+}
+
+Schema.UI_SPRITE_BUTTON = {
+    _name = "UI_SPRITE_BUTTON",
+    _fields = {
+        -- Sprite (base name or explicit states)
+        sprite      = { type = "string",   required = false },
+        states      = { type = "table",    required = false }, -- { normal, hover, pressed, disabled }
+        borders     = { type = "table",    required = false }, -- [left, top, right, bottom]
+
+        -- Content
+        label       = { type = "string",   required = false },
+        text        = { type = "string",   required = false }, -- Alias for label
+        children    = { type = "table",    required = false },
+
+        -- Interaction
+        onClick     = { type = "function", required = false },
+        disabled    = { type = "boolean",  required = false },
+
+        -- Styling
+        textColor   = { type = "string",   required = false },
+        fontSize    = { type = "number",   required = false },
+        shadow      = { type = "boolean",  required = false },
+        padding     = { type = "number",   required = false },
+        align       = { type = "number",   required = false },
+
+        -- Dimensions
+        minWidth    = { type = "number",   required = false },
+        minHeight   = { type = "number",   required = false },
+
+        -- Identity
+        id          = { type = "string",   required = false },
+    }
+}
+
+Schema.UI_PROGRESS_BAR = {
+    _name = "UI_PROGRESS_BAR",
+    _fields = {
+        -- Value
+        getValue    = { type = "function", required = false },
+        maxValue    = { type = "number",   required = false },
+
+        -- Styling
+        color       = { type = "string",   required = false },
+        emptyColor  = { type = "string",   required = false },
+        fullColor   = { type = "string",   required = false },
+        align       = { type = "number",   required = false },
+
+        -- Dimensions
+        minWidth    = { type = "number",   required = false },
+        minHeight   = { type = "number",   required = false },
+
+        -- Structure
+        children    = { type = "table",    required = false },
+
+        -- Identity
+        id          = { type = "string",   required = false },
+    }
+}
+
+--[[
+PANEL COMPONENTS
+These provide styled backgrounds with nine-patch support.
+]]
+
+Schema.UI_SPRITE_PANEL = {
+    _name = "UI_SPRITE_PANEL",
+    _fields = {
+        -- Sprite
+        sprite      = { type = "string",   required = false },
+        borders     = { type = "table",    required = false }, -- [left, top, right, bottom] or { left, top, right, bottom }
+        sizing      = { type = "string",   required = false, enum = { "fit_content", "fixed", "stretch" } },
+        tint        = { type = "string",   required = false },
+
+        -- Structure
+        children    = { type = "table",    required = false },
+        containerType = { type = "string", required = false, enum = { "VERTICAL_CONTAINER", "HORIZONTAL_CONTAINER" } },
+
+        -- Layout
+        padding     = { type = "number",   required = false },
+        align       = { type = "number",   required = false },
+
+        -- Dimensions
+        minWidth    = { type = "number",   required = false },
+        minHeight   = { type = "number",   required = false },
+        maxWidth    = { type = "number",   required = false },
+        maxHeight   = { type = "number",   required = false },
+
+        -- Decorations
+        decorations = { type = "table",    required = false },
+        regions     = { type = "table",    required = false },
+
+        -- Interaction
+        hover       = { type = "boolean",  required = false },
+        canCollide  = { type = "boolean",  required = false },
+
+        -- Identity
+        id          = { type = "string",   required = false },
+    }
+}
+
+Schema.UI_SPRITE_BOX = {
+    _name = "UI_SPRITE_BOX",
+    _fields = {
+        -- Sprite config
+        sprite      = { type = "table",    required = false }, -- { sprite, fixed, ... }
+
+        -- Structure
+        children    = { type = "table",    required = false },
+        vertical    = { type = "boolean",  required = false },
+
+        -- Layout
+        padding     = { type = "number",   required = false },
+
+        -- Identity
+        id          = { type = "string",   required = false },
+    }
+}
+
+Schema.UI_CUSTOM_PANEL = {
+    _name = "UI_CUSTOM_PANEL",
+    _fields = {
+        -- Callbacks
+        onDraw      = { type = "function", required = false },
+        onUpdate    = { type = "function", required = false },
+        onInput     = { type = "function", required = false },
+
+        -- Dimensions
+        minWidth    = { type = "number",   required = false },
+        minHeight   = { type = "number",   required = false },
+        preferredWidth = { type = "number", required = false },
+        preferredHeight = { type = "number", required = false },
+
+        -- Interaction
+        focusable   = { type = "boolean",  required = false },
+
+        -- Config wrapper
+        config      = { type = "table",    required = false },
+
+        -- Identity
+        id          = { type = "string",   required = false },
+    }
+}
+
+--[[
+COMPLEX COMPONENTS
+These are composite components with internal state management.
+]]
+
+Schema.UI_TABS = {
+    _name = "UI_TABS",
+    _fields = {
+        -- Tab definitions
+        tabs        = { type = "table",    required = true }, -- Array of { id, label, content }
+        activeTab   = { type = "string",   required = false },
+
+        -- Tab bar styling
+        tabBarPadding = { type = "number", required = false },
+        tabBarAlign = { type = "number",   required = false },
+        buttonColor = { type = "string",   required = false },
+        activeButtonColor = { type = "string", required = false },
+        buttonPadding = { type = "number", required = false },
+        buttonMinWidth = { type = "number", required = false },
+        buttonMinHeight = { type = "number", required = false },
+
+        -- Content area styling
+        contentPadding = { type = "number", required = false },
+        contentColor = { type = "string",  required = false },
+        contentMinWidth = { type = "number", required = false },
+        contentMinHeight = { type = "number", required = false },
+
+        -- Container styling
+        containerPadding = { type = "number", required = false },
+        containerColor = { type = "string", required = false },
+
+        -- Text styling
+        fontSize    = { type = "number",   required = false },
+        textColor   = { type = "string",   required = false },
+        emboss      = { type = "number",   required = false },
+
+        -- Identity
+        id          = { type = "string",   required = false },
+    }
+}
+
+Schema.UI_INVENTORY_GRID = {
+    _name = "UI_INVENTORY_GRID",
+    _fields = {
+        -- Grid dimensions
+        rows        = { type = "number",   required = false },
+        cols        = { type = "number",   required = false },
+        slotSize    = { type = "table",    required = false }, -- { w, h }
+        slotSpacing = { type = "number",   required = false },
+
+        -- Callbacks
+        onSlotChange = { type = "function", required = false },
+        onSlotClick = { type = "function", required = false },
+        onItemStack = { type = "function", required = false },
+
+        -- Slot configuration
+        slots       = { type = "table",    required = false }, -- Per-slot config
+        config      = { type = "table",    required = false }, -- Grid-wide config
+
+        -- Identity
+        id          = { type = "string",   required = false },
+    }
+}
+
+--------------------------------------------------------------------------------
 -- Validation Logic
 --------------------------------------------------------------------------------
 

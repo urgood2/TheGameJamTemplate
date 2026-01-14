@@ -1688,16 +1688,12 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
         float collisionBufferX = 0,
                 collisionBufferY = 0;
-        if (node.state.isBeingHovered)
+        if (node.state.isBeingHovered || node.state.isBeingDragged)
         {
-            // let collision be a little forgiving when hovered, so hovered state ends later than usual
+            // Both states use the same buffer, so just apply once
+            // Using hover buffer since it's the "forgiveness" buffer
             collisionBufferX = transform->getHoverCollisionBufferX();
             collisionBufferY = transform->getHoverCollisionBufferY();
-            // spdlog::debug("Entity {} is hovered. Applying collision buffer: {}", static_cast<int>(e), collisionBuffer);
-        }
-        if (node.state.isBeingDragged) {
-            collisionBufferX += transform->getHoverCollisionBufferX();
-            collisionBufferY += transform->getHoverCollisionBufferY();
         }
 
         tempPoint.x = point.x;

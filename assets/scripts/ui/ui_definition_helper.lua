@@ -9,6 +9,8 @@
 -- }
 ------------------------------------------------------------
 
+local Sol2Safety = require("core.sol2_safety")
+
 ui.definitions = ui.definitions or {}
 
 ------------------------------------------------------------
@@ -187,8 +189,7 @@ local function makeConfigFromTable(tbl)
         -- expecting const references (e.g., addColor(const Color&))
         -- The crash happens during argument conversion, before pcall can catch it
         ------------------------------------------------------------
-        if v == nil then
-            log_debug("[ui.def] Skipping nil value for key: " .. tostring(k))
+        if not Sol2Safety.isSafe(v) then
             goto continue
         end
         

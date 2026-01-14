@@ -161,15 +161,13 @@ namespace collision {
         float h  = T->getActualH();
         float r  = T->getActualRotation();
 
-        // apply hover/drag “forgiveness”
+        // apply hover/drag "forgiveness" - use max, not sum
         float bufX = 0, bufY = 0;
-        if (go.state.isBeingHovered) {
-        bufX += T->getHoverCollisionBufferX();
-        bufY += T->getHoverCollisionBufferY();
-        }
-        if (go.state.isBeingDragged) {
-        bufX += T->getHoverCollisionBufferX();
-        bufY += T->getHoverCollisionBufferY();
+        if (go.state.isBeingHovered || go.state.isBeingDragged) {
+            // Both states use the same buffer, so just apply once
+            // Using hover buffer since it's the "forgiveness" buffer
+            bufX = T->getHoverCollisionBufferX();
+            bufY = T->getHoverCollisionBufferY();
         }
 
         // center of box:

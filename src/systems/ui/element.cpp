@@ -25,7 +25,7 @@
 // Feature flag to enable handler-based rendering (for testing)
 // Set to true to use handlers for RECT_SHAPE and TEXT types
 #ifndef UI_USE_HANDLERS
-#define UI_USE_HANDLERS 0
+#define UI_USE_HANDLERS 1
 #endif
 
 namespace ui
@@ -2074,8 +2074,9 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
 #if UI_USE_HANDLERS
         // Handler-based rendering (experimental)
         // Create UIDrawContext with all necessary rendering info
-        {
-            auto* handler = UIHandlerRegistry::instance().get(config->uiType);
+        bool renderedByHandler = false;
+        if (config->uiType.has_value()) {
+            auto* handler = UIHandlerRegistry::instance().get(config->uiType.value());
             if (handler) {
                 UIDrawContext ctx;
                 ctx.layer = layerPtr;
@@ -2101,6 +2102,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                 ctx.buttonActive = buttonActive;
 
                 handler->draw(registry, entity, styleConfig, *transform, ctx);
+                renderedByHandler = true;
                 // Skip legacy rendering for handled types
                 // Note: Common rendering (outline, focus) still runs after this
             }
@@ -2108,7 +2110,11 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
 #endif
 
         // is it text?
+#if UI_USE_HANDLERS
+	        if (!renderedByHandler && config->uiType == UITypeEnum::TEXT && layoutScale)
+#else
 	        if (config->uiType == UITypeEnum::TEXT && layoutScale)
+#endif
 	        {
 	            ZONE_SCOPED("UI Element: Text Logic");
 	            const bool snapToPixels = config->pixelatedRectangle;
@@ -2230,7 +2236,20 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
 
             layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
         }
+// Rectangle/container style rendering (backgrounds). INPUT_TEXT still needs its
+// background even if its handler already drew the text/caret.
+#if UI_USE_HANDLERS
+        else if (
+            (config->uiType == UITypeEnum::INPUT_TEXT) ||
+            (!renderedByHandler && (config->uiType == UITypeEnum::RECT_SHAPE ||
+                                    config->uiType == UITypeEnum::VERTICAL_CONTAINER ||
+                                    config->uiType == UITypeEnum::HORIZONTAL_CONTAINER ||
+                                    config->uiType == UITypeEnum::ROOT ||
+                                    config->uiType == UITypeEnum::SCROLL_PANE))
+        )
+#else
         else if (config->uiType == UITypeEnum::RECT_SHAPE || config->uiType == UITypeEnum::VERTICAL_CONTAINER || config->uiType == UITypeEnum::HORIZONTAL_CONTAINER || config->uiType == UITypeEnum::ROOT || config->uiType == UITypeEnum::SCROLL_PANE || config->uiType == UITypeEnum::INPUT_TEXT)
+#endif
         {
             ZONE_SCOPED("UI Element: Rectangle/Container Logic");
             //TODO: need to apply scale and rotation to the rounded rectangle - make a prepdraw method that applies the transform's values
@@ -2525,8 +2544,13 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             }
         }
         
+#if UI_USE_HANDLERS
+        // Legacy INPUT_TEXT rendering (text + caret). Skip when a handler already drew it.
+        if (!renderedByHandler && config->uiType == UITypeEnum::INPUT_TEXT)
+#else
         // draw input text
         if (config->uiType == UITypeEnum::INPUT_TEXT)
+#endif
         {
             // Text source: ui::TextInput on the same entity
             auto &textInput = registry.get<ui::TextInput>(entity);

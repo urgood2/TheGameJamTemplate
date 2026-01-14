@@ -25,41 +25,48 @@ void TextHandler::draw(
 ) {
     // TextHandler draws TEXT elements with shadow and optional vertical text
 
-    if (!ctx.layer || !ctx.config || !ctx.node || !ctx.fontData) {
+    if (!ctx.layer || !ctx.node || !ctx.fontData) {
         SPDLOG_WARN("TextHandler::draw called with incomplete context");
         return;
     }
 
     auto layerPtr = ctx.layer;
-    auto* config = ctx.config;
     auto* node = ctx.node;
     const auto& fontData = *ctx.fontData;
     const int zIndex = ctx.zIndex;
 
-    // Get scale from layout config or legacy config
-    auto* layoutConfig = registry.try_get<UILayoutConfig>(entity);
-    const auto& layoutScale = layoutConfig ? layoutConfig->scale : config->scale;
+    // Fetch split components from registry
+    const auto* layoutConfig = registry.try_get<UILayoutConfig>(entity);
+    const auto* contentConfig = registry.try_get<UIContentConfig>(entity);
+    const auto* interactionConfig = registry.try_get<UIInteractionConfig>(entity);
 
+    // Get scale from layout config (required for text rendering)
+    const auto layoutScale = layoutConfig ? layoutConfig->scale : std::nullopt;
     if (!layoutScale) {
         return; // Scale required for text rendering
     }
 
-    // Get content config for text-specific fields
-    auto* contentConfig = registry.try_get<UIContentConfig>(entity);
-    const auto contentVerticalText = contentConfig ? contentConfig->verticalText : config->verticalText;
+    // Get content config values for text-specific fields
+    const auto contentVerticalText = contentConfig ? contentConfig->verticalText : std::optional<bool>{};
     float requestedSize = static_cast<float>(fontData.defaultSize);
     if (contentConfig && contentConfig->fontSize) {
         requestedSize = contentConfig->fontSize.value();
-    } else if (config->fontSize) {
-        requestedSize = config->fontSize.value();
     }
 
-    // Get style values
+    // Get text content and spacing from content config
+    const auto contentText = contentConfig ? contentConfig->text : std::optional<std::string>{};
+    const float spacing = (contentConfig && contentConfig->textSpacing)
+        ? contentConfig->textSpacing.value()
+        : fontData.spacing;
+
+    // Get button_UIE from interaction config for shadow logic
+    const auto buttonUIE = interactionConfig ? interactionConfig->button_UIE : std::optional<entt::entity>{};
+
+    // Get style values from UIStyleConfig (split component)
     const auto& styleColor = style.color;
     const auto styleShadow = style.shadow;
 
     const bool shadowsOn = globals::getSettings().shadowsOn;
-    const float spacing = config->textSpacing.value_or(fontData.spacing);
     const float scale = layoutScale.value_or(1.0f) * fontData.fontScale * globals::getGlobalUIScaleFactor();
 
     // Calculate effective size and select best font for that size
@@ -77,8 +84,9 @@ void TextHandler::draw(
     const float shadowOffsetX = fixedShadow.x * effectiveSize * 0.04f;
     const float shadowOffsetY = fixedShadow.y * effectiveSize * -0.03f;
 
-    bool drawShadow = (config->button_UIE && ctx.buttonActive) ||
-                      (!config->button_UIE && styleShadow && shadowsOn);
+    // Determine shadow drawing: button elements draw shadow when active, non-buttons when styleShadow is set
+    bool drawShadow = (buttonUIE && ctx.buttonActive) ||
+                      (!buttonUIE && styleShadow && shadowsOn);
 
     // Shadow pass
     if (drawShadow) {
@@ -92,7 +100,7 @@ void TextHandler::draw(
             cmd->y = y;
         }, zIndex);
 
-        if (contentVerticalText) {
+        if (contentVerticalText.value_or(false)) {
             layer::QueueCommand<layer::CmdTranslate>(layerPtr, [h = ctx.actualH](layer::CmdTranslate *cmd) {
                 cmd->x = 0;
                 cmd->y = h;
@@ -102,7 +110,7 @@ void TextHandler::draw(
             }, zIndex);
         }
 
-        if ((styleShadow || (config->button_UIE && ctx.buttonActive)) && shadowsOn) {
+        if ((styleShadow || (buttonUIE && ctx.buttonActive)) && shadowsOn) {
             Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(styleColor.value_or(WHITE).a * 0.3f)};
 
             float textX = fontData.fontRenderOffset.x;
@@ -114,9 +122,9 @@ void TextHandler::draw(
                     cmd->scaleY = fontScaleRatio;
                 }, zIndex);
             }
-            if (config->text) {
+            if (contentText) {
                 layer::QueueCommand<layer::CmdTextPro>(layerPtr,
-                    [text = config->text.value(), font = bestFont, textX, textY, spacing, shadowColor, fontSize](layer::CmdTextPro *cmd) {
+                    [text = contentText.value(), font = bestFont, textX, textY, spacing, shadowColor, fontSize](layer::CmdTextPro *cmd) {
                     cmd->text = text.c_str();
                     cmd->font = font;
                     cmd->x = textX;
@@ -143,7 +151,7 @@ void TextHandler::draw(
         cmd->y = y;
     }, zIndex);
 
-    if (contentVerticalText) {
+    if (contentVerticalText.value_or(false)) {
         layer::QueueCommand<layer::CmdTranslate>(layerPtr, [h = ctx.actualH](layer::CmdTranslate *cmd) {
             cmd->x = 0;
             cmd->y = h;
@@ -168,9 +176,9 @@ void TextHandler::draw(
         }, zIndex);
     }
 
-    if (config->text) {
+    if (contentText) {
         layer::QueueCommand<layer::CmdTextPro>(layerPtr,
-            [text = config->text.value(), font = bestFont, textX, textY, spacing, renderColor, fontSize](layer::CmdTextPro *cmd) {
+            [text = contentText.value(), font = bestFont, textX, textY, spacing, renderColor, fontSize](layer::CmdTextPro *cmd) {
             cmd->text = text.c_str();
             cmd->font = font;
             cmd->x = textX;

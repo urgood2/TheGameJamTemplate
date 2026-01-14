@@ -31,20 +31,20 @@ void RectHandler::draw(
     // RectHandler draws RECT_SHAPE elements (simple rectangles with styling)
     // This is the pure rectangle rendering logic extracted from DrawSelf
 
-    if (!ctx.layer || !ctx.config || !ctx.node) {
+    if (!ctx.layer || !ctx.node) {
         SPDLOG_WARN("RectHandler::draw called with incomplete context");
         return;
     }
 
     auto layerPtr = ctx.layer;
-    auto* config = ctx.config;
+    auto* config = ctx.config;  // Keep for util functions that still need it
     auto* node = ctx.node;
     const int zIndex = ctx.zIndex;
 
     // Make a mutable copy of transform for util functions that require non-const ref
     auto transformCopy = t;
 
-    // Use style values (prefer UIStyleConfig over config fallback)
+    // Use style values from UIStyleConfig (split component)
     const auto& stylingType = style.stylingType;
     const auto& styleColor = style.color;
     const auto styleShadow = style.shadow;
@@ -52,8 +52,8 @@ void RectHandler::draw(
 
     layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
 
-    // Shadow pass
-    if (config->shadow && globals::getSettings().shadowsOn) {
+    // Shadow pass - use style.shadow from split component
+    if (styleShadow && globals::getSettings().shadowsOn) {
         Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(styleColor.value_or(WHITE).a * 0.3f)};
         if (style.shadowColor) {
             shadowColor = style.shadowColor.value();

@@ -3,7 +3,10 @@
 REAL PLAYER INVENTORY VALIDATION TEST
 ================================================================================
 Tests the actual PlayerInventory UI with UIValidator.
-Run with: RUN_REAL_INVENTORY_TEST=1 ./build/raylib-cpp-cmake-template
+Run with: AUTO_START_MAIN_GAME=1 RUN_REAL_INVENTORY_TEST=1 ./build/raylib-cpp-cmake-template
+
+NOTE: Must use AUTO_START_MAIN_GAME=1 because PlayerInventory only exists
+during the IN_GAME state (planning phase), not in MAIN_MENU.
 
 This test validates:
 - Panel containment (children stay within bounds)
@@ -17,14 +20,79 @@ local M = {}
 
 local UIValidator = require("core.ui_validator")
 local timer = require("core.timer")
+local signal = require("external.hump.signal")
+
+-- Track if we've already scheduled the test
+local testScheduled = false
 
 function M.run()
-    local PlayerInventory = require("ui.player_inventory")
-
     print("\n================================================================================")
     print("REAL PLAYER INVENTORY VALIDATION")
     print("================================================================================\n")
 
+    -- Check if we're in the right game state
+    local currentState = globals.currentGameState
+    if currentState == GAMESTATE.IN_GAME then
+        -- Already in game, run immediately
+        print("[Test] Already in IN_GAME state, running validation...")
+        M.runValidation()
+    else
+        -- Schedule to run when game enters IN_GAME state
+        print("[Test] Not in IN_GAME yet (current: " .. tostring(currentState) .. ")")
+        print("[Test] Scheduling validation after game state changes...")
+        print("[Test] HINT: Use AUTO_START_MAIN_GAME=1 to auto-start the game")
+        M.scheduleAfterGameStart()
+    end
+end
+
+function M.scheduleAfterGameStart()
+    if testScheduled then
+        print("[Test] Test already scheduled, skipping...")
+        return
+    end
+    testScheduled = true
+
+    -- Wait for game to start, then run validation
+    -- Check every 0.5 seconds for up to 10 seconds
+    local checkCount = 0
+    local maxChecks = 20
+    local validationTriggered = false
+
+    timer.every_opts({
+        delay = 0.5,
+        action = function()
+            -- Skip if validation already triggered
+            if validationTriggered then
+                return false -- Stop the timer
+            end
+
+            checkCount = checkCount + 1
+
+            if globals.currentGameState == GAMESTATE.IN_GAME then
+                validationTriggered = true
+                print("[Test] Game entered IN_GAME state! Running validation in 1.5s...")
+
+                -- Wait for UI to fully initialize
+                timer.after_opts({
+                    delay = 1.5,
+                    action = function()
+                        M.runValidation()
+                    end,
+                    tag = "inventory_test_run"
+                })
+                return false -- Stop the repeating timer
+            elseif checkCount >= maxChecks then
+                print("[Test] Timeout waiting for IN_GAME state")
+                print("[Test] Use AUTO_START_MAIN_GAME=1 to automatically start the game")
+                return false -- Stop the timer
+            end
+        end,
+        tag = "inventory_test_wait_for_game"
+    })
+end
+
+function M.runValidation()
+    local PlayerInventory = require("ui.player_inventory")
     local results = { passed = 0, failed = 0, violations = {} }
 
     -- Open the inventory

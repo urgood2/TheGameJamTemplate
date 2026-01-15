@@ -44,16 +44,17 @@ function M.run()
             end
 
             print("[Test] Panel entity: " .. tostring(panelEntity))
-            print("[Test] Running UIValidator.validate()...")
+            print("[Test] Running UIValidator.validate() with skipHidden=true...")
 
-            -- Run full validation
-            local violations = UIValidator.validate(panelEntity)
+            -- Run full validation with skipHidden to ignore off-screen tabs
+            local options = { skipHidden = true }
+            local violations = UIValidator.validate(panelEntity, nil, options)
 
             -- Also validate each grid tab
             local grids = PlayerInventory.getGrids()
             for tabId, gridEntity in pairs(grids or {}) do
                 print("[Test] Validating grid: " .. tostring(tabId))
-                local gridViolations = UIValidator.validate(gridEntity)
+                local gridViolations = UIValidator.validate(gridEntity, nil, options)
                 for _, v in ipairs(gridViolations) do
                     table.insert(violations, v)
                 end

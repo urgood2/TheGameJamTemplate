@@ -28,6 +28,9 @@ local severities = {
 -- Render tracking (for manually-rendered entities)
 local renderLog = {}
 
+-- Hidden detection threshold: entities this far outside window are considered hidden
+local HIDDEN_THRESHOLD = 100
+
 ---Enable auto-validation
 function UIValidator.enable()
     enabled = true
@@ -121,11 +124,35 @@ function UIValidator.getBounds(entity)
     return nil
 end
 
+---Check if entity is hidden (positioned far off-screen)
+---@param entity number Entity ID
+---@param bounds? table Pre-computed bounds (optional)
+---@return boolean isHidden
+function UIValidator.isEntityHidden(entity, bounds)
+    bounds = bounds or UIValidator.getBounds(entity)
+    if not bounds then
+        return false -- No bounds = can't determine, assume visible
+    end
+
+    local windowBounds = UIValidator.getWindowBounds()
+
+    -- Check if entity is significantly outside window bounds
+    local outsideRight = bounds.x > windowBounds.w + HIDDEN_THRESHOLD
+    local outsideBottom = bounds.y > windowBounds.h + HIDDEN_THRESHOLD
+    local outsideLeft = bounds.x + bounds.w < -HIDDEN_THRESHOLD
+    local outsideTop = bounds.y + bounds.h < -HIDDEN_THRESHOLD
+
+    return outsideRight or outsideBottom or outsideLeft or outsideTop
+end
+
 ---Get bounds for entity and all descendants
 ---@param entity number Root entity ID
+---@param options? table {skipHidden: boolean}
 ---@return table Map of entity -> bounds
-function UIValidator.getAllBounds(entity)
+function UIValidator.getAllBounds(entity, options)
     local result = {}
+    options = options or {}
+    local skipHidden = options.skipHidden
 
     local function collectBounds(ent, depth)
         if not ent or not registry:valid(ent) then return end
@@ -133,6 +160,11 @@ function UIValidator.getAllBounds(entity)
 
         local bounds = UIValidator.getBounds(ent)
         if bounds then
+            -- Skip hidden entities if option is set
+            if skipHidden and UIValidator.isEntityHidden(ent, bounds) then
+                return -- Skip this entity and its children
+            end
+
             result[ent] = bounds
             -- stash entity id for clearer parent reporting downstream
             bounds.entity = ent
@@ -211,15 +243,23 @@ end
 
 ---Check containment rule for a UI entity tree
 ---@param entity number Root entity ID
+---@param options? table {skipHidden: boolean}
 ---@return table[] violations
-function UIValidator.checkContainment(entity)
+function UIValidator.checkContainment(entity, options)
     local violations = {}
+    options = options or {}
+    local skipHidden = options.skipHidden
 
     local function checkEntity(ent, parentBounds, parentId)
         if not ent or not registry:valid(ent) then return end
 
         local bounds = UIValidator.getBounds(ent)
         if not bounds then return end
+
+        -- Skip hidden entities if option is set
+        if skipHidden and UIValidator.isEntityHidden(ent, bounds) then
+            return
+        end
 
         -- Check if this entity is contained in parent
         if parentBounds then
@@ -289,12 +329,13 @@ end
 
 ---Check window bounds rule for a UI entity tree
 ---@param entity number Root entity ID
+---@param options? table {skipHidden: boolean}
 ---@return table[] violations
-function UIValidator.checkWindowBounds(entity)
+function UIValidator.checkWindowBounds(entity, options)
     local violations = {}
     local windowBounds = UIValidator.getWindowBounds()
 
-    local allBounds = UIValidator.getAllBounds(entity)
+    local allBounds = UIValidator.getAllBounds(entity, options)
     for ent, bounds in pairs(allBounds) do
         local v = UIValidator.checkWindowBoundsWithBounds(ent, bounds, windowBounds)
         for _, violation in ipairs(v) do
@@ -353,9 +394,12 @@ end
 
 ---Check sibling overlap for children of an entity
 ---@param entity number Parent entity ID
+---@param options? table {skipHidden: boolean}
 ---@return table[] violations
-function UIValidator.checkSiblingOverlap(entity)
+function UIValidator.checkSiblingOverlap(entity, options)
     local violations = {}
+    options = options or {}
+    local skipHidden = options.skipHidden
 
     local function checkChildren(ent)
         if not ent or not registry:valid(ent) then return end
@@ -363,16 +407,22 @@ function UIValidator.checkSiblingOverlap(entity)
         local go = component_cache.get(ent, GameObject)
         if not go or not go.orderedChildren then return end
 
-        -- Collect sibling bounds
+        -- Collect sibling bounds (excluding hidden)
         local siblings = {}
         for _, child in ipairs(go.orderedChildren) do
             local bounds = UIValidator.getBounds(child)
             if bounds then
+                -- Skip hidden entities if option is set
+                if skipHidden and UIValidator.isEntityHidden(child, bounds) then
+                    goto continue
+                end
+
                 local childGo = component_cache.get(child, GameObject)
                 local allowOverlap = childGo and childGo.config and childGo.config.allowOverlap
                 bounds.allowOverlap = allowOverlap
                 table.insert(siblings, { id = child, bounds = bounds })
             end
+            ::continue::
         end
 
         -- Check for overlaps
@@ -449,12 +499,23 @@ end
 
 ---Check z-order hierarchy for a UI entity tree
 ---@param entity number Root entity ID
+---@param options? table {skipHidden: boolean}
 ---@return table[] violations
-function UIValidator.checkZOrder(entity)
+function UIValidator.checkZOrder(entity, options)
     local violations = {}
+    options = options or {}
+    local skipHidden = options.skipHidden
 
     local function checkEntity(ent, parentZ)
         if not ent or not registry:valid(ent) then return end
+
+        -- Skip hidden entities if option is set
+        if skipHidden then
+            local bounds = UIValidator.getBounds(ent)
+            if bounds and UIValidator.isEntityHidden(ent, bounds) then
+                return
+            end
+        end
 
         local z = UIValidator.getZOrder(ent) or 0
 
@@ -485,25 +546,29 @@ function UIValidator.checkZOrder(entity)
 end
 
 -- Rule check functions lookup (must be after function definitions)
+-- Each function accepts (entity, options) where options = {skipHidden: boolean}
 local ruleChecks = {
-    containment = function(entity) return UIValidator.checkContainment(entity) end,
-    window_bounds = function(entity) return UIValidator.checkWindowBounds(entity) end,
-    sibling_overlap = function(entity) return UIValidator.checkSiblingOverlap(entity) end,
-    z_order_hierarchy = function(entity) return UIValidator.checkZOrder(entity) end,
-    layer_consistency = function(entity) return UIValidator.checkRenderConsistency(entity) end,
-    space_consistency = function(_) return {} end, -- space is evaluated within checkRenderConsistency
+    containment = function(entity, options) return UIValidator.checkContainment(entity, options) end,
+    window_bounds = function(entity, options) return UIValidator.checkWindowBounds(entity, options) end,
+    sibling_overlap = function(entity, options) return UIValidator.checkSiblingOverlap(entity, options) end,
+    z_order_hierarchy = function(entity, options) return UIValidator.checkZOrder(entity, options) end,
+    layer_consistency = function(entity, _options) return UIValidator.checkRenderConsistency(entity) end,
+    space_consistency = function(_entity, _options) return {} end, -- space is evaluated within checkRenderConsistency
 }
 
 ---Validate a UI entity and return all violations
 ---@param entity number Entity ID
 ---@param rules? string[] Optional: specific rules to check (default: all)
+---@param options? table Optional: {skipHidden: boolean} to skip off-screen entities
 ---@return table[] violations List of {type, severity, entity, message}
-function UIValidator.validate(entity, rules)
+function UIValidator.validate(entity, rules, options)
     local violations = {}
 
     if not entity then
         return violations
     end
+
+    options = options or {}
 
     -- Determine which rules to run
     local rulesToRun = rules or {
@@ -527,7 +592,7 @@ function UIValidator.validate(entity, rules)
         if checkFn then
             -- Skip entity-based rules for invalid entities, but allow render log rules
             if renderLogRules[ruleName] or isValidEntity then
-                local v = checkFn(entity)
+                local v = checkFn(entity, options)
                 for _, violation in ipairs(v) do
                     table.insert(violations, violation)
                 end

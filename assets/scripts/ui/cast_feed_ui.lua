@@ -11,8 +11,12 @@ local CastFeedUI = {}
 -- Dependencies
 local timer = require("core.timer")
 local signal = require("external.hump.signal")
+local signal_group = require("core.signal_group")
 local z_orders = require("core.z_orders")
 local entity_cache = require("core.entity_cache")
+
+-- Signal handler group for cleanup on game restart
+local cast_feed_handlers = nil
 
 -- Lazy-load toggle state to avoid circular dependencies
 local function isVisible()
@@ -237,23 +241,32 @@ function CastFeedUI.stopDemoFeed()
 end
 
 --- Initialize the Cast Feed UI
+-- Subscribe to cast feed events (uses signal_group for cleanup)
+function CastFeedUI.subscribe()
+    if cast_feed_handlers then return end
+    cast_feed_handlers = signal_group.new("cast_feed_ui")
+
+    cast_feed_handlers:on("on_spell_cast", CastFeedUI.onSpellCast)
+    cast_feed_handlers:on("on_joker_trigger", CastFeedUI.onJokerTrigger)
+    cast_feed_handlers:on("tag_threshold_discovered", CastFeedUI.onTagDiscovery)
+    cast_feed_handlers:on("spell_type_discovered", CastFeedUI.onSpellTypeDiscovery)
+    cast_feed_handlers:on(BOARD_CHANGE_SIGNAL, CastFeedUI.onBoardChanged)
+end
+
+-- Unsubscribe from cast feed events (prevents memory leaks on restart)
+function CastFeedUI.unsubscribe()
+    if cast_feed_handlers then
+        cast_feed_handlers:cleanup()
+        cast_feed_handlers = nil
+    end
+end
+
 function CastFeedUI.init()
     clearItems()
     CastFeedUI.isActive = true
 
-    -- Subscribe to events once
-    if not CastFeedUI._subscribed then
-        signal.register("on_spell_cast", CastFeedUI.onSpellCast)
-        signal.register("on_joker_trigger", CastFeedUI.onJokerTrigger)
-
-        -- Subscribe to discovery events
-        signal.register("tag_threshold_discovered", CastFeedUI.onTagDiscovery)
-        signal.register("spell_type_discovered", CastFeedUI.onSpellTypeDiscovery)
-        CastFeedUI._subscribed = true
-
-        -- Board changes clear the feed
-        signal.register(BOARD_CHANGE_SIGNAL, CastFeedUI.onBoardChanged)
-    end
+    -- Subscribe to events (guarded by signal_group)
+    CastFeedUI.subscribe()
 
     startDemoFeed()
 

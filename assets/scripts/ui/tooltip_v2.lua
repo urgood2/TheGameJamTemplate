@@ -195,6 +195,15 @@ local State = {
 -- HELPER FUNCTIONS
 --------------------------------------------------------------------------------
 
+-- Safely destroy an entity (guards against nil, missing registry, invalid entity)
+local function safe_destroy(entity)
+    if entity and registry and registry:valid(entity) then
+        registry:destroy(entity)
+        return true
+    end
+    return false
+end
+
 -- Get color safely
 local function getColor(name)
     if type(name) == "string" then
@@ -1027,22 +1036,18 @@ function TooltipV2.clearCache()
     for _, cached in pairs(State.cache) do
         if cached.boxes then
             for _, boxId in pairs(cached.boxes) do
-                if boxId and registry and registry:valid(boxId) then
-                    registry:destroy(boxId)
-                end
+                safe_destroy(boxId)
             end
         end
     end
-    
+
     -- Clear active tooltips
     for anchorEntity, boxes in pairs(State.active) do
         for _, boxId in pairs(boxes) do
-            if boxId and registry and registry:valid(boxId) then
-                registry:destroy(boxId)
-            end
+            safe_destroy(boxId)
         end
     end
-    
+
     State.cache = {}
     State.active = {}
 end

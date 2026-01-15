@@ -30,28 +30,35 @@ local component_cache = require("core.component_cache")
 local entity_cache = require("core.entity_cache")
 require("ui.ui_definition_helper")
 local dsl = require("ui.ui_syntax_sugar")
-local CastExecutionGraphUI = require("ui.cast_execution_graph_ui")
-local CastBlockFlashUI = require("ui.cast_block_flash_ui")
-local WandCooldownUI = require("ui.wand_cooldown_ui")
-local SubcastDebugUI = require("ui.subcast_debug_ui")
-local MessageQueueUI = require("ui.message_queue_ui")
-local CurrencyDisplay = require("ui.currency_display")
-local TagSynergyPanel = require("ui.tag_synergy_panel")
-local AvatarJokerStrip = require("ui.avatar_joker_strip")
-local TriggerStripUI = require("ui.trigger_strip_ui")
-local LevelUpScreen = require("ui.level_up_screen")
-local HoverRegistry = require("ui.hover_registry")
-local ContentDebugPanel = require("ui.content_debug_panel")
-local CombatDebugPanel = require("ui.combat_debug_panel")
-local UIOverlayToggles = require("ui.ui_overlay_toggles")
-local EntityInspector = require("ui.entity_inspector")
-wandResourceBar = require("ui.wand_resource_bar_ui") -- global to avoid local variable limit
+
+-- UI modules consolidated to stay under Lua's 200 local variable limit
+local ui_modules = {
+    CastExecutionGraphUI = require("ui.cast_execution_graph_ui"),
+    CastBlockFlashUI = require("ui.cast_block_flash_ui"),
+    WandCooldownUI = require("ui.wand_cooldown_ui"),
+    SubcastDebugUI = require("ui.subcast_debug_ui"),
+    MessageQueueUI = require("ui.message_queue_ui"),
+    CurrencyDisplay = require("ui.currency_display"),
+    TagSynergyPanel = require("ui.tag_synergy_panel"),
+    AvatarJokerStrip = require("ui.avatar_joker_strip"),
+    TriggerStripUI = require("ui.trigger_strip_ui"),
+    LevelUpScreen = require("ui.level_up_screen"),
+    HoverRegistry = require("ui.hover_registry"),
+    ContentDebugPanel = require("ui.content_debug_panel"),
+    CombatDebugPanel = require("ui.combat_debug_panel"),
+    UIOverlayToggles = require("ui.ui_overlay_toggles"),
+    EntityInspector = require("ui.entity_inspector"),
+    WandResourceBar = require("ui.wand_resource_bar_ui"),
+    TooltipV2 = require("ui.tooltip_v2"),
+}
+wandResourceBar = ui_modules.WandResourceBar -- global alias for compatibility
+TooltipV2 = ui_modules.TooltipV2 -- global alias for compatibility
+
 local tooltip_registry = require("core.tooltip_registry")
 local StatusIndicatorSystem = require("systems.status_indicator_system")
 local MarkSystem = require("systems.mark_system")
 local C = require("core.constants")
 local CardsData = require("data.cards")
-TooltipV2 = require("ui.tooltip_v2") -- global to avoid local variable limit
 
 USE_TOOLTIP_V2 = true
 
@@ -65,6 +72,10 @@ end
 
 -- Consolidated config/state to stay under Lua's 200 local variable limit
 local gameplay_cfg = {
+    -- Signal handler management (prevents memory leaks on game restart)
+    signal_group = require("core.signal_group"),
+    handlers = nil,  -- Will be set to signal_group.new() when handlers are registered
+
     -- Required runtime state (DO NOT REMOVE)
     LEVEL_UP_MODAL_DELAY = 0.5,
     ENABLE_SURVIVOR_MASK = false,
@@ -229,36 +240,62 @@ _G.USE_GRID_INVENTORY = gameplay_cfg.USE_GRID_INVENTORY
 require("core.type_defs") -- for Node customizations
 local BaseCreateExecutionContext = WandExecutor.createExecutionContext
 
+-- Cleanup signal handlers to prevent memory leaks on game restart
+-- IMPORTANT: Call this BEFORE timer.kill_group() in resetGameToStart()
+local function cleanupGameplayHandlers()
+    if gameplay_cfg.handlers then
+        gameplay_cfg.handlers:cleanup()
+        gameplay_cfg.handlers = nil
+    end
+    -- Reset registration flags so handlers re-register on next init
+    gameplay_cfg.messageQueueHooksRegistered = false
+    gameplay_cfg.deathFlowHandlersRegistered = false
+    gameplay_cfg.bumpEnemyHandlerRegistered = false
+    gameplay_cfg.pickupHandlersRegistered = false
+    if stats_tooltip then
+        stats_tooltip.signalRegistered = false
+    end
+end
+
+-- Initialize gameplay signal handler group
+local function initGameplayHandlers()
+    if gameplay_cfg.handlers then return gameplay_cfg.handlers end
+    gameplay_cfg.handlers = gameplay_cfg.signal_group.new("gameplay_main")
+    return gameplay_cfg.handlers
+end
+
 local function ensureMessageQueueHooks()
     if gameplay_cfg.messageQueueHooksRegistered then return end
     gameplay_cfg.messageQueueHooksRegistered = true
 
+    local handlers = initGameplayHandlers()
+
     local function ensureMQ()
-        if not MessageQueueUI.isActive then
-            MessageQueueUI.init()
+        if not ui_modules.MessageQueueUI.isActive then
+            ui_modules.MessageQueueUI.init()
         end
     end
 
-    signal.register("avatar_unlocked", function(data)
+    handlers:on("avatar_unlocked", function(data)
         ensureMQ()
         local avatarId = (data and data.avatar_id) or "Unknown Avatar"
-        MessageQueueUI.enqueue(string.format("Avatar unlocked: %s", avatarId))
+        ui_modules.MessageQueueUI.enqueue(string.format("Avatar unlocked: %s", avatarId))
     end)
 
-    signal.register("tag_threshold_discovered", function(data)
+    handlers:on("tag_threshold_discovered", function(data)
         ensureMQ()
         local tag = (data and data.tag) or "Tag"
         local threshold = (data and data.threshold) or "?"
-        MessageQueueUI.enqueue(string.format("Discovery: %s x%s", tag, threshold))
+        ui_modules.MessageQueueUI.enqueue(string.format("Discovery: %s x%s", tag, threshold))
     end)
 
-    signal.register("spell_type_discovered", function(data)
+    handlers:on("spell_type_discovered", function(data)
         ensureMQ()
         local spell = (data and data.spell_type) or "Spell"
-        MessageQueueUI.enqueue(string.format("New spell type: %s", spell))
+        ui_modules.MessageQueueUI.enqueue(string.format("New spell type: %s", spell))
     end)
 
-    signal.register("deck_changed", function(data)
+    handlers:on("deck_changed", function(data)
         -- Re-evaluate tag thresholds when deck changes (shop purchases, loot, etc.)
         if reevaluateDeckTags then
             reevaluateDeckTags()
@@ -269,9 +306,9 @@ local function ensureMessageQueueHooks()
         end
     end)
 
-    signal.register("trigger_activated", function(wandId, triggerType)
-        if TriggerStripUI and TriggerStripUI.onTriggerActivated then
-            TriggerStripUI.onTriggerActivated(wandId, triggerType)
+    handlers:on("trigger_activated", function(wandId, triggerType)
+        if ui_modules.TriggerStripUI and ui_modules.TriggerStripUI.onTriggerActivated then
+            ui_modules.TriggerStripUI.onTriggerActivated(wandId, triggerType)
         end
     end)
 end
@@ -1297,7 +1334,7 @@ local damageNumbers               = {}                                 -- active
 local spawnExpPickupAt            -- forward declaration
 
 local function isLevelUpModalActive()
-    return LevelUpScreen and LevelUpScreen.isActive
+    return ui_modules.LevelUpScreen and ui_modules.LevelUpScreen.isActive
 end
 
 local function kickAimSpring()
@@ -3472,11 +3509,10 @@ function setUpLogicTimers()
         end
     end
 
-    if signal.exists("on_bump_enemy") == false then
-        signal.register(
-            "on_bump_enemy",
-            on_bump_enemy_handler
-        )
+    if not gameplay_cfg.bumpEnemyHandlerRegistered then
+        gameplay_cfg.bumpEnemyHandlerRegistered = true
+        local handlers = initGameplayHandlers()
+        handlers:on("on_bump_enemy", on_bump_enemy_handler)
     end
 
     -- check the trigger board
@@ -3506,17 +3542,17 @@ function setUpLogicTimers()
                                         -- bail if current action board has no cards
                                         local currentSet = board_sets[current_board_set_index]
                                         if not currentSet then
-                                            CastExecutionGraphUI.clear()
+                                            ui_modules.CastExecutionGraphUI.clear()
                                             return
                                         end
                                         local actionBoardID = currentSet.action_board_id
                                         if not actionBoardID or actionBoardID == entt_null or not entity_cache.valid(actionBoardID) then
-                                            CastExecutionGraphUI.clear()
+                                            ui_modules.CastExecutionGraphUI.clear()
                                             return
                                         end
                                         local actionBoard = boards[actionBoardID]
                                         if not actionBoard or not actionBoard.cards or #actionBoard.cards == 0 then
-                                            CastExecutionGraphUI.clear()
+                                            ui_modules.CastExecutionGraphUI.clear()
                                             return
                                         end
 
@@ -3543,10 +3579,10 @@ function setUpLogicTimers()
                                         local simulatedResult = WandEngine.simulate_wand(currentSet.wandDef, deck)
 
                                         if simulatedResult and simulatedResult.blocks then
-                                            CastExecutionGraphUI.render(simulatedResult.blocks,
+                                            ui_modules.CastExecutionGraphUI.render(simulatedResult.blocks,
                                                 { wandId = currentSet.wandDef.id, title = localization.get("ui.execution_preview_title") })
                                         else
-                                            CastExecutionGraphUI.clear()
+                                            ui_modules.CastExecutionGraphUI.clear()
                                             return
                                         end
 
@@ -4812,17 +4848,17 @@ function initPlanningPhase()
 
     local CastFeedUI = require "ui.cast_feed_ui"
     CastFeedUI.init()
-    SubcastDebugUI.init()
-    MessageQueueUI.init()
-    CurrencyDisplay.init({ amount = globals.currency or 0 })
-    TagSynergyPanel.init({
+    ui_modules.SubcastDebugUI.init()
+    ui_modules.MessageQueueUI.init()
+    ui_modules.CurrencyDisplay.init({ amount = globals.currency or 0 })
+    ui_modules.TagSynergyPanel.init({
         breakpoints = TagEvaluator.get_breakpoints(),
         layout = { marginX = 24, marginTop = 18, panelWidth = 360 }
     })
-    AvatarJokerStrip.init({ margin = 20 })
-    TriggerStripUI.init()
+    ui_modules.AvatarJokerStrip.init({ margin = 20 })
+    ui_modules.TriggerStripUI.init()
 
-    MessageQueueUI.enqueueTest()
+    ui_modules.MessageQueueUI.enqueueTest()
     
     -- Changed from timer.run() to timer.run_every_render_frame() to fix flickering
     -- timer.run() executes during fixed timestep which may skip frames
@@ -4835,25 +4871,25 @@ function initPlanningPhase()
         end
 
         -- if MessageQueueUI and is_state_active and (is_state_active(PLANNING_STATE) or is_state_active(ACTION_STATE)) then
-            MessageQueueUI.update(dt)
-            MessageQueueUI.draw()
+            ui_modules.MessageQueueUI.update(dt)
+            ui_modules.MessageQueueUI.draw()
         -- end
 
-        if WandCooldownUI and is_state_active and is_state_active(ACTION_STATE) then
-            WandCooldownUI.update(dt)
-            WandCooldownUI.draw()
+        if ui_modules.WandCooldownUI and is_state_active and is_state_active(ACTION_STATE) then
+            ui_modules.WandCooldownUI.update(dt)
+            ui_modules.WandCooldownUI.draw()
         end
 
-        if CastBlockFlashUI and CastBlockFlashUI.isActive and is_state_active and is_state_active(ACTION_STATE) then
-            CastBlockFlashUI.update(dt)
-            CastBlockFlashUI.draw()
+        if ui_modules.CastBlockFlashUI and ui_modules.CastBlockFlashUI.isActive and is_state_active and is_state_active(ACTION_STATE) then
+            ui_modules.CastBlockFlashUI.update(dt)
+            ui_modules.CastBlockFlashUI.draw()
         end
 
-        if CurrencyDisplay and CurrencyDisplay.isActive and is_state_active
+        if ui_modules.CurrencyDisplay and ui_modules.CurrencyDisplay.isActive and is_state_active
             and (is_state_active(PLANNING_STATE) or is_state_active(SHOP_STATE)) then
-            CurrencyDisplay.setAmount(globals.currency or 0)
-            CurrencyDisplay.update(dt)
-            CurrencyDisplay.draw()
+            ui_modules.CurrencyDisplay.setAmount(globals.currency or 0)
+            ui_modules.CurrencyDisplay.update(dt)
+            ui_modules.CurrencyDisplay.draw()
         end
 
         do
@@ -4880,17 +4916,17 @@ function initPlanningPhase()
             end
         end
 
-        if TagSynergyPanel and TagSynergyPanel.isActive and is_state_active
+        if ui_modules.TagSynergyPanel and ui_modules.TagSynergyPanel.isActive and is_state_active
             and is_state_active(PLANNING_STATE) then
-            TagSynergyPanel.update(dt)
-            TagSynergyPanel.draw()
+            ui_modules.TagSynergyPanel.update(dt)
+            ui_modules.TagSynergyPanel.draw()
 
             -- Update synergy panel button visual feedback based on visibility
             local synergyButton = planningUIEntities and planningUIEntities.synergy_toggle_button
             if synergyButton and entity_cache.valid(synergyButton) then
                 local config = component_cache.get(synergyButton, UIConfig)
                 if config then
-                    local isVisible = TagSynergyPanel.isVisible()
+                    local isVisible = ui_modules.TagSynergyPanel.isVisible()
                     local targetColor = isVisible and util.getColor("apricot") or util.getColor("gray")
                     config.color = targetColor
                 end
@@ -4902,22 +4938,22 @@ function initPlanningPhase()
         end
 
         -- Update execution graph slide animation
-        if CastExecutionGraphUI and is_state_active and is_state_active(PLANNING_STATE) then
-            CastExecutionGraphUI.updateSlide(dt)
+        if ui_modules.CastExecutionGraphUI and is_state_active and is_state_active(PLANNING_STATE) then
+            ui_modules.CastExecutionGraphUI.updateSlide(dt)
 
             -- Update execution graph button visual feedback based on visibility
             local execGraphButton = planningUIEntities and planningUIEntities.exec_graph_toggle_button
             if execGraphButton and entity_cache.valid(execGraphButton) then
                 local config = component_cache.get(execGraphButton, UIConfig)
                 if config then
-                    local isVisible = CastExecutionGraphUI.isVisible()
+                    local isVisible = ui_modules.CastExecutionGraphUI.isVisible()
                     local targetColor = isVisible and util.getColor("apricot") or util.getColor("gray")
                     config.color = targetColor
                 end
             end
         end
 
-        if AvatarJokerStrip and AvatarJokerStrip.isActive and is_state_active
+        if ui_modules.AvatarJokerStrip and ui_modules.AvatarJokerStrip.isActive and is_state_active
             and (is_state_active(PLANNING_STATE) or is_state_active(ACTION_STATE) or is_state_active(SHOP_STATE)) then
             local playerTarget = nil
             if getTagEvaluationTargets then
@@ -4927,25 +4963,25 @@ function initPlanningPhase()
             end
             -- Only sync if we have a valid player with avatar_state
             if playerTarget and playerTarget.avatar_state then
-                AvatarJokerStrip.syncFrom(playerTarget)
+                ui_modules.AvatarJokerStrip.syncFrom(playerTarget)
             end
-            AvatarJokerStrip.update(dt)
-            AvatarJokerStrip.draw()
+            ui_modules.AvatarJokerStrip.update(dt)
+            ui_modules.AvatarJokerStrip.draw()
         end
 
-        if TriggerStripUI and is_state_active and is_state_active(ACTION_STATE) then
-            TriggerStripUI.update(dt)
-            TriggerStripUI.draw()
+        if ui_modules.TriggerStripUI and is_state_active and is_state_active(ACTION_STATE) then
+            ui_modules.TriggerStripUI.update(dt)
+            ui_modules.TriggerStripUI.draw()
         end
 
-        if SubcastDebugUI and is_state_active and is_state_active(ACTION_STATE) then
-            SubcastDebugUI.update(dt)
-            SubcastDebugUI.draw()
+        if ui_modules.SubcastDebugUI and is_state_active and is_state_active(ACTION_STATE) then
+            ui_modules.SubcastDebugUI.update(dt)
+            ui_modules.SubcastDebugUI.draw()
         end
 
-        if LevelUpScreen and LevelUpScreen.isActive then
-            LevelUpScreen.update(dt)
-            LevelUpScreen.draw()
+        if ui_modules.LevelUpScreen and ui_modules.LevelUpScreen.isActive then
+            ui_modules.LevelUpScreen.update(dt)
+            ui_modules.LevelUpScreen.draw()
         end
 
         -- Update combat systems
@@ -4964,7 +5000,7 @@ function initPlanningPhase()
         end
 
         -- Process hover regions after all UIs have registered
-        HoverRegistry.update()
+        ui_modules.HoverRegistry.update()
     end)
 
     -- let's bind d-pad input to switch between cards, and A to select.
@@ -5323,8 +5359,8 @@ function initPlanningPhase()
 
     -- Leave space for the synergy panel on the right during planning.
     local synergyPanelReserve = 300
-    if TagSynergyPanel and TagSynergyPanel.layout then
-        local layout = TagSynergyPanel.layout
+    if ui_modules.TagSynergyPanel and ui_modules.TagSynergyPanel.layout then
+        local layout = ui_modules.TagSynergyPanel.layout
         synergyPanelReserve = math.max(synergyPanelReserve, (layout.panelWidth or 0) + (layout.marginX or 0))
     end
 
@@ -5705,6 +5741,24 @@ end
 
 -- Reset game to starting state for new run
 local function resetGameToStart()
+    -- CRITICAL: Cleanup signal handlers FIRST (before timer cleanup)
+    -- This prevents memory leaks from accumulated handlers on restart
+    cleanupGameplayHandlers()
+
+    -- Cleanup external module signal handlers
+    local ok, CastFeedUI = pcall(require, "ui.cast_feed_ui")
+    if ok and CastFeedUI and CastFeedUI.unsubscribe then
+        CastFeedUI.unsubscribe()
+    end
+
+    local ok2, PlayerInventory = pcall(require, "ui.player_inventory")
+    if ok2 and PlayerInventory and PlayerInventory.cleanupSignalHandlers then
+        PlayerInventory.cleanupSignalHandlers()
+    end
+
+    -- WaveDirector cleanup is called separately via its own cleanup() function
+    -- which includes handler cleanup
+
     -- Reset death guard so player can die again in new run
     gameplay_cfg.isPlayerDying = false
     log_debug("[gameplay] Resetting game to start...")
@@ -5931,11 +5985,11 @@ local function resetGameToStart()
     end
 
     -- 7. Reset UI systems
-    if CastBlockFlashUI and CastBlockFlashUI.clear then
-        CastBlockFlashUI.clear()
+    if ui_modules.CastBlockFlashUI and ui_modules.CastBlockFlashUI.clear then
+        ui_modules.CastBlockFlashUI.clear()
     end
-    if SubcastDebugUI and SubcastDebugUI.clear then
-        SubcastDebugUI.clear()
+    if ui_modules.SubcastDebugUI and ui_modules.SubcastDebugUI.clear then
+        ui_modules.SubcastDebugUI.clear()
     end
 
     -- 8. Clear combat context (enemies and accumulated state)
@@ -6058,43 +6112,54 @@ end
 -- PLAYER DEATH FLOW SIGNALS
 -- ============================================================================
 
--- Handle player death - trigger animation
-signal.register("player_died", function(playerEntity)
-    log_debug("[gameplay] Player died - starting death animation")
-    playPlayerDeathAnimation(playerEntity, function()
-        log_debug("[gameplay] Death animation complete")
-        -- Animation complete callback - state machine handles transition to GAME_OVER
-    end)
-end)
+-- Initialize death flow handlers (called once on game init)
+local function initDeathFlowHandlers()
+    if gameplay_cfg.deathFlowHandlersRegistered then return end
+    gameplay_cfg.deathFlowHandlersRegistered = true
 
--- Handle game over - show death screen
-signal.register("show_death_screen", function()
-    log_debug("[gameplay] Showing death screen")
-    gameplay_cfg.getDeathScreen().show()
-end)
+    local handlers = initGameplayHandlers()
 
--- Handle restart request - fade and reset
-signal.register("restart_game", function()
-    log_debug("[gameplay] Restart requested - fading to black")
-    local timer = require("core.timer")
-
-    -- Simple fade to black (if fade system exists)
-    if fadeToBlack then
-        fadeToBlack(0.5, function()
-            resetGameToStart()
-            fadeFromBlack(0.5)
+    -- Handle player death - trigger animation
+    handlers:on("player_died", function(playerEntity)
+        log_debug("[gameplay] Player died - starting death animation")
+        playPlayerDeathAnimation(playerEntity, function()
+            log_debug("[gameplay] Death animation complete")
+            -- Animation complete callback - state machine handles transition to GAME_OVER
         end)
-    else
-        -- No fade system - just reset immediately
-        timer.after_opts({
-            delay = 0.1,
-            action = function()
+    end)
+
+    -- Handle game over - show death screen
+    handlers:on("show_death_screen", function()
+        log_debug("[gameplay] Showing death screen")
+        gameplay_cfg.getDeathScreen().show()
+    end)
+
+    -- Handle restart request - fade and reset
+    handlers:on("restart_game", function()
+        log_debug("[gameplay] Restart requested - fading to black")
+        local timer = require("core.timer")
+
+        -- Simple fade to black (if fade system exists)
+        if fadeToBlack then
+            fadeToBlack(0.5, function()
                 resetGameToStart()
-            end,
-            tag = "restart_delay"
-        })
-    end
-end)
+                fadeFromBlack(0.5)
+            end)
+        else
+            -- No fade system - just reset immediately
+            timer.after_opts({
+                delay = 0.1,
+                action = function()
+                    resetGameToStart()
+                end,
+                tag = "restart_delay"
+            })
+        end
+    end)
+end
+
+-- Register death flow handlers on module load
+initDeathFlowHandlers()
 
 function initCombatSystem()
     -- init combat system.
@@ -6191,12 +6256,12 @@ function initCombatSystem()
         timer.after_opts({
             delay = 0.5,
             action = function()
-                if AvatarJokerStrip and AvatarJokerStrip.isActive and AvatarJokerStrip.syncFrom then
+                if ui_modules.AvatarJokerStrip and ui_modules.AvatarJokerStrip.isActive and ui_modules.AvatarJokerStrip.syncFrom then
                     log_debug("[Avatar] Syncing avatar strip with captured player")
                     log_debug("[Avatar] capturedPlayer.avatar_state.equipped =", capturedPlayer and capturedPlayer.avatar_state and capturedPlayer.avatar_state.equipped)
-                    AvatarJokerStrip.syncFrom(capturedPlayer)
+                    ui_modules.AvatarJokerStrip.syncFrom(capturedPlayer)
                 else
-                    log_debug("[Avatar] Avatar strip not ready: isActive=", AvatarJokerStrip and AvatarJokerStrip.isActive)
+                    log_debug("[Avatar] Avatar strip not ready: isActive=", ui_modules.AvatarJokerStrip and ui_modules.AvatarJokerStrip.isActive)
                 end
             end,
             tag = "debug_avatar_sync"
@@ -7287,7 +7352,7 @@ if gameplay_cfg.auto_action_env and timer and timer.after then
         else
             print("[DEBUG ACTION] AUTO_ACTION_PHASE fallback: startActionPhase not available")
         end
-    end)
+    end, "auto_action_fallback", "debug_timers")
 end
 
 updateWandResourceBar = function()
@@ -7359,12 +7424,12 @@ reevaluateDeckTags = function()
     if not playerTarget then return end
 
     TagEvaluator.evaluate_and_apply(playerTarget, deckSnapshot, combat_context)
-    if TagSynergyPanel and TagSynergyPanel.isActive then
-        TagSynergyPanel.setData(playerTarget.tag_counts, TagEvaluator.get_breakpoints())
+    if ui_modules.TagSynergyPanel and ui_modules.TagSynergyPanel.isActive then
+        ui_modules.TagSynergyPanel.setData(playerTarget.tag_counts, TagEvaluator.get_breakpoints())
     end
-    if AvatarJokerStrip and AvatarJokerStrip.isActive and playerScript and playerScript.avatar_state then
+    if ui_modules.AvatarJokerStrip and ui_modules.AvatarJokerStrip.isActive and playerScript and playerScript.avatar_state then
         -- Use playerScript (has avatar_state), not playerTarget (may be combatTable)
-        AvatarJokerStrip.syncFrom(playerScript)
+        ui_modules.AvatarJokerStrip.syncFrom(playerScript)
     end
 
     if playerScript and playerTarget ~= playerScript then
@@ -7775,7 +7840,7 @@ function startActionPhase()
     end
 
     -- Clean up planning phase UI elements to prevent flicker
-    CastExecutionGraphUI.clear()
+    ui_modules.CastExecutionGraphUI.clear()
     wandResourceBar.hide()
 
     if record_telemetry then
@@ -7850,8 +7915,8 @@ function startActionPhase()
     logBoardSetStatus("startActionPhase after wand load")
     
     local cast_ok, cast_err = pcall(function()
-        CastBlockFlashUI.clear()  -- Clear before init to prevent duplicate items
-        CastBlockFlashUI.init()
+        ui_modules.CastBlockFlashUI.clear()  -- Clear before init to prevent duplicate items
+        ui_modules.CastBlockFlashUI.init()
     end)
     if not cast_ok then
         print("[DEBUG ACTION] ERROR in CastBlockFlashUI: " .. tostring(cast_err))
@@ -7859,9 +7924,9 @@ function startActionPhase()
         print("[DEBUG ACTION] CastBlockFlashUI initialized")
     end
     
-    local trigger_ok, trigger_err = pcall(function() TriggerStripUI.show() end)
+    local trigger_ok, trigger_err = pcall(function() ui_modules.TriggerStripUI.show() end)
     if not trigger_ok then
-        print("[DEBUG ACTION] ERROR in TriggerStripUI.show: " .. tostring(trigger_err))
+        print("[DEBUG ACTION] ERROR in ui_modules.TriggerStripUI.show: " .. tostring(trigger_err))
     else
         print("[DEBUG ACTION] TriggerStripUI shown")
     end
@@ -7944,10 +8009,10 @@ function startPlanningPhase()
 	    end
 	    WandExecutor.cleanup()
 	    entity_cache.clear()
-	    CastBlockFlashUI.clear()
-	    SubcastDebugUI.clear()
-	    SubcastDebugUI.init()
-	    TriggerStripUI.hide()
+	    ui_modules.CastBlockFlashUI.clear()
+	    ui_modules.SubcastDebugUI.clear()
+	    ui_modules.SubcastDebugUI.init()
+	    ui_modules.TriggerStripUI.hide()
 	    if StatusIndicatorSystem and StatusIndicatorSystem.cleanup then
 	        StatusIndicatorSystem.cleanup()
 	    end
@@ -8433,7 +8498,7 @@ if gameplay_cfg.debugQuickAccessState.lastMessage then
         ImGui.Separator()
         ImGui.Text("Debug Panels")
         if ImGui.Button("Toggle Entity Inspector") then
-            EntityInspector.toggle()
+            ui_modules.EntityInspector.toggle()
         end
     end
     ImGui.End() -- Must be called even if Begin() returns false
@@ -8441,23 +8506,23 @@ if gameplay_cfg.debugQuickAccessState.lastMessage then
     renderCardSpawnerDebugUI()
 
     -- Content Debug Panel (Jokers, Projectiles, Tags)
-    if ContentDebugPanel and ContentDebugPanel.render then
-        ContentDebugPanel.render()
+    if ui_modules.ContentDebugPanel and ui_modules.ContentDebugPanel.render then
+        ui_modules.ContentDebugPanel.render()
     end
 
     -- Combat Debug Panel (Stats, Combat, Defense, etc.)
-    if CombatDebugPanel and CombatDebugPanel.render then
-        CombatDebugPanel.render()
+    if ui_modules.CombatDebugPanel and ui_modules.CombatDebugPanel.render then
+        ui_modules.CombatDebugPanel.render()
     end
 
     -- UI Overlay Toggles (visibility controls for action mode overlays)
-    if UIOverlayToggles and UIOverlayToggles.render then
-        UIOverlayToggles.render()
+    if ui_modules.UIOverlayToggles and ui_modules.UIOverlayToggles.render then
+        ui_modules.UIOverlayToggles.render()
     end
 
     -- Entity Inspector Panel (inspect entity components at runtime)
-    if EntityInspector and EntityInspector.render then
-        EntityInspector.render()
+    if ui_modules.EntityInspector and ui_modules.EntityInspector.render then
+        ui_modules.EntityInspector.render()
     end
 end
 
@@ -8967,17 +9032,51 @@ function initSurvivorEntity()
         context = "gameplay"
     })
 
-    signal.register("player_level_up", function()
-        log_debug("Player leveled up!")
-        playSoundEffect("effects", "level_up", 1.0)
-        local playerScript = getScriptTableFromEntityID(survivorEntity)
-        timer.after(gameplay_cfg.LEVEL_UP_MODAL_DELAY, function()
-            LevelUpScreen.push({
-                playerEntity = survivorEntity,
-                actor = playerScript and playerScript.combatTable
-            })
-        end, "level_up_modal_delay")
-    end)
+    -- Register pickup/level handlers once (guarded to prevent accumulation on restart)
+    if not gameplay_cfg.pickupHandlersRegistered then
+        gameplay_cfg.pickupHandlersRegistered = true
+        local handlers = initGameplayHandlers()
+
+        handlers:on("player_level_up", function()
+            log_debug("Player leveled up!")
+            playSoundEffect("effects", "level_up", 1.0)
+            local playerScript = getScriptTableFromEntityID(survivorEntity)
+            timer.after(gameplay_cfg.LEVEL_UP_MODAL_DELAY, function()
+                ui_modules.LevelUpScreen.push({
+                    playerEntity = survivorEntity,
+                    actor = playerScript and playerScript.combatTable
+                })
+            end, "level_up_modal_delay")
+        end)
+
+        handlers:on("on_pickup", function(pickupEntity)
+            log_debug("Survivor picked up entity", pickupEntity)
+
+            local playerScript = getScriptTableFromEntityID(survivorEntity)
+
+            if not playerScript or not playerScript.combatTable then
+                log_debug("No combat table on player, cannot grant exp!")
+                return
+            end
+
+            playSoundEffect("effects", "gain_exp_pickup", 1.0)
+
+            CombatSystem.Game.Leveling.grant_exp(combat_context, playerScript.combatTable, 50) -- grant 20 exp per pickup
+
+            -- tug the exp bar spring
+            if expBarScaleSpringEntity and entity_cache.valid(expBarScaleSpringEntity) then
+                local expBarSpringRef = spring.get(registry, expBarScaleSpringEntity)
+                if expBarSpringRef then
+                    expBarSpringRef:pull(0.15, 120.0, 14.0)
+                end
+            end
+
+            local playerT = component_cache.get(survivorEntity, Transform)
+            if playerT then
+                playerT.visualS = 1.5
+            end
+        end)
+    end
 
 
     -- lets run every physics frame, detecting for magnet radus
@@ -9028,36 +9127,6 @@ function initSurvivorEntity()
         "player_magnet_detection", nil
     )
 
-    -- let's register signal listeners
-    signal.register("on_pickup", function(pickupEntity)
-        log_debug("Survivor picked up entity", pickupEntity)
-
-        local playerScript = getScriptTableFromEntityID(survivorEntity)
-
-        if not playerScript or not playerScript.combatTable then
-            log_debug("No combat table on player, cannot grant exp!")
-            return
-        end
-
-        playSoundEffect("effects", "gain_exp_pickup", 1.0)
-
-        CombatSystem.Game.Leveling.grant_exp(combat_context, playerScript.combatTable, 50) -- grant 20 exp per pickup
-
-        -- tug the exp bar spring
-        if expBarScaleSpringEntity and entity_cache.valid(expBarScaleSpringEntity) then
-            local expBarSpringRef = spring.get(registry, expBarScaleSpringEntity)
-            if expBarSpringRef then
-                expBarSpringRef:pull(0.15, 120.0, 14.0)
-            end
-        end
-
-        local playerT = component_cache.get(survivorEntity, Transform)
-        if playerT then
-            playerT.visualS = 1.5
-        end
-
-        --TODo: this is just a test.
-    end)
 end
 
 function ensureShopSystemInitialized()
@@ -9283,8 +9352,8 @@ function tryPurchaseAvatar(avatarId)
     globals.shopState.avatarPurchases[avatarId] = true
     AvatarSystem.equip(playerTarget, avatarId)
 
-    if AvatarJokerStrip and AvatarJokerStrip.syncFrom then
-        AvatarJokerStrip.syncFrom(playerTarget)
+    if ui_modules.AvatarJokerStrip and ui_modules.AvatarJokerStrip.syncFrom then
+        ui_modules.AvatarJokerStrip.syncFrom(playerTarget)
     end
 
     playSoundEffect("effects", "shop-buy")
@@ -9588,11 +9657,11 @@ end
 
 function initActionPhase()
     
-    LevelUpScreen.init()
+    ui_modules.LevelUpScreen.init()
     
     local CastFeedUI = require("ui.cast_feed_ui")
-    if not MessageQueueUI.isActive then
-        MessageQueueUI.init()
+    if not ui_modules.MessageQueueUI.isActive then
+        ui_modules.MessageQueueUI.init()
     end
     ensureMessageQueueHooks()
     if gameplay_cfg.DEBUG_AVATAR_TEST_EVENTS then
@@ -9615,9 +9684,9 @@ function initActionPhase()
 
     -- Initialize CastFeedUI
     CastFeedUI.init()
-    WandCooldownUI.init()
-    SubcastDebugUI.init()
-    TriggerStripUI.show()
+    ui_modules.WandCooldownUI.init()
+    ui_modules.SubcastDebugUI.init()
+    ui_modules.TriggerStripUI.show()
     
     -- Demo polish UIs
     local DemoFooterUI = gameplay_cfg.getDemoFooterUI()
@@ -10689,7 +10758,7 @@ function initPlanningUI()
             :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER))
             :addButtonCallback(function()
                 playSoundEffect("effects", "button-click")
-                TagSynergyPanel.toggle()
+                ui_modules.TagSynergyPanel.toggle()
             end)
             :build()
         )
@@ -10732,7 +10801,7 @@ function initPlanningUI()
     -- Set button bounds for click-outside exclusion
     local buttonTransform = component_cache.get(planningUIEntities.synergy_button_box, Transform)
     if buttonTransform then
-        TagSynergyPanel.setToggleButtonBounds({
+        ui_modules.TagSynergyPanel.setToggleButtonBounds({
             x = buttonTransform.actualX or synergyPosX,
             y = buttonTransform.actualY or synergyPosY,
             w = buttonTransform.actualW or 100,
@@ -10754,13 +10823,13 @@ function initPlanningUI()
             :addMinWidth(80)
             :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER))
             :addButtonCallback(function()
-                if CastExecutionGraphUI.toggleFromButton then
-                    if CastExecutionGraphUI.toggleFromButton() then
+                if ui_modules.CastExecutionGraphUI.toggleFromButton then
+                    if ui_modules.CastExecutionGraphUI.toggleFromButton() then
                         playSoundEffect("effects", "button-click")
                     end
                 else
                     playSoundEffect("effects", "button-click")
-                    CastExecutionGraphUI.toggle()
+                    ui_modules.CastExecutionGraphUI.toggle()
                 end
             end)
             :build()
@@ -10780,7 +10849,7 @@ function initPlanningUI()
         :build()
 
     local AvatarJokerStrip = require("ui.avatar_joker_strip")
-    local panelTopY = AvatarJokerStrip.getPanelTopY() or (globals.screenHeight() - 120)
+    local panelTopY = ui_modules.AvatarJokerStrip.getPanelTopY() or (globals.screenHeight() - 120)
     local execGraphPosX = 32
     local execGraphPosY = panelTopY - 50
     planningUIEntities.exec_graph_button_box = ui.box.Initialize({ x = execGraphPosX, y = execGraphPosY }, execGraphRoot)
@@ -10812,7 +10881,7 @@ function initPlanningUI()
         and planningUIEntities.exec_graph_toggle_button ~= entt_null then
         execGraphBoundsEntity = planningUIEntities.exec_graph_toggle_button
     end
-    CastExecutionGraphUI.setToggleButtonBounds(
+    ui_modules.CastExecutionGraphUI.setToggleButtonBounds(
         {
             x = execGraphButtonTransform and execGraphButtonTransform.actualX or execGraphPosX,
             y = execGraphButtonTransform and execGraphButtonTransform.actualY or execGraphPosY,
@@ -10827,7 +10896,9 @@ function initPlanningUI()
     )
 
     if not stats_tooltip.signalRegistered then
-        signal.register("stats_recomputed", function(payload)
+        stats_tooltip.signalRegistered = true
+        local handlers = initGameplayHandlers()
+        handlers:on("stats_recomputed", function(payload)
             local ctx = combat_context
             local playerActor = ctx and ctx.side1 and ctx.side1[1]
             if not playerActor then return end
@@ -10843,7 +10914,6 @@ function initPlanningUI()
             local detailedAnchor = planningUIEntities and planningUIEntities.player_stats_detailed_button
             refreshDetailedStatsTooltip(detailedAnchor or anchor)
         end)
-        stats_tooltip.signalRegistered = true
     end
 
     planningUIEntities.wand_buttons = {}

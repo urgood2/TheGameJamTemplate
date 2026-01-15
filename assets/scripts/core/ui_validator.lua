@@ -254,4 +254,59 @@ function UIValidator.checkContainment(entity)
     return violations
 end
 
+---Get window bounds
+---@return table {x, y, w, h}
+function UIValidator.getWindowBounds()
+    local w = globals and globals.screenWidth or 1280
+    local h = globals and globals.screenHeight or 720
+    return { x = 0, y = 0, w = w, h = h }
+end
+
+---Check if bounds are inside window
+---@param entityId string|number Entity identifier
+---@param bounds table {x, y, w, h}
+---@param windowBounds? table {x, y, w, h} Optional custom window bounds
+---@return table[] violations
+function UIValidator.checkWindowBoundsWithBounds(entityId, bounds, windowBounds)
+    local violations = {}
+    windowBounds = windowBounds or UIValidator.getWindowBounds()
+
+    if not isContained(
+        windowBounds.x, windowBounds.y, windowBounds.w, windowBounds.h,
+        bounds.x, bounds.y, bounds.w, bounds.h
+    ) then
+        table.insert(violations, {
+            type = "window_bounds",
+            severity = severities.window_bounds,
+            entity = entityId,
+            message = string.format(
+                "Entity %s outside window bounds (entity: %d,%d %dx%d, window: %d,%d %dx%d)",
+                tostring(entityId),
+                bounds.x, bounds.y, bounds.w, bounds.h,
+                windowBounds.x, windowBounds.y, windowBounds.w, windowBounds.h
+            ),
+        })
+    end
+
+    return violations
+end
+
+---Check window bounds rule for a UI entity tree
+---@param entity number Root entity ID
+---@return table[] violations
+function UIValidator.checkWindowBounds(entity)
+    local violations = {}
+    local windowBounds = UIValidator.getWindowBounds()
+
+    local allBounds = UIValidator.getAllBounds(entity)
+    for ent, bounds in pairs(allBounds) do
+        local v = UIValidator.checkWindowBoundsWithBounds(ent, bounds, windowBounds)
+        for _, violation in ipairs(v) do
+            table.insert(violations, violation)
+        end
+    end
+
+    return violations
+end
+
 return UIValidator

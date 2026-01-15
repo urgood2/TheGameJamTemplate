@@ -136,3 +136,39 @@ TestRunner.describe("UIValidator Containment Rule", function()
     end)
 
 end)
+
+TestRunner.describe("UIValidator Window Bounds Rule", function()
+
+    TestRunner.it("checkWindowBounds returns no violations for UI inside window", function()
+        local UIValidator = require("core.ui_validator")
+        local dsl = require("ui.ui_syntax_sugar")
+
+        -- Small UI in center of screen
+        local ui = dsl.root {
+            config = { padding = 10, minWidth = 100, minHeight = 100 },
+            children = {}
+        }
+        local entity = dsl.spawn({ x = 200, y = 200 }, ui)
+
+        local violations = UIValidator.checkWindowBounds(entity)
+
+        TestRunner.assert_not_nil(violations, "should return violations array")
+        TestRunner.assert_equals(0, #violations, "should have no violations for UI inside window")
+
+        dsl.remove(entity)
+    end)
+
+    TestRunner.it("checkWindowBounds detects UI outside window", function()
+        local UIValidator = require("core.ui_validator")
+
+        -- Mock bounds outside window (assuming 1280x720 window)
+        local mockBounds = { x = 1300, y = 100, w = 100, h = 100 }
+        local windowBounds = { x = 0, y = 0, w = 1280, h = 720 }
+
+        local violations = UIValidator.checkWindowBoundsWithBounds("test_entity", mockBounds, windowBounds)
+
+        TestRunner.assert_true(#violations > 0, "should detect UI outside window")
+        TestRunner.assert_equals("window_bounds", violations[1].type, "violation type should be window_bounds")
+    end)
+
+end)

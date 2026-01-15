@@ -789,13 +789,13 @@ local function createStatPill(statKey, snapshot, opts)
     end
     
     local children = {
-        dsl.text(label .. ":", {
+        dsl.strict.text(label .. ":", {
             fontSize = PILL_FONT_SIZE,
             color = labelColor,
             shadow = false,
         }),
-        dsl.spacer(4),
-        dsl.text(baseFormatted, {
+        dsl.strict.spacer(4),
+        dsl.strict.text(baseFormatted, {
             fontSize = PILL_FONT_SIZE,
             color = valueColor,
             shadow = false,
@@ -809,8 +809,8 @@ local function createStatPill(statKey, snapshot, opts)
             local deltaStr = formatDelta(delta)
             if deltaStr then
                 local deltaColor = delta > 0 and "mint_green" or "fiery_red"
-                table.insert(children, dsl.spacer(2))
-                table.insert(children, dsl.text(deltaStr, {
+                table.insert(children, dsl.strict.spacer(2))
+                table.insert(children, dsl.strict.text(deltaStr, {
                     fontSize = PILL_FONT_SIZE - 2,
                     color = deltaColor,
                     shadow = false,
@@ -821,7 +821,7 @@ local function createStatPill(statKey, snapshot, opts)
     
     local tooltipBody = buildStatTooltipBody(statKey, value, snapshot)
     
-    return dsl.hbox {
+    return dsl.strict.hbox {
         config = {
             id = "stat_pill_" .. statKey,
             padding = 3,
@@ -843,7 +843,7 @@ local function createSectionHeader(sectionId, title, isExpanded, onToggle)
     -- Use simple ASCII arrows instead of unicode (unicode can render too large)
     local icon = isExpanded and "- " or "+ "
     
-    return dsl.hbox {
+    return dsl.strict.hbox {
         config = {
             padding = 4,
             color = getColors().section_bg,
@@ -853,7 +853,7 @@ local function createSectionHeader(sectionId, title, isExpanded, onToggle)
             hover = true,
         },
         children = {
-            dsl.text(icon .. title, {
+            dsl.strict.text(icon .. title, {
                 fontSize = HEADER_FONT_SIZE,
                 color = "apricot_cream",
                 shadow = true,
@@ -871,7 +871,7 @@ local function createTabBar(currentTab, onTabChange)
         local bgColor = isActive and getColors().tab_active or getColors().tab_inactive
         local textColor = isActive and "apricot_cream" or "gray"
         
-        table.insert(children, dsl.hbox {
+        table.insert(children, dsl.strict.hbox {
             config = {
                 padding = 3,
                 color = bgColor,
@@ -882,7 +882,7 @@ local function createTabBar(currentTab, onTabChange)
                 align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
             },
             children = {
-                dsl.text(tab.label, {
+                dsl.strict.text(tab.label, {
                     fontSize = 11,
                     color = textColor,
                     shadow = isActive,
@@ -891,7 +891,7 @@ local function createTabBar(currentTab, onTabChange)
         })
     end
     
-    return dsl.hbox {
+    return dsl.strict.hbox {
         config = {
             padding = 2,
             color = getColors().tab_bar_bg,
@@ -906,13 +906,13 @@ end
 --------------------------------------------------------------------------------
 
 local function buildTier1GroupHeader(title)
-    return dsl.hbox {
+    return dsl.strict.hbox {
         config = {
             padding = 2,
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
         },
         children = {
-            dsl.text(title, {
+            dsl.strict.text(title, {
                 fontSize = 10,
                 color = "gray",
                 shadow = false,
@@ -939,13 +939,13 @@ local function buildTier1Section(snapshot)
                 totalPills = totalPills + 1
                 table.insert(statsRow, pill)
                 if i < #group.stats then
-                    table.insert(statsRow, dsl.spacer(4))
+                    table.insert(statsRow, dsl.strict.spacer(4))
                 end
             end
         end
         
         if #statsRow > 0 then
-            table.insert(groupChildren, dsl.hbox {
+            table.insert(groupChildren, dsl.strict.hbox {
                 config = {
                     padding = 2,
                     align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
@@ -953,14 +953,14 @@ local function buildTier1Section(snapshot)
                 children = statsRow,
             })
         end
-        
-        table.insert(groupElements, dsl.vbox {
+
+        table.insert(groupElements, dsl.strict.vbox {
             config = { padding = 2 },
             children = groupChildren,
         })
     end
-    
-    return dsl.vbox {
+
+    return dsl.strict.vbox {
         config = {
             padding = 6,
             color = getColors().section_bg,
@@ -992,9 +992,9 @@ local function buildSection(sectionDef, snapshot, sectionId)
             StatsPanel._rebuildTabContent()
         end)
     }
-    
+
     if isExpanded then
-        table.insert(children, dsl.vbox {
+        table.insert(children, dsl.strict.vbox {
             config = {
                 padding = 4,
                 color = getColors().section_content_bg,
@@ -1002,8 +1002,8 @@ local function buildSection(sectionDef, snapshot, sectionId)
             children = statPills,
         })
     end
-    
-    return dsl.vbox {
+
+    return dsl.strict.vbox {
         config = { padding = 0 },
         children = children,
     }
@@ -1042,18 +1042,18 @@ local function buildElementalResistGrid(snapshot)
     
     local COL_WIDTH = 55
     local ELEMENT_COL_WIDTH = 75
-    
-    local headerRow = dsl.hbox {
+
+    local headerRow = dsl.strict.hbox {
         config = {
             padding = 2,
             color = getColors().section_bg,
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
         },
         children = {
-            dsl.text("Element", { fontSize = 10, color = "gray", minWidth = ELEMENT_COL_WIDTH }),
-            dsl.text("Resist", { fontSize = 10, color = "gray", minWidth = COL_WIDTH }),
-            dsl.text("Damage", { fontSize = 10, color = "gray", minWidth = COL_WIDTH }),
-            dsl.text("Duration", { fontSize = 10, color = "gray", minWidth = COL_WIDTH }),
+            dsl.strict.text("Element", { fontSize = 10, color = "gray", minWidth = ELEMENT_COL_WIDTH }),
+            dsl.strict.text("Resist", { fontSize = 10, color = "gray", minWidth = COL_WIDTH }),
+            dsl.strict.text("Damage", { fontSize = 10, color = "gray", minWidth = COL_WIDTH }),
+            dsl.strict.text("Duration", { fontSize = 10, color = "gray", minWidth = COL_WIDTH }),
         }
     }
     
@@ -1072,28 +1072,28 @@ local function buildElementalResistGrid(snapshot)
         local modText = formatGridValue(entry.mod, false)
         local durationText = hasDuration and formatGridValue(entry.duration, false) or "--"
         
-        table.insert(gridRows, dsl.hbox {
+        table.insert(gridRows, dsl.strict.hbox {
             config = {
                 padding = 2,
                 align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
             },
             children = {
-                dsl.text(icon .. " " .. displayName, {
+                dsl.strict.text(icon .. " " .. displayName, {
                     fontSize = PILL_FONT_SIZE - 1,
                     color = elementColor,
                     minWidth = ELEMENT_COL_WIDTH,
                 }),
-                dsl.text(resistText, {
+                dsl.strict.text(resistText, {
                     fontSize = PILL_FONT_SIZE - 1,
                     color = hasResist and getGridValueColor(entry.resist) or "gray",
                     minWidth = COL_WIDTH,
                 }),
-                dsl.text(modText, {
+                dsl.strict.text(modText, {
                     fontSize = PILL_FONT_SIZE - 1,
                     color = getGridValueColor(entry.mod),
                     minWidth = COL_WIDTH,
                 }),
-                dsl.text(durationText, {
+                dsl.strict.text(durationText, {
                     fontSize = PILL_FONT_SIZE - 1,
                     color = hasDuration and getGridValueColor(entry.duration) or "gray",
                     minWidth = COL_WIDTH,
@@ -1112,7 +1112,7 @@ local function buildElementalResistGrid(snapshot)
     }
     
     if isExpanded then
-        table.insert(children, dsl.vbox {
+        table.insert(children, dsl.strict.vbox {
             config = {
                 padding = 4,
                 color = getColors().section_content_bg,
@@ -1120,8 +1120,8 @@ local function buildElementalResistGrid(snapshot)
             children = gridRows,
         })
     end
-    
-    return dsl.vbox {
+
+    return dsl.strict.vbox {
         config = { padding = 0 },
         children = children,
     }
@@ -1133,13 +1133,13 @@ local function buildTabContent(tabIndex, snapshot)
     local tab = TABS[tabIndex]
     if not tab then
         log_debug("[StatsPanel] buildTabContent: invalid tab index")
-        return dsl.text("Invalid tab", { color = "red" })
+        return dsl.strict.text("Invalid tab", { color = "red" })
     end
 
     local layout = TAB_LAYOUTS[tab.id]
     if not layout then
         log_debug("[StatsPanel] buildTabContent: no layout for tab " .. tab.id)
-        return dsl.text("No data", { color = "gray" })
+        return dsl.strict.text("No data", { color = "gray" })
     end
 
     local sections = {}
@@ -1149,7 +1149,7 @@ local function buildTabContent(tabIndex, snapshot)
         local section = buildSection(sectionDef, snapshot, sectionId)
         if section then
             table.insert(sections, section)
-            table.insert(sections, dsl.spacer(2))
+            table.insert(sections, dsl.strict.spacer(2))
         end
     end
 
@@ -1163,17 +1163,17 @@ local function buildTabContent(tabIndex, snapshot)
 
     log_debug("[StatsPanel] buildTabContent: " .. #sections .. " sections for tab " .. tab.id)
     if #sections == 0 then
-        return dsl.text("No stats in this category", { fontSize = 11, color = "gray" })
+        return dsl.strict.text("No stats in this category", { fontSize = 11, color = "gray" })
     end
-    
-    return dsl.vbox {
+
+    return dsl.strict.vbox {
         config = { padding = 4 },
         children = sections,
     }
 end
 
 local function buildHeader()
-    return dsl.hbox {
+    return dsl.strict.hbox {
         config = {
             id = "stats_panel_header",
             padding = 6,
@@ -1181,7 +1181,7 @@ local function buildHeader()
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
         },
         children = {
-            dsl.text(L("stats_panel.title", "Character Stats"), {
+            dsl.strict.text(L("stats_panel.title", "Character Stats"), {
                 fontSize = 16,
                 color = "apricot_cream",
                 shadow = true,
@@ -1191,7 +1191,7 @@ local function buildHeader()
 end
 
 local function buildFooter()
-    return dsl.text("C: toggle  1-5: tabs  Esc: close", {
+    return dsl.strict.text("C: toggle  1-5: tabs  Esc: close", {
         fontSize = 9,
         color = "gray",
         align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
@@ -1200,7 +1200,7 @@ end
 
 local function buildTabContentContainer(snapshot)
     local state = StatsPanel._state
-    return dsl.vbox {
+    return dsl.strict.vbox {
         config = {
             id = "stats_panel_tab_content",
             padding = 0,
@@ -1212,20 +1212,20 @@ local function buildTabContentContainer(snapshot)
 end
 
 local function buildScrollableContent(snapshot)
-    return dsl.vbox {
+    return dsl.strict.vbox {
         config = {
             id = "stats_panel_scrollable_content",
             padding = 0,
         },
         children = {
             buildTier1Section(snapshot),
-            
-            dsl.spacer(4),
-            
-            dsl.divider("horizontal", { color = "gray", thickness = 1, length = PANEL_WIDTH - 24 }),
-            
-            dsl.spacer(4),
-            
+
+            dsl.strict.spacer(4),
+
+            dsl.strict.divider("horizontal", { color = "gray", thickness = 1, length = PANEL_WIDTH - 24 }),
+
+            dsl.strict.spacer(4),
+
             buildTabContentContainer(snapshot),
         }
     }
@@ -1233,14 +1233,14 @@ end
 
 local function buildPanelDefinition(snapshot)
     local state = StatsPanel._state
-    
+
     local scrollableContent = buildScrollableContent(snapshot)
     local scrollPane = createScrollPane({ scrollableContent }, {
         id = "stats_panel_scroll",
         height = SCROLL_VIEWPORT_HEIGHT,
     })
-    
-    return dsl.root {
+
+    return dsl.strict.root {
         config = {
             id = "stats_panel_root",
             color = getColors().bg,
@@ -1252,28 +1252,28 @@ local function buildPanelDefinition(snapshot)
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
         },
         children = {
-            dsl.vbox {
+            dsl.strict.vbox {
                 config = {
                     id = "stats_panel_main_container",
                     padding = 0,
                 },
                 children = {
                     buildHeader(),
-                    
-                    dsl.spacer(4),
-                    
+
+                    dsl.strict.spacer(4),
+
                     scrollPane,
-                    
-                    dsl.spacer(4),
-                    
+
+                    dsl.strict.spacer(4),
+
                     createTabBar(state.currentTab, function(newTab)
                         log_debug("[StatsPanel] Tab clicked: " .. tostring(newTab))
                         state.currentTab = newTab
                         StatsPanel._rebuildTabContent()
                     end),
-                    
-                    dsl.spacer(4),
-                    
+
+                    dsl.strict.spacer(4),
+
                     buildFooter(),
                 }
             }

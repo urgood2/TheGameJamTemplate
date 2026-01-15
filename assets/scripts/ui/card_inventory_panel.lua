@@ -171,7 +171,7 @@ local function createGridForTab(tabId, x, y, visible)
     
     local spawnX = visible and x or -9999
     
-    local gridDef = dsl.inventoryGrid {
+    local gridDef = dsl.strict.inventoryGrid {
         id = cfg.id,
         rows = cfg.rows,
         cols = cfg.cols,
@@ -344,20 +344,20 @@ end
 --------------------------------------------------------------------------------
 
 local function createHeader()
-    return dsl.hbox {
+    return dsl.strict.hbox {
         config = {
             color = "dark_lavender",
             padding = { 12, 8 },
             emboss = 2,
         },
         children = {
-            dsl.text(getLocalizedText("ui.inventory.title", "Card Inventory"), {
+            dsl.strict.text(getLocalizedText("ui.inventory.title", "Card Inventory"), {
                 fontSize = 18,
                 color = "gold",
                 shadow = true,
             }),
-            dsl.spacer(1), -- flex spacer
-            dsl.button("✕", {
+            dsl.strict.spacer(1), -- flex spacer
+            dsl.strict.button("✕", {
                 id = "close_btn",
                 minWidth = 28,
                 minHeight = 28,
@@ -373,17 +373,17 @@ local function createHeader()
 end
 
 local function createFilterBar()
-    return dsl.hbox {
+    return dsl.strict.hbox {
         config = {
             color = "blackberry",
             padding = 8,
         },
         children = {
             -- Search input placeholder (simplified as text for now)
-            dsl.text("🔍", { fontSize = 14, color = "gray" }),
-            dsl.spacer(8),
+            dsl.strict.text("🔍", { fontSize = 14, color = "gray" }),
+            dsl.strict.spacer(8),
             -- Sort buttons
-            dsl.button(getLocalizedText("ui.inventory.sort_name", "Name") .. " ↕", {
+            dsl.strict.button(getLocalizedText("ui.inventory.sort_name", "Name") .. " ↕", {
                 id = "sort_name_btn",
                 minWidth = 60,
                 minHeight = 24,
@@ -394,8 +394,8 @@ local function createFilterBar()
                     toggleSort("name")
                 end,
             }),
-            dsl.spacer(4),
-            dsl.button(getLocalizedText("ui.inventory.sort_cost", "Cost") .. " ↕", {
+            dsl.strict.spacer(4),
+            dsl.strict.button(getLocalizedText("ui.inventory.sort_cost", "Cost") .. " ↕", {
                 id = "sort_cost_btn",
                 minWidth = 60,
                 minHeight = 24,
@@ -419,7 +419,7 @@ local function createTabs()
         local labelKey = "ui.inventory.tab_" .. tabId
         local label = cfg.icon .. " " .. getLocalizedText(labelKey, tabId:gsub("^%l", string.upper))
         
-        table.insert(tabChildren, dsl.button(label, {
+        table.insert(tabChildren, dsl.strict.button(label, {
             id = "tab_" .. tabId,
             minWidth = 90,
             minHeight = 32,
@@ -432,11 +432,11 @@ local function createTabs()
         }))
         
         if tabId ~= TAB_ORDER[#TAB_ORDER] then
-            table.insert(tabChildren, dsl.spacer(2))
+            table.insert(tabChildren, dsl.strict.spacer(2))
         end
     end
     
-    return dsl.hbox {
+    return dsl.strict.hbox {
         config = {
             color = "blackberry",
             padding = 4,
@@ -446,13 +446,13 @@ local function createTabs()
 end
 
 local function createFooter()
-    return dsl.hbox {
+    return dsl.strict.hbox {
         config = {
             color = "dark_lavender",
             padding = 8,
         },
         children = {
-            dsl.dynamicText(function()
+            dsl.strict.dynamicText(function()
                 local activeGrid = state.grids[state.activeTab]
                 if activeGrid then
                     local used = grid.getUsedSlotCount(activeGrid) or 0
@@ -461,8 +461,8 @@ local function createFooter()
                 end
                 return "0 / 15 slots"
             end, 11, nil, { color = "light_gray" }),
-            dsl.spacer(1),
-            dsl.button(getLocalizedText("ui.inventory.sort_all", "Sort All"), {
+            dsl.strict.spacer(1),
+            dsl.strict.button(getLocalizedText("ui.inventory.sort_all", "Sort All"), {
                 id = "sort_all_btn",
                 minWidth = 70,
                 minHeight = 24,
@@ -481,7 +481,7 @@ local function createFooter()
 end
 
 local function createPanelDefinition()
-    return dsl.root {
+    return dsl.strict.root {
         config = {
             id = PANEL_ID,
             color = "blackberry",
@@ -494,14 +494,14 @@ local function createPanelDefinition()
             createFilterBar(),
             createTabs(),
             -- Grid content area (placeholder - actual grids are separate entities)
-            dsl.vbox {
+            dsl.strict.vbox {
                 config = {
                     padding = 8,
                     minHeight = 300,
                     color = "blackberry",
                 },
                 children = {
-                    dsl.text("", { fontSize = 1 }), -- Invisible placeholder
+                    dsl.strict.text("", { fontSize = 1 }), -- Invisible placeholder
                 },
             },
             createFooter(),

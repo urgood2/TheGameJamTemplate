@@ -216,3 +216,37 @@ TestRunner.describe("UIValidator Sibling Overlap Rule", function()
     end)
 
 end)
+
+TestRunner.describe("UIValidator Z-Order Rule", function()
+
+    TestRunner.it("checkZOrder returns no violations for correct hierarchy", function()
+        local UIValidator = require("core.ui_validator")
+
+        -- Children have higher z than parent
+        local hierarchy = {
+            { id = "parent", z = 100, children = { "child1", "child2" } },
+            { id = "child1", z = 101, children = {} },
+            { id = "child2", z = 102, children = {} },
+        }
+
+        local violations = UIValidator.checkZOrderWithHierarchy(hierarchy)
+
+        TestRunner.assert_equals(0, #violations, "should have no violations for correct z-order")
+    end)
+
+    TestRunner.it("checkZOrder detects child behind parent", function()
+        local UIValidator = require("core.ui_validator")
+
+        -- Child has lower z than parent
+        local hierarchy = {
+            { id = "parent", z = 100, children = { "child1" } },
+            { id = "child1", z = 50, children = {} }, -- Behind parent
+        }
+
+        local violations = UIValidator.checkZOrderWithHierarchy(hierarchy)
+
+        TestRunner.assert_true(#violations > 0, "should detect child behind parent")
+        TestRunner.assert_equals("z_order_hierarchy", violations[1].type, "violation type should be z_order_hierarchy")
+    end)
+
+end)

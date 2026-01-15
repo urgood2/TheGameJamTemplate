@@ -395,4 +395,97 @@ function UIValidator.checkSiblingOverlap(entity)
     return violations
 end
 
+---Get z-order for an entity
+---@param entity number Entity ID
+---@return number|nil z-order or nil
+function UIValidator.getZOrder(entity)
+    if not entity or not registry:valid(entity) then
+        return nil
+    end
+
+    if layer_order_system and layer_order_system.getZIndex then
+        return layer_order_system.getZIndex(entity)
+    end
+
+    -- Fallback to LayerOrderComponent
+    local layerOrder = component_cache.get(entity, LayerOrderComponent)
+    if layerOrder then
+        return layerOrder.z or layerOrder.zIndex or 0
+    end
+
+    return 0
+end
+
+---Check z-order with provided hierarchy
+---@param hierarchy table[] Array of {id, z, children: string[]}
+---@return table[] violations
+function UIValidator.checkZOrderWithHierarchy(hierarchy)
+    local violations = {}
+
+    -- Build lookup
+    local byId = {}
+    for _, node in ipairs(hierarchy) do
+        byId[node.id] = node
+    end
+
+    -- Check each node
+    for _, node in ipairs(hierarchy) do
+        for _, childId in ipairs(node.children) do
+            local child = byId[childId]
+            if child and child.z <= node.z then
+                table.insert(violations, {
+                    type = "z_order_hierarchy",
+                    severity = severities.z_order_hierarchy,
+                    entity = childId,
+                    parent = node.id,
+                    message = string.format(
+                        "Entity %s (z=%d) behind parent %s (z=%d)",
+                        tostring(childId), child.z,
+                        tostring(node.id), node.z
+                    ),
+                })
+            end
+        end
+    end
+
+    return violations
+end
+
+---Check z-order hierarchy for a UI entity tree
+---@param entity number Root entity ID
+---@return table[] violations
+function UIValidator.checkZOrder(entity)
+    local violations = {}
+
+    local function checkEntity(ent, parentZ)
+        if not ent or not registry:valid(ent) then return end
+
+        local z = UIValidator.getZOrder(ent) or 0
+
+        -- Check against parent
+        if parentZ and z <= parentZ then
+            table.insert(violations, {
+                type = "z_order_hierarchy",
+                severity = severities.z_order_hierarchy,
+                entity = ent,
+                message = string.format(
+                    "Entity %s (z=%d) not above parent (z=%d)",
+                    tostring(ent), z, parentZ
+                ),
+            })
+        end
+
+        -- Check children
+        local go = component_cache.get(ent, GameObject)
+        if go and go.orderedChildren then
+            for _, child in ipairs(go.orderedChildren) do
+                checkEntity(child, z)
+            end
+        end
+    end
+
+    checkEntity(entity, nil)
+    return violations
+end
+
 return UIValidator

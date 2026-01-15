@@ -309,4 +309,90 @@ function UIValidator.checkWindowBounds(entity)
     return violations
 end
 
+---Check if two rectangles overlap
+---@return boolean
+local function rectsOverlap(ax, ay, aw, ah, bx, by, bw, bh)
+    return ax < bx + bw and ax + aw > bx and
+           ay < by + bh and ay + ah > by
+end
+
+---Check sibling overlap with provided bounds
+---@param siblings table[] Array of {id, bounds: {x,y,w,h,allowOverlap?}}
+---@return table[] violations
+function UIValidator.checkSiblingOverlapWithBounds(siblings)
+    local violations = {}
+
+    for i = 1, #siblings - 1 do
+        for j = i + 1, #siblings do
+            local a = siblings[i]
+            local b = siblings[j]
+
+            -- Skip if either has allowOverlap
+            if a.bounds.allowOverlap or b.bounds.allowOverlap then
+                goto continue
+            end
+
+            if rectsOverlap(
+                a.bounds.x, a.bounds.y, a.bounds.w, a.bounds.h,
+                b.bounds.x, b.bounds.y, b.bounds.w, b.bounds.h
+            ) then
+                table.insert(violations, {
+                    type = "sibling_overlap",
+                    severity = severities.sibling_overlap,
+                    entity = b.id,
+                    sibling = a.id,
+                    message = string.format(
+                        "Entity %s overlaps sibling %s",
+                        tostring(b.id), tostring(a.id)
+                    ),
+                })
+            end
+
+            ::continue::
+        end
+    end
+
+    return violations
+end
+
+---Check sibling overlap for children of an entity
+---@param entity number Parent entity ID
+---@return table[] violations
+function UIValidator.checkSiblingOverlap(entity)
+    local violations = {}
+
+    local function checkChildren(ent)
+        if not ent or not registry:valid(ent) then return end
+
+        local go = component_cache.get(ent, GameObject)
+        if not go or not go.orderedChildren then return end
+
+        -- Collect sibling bounds
+        local siblings = {}
+        for _, child in ipairs(go.orderedChildren) do
+            local bounds = UIValidator.getBounds(child)
+            if bounds then
+                local childGo = component_cache.get(child, GameObject)
+                local allowOverlap = childGo and childGo.config and childGo.config.allowOverlap
+                bounds.allowOverlap = allowOverlap
+                table.insert(siblings, { id = child, bounds = bounds })
+            end
+        end
+
+        -- Check for overlaps
+        local v = UIValidator.checkSiblingOverlapWithBounds(siblings)
+        for _, violation in ipairs(v) do
+            table.insert(violations, violation)
+        end
+
+        -- Recurse into children
+        for _, child in ipairs(go.orderedChildren) do
+            checkChildren(child)
+        end
+    end
+
+    checkChildren(entity)
+    return violations
+end
+
 return UIValidator

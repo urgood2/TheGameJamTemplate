@@ -172,3 +172,47 @@ TestRunner.describe("UIValidator Window Bounds Rule", function()
     end)
 
 end)
+
+TestRunner.describe("UIValidator Sibling Overlap Rule", function()
+
+    TestRunner.it("checkSiblingOverlap returns no violations for non-overlapping siblings", function()
+        local UIValidator = require("core.ui_validator")
+
+        local siblings = {
+            { id = "a", bounds = { x = 0, y = 0, w = 50, h = 50 } },
+            { id = "b", bounds = { x = 60, y = 0, w = 50, h = 50 } }, -- No overlap
+        }
+
+        local violations = UIValidator.checkSiblingOverlapWithBounds(siblings)
+
+        TestRunner.assert_equals(0, #violations, "should have no violations for non-overlapping siblings")
+    end)
+
+    TestRunner.it("checkSiblingOverlap detects overlapping siblings", function()
+        local UIValidator = require("core.ui_validator")
+
+        local siblings = {
+            { id = "a", bounds = { x = 0, y = 0, w = 50, h = 50 } },
+            { id = "b", bounds = { x = 40, y = 0, w = 50, h = 50 } }, -- Overlaps by 10px
+        }
+
+        local violations = UIValidator.checkSiblingOverlapWithBounds(siblings)
+
+        TestRunner.assert_true(#violations > 0, "should detect overlapping siblings")
+        TestRunner.assert_equals("sibling_overlap", violations[1].type, "violation type should be sibling_overlap")
+    end)
+
+    TestRunner.it("respects allowOverlap flag", function()
+        local UIValidator = require("core.ui_validator")
+
+        local siblings = {
+            { id = "a", bounds = { x = 0, y = 0, w = 50, h = 50 } },
+            { id = "b", bounds = { x = 40, y = 0, w = 50, h = 50, allowOverlap = true } },
+        }
+
+        local violations = UIValidator.checkSiblingOverlapWithBounds(siblings)
+
+        TestRunner.assert_equals(0, #violations, "should allow overlap when flag set")
+    end)
+
+end)

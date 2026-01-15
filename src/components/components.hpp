@@ -173,6 +173,7 @@ struct InfoComponent
 };
 
 
-struct VFXComponent
+/// Tag component for entities with visual effects (empty struct = pure tag)
+struct VFXTag
 {
 };

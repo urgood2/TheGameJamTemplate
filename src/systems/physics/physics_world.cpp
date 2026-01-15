@@ -260,19 +260,9 @@ void PhysicsWorld::PostUpdate() {
   triggerEnter.clear();
   triggerExit.clear();
 
-  // PERF: Skip per-entity collision clearing - these vectors are never populated.
-  // All collision data is stored in world-level maps (collisionEnter, collisionActive, etc.)
-  // The per-entity vectors in ColliderComponent are legacy/unused code paths.
-  // Removing this O(n) loop where n = number of entities with ColliderComponent.
-  //
-  // registry->view<ColliderComponent>().each([](auto &collider) {
-  //   collider.collisionEnter.clear();
-  //   collider.collisionActive.clear();
-  //   collider.collisionExit.clear();
-  //   collider.triggerEnter.clear();
-  //   collider.triggerActive.clear();
-  //   collider.triggerExit.clear();
-  // });
+  // NOTE: Per-entity collision vectors were removed from ColliderComponent.
+  // All collision data is handled via world-level maps (collisionEnter, collisionExit, etc.)
+  // and the C++ event bus (events::CollisionStarted, events::CollisionEnded).
 }
 
 void PhysicsWorld::SetGravity(float gravityX, float gravityY) {
@@ -788,7 +778,7 @@ cpBool PhysicsWorld::OnPreSolve(cpArbiter *arb) {
                                  luaArb);
       if (r.isErr()) {
         SPDLOG_ERROR("pair pre_solve: {}", r.error());
-        throw;
+        return cpFalse;  // Reject collision on Lua error (don't crash)
       }
       if (r.value().return_count() > 0 &&
           r.value().get_type(0) == sol::type::boolean)
@@ -803,7 +793,7 @@ cpBool PhysicsWorld::OnPreSolve(cpArbiter *arb) {
                                  "physics pre_solve wildcardA", luaArb);
       if (r.isErr()) {
         SPDLOG_ERROR("wildcard({}) pre_solve: {}", (int)ta, r.error());
-        throw;
+        return cpFalse;  // Reject collision on Lua error (don't crash)
       }
       if (r.value().return_count() > 0 &&
           r.value().get_type(0) == sol::type::boolean)
@@ -818,7 +808,7 @@ cpBool PhysicsWorld::OnPreSolve(cpArbiter *arb) {
                                  "physics pre_solve wildcardB", luaArb);
       if (r.isErr()) {
         SPDLOG_ERROR("wildcard({}) pre_solve: {}", (int)tb, r.error());
-        throw;
+        return cpFalse;  // Reject collision on Lua error (don't crash)
       }
       if (r.value().return_count() > 0 &&
           r.value().get_type(0) == sol::type::boolean)
@@ -848,7 +838,7 @@ void PhysicsWorld::OnPostSolve(cpArbiter *arb) {
       auto r = util::safeLuaCall(fn, "physics post_solve", luaArb);
       if (r.isErr()) {
         SPDLOG_ERROR("post_solve: {}", r.error());
-        throw;
+        return;  // Log and continue (don't crash)
       }
     }
   };
@@ -1525,8 +1515,7 @@ cpBool PhysicsWorld::OnBegin(cpArbiter *arb) {
     auto r = util::safeLuaCall(fn, "physics begin", luaArb);
     if (r.isErr()) {
       SPDLOG_ERROR("begin: {}", r.error());
-      throw;
-      return std::nullopt;
+      return std::nullopt;  // Continue processing (don't crash)
     }
     if (r.value().return_count() > 0 &&
         r.value().get_type(0) == sol::type::boolean) {
@@ -1583,7 +1572,7 @@ void PhysicsWorld::OnSeparate(cpArbiter *arb) {
     auto r = util::safeLuaCall(fn, "physics separate", luaArb);
     if (r.isErr()) {
       SPDLOG_ERROR("separate: {}", r.error());
-      throw;
+      return;  // Log and continue (don't crash)
     }
   };
 

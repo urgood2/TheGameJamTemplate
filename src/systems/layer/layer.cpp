@@ -62,11 +62,14 @@ std::stack<RenderTexture2D> renderStack{};
 }
 } // namespace layer
 
+// Maximum depth for nested transform composite renders
+static constexpr size_t MAX_RENDER_STACK_DEPTH = 16;
+
 template <typename F>
 static void QueueScopedTransformCompositeRender(
     std::shared_ptr<layer::Layer> layer, entt::entity e, int z,
     layer::DrawCommandSpace space, F &&buildChildren) {
-  static std::array<std::vector<layer::DrawCommandV2> *, 8> s_commandStackArr;
+  static std::array<std::vector<layer::DrawCommandV2> *, MAX_RENDER_STACK_DEPTH> s_commandStackArr;
   static int s_stackTop = 0;
 
   auto *cmd = layer::layer_command_buffer::Add<
@@ -82,6 +85,13 @@ static void QueueScopedTransformCompositeRender(
 
   auto *prevList = layer->commands_ptr;
   layer->commands_ptr = &cmd->children;
+
+  // Overflow protection for nested render stacks
+  if (static_cast<size_t>(s_stackTop) >= MAX_RENDER_STACK_DEPTH) {
+    SPDLOG_ERROR("Render stack overflow! Max depth: {}. Skipping nested render.", MAX_RENDER_STACK_DEPTH);
+    layer->commands_ptr = prevList;
+    return;
+  }
 
   s_commandStackArr[s_stackTop++] = &cmd->children;
   std::forward<F>(buildChildren)();

@@ -674,12 +674,9 @@ struct ColliderComponent {
   bool isDynamic = true;          // Indicates whether the body is dynamic
   bool debugDraw = true;          // Flag to enable/disable rendering
   ColliderShapeType shapeType;    // Type of collider shape
-  std::vector<CollisionEvent> collisionEnter;  // Physical collision start
-  std::vector<CollisionEvent> collisionActive; // Physical collision active
-  std::vector<CollisionEvent> collisionExit;   // Physical collision end
-  std::vector<void *> triggerEnter;  // Trigger (collision with sensor) start
-  std::vector<void *> triggerActive; // Trigger (collision with sensor) active
-  std::vector<void *> triggerExit;   // Trigger end
+  // NOTE: Per-entity collision vectors (collisionEnter/Active/Exit, triggerEnter/Active/Exit)
+  // were removed as they were never populated. Collision events are handled via world-level
+  // maps in PhysicsWorld (collisionEnter, collisionExit, etc.) and the C++ event bus.
   std::string tag = "default";       // Collision tag for filtering
 
   ColliderComponent(std::shared_ptr<cpBody> body,

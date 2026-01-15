@@ -568,4 +568,95 @@ function UIValidator.validateAndReport(entity)
     return #errors > 0
 end
 
+---Track render info for entities (call this instead of direct command_buffer calls)
+---@param parentUI number|nil Parent UI entity (nil for roots)
+---@param layerName string Layer name (e.g., "layers.ui")
+---@param entities table[] Entities being rendered
+---@param z number Z-order
+---@param space string DrawCommandSpace ("Screen" or "World")
+function UIValidator.trackRender(parentUI, layerName, entities, z, space)
+    local frameNum = globals and globals.frameCount or 0
+
+    for _, entity in ipairs(entities) do
+        renderLog[entity] = {
+            parent = parentUI,
+            layer = layerName,
+            z = z,
+            space = space,
+            frame = frameNum,
+        }
+    end
+end
+
+---Queue draw and track for validation (wraps command_buffer.queueDrawBatchedEntities)
+---@param parentUI number Parent UI entity for association
+---@param layer userdata Layer to render to
+---@param entities table[] Entities to render
+---@param z number Z-order
+---@param space userdata DrawCommandSpace
+function UIValidator.queueDrawEntities(parentUI, layer, entities, z, space)
+    -- Track for validation
+    local layerName = tostring(layer) -- Convert layer to string for comparison
+    local spaceName = space == (layer and layer.DrawCommandSpace and layer.DrawCommandSpace.Screen) and "Screen" or "World"
+
+    UIValidator.trackRender(parentUI, layerName, entities, z, spaceName)
+
+    -- Perform actual render (only if command_buffer exists)
+    if command_buffer and command_buffer.queueDrawBatchedEntities then
+        command_buffer.queueDrawBatchedEntities(layer, function(cmd)
+            cmd.entities = entities
+        end, z, space)
+    end
+end
+
+---Check render consistency for a UI entity and its associated renders
+---@param parentUI number Parent UI entity
+---@return table[] violations
+function UIValidator.checkRenderConsistency(parentUI)
+    local violations = {}
+
+    -- Get parent's render info
+    local parentInfo = renderLog[parentUI]
+    if not parentInfo then
+        return violations -- No parent info, can't check
+    end
+
+    -- Check all entities associated with this parent
+    for entity, info in pairs(renderLog) do
+        if info.parent == parentUI then
+            -- Check layer consistency
+            if info.layer ~= parentInfo.layer then
+                table.insert(violations, {
+                    type = "layer_consistency",
+                    severity = severities.layer_consistency,
+                    entity = entity,
+                    parent = parentUI,
+                    message = string.format(
+                        "Entity %s renders to %s, parent %s uses %s",
+                        tostring(entity), info.layer,
+                        tostring(parentUI), parentInfo.layer
+                    ),
+                })
+            end
+
+            -- Check space consistency
+            if info.space ~= parentInfo.space then
+                table.insert(violations, {
+                    type = "space_consistency",
+                    severity = severities.space_consistency,
+                    entity = entity,
+                    parent = parentUI,
+                    message = string.format(
+                        "Entity %s uses %s space, parent %s uses %s",
+                        tostring(entity), info.space,
+                        tostring(parentUI), parentInfo.space
+                    ),
+                })
+            end
+        end
+    end
+
+    return violations
+end
+
 return UIValidator

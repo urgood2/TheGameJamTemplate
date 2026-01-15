@@ -366,3 +366,69 @@ TestRunner.describe("UITestUtils Module", function()
     end)
 
 end)
+
+TestRunner.describe("UIValidator Tracked Render Wrappers", function()
+
+    TestRunner.it("trackRender records render info", function()
+        local UIValidator = require("core.ui_validator")
+
+        -- Clear previous log
+        UIValidator.clearRenderLog()
+
+        -- Mock entities (using numbers as IDs)
+        local parentUI = 1000
+        local card1 = 1001
+        local card2 = 1002
+
+        -- Track renders
+        UIValidator.trackRender(parentUI, "layers.ui", { card1, card2 }, 500, "Screen")
+
+        local log = UIValidator.getRenderLog()
+
+        TestRunner.assert_not_nil(log[card1], "card1 should be in render log")
+        TestRunner.assert_not_nil(log[card2], "card2 should be in render log")
+        TestRunner.assert_equals(parentUI, log[card1].parent, "should track parent")
+        TestRunner.assert_equals("layers.ui", log[card1].layer, "should track layer")
+        TestRunner.assert_equals(500, log[card1].z, "should track z-order")
+        TestRunner.assert_equals("Screen", log[card1].space, "should track space")
+    end)
+
+    TestRunner.it("checkRenderConsistency detects layer mismatch", function()
+        local UIValidator = require("core.ui_validator")
+
+        UIValidator.clearRenderLog()
+
+        local parentUI = 2000
+        local card1 = 2001
+
+        -- Parent renders to ui layer
+        UIValidator.trackRender(nil, "layers.ui", { parentUI }, 100, "Screen")
+        -- Card renders to different layer
+        UIValidator.trackRender(parentUI, "layers.sprites", { card1 }, 200, "Screen")
+
+        local violations = UIValidator.checkRenderConsistency(parentUI)
+
+        TestRunner.assert_true(#violations > 0, "should detect layer mismatch")
+        TestRunner.assert_equals("layer_consistency", violations[1].type, "type should be layer_consistency")
+    end)
+
+    TestRunner.it("checkRenderConsistency detects space mismatch", function()
+        local UIValidator = require("core.ui_validator")
+
+        UIValidator.clearRenderLog()
+
+        local parentUI = 3000
+        local card1 = 3001
+
+        -- Parent uses Screen space
+        UIValidator.trackRender(nil, "layers.ui", { parentUI }, 100, "Screen")
+        -- Card uses World space (mismatch!)
+        UIValidator.trackRender(parentUI, "layers.ui", { card1 }, 200, "World")
+
+        local violations = UIValidator.checkRenderConsistency(parentUI)
+
+        TestRunner.assert_true(#violations > 0, "should detect space mismatch")
+        TestRunner.assert_equals("space_consistency", violations[1].type, "type should be space_consistency")
+    end)
+
+end)

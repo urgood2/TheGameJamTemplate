@@ -2625,3 +2625,4 @@ search_world.txt
 src_projectiles.txt
 nul
 CMakeUserPresets.json
+debug.log

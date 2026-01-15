@@ -497,6 +497,13 @@ function UIValidator.checkGlobalOverlap(entities, options)
                 goto continue_pair
             end
 
+            -- Skip if z-order difference is significant (intentional layering)
+            -- Elements at very different z-levels are meant to be layered, not overlapping
+            local zDiff = math.abs(a.z - b.z)
+            if zDiff > 10 then
+                goto continue_pair
+            end
+
             -- Check for overlap
             if rectsOverlap(
                 a.bounds.x, a.bounds.y, a.bounds.w, a.bounds.h,

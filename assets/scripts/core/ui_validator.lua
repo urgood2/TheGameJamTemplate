@@ -44,14 +44,8 @@ function UIValidator.isEnabled()
     return enabled
 end
 
----Validate a UI entity and return violations
----@param entity number Entity ID
----@param rules? string[] Optional: specific rules to check (default: all)
----@return table[] violations List of {type, severity, entity, message}
-function UIValidator.validate(entity, rules)
-    -- Placeholder - will implement in subsequent tasks
-    return {}
-end
+-- Forward declaration for validate (implemented after all rule functions)
+local validateImpl
 
 ---Set severity for a rule
 ---@param rule string Rule name
@@ -486,6 +480,92 @@ function UIValidator.checkZOrder(entity)
 
     checkEntity(entity, nil)
     return violations
+end
+
+-- Rule check functions lookup (must be after function definitions)
+local ruleChecks = {
+    containment = function(entity) return UIValidator.checkContainment(entity) end,
+    window_bounds = function(entity) return UIValidator.checkWindowBounds(entity) end,
+    sibling_overlap = function(entity) return UIValidator.checkSiblingOverlap(entity) end,
+    z_order_hierarchy = function(entity) return UIValidator.checkZOrder(entity) end,
+}
+
+---Validate a UI entity and return all violations
+---@param entity number Entity ID
+---@param rules? string[] Optional: specific rules to check (default: all)
+---@return table[] violations List of {type, severity, entity, message}
+function UIValidator.validate(entity, rules)
+    local violations = {}
+
+    if not entity or not registry:valid(entity) then
+        return violations
+    end
+
+    -- Determine which rules to run
+    local rulesToRun = rules or { "containment", "window_bounds", "sibling_overlap", "z_order_hierarchy" }
+
+    for _, ruleName in ipairs(rulesToRun) do
+        local checkFn = ruleChecks[ruleName]
+        if checkFn then
+            local v = checkFn(entity)
+            for _, violation in ipairs(v) do
+                table.insert(violations, violation)
+            end
+        end
+    end
+
+    return violations
+end
+
+---Filter violations to errors only
+---@param violations table[]
+---@return table[]
+function UIValidator.getErrors(violations)
+    local errors = {}
+    for _, v in ipairs(violations) do
+        if v.severity == "error" then
+            table.insert(errors, v)
+        end
+    end
+    return errors
+end
+
+---Filter violations to warnings only
+---@param violations table[]
+---@return table[]
+function UIValidator.getWarnings(violations)
+    local warnings = {}
+    for _, v in ipairs(violations) do
+        if v.severity == "warning" then
+            table.insert(warnings, v)
+        end
+    end
+    return warnings
+end
+
+---Validate and print results (convenience function)
+---@param entity number Entity ID
+---@return boolean hasErrors
+function UIValidator.validateAndReport(entity)
+    local violations = UIValidator.validate(entity)
+    local errors = UIValidator.getErrors(violations)
+    local warnings = UIValidator.getWarnings(violations)
+
+    if #errors > 0 then
+        print(string.format("[UIValidator] %d ERRORS:", #errors))
+        for _, e in ipairs(errors) do
+            print(string.format("  X %s: %s", e.type, e.message))
+        end
+    end
+
+    if #warnings > 0 then
+        print(string.format("[UIValidator] %d warnings:", #warnings))
+        for _, w in ipairs(warnings) do
+            print(string.format("  ! %s: %s", w.type, w.message))
+        end
+    end
+
+    return #errors > 0
 end
 
 return UIValidator

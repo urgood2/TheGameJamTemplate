@@ -250,3 +250,73 @@ TestRunner.describe("UIValidator Z-Order Rule", function()
     end)
 
 end)
+
+TestRunner.describe("UIValidator Full Validation", function()
+
+    TestRunner.it("validate runs all rules by default", function()
+        local UIValidator = require("core.ui_validator")
+        local dsl = require("ui.ui_syntax_sugar")
+
+        local ui = dsl.root {
+            config = { padding = 10, minWidth = 100, minHeight = 100 },
+            children = {
+                dsl.text("Test", { fontSize = 14 })
+            }
+        }
+        local entity = dsl.spawn({ x = 200, y = 200 }, ui)
+
+        local violations = UIValidator.validate(entity)
+
+        TestRunner.assert_not_nil(violations, "should return violations array")
+        TestRunner.assert_true(type(violations) == "table", "should be table")
+
+        dsl.remove(entity)
+    end)
+
+    TestRunner.it("validate accepts specific rules filter", function()
+        local UIValidator = require("core.ui_validator")
+        local dsl = require("ui.ui_syntax_sugar")
+
+        local ui = dsl.root {
+            config = { padding = 10 },
+            children = {}
+        }
+        local entity = dsl.spawn({ x = 200, y = 200 }, ui)
+
+        -- Only check containment
+        local violations = UIValidator.validate(entity, { "containment" })
+
+        TestRunner.assert_not_nil(violations, "should return violations array")
+
+        dsl.remove(entity)
+    end)
+
+    TestRunner.it("getErrors filters to error severity only", function()
+        local UIValidator = require("core.ui_validator")
+
+        local violations = {
+            { type = "containment", severity = "error", entity = 1, message = "test" },
+            { type = "sibling_overlap", severity = "warning", entity = 2, message = "test" },
+        }
+
+        local errors = UIValidator.getErrors(violations)
+
+        TestRunner.assert_equals(1, #errors, "should return only errors")
+        TestRunner.assert_equals("error", errors[1].severity, "should be error severity")
+    end)
+
+    TestRunner.it("getWarnings filters to warning severity only", function()
+        local UIValidator = require("core.ui_validator")
+
+        local violations = {
+            { type = "containment", severity = "error", entity = 1, message = "test" },
+            { type = "sibling_overlap", severity = "warning", entity = 2, message = "test" },
+        }
+
+        local warnings = UIValidator.getWarnings(violations)
+
+        TestRunner.assert_equals(1, #warnings, "should return only warnings")
+        TestRunner.assert_equals("warning", warnings[1].severity, "should be warning severity")
+    end)
+
+end)

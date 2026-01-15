@@ -11,6 +11,7 @@
 
 #include "raylib.h"
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <functional>
 #include <stdexcept>

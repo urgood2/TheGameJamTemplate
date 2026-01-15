@@ -1515,7 +1515,7 @@ cpBool PhysicsWorld::OnBegin(cpArbiter *arb) {
     auto r = util::safeLuaCall(fn, "physics begin", luaArb);
     if (r.isErr()) {
       SPDLOG_ERROR("begin: {}", r.error());
-      return std::nullopt;  // Continue processing (don't crash)
+      return std::optional<bool>(false);  // Reject contact on Lua error
     }
     if (r.value().return_count() > 0 &&
         r.value().get_type(0) == sol::type::boolean) {

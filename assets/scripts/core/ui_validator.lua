@@ -80,4 +80,85 @@ function UIValidator.getRenderLog()
     return renderLog
 end
 
+---Get computed bounds for an entity
+---@param entity number Entity ID
+---@return table|nil {x, y, w, h} or nil if no bounds
+function UIValidator.getBounds(entity)
+    if not entity or not registry:valid(entity) then
+        return nil
+    end
+
+    -- Try Transform component first (for positioned entities)
+    local transform = component_cache.get(entity, Transform)
+    if transform then
+        local x = transform.actualX or transform.x or 0
+        local y = transform.actualY or transform.y or 0
+        local w = transform.w or 32
+        local h = transform.h or 32
+        return { x = x, y = y, w = w, h = h }
+    end
+
+    -- Try UIElementComponent for UI-specific bounds
+    local uiElement = component_cache.get(entity, UIElementComponent)
+    if uiElement and uiElement.bounds then
+        return {
+            x = uiElement.bounds.x or 0,
+            y = uiElement.bounds.y or 0,
+            w = uiElement.bounds.w or 0,
+            h = uiElement.bounds.h or 0,
+        }
+    end
+
+    -- Try CollisionShape2D for collision bounds
+    local collision = component_cache.get(entity, CollisionShape2D)
+    if collision then
+        local minX = collision.aabb_min_x or 0
+        local minY = collision.aabb_min_y or 0
+        local maxX = collision.aabb_max_x or 0
+        local maxY = collision.aabb_max_y or 0
+        return {
+            x = minX,
+            y = minY,
+            w = maxX - minX,
+            h = maxY - minY,
+        }
+    end
+
+    return nil
+end
+
+---Get bounds for entity and all descendants
+---@param entity number Root entity ID
+---@return table Map of entity -> bounds
+function UIValidator.getAllBounds(entity)
+    local result = {}
+
+    local function collectBounds(ent, depth)
+        if not ent or not registry:valid(ent) then return end
+        if depth > 50 then return end -- Prevent infinite recursion
+
+        local bounds = UIValidator.getBounds(ent)
+        if bounds then
+            result[ent] = bounds
+        end
+
+        -- Get children from GameObject
+        local go = component_cache.get(ent, GameObject)
+        if go and go.orderedChildren then
+            for _, child in ipairs(go.orderedChildren) do
+                collectBounds(child, depth + 1)
+            end
+        end
+
+        -- Also check UIBoxComponent children
+        local uiBox = component_cache.get(ent, UIBoxComponent)
+        if uiBox and uiBox.uiRoot and registry:valid(uiBox.uiRoot) then
+            collectBounds(uiBox.uiRoot, depth + 1)
+        end
+    end
+
+    collectBounds(entity, 0)
+    return result
+end
+
 return UIValidator

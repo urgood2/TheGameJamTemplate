@@ -307,7 +307,7 @@ local function ensureMessageQueueHooks()
     end)
 
     handlers:on("trigger_activated", function(wandId, triggerType)
-        if TriggerStripUI and ui_modules.TriggerStripUI.onTriggerActivated then
+        if ui_modules.TriggerStripUI and ui_modules.TriggerStripUI.onTriggerActivated then
             ui_modules.TriggerStripUI.onTriggerActivated(wandId, triggerType)
         end
     end)
@@ -1334,7 +1334,7 @@ local damageNumbers               = {}                                 -- active
 local spawnExpPickupAt            -- forward declaration
 
 local function isLevelUpModalActive()
-    return LevelUpScreen and ui_modules.LevelUpScreen.isActive
+    return ui_modules.LevelUpScreen and ui_modules.LevelUpScreen.isActive
 end
 
 local function kickAimSpring()
@@ -4875,17 +4875,17 @@ function initPlanningPhase()
             ui_modules.MessageQueueUI.draw()
         -- end
 
-        if WandCooldownUI and is_state_active and is_state_active(ACTION_STATE) then
+        if ui_modules.WandCooldownUI and is_state_active and is_state_active(ACTION_STATE) then
             ui_modules.WandCooldownUI.update(dt)
             ui_modules.WandCooldownUI.draw()
         end
 
-        if CastBlockFlashUI and ui_modules.CastBlockFlashUI.isActive and is_state_active and is_state_active(ACTION_STATE) then
+        if ui_modules.CastBlockFlashUI and ui_modules.CastBlockFlashUI.isActive and is_state_active and is_state_active(ACTION_STATE) then
             ui_modules.CastBlockFlashUI.update(dt)
             ui_modules.CastBlockFlashUI.draw()
         end
 
-        if CurrencyDisplay and ui_modules.CurrencyDisplay.isActive and is_state_active
+        if ui_modules.CurrencyDisplay and ui_modules.CurrencyDisplay.isActive and is_state_active
             and (is_state_active(PLANNING_STATE) or is_state_active(SHOP_STATE)) then
             ui_modules.CurrencyDisplay.setAmount(globals.currency or 0)
             ui_modules.CurrencyDisplay.update(dt)
@@ -4916,7 +4916,7 @@ function initPlanningPhase()
             end
         end
 
-        if TagSynergyPanel and ui_modules.TagSynergyPanel.isActive and is_state_active
+        if ui_modules.TagSynergyPanel and ui_modules.TagSynergyPanel.isActive and is_state_active
             and is_state_active(PLANNING_STATE) then
             ui_modules.TagSynergyPanel.update(dt)
             ui_modules.TagSynergyPanel.draw()
@@ -4938,7 +4938,7 @@ function initPlanningPhase()
         end
 
         -- Update execution graph slide animation
-        if CastExecutionGraphUI and is_state_active and is_state_active(PLANNING_STATE) then
+        if ui_modules.CastExecutionGraphUI and is_state_active and is_state_active(PLANNING_STATE) then
             ui_modules.CastExecutionGraphUI.updateSlide(dt)
 
             -- Update execution graph button visual feedback based on visibility
@@ -4953,7 +4953,7 @@ function initPlanningPhase()
             end
         end
 
-        if AvatarJokerStrip and ui_modules.AvatarJokerStrip.isActive and is_state_active
+        if ui_modules.AvatarJokerStrip and ui_modules.AvatarJokerStrip.isActive and is_state_active
             and (is_state_active(PLANNING_STATE) or is_state_active(ACTION_STATE) or is_state_active(SHOP_STATE)) then
             local playerTarget = nil
             if getTagEvaluationTargets then
@@ -4969,17 +4969,17 @@ function initPlanningPhase()
             ui_modules.AvatarJokerStrip.draw()
         end
 
-        if TriggerStripUI and is_state_active and is_state_active(ACTION_STATE) then
+        if ui_modules.TriggerStripUI and is_state_active and is_state_active(ACTION_STATE) then
             ui_modules.TriggerStripUI.update(dt)
             ui_modules.TriggerStripUI.draw()
         end
 
-        if SubcastDebugUI and is_state_active and is_state_active(ACTION_STATE) then
+        if ui_modules.SubcastDebugUI and is_state_active and is_state_active(ACTION_STATE) then
             ui_modules.SubcastDebugUI.update(dt)
             ui_modules.SubcastDebugUI.draw()
         end
 
-        if LevelUpScreen and ui_modules.LevelUpScreen.isActive then
+        if ui_modules.LevelUpScreen and ui_modules.LevelUpScreen.isActive then
             ui_modules.LevelUpScreen.update(dt)
             ui_modules.LevelUpScreen.draw()
         end
@@ -5359,7 +5359,7 @@ function initPlanningPhase()
 
     -- Leave space for the synergy panel on the right during planning.
     local synergyPanelReserve = 300
-    if TagSynergyPanel and ui_modules.TagSynergyPanel.layout then
+    if ui_modules.TagSynergyPanel and ui_modules.TagSynergyPanel.layout then
         local layout = ui_modules.TagSynergyPanel.layout
         synergyPanelReserve = math.max(synergyPanelReserve, (layout.panelWidth or 0) + (layout.marginX or 0))
     end
@@ -5985,10 +5985,10 @@ local function resetGameToStart()
     end
 
     -- 7. Reset UI systems
-    if CastBlockFlashUI and ui_modules.CastBlockFlashUI.clear then
+    if ui_modules.CastBlockFlashUI and ui_modules.CastBlockFlashUI.clear then
         ui_modules.CastBlockFlashUI.clear()
     end
-    if SubcastDebugUI and ui_modules.SubcastDebugUI.clear then
+    if ui_modules.SubcastDebugUI and ui_modules.SubcastDebugUI.clear then
         ui_modules.SubcastDebugUI.clear()
     end
 
@@ -6256,12 +6256,12 @@ function initCombatSystem()
         timer.after_opts({
             delay = 0.5,
             action = function()
-                if AvatarJokerStrip and ui_modules.AvatarJokerStrip.isActive and ui_modules.AvatarJokerStrip.syncFrom then
+                if ui_modules.AvatarJokerStrip and ui_modules.AvatarJokerStrip.isActive and ui_modules.AvatarJokerStrip.syncFrom then
                     log_debug("[Avatar] Syncing avatar strip with captured player")
                     log_debug("[Avatar] capturedPlayer.avatar_state.equipped =", capturedPlayer and capturedPlayer.avatar_state and capturedPlayer.avatar_state.equipped)
                     ui_modules.AvatarJokerStrip.syncFrom(capturedPlayer)
                 else
-                    log_debug("[Avatar] Avatar strip not ready: isActive=", AvatarJokerStrip and ui_modules.AvatarJokerStrip.isActive)
+                    log_debug("[Avatar] Avatar strip not ready: isActive=", ui_modules.AvatarJokerStrip and ui_modules.AvatarJokerStrip.isActive)
                 end
             end,
             tag = "debug_avatar_sync"
@@ -7424,10 +7424,10 @@ reevaluateDeckTags = function()
     if not playerTarget then return end
 
     TagEvaluator.evaluate_and_apply(playerTarget, deckSnapshot, combat_context)
-    if TagSynergyPanel and ui_modules.TagSynergyPanel.isActive then
+    if ui_modules.TagSynergyPanel and ui_modules.TagSynergyPanel.isActive then
         ui_modules.TagSynergyPanel.setData(playerTarget.tag_counts, TagEvaluator.get_breakpoints())
     end
-    if AvatarJokerStrip and ui_modules.AvatarJokerStrip.isActive and playerScript and playerScript.avatar_state then
+    if ui_modules.AvatarJokerStrip and ui_modules.AvatarJokerStrip.isActive and playerScript and playerScript.avatar_state then
         -- Use playerScript (has avatar_state), not playerTarget (may be combatTable)
         ui_modules.AvatarJokerStrip.syncFrom(playerScript)
     end
@@ -8506,22 +8506,22 @@ if gameplay_cfg.debugQuickAccessState.lastMessage then
     renderCardSpawnerDebugUI()
 
     -- Content Debug Panel (Jokers, Projectiles, Tags)
-    if ContentDebugPanel and ui_modules.ContentDebugPanel.render then
+    if ui_modules.ContentDebugPanel and ui_modules.ContentDebugPanel.render then
         ui_modules.ContentDebugPanel.render()
     end
 
     -- Combat Debug Panel (Stats, Combat, Defense, etc.)
-    if CombatDebugPanel and ui_modules.CombatDebugPanel.render then
+    if ui_modules.CombatDebugPanel and ui_modules.CombatDebugPanel.render then
         ui_modules.CombatDebugPanel.render()
     end
 
     -- UI Overlay Toggles (visibility controls for action mode overlays)
-    if UIOverlayToggles and ui_modules.UIOverlayToggles.render then
+    if ui_modules.UIOverlayToggles and ui_modules.UIOverlayToggles.render then
         ui_modules.UIOverlayToggles.render()
     end
 
     -- Entity Inspector Panel (inspect entity components at runtime)
-    if EntityInspector and ui_modules.EntityInspector.render then
+    if ui_modules.EntityInspector and ui_modules.EntityInspector.render then
         ui_modules.EntityInspector.render()
     end
 end
@@ -9352,7 +9352,7 @@ function tryPurchaseAvatar(avatarId)
     globals.shopState.avatarPurchases[avatarId] = true
     AvatarSystem.equip(playerTarget, avatarId)
 
-    if AvatarJokerStrip and ui_modules.AvatarJokerStrip.syncFrom then
+    if ui_modules.AvatarJokerStrip and ui_modules.AvatarJokerStrip.syncFrom then
         ui_modules.AvatarJokerStrip.syncFrom(playerTarget)
     end
 

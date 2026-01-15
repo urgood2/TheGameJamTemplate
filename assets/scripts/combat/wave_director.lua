@@ -41,6 +41,9 @@ WaveDirector.stage_provider = nil
 --============================================
 
 function WaveDirector.start_stage(stage_config)
+    -- Ensure signal handlers are registered for each stage start
+    WaveDirector.init_handlers()
+
     if not stage_config then
         print("WaveDirector.start_stage called with nil config")
         return

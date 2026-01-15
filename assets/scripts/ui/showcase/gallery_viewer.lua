@@ -261,7 +261,7 @@ function GalleryViewer:_rebuildPreview()
 end
 
 function GalleryViewer:_buildUI()
-    return dsl.root {
+    return dsl.strict.root {
         config = {
             padding = 0,
             color = self._colors.background,
@@ -269,10 +269,10 @@ function GalleryViewer:_buildUI()
             minHeight = self._height,
         },
         children = {
-            dsl.vbox {
+            dsl.strict.vbox {
                 children = {
                     self:_buildHeader(),
-                    dsl.hbox {
+                    dsl.strict.hbox {
                         children = {
                             self:_buildCategoryList(),
                         }
@@ -288,18 +288,18 @@ function GalleryViewer:_buildHeader()
     local categoryName = currentItem and ShowcaseRegistry.getCategoryName(currentItem.category) or "Gallery"
     local showcaseName = currentItem and currentItem.showcase.name or ""
 
-    return dsl.vbox {
+    return dsl.strict.vbox {
         config = { padding = 10, color = self._colors.headerBg, minWidth = self._width },
         children = {
-            dsl.hbox {
+            dsl.strict.hbox {
                 children = {
-                    dsl.text("UI Showcase Gallery", { fontSize = 18, color = "white", shadow = true }),
-                    dsl.spacer(20),
-                    dsl.text(categoryName .. " > " .. showcaseName, { fontSize = 12, color = "lightgray" }),
+                    dsl.strict.text("UI Showcase Gallery", { fontSize = 18, color = "white", shadow = true }),
+                    dsl.strict.spacer(20),
+                    dsl.strict.text(categoryName .. " > " .. showcaseName, { fontSize = 12, color = "lightgray" }),
                 }
             },
-            dsl.spacer(4),
-            dsl.text("Use UP/DOWN to navigate, ENTER to select, ESC to close", { fontSize = 10, color = "gray" }),
+            dsl.strict.spacer(4),
+            dsl.strict.text("Use UP/DOWN to navigate, ENTER to select, ESC to close", { fontSize = 10, color = "gray" }),
         }
     }
 end
@@ -310,10 +310,10 @@ function GalleryViewer:_buildCategoryList()
 
     for _, categoryId in ipairs(self._categories) do
         -- Category header
-        children[#children + 1] = dsl.vbox {
+        children[#children + 1] = dsl.strict.vbox {
             config = { padding = 4, color = self._colors.headerBg, minWidth = self._listWidth },
             children = {
-                dsl.text(ShowcaseRegistry.getCategoryName(categoryId), {
+                dsl.strict.text(ShowcaseRegistry.getCategoryName(categoryId), {
                     fontSize = 12,
                     color = self._colors.categoryText,
                     shadow = true
@@ -329,7 +329,7 @@ function GalleryViewer:_buildCategoryList()
             local itemBgColor = isSelected and self._colors.selectedBg or self._colors.listBg
 
             local capturedIndex = itemIndex
-            children[#children + 1] = dsl.vbox {
+            children[#children + 1] = dsl.strict.vbox {
                 config = {
                     padding = 6,
                     color = itemBgColor,
@@ -342,7 +342,7 @@ function GalleryViewer:_buildCategoryList()
                     end
                 },
                 children = {
-                    dsl.text(showcase.name, {
+                    dsl.strict.text(showcase.name, {
                         fontSize = 11,
                         color = isSelected and "white" or self._colors.textDim
                     })
@@ -351,10 +351,10 @@ function GalleryViewer:_buildCategoryList()
         end
 
         -- Spacer between categories
-        children[#children + 1] = dsl.spacer(4)
+        children[#children + 1] = dsl.strict.spacer(4)
     end
 
-    return dsl.vbox {
+    return dsl.strict.vbox {
         config = { padding = 4, minWidth = self._listWidth, minHeight = self._height - 50 },
         children = children
     }
@@ -369,14 +369,14 @@ function GalleryViewer:_buildPreviewPanel(showcase)
     if success and result then
         previewContent = result
     else
-        previewContent = dsl.text("Error creating preview", { color = "red" })
+        previewContent = dsl.strict.text("Error creating preview", { color = "red" })
     end
 
     -- Build source code display
     local sourceLines = {}
     if showcase.source then
         for line in showcase.source:gmatch("[^\n]+") do
-            sourceLines[#sourceLines + 1] = dsl.text(line, {
+            sourceLines[#sourceLines + 1] = dsl.strict.text(line, {
                 fontSize = 9,
                 color = self._colors.sourceCodeText,
                 fontName = "monospace"
@@ -384,39 +384,39 @@ function GalleryViewer:_buildPreviewPanel(showcase)
         end
     end
 
-    return dsl.vbox {
+    return dsl.strict.vbox {
         config = { padding = 8, color = self._colors.background, minWidth = self._previewWidth },
         children = {
             -- Preview section
-            dsl.vbox {
+            dsl.strict.vbox {
                 config = { padding = 4 },
                 children = {
-                    dsl.text("Preview", { fontSize = 12, color = self._colors.categoryText, shadow = true }),
-                    dsl.spacer(4),
-                    dsl.text(showcase.description or "", { fontSize = 10, color = self._colors.textDim }),
-                    dsl.spacer(8),
+                    dsl.strict.text("Preview", { fontSize = 12, color = self._colors.categoryText, shadow = true }),
+                    dsl.strict.spacer(4),
+                    dsl.strict.text(showcase.description or "", { fontSize = 10, color = self._colors.textDim }),
+                    dsl.strict.spacer(8),
                 }
             },
 
             -- Live preview
-            dsl.vbox {
+            dsl.strict.vbox {
                 config = { padding = 10, color = "dimgray", minWidth = self._previewWidth - 20, minHeight = 100 },
                 children = { previewContent }
             },
 
-            dsl.spacer(12),
+            dsl.strict.spacer(12),
 
             -- Source code section
-            dsl.vbox {
+            dsl.strict.vbox {
                 config = { padding = 4 },
                 children = {
-                    dsl.text("Source Code", { fontSize = 12, color = self._colors.categoryText, shadow = true }),
-                    dsl.spacer(4),
+                    dsl.strict.text("Source Code", { fontSize = 12, color = self._colors.categoryText, shadow = true }),
+                    dsl.strict.spacer(4),
                 }
             },
 
             -- Source code display
-            dsl.vbox {
+            dsl.strict.vbox {
                 config = {
                     padding = 8,
                     color = self._colors.sourceCodeBg,
@@ -424,7 +424,7 @@ function GalleryViewer:_buildPreviewPanel(showcase)
                     minHeight = 80
                 },
                 children = #sourceLines > 0 and sourceLines or {
-                    dsl.text("-- No source available", { fontSize = 9, color = "gray" })
+                    dsl.strict.text("-- No source available", { fontSize = 9, color = "gray" })
                 }
             },
         }

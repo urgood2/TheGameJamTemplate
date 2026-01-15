@@ -185,7 +185,7 @@ local function createCloseButton(modalX, initialY)
     local buttonX = modalX + MODAL_WIDTH - buttonSize - 12
     local buttonY = initialY + 12
 
-    local closeButtonDef = dsl.root {
+    local closeButtonDef = dsl.strict.root {
         config = {
             color = util.getColor("red"),
             emboss = 2,
@@ -202,7 +202,7 @@ local function createCloseButton(modalX, initialY)
             end,
         },
         children = {
-            dsl.text("X", {
+            dsl.strict.text("X", {
                 fontSize = 16,
                 color = "white",
                 shadow = true
@@ -242,29 +242,29 @@ local function buildModalUI()
 
     local contentNodes = {}
     for _, line in ipairs(contentLines) do
-        table.insert(contentNodes, dsl.text(line, {
+        table.insert(contentNodes, dsl.strict.text(line, {
             fontSize = 16,
             color = "white",
             shadow = true
         }))
-        table.insert(contentNodes, dsl.spacer(6))
+        table.insert(contentNodes, dsl.strict.spacer(6))
     end
 
     -- Header with title/version (X button is positioned separately)
-    local headerRow = dsl.vbox {
+    local headerRow = dsl.strict.vbox {
         config = { padding = 0, spacing = 4 },
         children = {
-            dsl.text(titleText, {
+            dsl.strict.text(titleText, {
                 fontSize = 28,
                 color = "gold",
                 shadow = true
             }),
-            dsl.text(versionText, {
+            dsl.strict.text(versionText, {
                 fontSize = 18,
                 color = "cyan",
                 shadow = true
             }),
-            dsl.text(dateText, {
+            dsl.strict.text(dateText, {
                 fontSize = 14,
                 color = "lightgray",
                 shadow = true
@@ -272,7 +272,7 @@ local function buildModalUI()
         }
     }
 
-    local modalDef = dsl.root {
+    local modalDef = dsl.strict.root {
         config = {
             color = util.getColor("blackberry"),
             padding = 20,
@@ -281,13 +281,13 @@ local function buildModalUI()
             minHeight = MODAL_HEIGHT,
         },
         children = {
-            dsl.vbox {
+            dsl.strict.vbox {
                 config = { spacing = 10 },
                 children = {
                     headerRow,
-                    dsl.divider("horizontal", { color = "gray", thickness = 2, length = MODAL_WIDTH - 50 }),
-                    dsl.spacer(8),
-                    dsl.vbox {
+                    dsl.strict.divider("horizontal", { color = "gray", thickness = 2, length = MODAL_WIDTH - 50 }),
+                    dsl.strict.spacer(8),
+                    dsl.strict.vbox {
                         config = {
                             padding = 8,
                             spacing = 4,

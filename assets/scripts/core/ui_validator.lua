@@ -497,10 +497,11 @@ function UIValidator.checkGlobalOverlap(entities, options)
                 goto continue_pair
             end
 
-            -- Skip if z-order difference is significant (intentional layering)
-            -- Elements at very different z-levels are meant to be layered, not overlapping
+            -- Optional: Skip if z-order difference exceeds threshold (for filtering intentional layering)
+            -- Default: report ALL overlaps (no threshold) - use zOrderThreshold option to filter
             local zDiff = math.abs(a.z - b.z)
-            if zDiff > 10 then
+            local zThreshold = options.zOrderThreshold or 0  -- 0 = report all overlaps
+            if zThreshold > 0 and zDiff > zThreshold then
                 goto continue_pair
             end
 

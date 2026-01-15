@@ -91,15 +91,55 @@ function M.scheduleAfterGameStart()
     })
 end
 
+-- Create a simple test card entity
+local function createTestCard(x, y, cardData)
+    if not animation_system or not animation_system.createAnimatedObjectWithTransform then
+        print("[Test] WARNING: animation_system not available, cannot create test card")
+        return nil
+    end
+
+    local entity = animation_system.createAnimatedObjectWithTransform(
+        "card-new-test-action.png", true, x or 0, y or 0, nil, true
+    )
+
+    if not entity or not registry:valid(entity) then
+        print("[Test] WARNING: Failed to create test card entity")
+        return nil
+    end
+
+    animation_system.resizeAnimationObjectsInEntityToFit(entity, 60, 84)
+
+    -- Set z-order (should be above grid at z=850)
+    if layer_order_system and layer_order_system.assignZIndexToEntity then
+        local z = (z_orders and z_orders.ui_tooltips or 900) + 100  -- 1000
+        layer_order_system.assignZIndexToEntity(entity, z)
+        print("[Test] Card z-order set to: " .. z)
+    end
+
+    -- Screen-space collision
+    if transform and transform.set_space then
+        transform.set_space(entity, "screen")
+    end
+
+    -- Add shader pipeline for rendering
+    if shader_pipeline and shader_pipeline.ShaderPipelineComponent then
+        local shaderComp = registry:emplace(entity, shader_pipeline.ShaderPipelineComponent)
+        shaderComp:addPass("3d_skew")
+    end
+
+    return entity
+end
+
 function M.runValidation()
     local PlayerInventory = require("ui.player_inventory")
     local results = { passed = 0, failed = 0, violations = {} }
+    local testCards = {}
 
     -- Open the inventory
     print("[Test] Opening PlayerInventory...")
     PlayerInventory.open()
 
-    -- Wait for UI to settle, then validate
+    -- Wait for UI to settle, then add test cards and validate
     timer.after_opts({
         delay = 0.5,
         action = function()
@@ -112,6 +152,23 @@ function M.runValidation()
             end
 
             print("[Test] Panel entity: " .. tostring(panelEntity))
+
+            -- Create and add test cards to verify z-order
+            print("[Test] Creating test cards...")
+            local testCard1 = createTestCard(100, 100, { id = "test_card_1" })
+            local testCard2 = createTestCard(200, 100, { id = "test_card_2" })
+
+            if testCard1 then
+                local added = PlayerInventory.addCard(testCard1, "equipment", { id = "test_card_1" })
+                print("[Test] Added test card 1 to equipment: " .. tostring(added))
+                table.insert(testCards, testCard1)
+            end
+            if testCard2 then
+                local added = PlayerInventory.addCard(testCard2, "equipment", { id = "test_card_2" })
+                print("[Test] Added test card 2 to equipment: " .. tostring(added))
+                table.insert(testCards, testCard2)
+            end
+
             print("[Test] Running UIValidator.validate() with skipHidden=true...")
 
             -- Run full validation with skipHidden to ignore off-screen tabs
@@ -149,8 +206,14 @@ function M.runValidation()
                 print("[Test] Global overlap violations: " .. #globalViolations)
             end
 
-            -- Check card z-order if there are any cards in the inventory
+            -- Check card z-order - cards should render ABOVE the grid
             local cardRegistry = PlayerInventory.getCardRegistry and PlayerInventory.getCardRegistry()
+            local cardCount = 0
+            if cardRegistry then
+                for _ in pairs(cardRegistry) do cardCount = cardCount + 1 end
+            end
+            print("[Test] Cards in registry: " .. cardCount)
+
             if cardRegistry and next(cardRegistry) and activeGridEntity then
                 print("[Test] Checking card z-order occlusion...")
                 local cardPairs = {}
@@ -190,15 +253,27 @@ function M.runValidation()
                 end
             end
 
-            if #errors == 0 then
-                print("\n[PASS] No validation errors in PlayerInventory!")
+            -- STRICT: Fail on ANY violations (errors OR warnings)
+            -- This ensures layout issues are caught, not just critical errors
+            local hasViolations = #violations > 0
+
+            if not hasViolations then
+                print("\n[PASS] No validation violations in PlayerInventory!")
                 results.passed = 1
             else
-                print("\n[FAIL] Found " .. #errors .. " validation errors")
+                print("\n[FAIL] Found " .. #violations .. " validation violations (" .. #errors .. " errors, " .. #warnings .. " warnings)")
                 results.failed = 1
             end
 
             results.violations = violations
+
+            -- Cleanup test cards
+            for _, cardEntity in ipairs(testCards) do
+                if cardEntity and registry:valid(cardEntity) then
+                    PlayerInventory.removeCard(cardEntity)
+                    registry:destroy(cardEntity)
+                end
+            end
 
             print("\n================================================================================")
 
@@ -209,8 +284,8 @@ function M.runValidation()
                 timer.after_opts({
                     delay = 0.5,
                     action = function()
-                        print("[Test] Exiting with code: " .. (#errors == 0 and "0 (success)" or "1 (failure)"))
-                        os.exit(#errors == 0 and 0 or 1)
+                        print("[Test] Exiting with code: " .. (hasViolations and "1 (failure)" or "0 (success)"))
+                        os.exit(hasViolations and 1 or 0)
                     end,
                     tag = "test_auto_exit"
                 })

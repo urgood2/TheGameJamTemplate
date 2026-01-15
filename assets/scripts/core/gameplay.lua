@@ -30,28 +30,35 @@ local component_cache = require("core.component_cache")
 local entity_cache = require("core.entity_cache")
 require("ui.ui_definition_helper")
 local dsl = require("ui.ui_syntax_sugar")
-local CastExecutionGraphUI = require("ui.cast_execution_graph_ui")
-local CastBlockFlashUI = require("ui.cast_block_flash_ui")
-local WandCooldownUI = require("ui.wand_cooldown_ui")
-local SubcastDebugUI = require("ui.subcast_debug_ui")
-local MessageQueueUI = require("ui.message_queue_ui")
-local CurrencyDisplay = require("ui.currency_display")
-local TagSynergyPanel = require("ui.tag_synergy_panel")
-local AvatarJokerStrip = require("ui.avatar_joker_strip")
-local TriggerStripUI = require("ui.trigger_strip_ui")
-local LevelUpScreen = require("ui.level_up_screen")
-local HoverRegistry = require("ui.hover_registry")
-local ContentDebugPanel = require("ui.content_debug_panel")
-local CombatDebugPanel = require("ui.combat_debug_panel")
-local UIOverlayToggles = require("ui.ui_overlay_toggles")
-local EntityInspector = require("ui.entity_inspector")
-wandResourceBar = require("ui.wand_resource_bar_ui") -- global to avoid local variable limit
+
+-- UI modules consolidated to stay under Lua's 200 local variable limit
+local ui = {
+    CastExecutionGraphUI = require("ui.cast_execution_graph_ui"),
+    CastBlockFlashUI = require("ui.cast_block_flash_ui"),
+    WandCooldownUI = require("ui.wand_cooldown_ui"),
+    SubcastDebugUI = require("ui.subcast_debug_ui"),
+    MessageQueueUI = require("ui.message_queue_ui"),
+    CurrencyDisplay = require("ui.currency_display"),
+    TagSynergyPanel = require("ui.tag_synergy_panel"),
+    AvatarJokerStrip = require("ui.avatar_joker_strip"),
+    TriggerStripUI = require("ui.trigger_strip_ui"),
+    LevelUpScreen = require("ui.level_up_screen"),
+    HoverRegistry = require("ui.hover_registry"),
+    ContentDebugPanel = require("ui.content_debug_panel"),
+    CombatDebugPanel = require("ui.combat_debug_panel"),
+    UIOverlayToggles = require("ui.ui_overlay_toggles"),
+    EntityInspector = require("ui.entity_inspector"),
+    WandResourceBar = require("ui.wand_resource_bar_ui"),
+    TooltipV2 = require("ui.tooltip_v2"),
+}
+wandResourceBar = ui.WandResourceBar -- global alias for compatibility
+TooltipV2 = ui.TooltipV2 -- global alias for compatibility
+
 local tooltip_registry = require("core.tooltip_registry")
 local StatusIndicatorSystem = require("systems.status_indicator_system")
 local MarkSystem = require("systems.mark_system")
 local C = require("core.constants")
 local CardsData = require("data.cards")
-TooltipV2 = require("ui.tooltip_v2") -- global to avoid local variable limit
 
 USE_TOOLTIP_V2 = true
 
@@ -65,6 +72,10 @@ end
 
 -- Consolidated config/state to stay under Lua's 200 local variable limit
 local gameplay_cfg = {
+    -- Signal handler management (prevents memory leaks on game restart)
+    signal_group = require("core.signal_group"),
+    handlers = nil,  -- Will be set to signal_group.new() when handlers are registered
+
     -- Required runtime state (DO NOT REMOVE)
     LEVEL_UP_MODAL_DELAY = 0.5,
     ENABLE_SURVIVOR_MASK = false,
@@ -229,9 +240,35 @@ _G.USE_GRID_INVENTORY = gameplay_cfg.USE_GRID_INVENTORY
 require("core.type_defs") -- for Node customizations
 local BaseCreateExecutionContext = WandExecutor.createExecutionContext
 
+-- Cleanup signal handlers to prevent memory leaks on game restart
+-- IMPORTANT: Call this BEFORE timer.kill_group() in resetGameToStart()
+local function cleanupGameplayHandlers()
+    if gameplay_cfg.handlers then
+        gameplay_cfg.handlers:cleanup()
+        gameplay_cfg.handlers = nil
+    end
+    -- Reset registration flags so handlers re-register on next init
+    gameplay_cfg.messageQueueHooksRegistered = false
+    gameplay_cfg.deathFlowHandlersRegistered = false
+    gameplay_cfg.bumpEnemyHandlerRegistered = false
+    gameplay_cfg.pickupHandlersRegistered = false
+    if stats_tooltip then
+        stats_tooltip.signalRegistered = false
+    end
+end
+
+-- Initialize gameplay signal handler group
+local function initGameplayHandlers()
+    if gameplay_cfg.handlers then return gameplay_cfg.handlers end
+    gameplay_cfg.handlers = gameplay_cfg.signal_group.new("gameplay_main")
+    return gameplay_cfg.handlers
+end
+
 local function ensureMessageQueueHooks()
     if gameplay_cfg.messageQueueHooksRegistered then return end
     gameplay_cfg.messageQueueHooksRegistered = true
+
+    local handlers = initGameplayHandlers()
 
     local function ensureMQ()
         if not MessageQueueUI.isActive then
@@ -239,26 +276,26 @@ local function ensureMessageQueueHooks()
         end
     end
 
-    signal.register("avatar_unlocked", function(data)
+    handlers:on("avatar_unlocked", function(data)
         ensureMQ()
         local avatarId = (data and data.avatar_id) or "Unknown Avatar"
         MessageQueueUI.enqueue(string.format("Avatar unlocked: %s", avatarId))
     end)
 
-    signal.register("tag_threshold_discovered", function(data)
+    handlers:on("tag_threshold_discovered", function(data)
         ensureMQ()
         local tag = (data and data.tag) or "Tag"
         local threshold = (data and data.threshold) or "?"
         MessageQueueUI.enqueue(string.format("Discovery: %s x%s", tag, threshold))
     end)
 
-    signal.register("spell_type_discovered", function(data)
+    handlers:on("spell_type_discovered", function(data)
         ensureMQ()
         local spell = (data and data.spell_type) or "Spell"
         MessageQueueUI.enqueue(string.format("New spell type: %s", spell))
     end)
 
-    signal.register("deck_changed", function(data)
+    handlers:on("deck_changed", function(data)
         -- Re-evaluate tag thresholds when deck changes (shop purchases, loot, etc.)
         if reevaluateDeckTags then
             reevaluateDeckTags()
@@ -269,7 +306,7 @@ local function ensureMessageQueueHooks()
         end
     end)
 
-    signal.register("trigger_activated", function(wandId, triggerType)
+    handlers:on("trigger_activated", function(wandId, triggerType)
         if TriggerStripUI and TriggerStripUI.onTriggerActivated then
             TriggerStripUI.onTriggerActivated(wandId, triggerType)
         end
@@ -3472,11 +3509,10 @@ function setUpLogicTimers()
         end
     end
 
-    if signal.exists("on_bump_enemy") == false then
-        signal.register(
-            "on_bump_enemy",
-            on_bump_enemy_handler
-        )
+    if not gameplay_cfg.bumpEnemyHandlerRegistered then
+        gameplay_cfg.bumpEnemyHandlerRegistered = true
+        local handlers = initGameplayHandlers()
+        handlers:on("on_bump_enemy", on_bump_enemy_handler)
     end
 
     -- check the trigger board
@@ -5705,6 +5741,24 @@ end
 
 -- Reset game to starting state for new run
 local function resetGameToStart()
+    -- CRITICAL: Cleanup signal handlers FIRST (before timer cleanup)
+    -- This prevents memory leaks from accumulated handlers on restart
+    cleanupGameplayHandlers()
+
+    -- Cleanup external module signal handlers
+    local ok, CastFeedUI = pcall(require, "ui.cast_feed_ui")
+    if ok and CastFeedUI and CastFeedUI.unsubscribe then
+        CastFeedUI.unsubscribe()
+    end
+
+    local ok2, PlayerInventory = pcall(require, "ui.player_inventory")
+    if ok2 and PlayerInventory and PlayerInventory.cleanupSignalHandlers then
+        PlayerInventory.cleanupSignalHandlers()
+    end
+
+    -- WaveDirector cleanup is called separately via its own cleanup() function
+    -- which includes handler cleanup
+
     -- Reset death guard so player can die again in new run
     gameplay_cfg.isPlayerDying = false
     log_debug("[gameplay] Resetting game to start...")
@@ -6058,43 +6112,54 @@ end
 -- PLAYER DEATH FLOW SIGNALS
 -- ============================================================================
 
--- Handle player death - trigger animation
-signal.register("player_died", function(playerEntity)
-    log_debug("[gameplay] Player died - starting death animation")
-    playPlayerDeathAnimation(playerEntity, function()
-        log_debug("[gameplay] Death animation complete")
-        -- Animation complete callback - state machine handles transition to GAME_OVER
-    end)
-end)
+-- Initialize death flow handlers (called once on game init)
+local function initDeathFlowHandlers()
+    if gameplay_cfg.deathFlowHandlersRegistered then return end
+    gameplay_cfg.deathFlowHandlersRegistered = true
 
--- Handle game over - show death screen
-signal.register("show_death_screen", function()
-    log_debug("[gameplay] Showing death screen")
-    gameplay_cfg.getDeathScreen().show()
-end)
+    local handlers = initGameplayHandlers()
 
--- Handle restart request - fade and reset
-signal.register("restart_game", function()
-    log_debug("[gameplay] Restart requested - fading to black")
-    local timer = require("core.timer")
-
-    -- Simple fade to black (if fade system exists)
-    if fadeToBlack then
-        fadeToBlack(0.5, function()
-            resetGameToStart()
-            fadeFromBlack(0.5)
+    -- Handle player death - trigger animation
+    handlers:on("player_died", function(playerEntity)
+        log_debug("[gameplay] Player died - starting death animation")
+        playPlayerDeathAnimation(playerEntity, function()
+            log_debug("[gameplay] Death animation complete")
+            -- Animation complete callback - state machine handles transition to GAME_OVER
         end)
-    else
-        -- No fade system - just reset immediately
-        timer.after_opts({
-            delay = 0.1,
-            action = function()
+    end)
+
+    -- Handle game over - show death screen
+    handlers:on("show_death_screen", function()
+        log_debug("[gameplay] Showing death screen")
+        gameplay_cfg.getDeathScreen().show()
+    end)
+
+    -- Handle restart request - fade and reset
+    handlers:on("restart_game", function()
+        log_debug("[gameplay] Restart requested - fading to black")
+        local timer = require("core.timer")
+
+        -- Simple fade to black (if fade system exists)
+        if fadeToBlack then
+            fadeToBlack(0.5, function()
                 resetGameToStart()
-            end,
-            tag = "restart_delay"
-        })
-    end
-end)
+                fadeFromBlack(0.5)
+            end)
+        else
+            -- No fade system - just reset immediately
+            timer.after_opts({
+                delay = 0.1,
+                action = function()
+                    resetGameToStart()
+                end,
+                tag = "restart_delay"
+            })
+        end
+    end)
+end
+
+-- Register death flow handlers on module load
+initDeathFlowHandlers()
 
 function initCombatSystem()
     -- init combat system.
@@ -7287,7 +7352,7 @@ if gameplay_cfg.auto_action_env and timer and timer.after then
         else
             print("[DEBUG ACTION] AUTO_ACTION_PHASE fallback: startActionPhase not available")
         end
-    end)
+    end, "auto_action_fallback", "debug_timers")
 end
 
 updateWandResourceBar = function()
@@ -8967,17 +9032,51 @@ function initSurvivorEntity()
         context = "gameplay"
     })
 
-    signal.register("player_level_up", function()
-        log_debug("Player leveled up!")
-        playSoundEffect("effects", "level_up", 1.0)
-        local playerScript = getScriptTableFromEntityID(survivorEntity)
-        timer.after(gameplay_cfg.LEVEL_UP_MODAL_DELAY, function()
-            LevelUpScreen.push({
-                playerEntity = survivorEntity,
-                actor = playerScript and playerScript.combatTable
-            })
-        end, "level_up_modal_delay")
-    end)
+    -- Register pickup/level handlers once (guarded to prevent accumulation on restart)
+    if not gameplay_cfg.pickupHandlersRegistered then
+        gameplay_cfg.pickupHandlersRegistered = true
+        local handlers = initGameplayHandlers()
+
+        handlers:on("player_level_up", function()
+            log_debug("Player leveled up!")
+            playSoundEffect("effects", "level_up", 1.0)
+            local playerScript = getScriptTableFromEntityID(survivorEntity)
+            timer.after(gameplay_cfg.LEVEL_UP_MODAL_DELAY, function()
+                LevelUpScreen.push({
+                    playerEntity = survivorEntity,
+                    actor = playerScript and playerScript.combatTable
+                })
+            end, "level_up_modal_delay")
+        end)
+
+        handlers:on("on_pickup", function(pickupEntity)
+            log_debug("Survivor picked up entity", pickupEntity)
+
+            local playerScript = getScriptTableFromEntityID(survivorEntity)
+
+            if not playerScript or not playerScript.combatTable then
+                log_debug("No combat table on player, cannot grant exp!")
+                return
+            end
+
+            playSoundEffect("effects", "gain_exp_pickup", 1.0)
+
+            CombatSystem.Game.Leveling.grant_exp(combat_context, playerScript.combatTable, 50) -- grant 20 exp per pickup
+
+            -- tug the exp bar spring
+            if expBarScaleSpringEntity and entity_cache.valid(expBarScaleSpringEntity) then
+                local expBarSpringRef = spring.get(registry, expBarScaleSpringEntity)
+                if expBarSpringRef then
+                    expBarSpringRef:pull(0.15, 120.0, 14.0)
+                end
+            end
+
+            local playerT = component_cache.get(survivorEntity, Transform)
+            if playerT then
+                playerT.visualS = 1.5
+            end
+        end)
+    end
 
 
     -- lets run every physics frame, detecting for magnet radus
@@ -9028,36 +9127,6 @@ function initSurvivorEntity()
         "player_magnet_detection", nil
     )
 
-    -- let's register signal listeners
-    signal.register("on_pickup", function(pickupEntity)
-        log_debug("Survivor picked up entity", pickupEntity)
-
-        local playerScript = getScriptTableFromEntityID(survivorEntity)
-
-        if not playerScript or not playerScript.combatTable then
-            log_debug("No combat table on player, cannot grant exp!")
-            return
-        end
-
-        playSoundEffect("effects", "gain_exp_pickup", 1.0)
-
-        CombatSystem.Game.Leveling.grant_exp(combat_context, playerScript.combatTable, 50) -- grant 20 exp per pickup
-
-        -- tug the exp bar spring
-        if expBarScaleSpringEntity and entity_cache.valid(expBarScaleSpringEntity) then
-            local expBarSpringRef = spring.get(registry, expBarScaleSpringEntity)
-            if expBarSpringRef then
-                expBarSpringRef:pull(0.15, 120.0, 14.0)
-            end
-        end
-
-        local playerT = component_cache.get(survivorEntity, Transform)
-        if playerT then
-            playerT.visualS = 1.5
-        end
-
-        --TODo: this is just a test.
-    end)
 end
 
 function ensureShopSystemInitialized()
@@ -10827,7 +10896,9 @@ function initPlanningUI()
     )
 
     if not stats_tooltip.signalRegistered then
-        signal.register("stats_recomputed", function(payload)
+        stats_tooltip.signalRegistered = true
+        local handlers = initGameplayHandlers()
+        handlers:on("stats_recomputed", function(payload)
             local ctx = combat_context
             local playerActor = ctx and ctx.side1 and ctx.side1[1]
             if not playerActor then return end
@@ -10843,7 +10914,6 @@ function initPlanningUI()
             local detailedAnchor = planningUIEntities and planningUIEntities.player_stats_detailed_button
             refreshDetailedStatsTooltip(detailedAnchor or anchor)
         end)
-        stats_tooltip.signalRegistered = true
     end
 
     planningUIEntities.wand_buttons = {}

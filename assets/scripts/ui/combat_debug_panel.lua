@@ -522,9 +522,11 @@ function CombatDebugPanel.fire_test_joker_event(event_type)
         if joker and joker.calculate then
             local ok, effect = pcall(joker.calculate, joker, context)
             if ok and effect then
+                -- Safely extract message (effect may be non-table truthy value)
+                local message = (type(effect) == "table" and effect.message) or "effect returned"
                 table.insert(results, {
                     joker = joker.name or joker_id,
-                    message = effect.message or "effect returned",
+                    message = message,
                     effect = effect
                 })
             end

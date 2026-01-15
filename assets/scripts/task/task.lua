@@ -1,6 +1,5 @@
-local registry = require("registry")
-
 -- This enables the monobehavior-like script to execute coroutine tasks
+-- Note: registry is a C++ global exposed via Sol2, not a Lua module
 
 
 -- task.lua

@@ -675,17 +675,22 @@ local function cleanupSignalHandlers()
         end
     end
     state.signalHandlers = {}
+    -- Reset input handler flag so it re-registers on next game
+    state.inputHandlerInitialized = false
+    -- Reset game state handler flag
+    state.gameStateHandlerRegistered = false
 end
+
+-- Export for cleanup from gameplay.lua resetGameToStart()
+PlayerInventory.cleanupSignalHandlers = cleanupSignalHandlers
 
 --------------------------------------------------------------------------------
 -- Input Handling: Tab Key Toggle
 --------------------------------------------------------------------------------
 
-local inputHandlerInitialized = false
-
 local function setupInputHandler()
-    if inputHandlerInitialized then return end
-    inputHandlerInitialized = true
+    if state.inputHandlerInitialized then return end
+    state.inputHandlerInitialized = true
 
     log_debug("[PlayerInventory] Setting up input handler for Tab key")
 
@@ -1039,11 +1044,17 @@ function PlayerInventory.spawnDummyCards()
 end
 
 -- Setup input handler via signal after game systems are ready
-signal.register("game_state_changed", function(data)
-    if data and data.current == "PLANNING" then
-        setupInputHandler()
+-- Guarded to prevent handler accumulation on game restart
+if not state.gameStateHandlerRegistered then
+    state.gameStateHandlerRegistered = true
+    local gameStateHandler = function(data)
+        if data and data.current == "PLANNING" then
+            setupInputHandler()
+        end
     end
-end)
+    signal.register("game_state_changed", gameStateHandler)
+    table.insert(state.signalHandlers, { event = "game_state_changed", handler = gameStateHandler })
+end
 
 -- Also setup immediately in case we're already in planning phase
 timer.after_opts({

@@ -2,8 +2,12 @@
 -- Core orchestrator for wave-based gameplay
 
 local signal = require("external.hump.signal")
+local signal_group = require("core.signal_group")
 local timer = require("core.timer")
 local entity_cache = require("core.entity_cache")
+
+-- Signal handler group for cleanup on game restart
+local wave_handlers = nil
 
 local WaveHelpers = require("combat.wave_helpers")
 local EnemyFactory = require("combat.enemy_factory")
@@ -335,6 +339,9 @@ function WaveDirector.get_state()
 end
 
 function WaveDirector.cleanup()
+    -- Cleanup signal handlers FIRST (prevents memory leaks on restart)
+    WaveDirector.cleanup_handlers()
+
     -- Kill all remaining enemies
     for e, _ in pairs(state.alive_enemies) do
         if entity_cache.valid(e) then
@@ -355,17 +362,33 @@ function WaveDirector.cleanup()
 end
 
 --============================================
--- SIGNAL LISTENERS
+-- SIGNAL HANDLERS
 --============================================
 
-signal.register("enemy_killed", function(e, ctx)
-    WaveDirector.on_enemy_killed(e)
-end)
+-- Initialize signal handlers (prevents accumulation on restart)
+function WaveDirector.init_handlers()
+    if wave_handlers then return end
+    wave_handlers = signal_group.new("wave_director")
 
--- Handle summoned enemies (add to tracking)
-signal.register("summon_enemy", function(data)
-    local e, ctx = WaveDirector.spawn_enemy(data.type, { x = data.x, y = data.y })
-    -- Summoned enemies are tracked just like regular enemies
-end)
+    wave_handlers:on("enemy_killed", function(e, ctx)
+        WaveDirector.on_enemy_killed(e)
+    end)
+
+    wave_handlers:on("summon_enemy", function(data)
+        local e, ctx = WaveDirector.spawn_enemy(data.type, { x = data.x, y = data.y })
+        -- Summoned enemies are tracked just like regular enemies
+    end)
+end
+
+-- Cleanup signal handlers
+function WaveDirector.cleanup_handlers()
+    if wave_handlers then
+        wave_handlers:cleanup()
+        wave_handlers = nil
+    end
+end
+
+-- Initialize handlers on module load (maintains current behavior)
+WaveDirector.init_handlers()
 
 return WaveDirector

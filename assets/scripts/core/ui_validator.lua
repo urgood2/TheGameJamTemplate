@@ -161,4 +161,97 @@ function UIValidator.getAllBounds(entity)
     return result
 end
 
+---Check if child bounds are fully inside parent bounds
+---@param px number Parent x
+---@param py number Parent y
+---@param pw number Parent width
+---@param ph number Parent height
+---@param cx number Child x
+---@param cy number Child y
+---@param cw number Child width
+---@param ch number Child height
+---@return boolean contained
+local function isContained(px, py, pw, ph, cx, cy, cw, ch)
+    return cx >= px and
+           cy >= py and
+           (cx + cw) <= (px + pw) and
+           (cy + ch) <= (py + ph)
+end
+
+---Check containment between specific parent/child bounds
+---@param parentId string|number Parent identifier
+---@param parentBounds table {x, y, w, h}
+---@param childId string|number Child identifier
+---@param childBounds table {x, y, w, h, allowEscape?}
+---@return table[] violations
+function UIValidator.checkContainmentWithBounds(parentId, parentBounds, childId, childBounds)
+    local violations = {}
+
+    -- Skip if child has allowEscape flag
+    if childBounds.allowEscape then
+        return violations
+    end
+
+    if not isContained(
+        parentBounds.x, parentBounds.y, parentBounds.w, parentBounds.h,
+        childBounds.x, childBounds.y, childBounds.w, childBounds.h
+    ) then
+        table.insert(violations, {
+            type = "containment",
+            severity = severities.containment,
+            entity = childId,
+            parent = parentId,
+            message = string.format(
+                "Entity %s escapes parent %s bounds (child: %d,%d %dx%d, parent: %d,%d %dx%d)",
+                tostring(childId), tostring(parentId),
+                childBounds.x, childBounds.y, childBounds.w, childBounds.h,
+                parentBounds.x, parentBounds.y, parentBounds.w, parentBounds.h
+            ),
+        })
+    end
+
+    return violations
+end
+
+---Check containment rule for a UI entity tree
+---@param entity number Root entity ID
+---@return table[] violations
+function UIValidator.checkContainment(entity)
+    local violations = {}
+
+    local function checkEntity(ent, parentBounds)
+        if not ent or not registry:valid(ent) then return end
+
+        local bounds = UIValidator.getBounds(ent)
+        if not bounds then return end
+
+        -- Check if this entity is contained in parent
+        if parentBounds then
+            -- Get allowEscape from config if available
+            local go = component_cache.get(ent, GameObject)
+            local allowEscape = go and go.config and go.config.allowEscape
+            bounds.allowEscape = allowEscape
+
+            local v = UIValidator.checkContainmentWithBounds(
+                "parent", parentBounds,
+                ent, bounds
+            )
+            for _, violation in ipairs(v) do
+                table.insert(violations, violation)
+            end
+        end
+
+        -- Check children
+        local go = component_cache.get(ent, GameObject)
+        if go and go.orderedChildren then
+            for _, child in ipairs(go.orderedChildren) do
+                checkEntity(child, bounds)
+            end
+        end
+    end
+
+    checkEntity(entity, nil)
+    return violations
+end
+
 return UIValidator

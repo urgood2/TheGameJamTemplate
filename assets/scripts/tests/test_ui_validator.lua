@@ -77,3 +77,62 @@ TestRunner.describe("UIValidator Bounds Extraction", function()
     end)
 
 end)
+
+TestRunner.describe("UIValidator Containment Rule", function()
+
+    TestRunner.it("checkContainment returns no violations for contained children", function()
+        local UIValidator = require("core.ui_validator")
+        local dsl = require("ui.ui_syntax_sugar")
+
+        -- Parent 200x200, child should fit inside
+        local ui = dsl.root {
+            config = { padding = 20, minWidth = 200, minHeight = 200 },
+            children = {
+                dsl.text("Small text", { fontSize = 12 })
+            }
+        }
+        local entity = dsl.spawn({ x = 100, y = 100 }, ui)
+
+        local violations = UIValidator.checkContainment(entity)
+
+        TestRunner.assert_not_nil(violations, "should return violations array")
+        TestRunner.assert_equals(0, #violations, "should have no violations for contained children")
+
+        dsl.remove(entity)
+    end)
+
+    TestRunner.it("checkContainment detects child escaping parent", function()
+        local UIValidator = require("core.ui_validator")
+
+        -- Mock bounds where child escapes parent
+        local mockBounds = {
+            parent = { x = 100, y = 100, w = 50, h = 50 },
+            child = { x = 140, y = 100, w = 30, h = 30 }, -- Escapes right edge (140+30 > 100+50)
+        }
+
+        local violations = UIValidator.checkContainmentWithBounds(
+            "parent", mockBounds.parent,
+            "child", mockBounds.child
+        )
+
+        TestRunner.assert_true(#violations > 0, "should detect child escaping parent")
+        TestRunner.assert_equals("containment", violations[1].type, "violation type should be containment")
+    end)
+
+    TestRunner.it("respects allowEscape flag", function()
+        local UIValidator = require("core.ui_validator")
+
+        local mockBounds = {
+            parent = { x = 100, y = 100, w = 50, h = 50 },
+            child = { x = 140, y = 100, w = 30, h = 30, allowEscape = true },
+        }
+
+        local violations = UIValidator.checkContainmentWithBounds(
+            "parent", mockBounds.parent,
+            "child", mockBounds.child
+        )
+
+        TestRunner.assert_equals(0, #violations, "should allow escape when flag set")
+    end)
+
+end)

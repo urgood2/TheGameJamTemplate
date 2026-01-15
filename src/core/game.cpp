@@ -124,19 +124,9 @@ using std::pair;
 
 // AsteroidManager *asteroidManager = nullptr;
 
-// example entity
-entt::entity player{entt::null}, player2{entt::null}; // example player entity
-
-// example transform entity (which can be anything)
-entt::entity transformEntity{entt::null};
-entt::entity childEntity{entt::null};
-entt::entity childEntity2{entt::null};
-entt::entity childEntity3{entt::null};
-entt::entity uiBox{entt::null};
-entt::entity hoverPopupUIBox{entt::null};
-entt::entity dragPopupUIBox{entt::null};
-entt::entity alertUIBox{entt::null};
-entt::entity testInventory{entt::null};
+// NOTE: Legacy global entity declarations (player, transformEntity, childEntity*,
+// uiBox, etc.) were removed as they were unused example code. Entity references
+// should be stored in EngineContext or managed at scene scope.
 
 // lua function handles
 sol::protected_function luaMainInitFunc;
@@ -208,11 +198,8 @@ namespace game
     double g_avgGcPauseMs{0.0};
     size_t g_gcPauseSampleCount{0};
 
-    // camera
-    entt::entity cameraRotationSpringEntity;
-    entt::entity cameraZoomSpringEntity;
-    entt::entity cameraXSpringEntity;
-    entt::entity cameraYSpringEntity;
+    // NOTE: Unused camera spring entity declarations were removed.
+    // Camera springs are now managed by camera_manager.
 
     TextSystem::Text text;
     entt::entity textEntity{entt::null};

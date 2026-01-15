@@ -503,7 +503,7 @@ namespace tutorial_system_v2 {
         // top side: 25
         // bottom: 24
 
-        // use VFXComponent, with optional callback to delete itself? Maybe listen to a key event? like any_key
+        // use VFXTag, with optional callback to delete itself? Maybe listen to a key event? like any_key
 
         // maybe make a ninepatch component that can be removed after a set time
 

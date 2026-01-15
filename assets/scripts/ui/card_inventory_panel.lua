@@ -363,7 +363,6 @@ local function createHeader()
                 minHeight = 28,
                 fontSize = 16,
                 color = "darkred",
-                hover = true,
                 onClick = function()
                     CardInventoryPanel.close()
                 end,
@@ -389,7 +388,6 @@ local function createFilterBar()
                 minHeight = 24,
                 fontSize = 11,
                 color = "purple_slate",
-                hover = true,
                 onClick = function()
                     toggleSort("name")
                 end,
@@ -401,7 +399,6 @@ local function createFilterBar()
                 minHeight = 24,
                 fontSize = 11,
                 color = "purple_slate",
-                hover = true,
                 onClick = function()
                     toggleSort("cost")
                 end,
@@ -425,7 +422,6 @@ local function createTabs()
             minHeight = 32,
             fontSize = 11,
             color = isActive and "steel_blue" or "gray",
-            hover = true,
             onClick = function()
                 switchTab(tabId)
             end,
@@ -468,7 +464,6 @@ local function createFooter()
                 minHeight = 24,
                 fontSize = 11,
                 color = "jade_green",
-                hover = true,
                 onClick = function()
                     if not state.sortField then
                         state.sortField = "name"

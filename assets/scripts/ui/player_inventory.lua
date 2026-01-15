@@ -421,7 +421,6 @@ local function createCloseButton(panelX, panelY, panelWidth)
         minHeight = 24,
         fontSize = 12,
         color = "darkred",
-        hover = true,
         onClick = function()
             PlayerInventory.close()
         end,
@@ -449,7 +448,6 @@ local function createTabs()
             minHeight = 24,
             fontSize = 10,
             color = isActive and "steel_blue" or "gray",
-            hover = true,
             onClick = function()
                 switchTab(tabId)
             end,
@@ -486,7 +484,6 @@ local function createFooter()
                 minHeight = 24,
                 fontSize = 10,
                 color = "purple_slate",
-                hover = true,
                 onClick = function()
                     log_debug("[PlayerInventory] Sort by name clicked")
                 end,
@@ -498,7 +495,6 @@ local function createFooter()
                 minHeight = 24,
                 fontSize = 10,
                 color = "purple_slate",
-                hover = true,
                 onClick = function()
                     log_debug("[PlayerInventory] Sort by cost clicked")
                 end,

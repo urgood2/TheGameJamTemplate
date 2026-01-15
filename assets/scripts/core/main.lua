@@ -507,14 +507,14 @@ function createInventoryTestButton()
     local PlayerInventory = require("ui.player_inventory")
     local timer = require("core.timer")
     
-    local buttonDef = dsl.root {
+    local buttonDef = dsl.strict.root {
         config = {
             color = util.getColor("jade_green"),
             padding = 8,
             emboss = 3,
         },
         children = {
-            dsl.button("Test Inventory", {
+            dsl.strict.button("Test Inventory", {
                 fontSize = 14,
                 color = "transparent",
                 textColor = "white",
@@ -524,7 +524,7 @@ function createInventoryTestButton()
                     if playSoundEffect then playSoundEffect("effects", "button-click") end
                     PlayerInventory.toggle()
                     log_debug("[TEST] PlayerInventory.isOpen() = " .. tostring(PlayerInventory.isOpen()))
-                    
+
                     if PlayerInventory.isOpen() then
                         timer.after_opts({
                             delay = 0.1,
@@ -567,14 +567,14 @@ function createTabDemo()
     print("[TRACE] createTabDemo called")
     local dsl = require("ui.ui_syntax_sugar")
     
-    local tabDef = dsl.root {
+    local tabDef = dsl.strict.root {
         config = {
             color = util.getColor("blackberry"),
             padding = 4,
             emboss = 3,
         },
         children = {
-            dsl.tabs {
+            dsl.strict.tabs {
                 id = "demo_tabs",
                 activeTab = "game",
                 contentMinWidth = 200,
@@ -584,13 +584,13 @@ function createTabDemo()
                         id = "game",
                         label = "Game",
                         content = function()
-                            return dsl.vbox {
+                            return dsl.strict.vbox {
                                 config = { padding = 4 },
                                 children = {
-                                    dsl.text("Game Settings", { fontSize = 16, color = "white", shadow = true }),
-                                    dsl.spacer(8),
-                                    dsl.text("Speed: Normal", { fontSize = 12, color = "lightgray" }),
-                                    dsl.text("Difficulty: Medium", { fontSize = 12, color = "lightgray" }),
+                                    dsl.strict.text("Game Settings", { fontSize = 16, color = "white", shadow = true }),
+                                    dsl.strict.spacer(8),
+                                    dsl.strict.text("Speed: Normal", { fontSize = 12, color = "lightgray" }),
+                                    dsl.strict.text("Difficulty: Medium", { fontSize = 12, color = "lightgray" }),
                                 }
                             }
                         end
@@ -599,13 +599,13 @@ function createTabDemo()
                         id = "graphics",
                         label = "Graphics",
                         content = function()
-                            return dsl.vbox {
+                            return dsl.strict.vbox {
                                 config = { padding = 4 },
                                 children = {
-                                    dsl.text("Graphics Settings", { fontSize = 16, color = "white", shadow = true }),
-                                    dsl.spacer(8),
-                                    dsl.text("Fullscreen: Off", { fontSize = 12, color = "lightgray" }),
-                                    dsl.text("VSync: On", { fontSize = 12, color = "lightgray" }),
+                                    dsl.strict.text("Graphics Settings", { fontSize = 16, color = "white", shadow = true }),
+                                    dsl.strict.spacer(8),
+                                    dsl.strict.text("Fullscreen: Off", { fontSize = 12, color = "lightgray" }),
+                                    dsl.strict.text("VSync: On", { fontSize = 12, color = "lightgray" }),
                                 }
                             }
                         end
@@ -614,14 +614,14 @@ function createTabDemo()
                         id = "audio",
                         label = "Audio",
                         content = function()
-                            return dsl.vbox {
+                            return dsl.strict.vbox {
                                 config = { padding = 4 },
                                 children = {
-                                    dsl.text("Audio Settings", { fontSize = 16, color = "white", shadow = true }),
-                                    dsl.spacer(8),
-                                    dsl.text("Master: 100%", { fontSize = 12, color = "lightgray" }),
-                                    dsl.text("Music: 80%", { fontSize = 12, color = "lightgray" }),
-                                    dsl.text("SFX: 100%", { fontSize = 12, color = "lightgray" }),
+                                    dsl.strict.text("Audio Settings", { fontSize = 16, color = "white", shadow = true }),
+                                    dsl.strict.spacer(8),
+                                    dsl.strict.text("Master: 100%", { fontSize = 12, color = "lightgray" }),
+                                    dsl.strict.text("Music: 80%", { fontSize = 12, color = "lightgray" }),
+                                    dsl.strict.text("SFX: 100%", { fontSize = 12, color = "lightgray" }),
                                 }
                             }
                         end
@@ -639,14 +639,14 @@ function createTabDemo()
                         label = "Inventory",
                         content = function()
                             local PlayerInventory = require("ui.player_inventory")
-                            return dsl.vbox {
+                            return dsl.strict.vbox {
                                 config = { padding = 8 },
                                 children = {
-                                    dsl.text("Player Inventory Test", { fontSize = 16, color = "white", shadow = true }),
-                                    dsl.spacer(8),
-                                    dsl.text("Status: " .. (PlayerInventory.isOpen() and "OPEN" or "CLOSED"), { fontSize = 12, color = "lightgray" }),
-                                    dsl.spacer(12),
-                                    dsl.button("Open Inventory", {
+                                    dsl.strict.text("Player Inventory Test", { fontSize = 16, color = "white", shadow = true }),
+                                    dsl.strict.spacer(8),
+                                    dsl.strict.text("Status: " .. (PlayerInventory.isOpen() and "OPEN" or "CLOSED"), { fontSize = 12, color = "lightgray" }),
+                                    dsl.strict.spacer(12),
+                                    dsl.strict.button("Open Inventory", {
                                         fontSize = 14,
                                         color = "jade_green",
                                         textColor = "white",
@@ -657,8 +657,8 @@ function createTabDemo()
                                             print("[TEST] PlayerInventory.open() called")
                                         end
                                     }),
-                                    dsl.spacer(4),
-                                    dsl.button("Close Inventory", {
+                                    dsl.strict.spacer(4),
+                                    dsl.strict.button("Close Inventory", {
                                         fontSize = 14,
                                         color = "darkred",
                                         textColor = "white",
@@ -669,8 +669,8 @@ function createTabDemo()
                                             print("[TEST] PlayerInventory.close() called")
                                         end
                                     }),
-                                    dsl.spacer(4),
-                                    dsl.button("Toggle Inventory", {
+                                    dsl.strict.spacer(4),
+                                    dsl.strict.button("Toggle Inventory", {
                                         fontSize = 14,
                                         color = "steel_blue",
                                         textColor = "white",
@@ -700,15 +700,15 @@ function createPatchNotesButton()
     
     local hasUnread = PatchNotesModal.hasUnread()
     
-    -- Use dsl.button which properly handles click via buttonCallback
-    local buttonDef = dsl.root {
+    -- Use dsl.strict.button which properly handles click via buttonCallback
+    local buttonDef = dsl.strict.root {
         config = {
             color = util.getColor("gray"),
             padding = 8,
             emboss = 2,
         },
         children = {
-            dsl.button("Notes", {
+            dsl.strict.button("Notes", {
                 fontSize = 14,
                 color = "transparent", -- Use transparent so root color shows through
                 textColor = "white",

@@ -198,7 +198,7 @@ function UIValidator.checkContainmentWithBounds(parentId, parentBounds, childId,
             entity = childId,
             parent = parentId,
             message = string.format(
-                "Entity %s escapes parent %s bounds (child: %d,%d %dx%d, parent: %d,%d %dx%d)",
+                "Entity %s escapes parent %s bounds (child: %.0f,%.0f %.0fx%.0f, parent: %.0f,%.0f %.0fx%.0f)",
                 tostring(childId), tostring(parentId),
                 childBounds.x, childBounds.y, childBounds.w, childBounds.h,
                 parentBounds.x, parentBounds.y, parentBounds.w, parentBounds.h
@@ -276,7 +276,7 @@ function UIValidator.checkWindowBoundsWithBounds(entityId, bounds, windowBounds)
             severity = severities.window_bounds,
             entity = entityId,
             message = string.format(
-                "Entity %s outside window bounds (entity: %d,%d %dx%d, window: %d,%d %dx%d)",
+                "Entity %s outside window bounds (entity: %.0f,%.0f %.0fx%.0f, window: %.0f,%.0f %.0fx%.0f)",
                 tostring(entityId),
                 bounds.x, bounds.y, bounds.w, bounds.h,
                 windowBounds.x, windowBounds.y, windowBounds.w, windowBounds.h

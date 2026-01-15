@@ -1012,6 +1012,12 @@ function PlayerInventory.getLockedCards()
     return state.lockedCards
 end
 
+--- Get the main panel entity for validation/testing.
+-- @return number|nil Panel entity or nil if not initialized
+function PlayerInventory.getPanelEntity()
+    return state.panelEntity
+end
+
 function PlayerInventory.spawnDummyCards()
     if not state.initialized then
         initializeInventory()

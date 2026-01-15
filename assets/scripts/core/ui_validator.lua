@@ -23,6 +23,8 @@ local severities = {
     collision_alignment = "error",
     layer_consistency = "error",
     space_consistency = "error",
+    global_overlap = "warning",      -- Cross-hierarchy overlaps
+    z_order_occlusion = "error",     -- Higher-z entity behind lower-z entity
 }
 
 -- Render tracking (for manually-rendered entities)
@@ -438,6 +440,142 @@ function UIValidator.checkSiblingOverlap(entity, options)
     end
 
     checkChildren(entity)
+    return violations
+end
+
+---Check for overlaps between multiple entity trees (cross-hierarchy)
+---@param entities table[] Array of root entity IDs to check against each other
+---@param options? table {skipHidden: boolean}
+---@return table[] violations
+function UIValidator.checkGlobalOverlap(entities, options)
+    local violations = {}
+    options = options or {}
+    local skipHidden = options.skipHidden
+
+    -- Collect all bounds from all entity trees
+    local allEntities = {}
+    for _, rootEntity in ipairs(entities) do
+        local bounds = UIValidator.getAllBounds(rootEntity, options)
+        for ent, entBounds in pairs(bounds) do
+            -- Skip if hidden
+            if skipHidden and UIValidator.isEntityHidden(ent, entBounds) then
+                goto continue
+            end
+
+            -- Get z-order for later comparison
+            local z = UIValidator.getZOrder(ent) or 0
+
+            -- Check allowOverlap flag
+            local go = component_cache.get(ent, GameObject)
+            local allowOverlap = go and go.config and go.config.allowOverlap
+
+            table.insert(allEntities, {
+                id = ent,
+                root = rootEntity,
+                bounds = entBounds,
+                z = z,
+                allowOverlap = allowOverlap,
+            })
+
+            ::continue::
+        end
+    end
+
+    -- Check all pairs for overlaps
+    for i = 1, #allEntities - 1 do
+        for j = i + 1, #allEntities do
+            local a = allEntities[i]
+            local b = allEntities[j]
+
+            -- Skip if same root (handled by sibling_overlap)
+            if a.root == b.root then
+                goto continue_pair
+            end
+
+            -- Skip if either allows overlap
+            if a.allowOverlap or b.allowOverlap then
+                goto continue_pair
+            end
+
+            -- Check for overlap
+            if rectsOverlap(
+                a.bounds.x, a.bounds.y, a.bounds.w, a.bounds.h,
+                b.bounds.x, b.bounds.y, b.bounds.w, b.bounds.h
+            ) then
+                -- Report lower-z entity being occluded by higher-z entity
+                local occluded, occluder
+                if a.z < b.z then
+                    occluded, occluder = a, b
+                else
+                    occluded, occluder = b, a
+                end
+
+                table.insert(violations, {
+                    type = "global_overlap",
+                    severity = severities.global_overlap,
+                    entity = occluder.id,
+                    occluded = occluded.id,
+                    message = string.format(
+                        "Entity %s (z=%d) overlaps entity %s (z=%d) from different hierarchy",
+                        tostring(occluder.id), occluder.z,
+                        tostring(occluded.id), occluded.z
+                    ),
+                })
+            end
+
+            ::continue_pair::
+        end
+    end
+
+    return violations
+end
+
+---Check z-order occlusion - entities with higher z should not be visually behind lower z
+---@param entityPairs table[] Array of {front: entity, behind: entity} pairs to verify
+---@param options? table {skipHidden: boolean}
+---@return table[] violations
+function UIValidator.checkZOrderOcclusion(entityPairs, options)
+    local violations = {}
+    options = options or {}
+
+    for _, pair in ipairs(entityPairs) do
+        local frontEntity = pair.front
+        local behindEntity = pair.behind
+
+        if not frontEntity or not behindEntity then
+            goto continue
+        end
+
+        local frontZ = UIValidator.getZOrder(frontEntity) or 0
+        local behindZ = UIValidator.getZOrder(behindEntity) or 0
+
+        -- Front entity should have higher z than behind entity
+        if frontZ <= behindZ then
+            local frontBounds = UIValidator.getBounds(frontEntity)
+            local behindBounds = UIValidator.getBounds(behindEntity)
+
+            -- Only report if they actually overlap
+            if frontBounds and behindBounds and rectsOverlap(
+                frontBounds.x, frontBounds.y, frontBounds.w, frontBounds.h,
+                behindBounds.x, behindBounds.y, behindBounds.w, behindBounds.h
+            ) then
+                table.insert(violations, {
+                    type = "z_order_occlusion",
+                    severity = severities.z_order_occlusion,
+                    entity = frontEntity,
+                    behind = behindEntity,
+                    message = string.format(
+                        "Entity %s (z=%d) should render above %s (z=%d) but has lower/equal z-order",
+                        tostring(frontEntity), frontZ,
+                        tostring(behindEntity), behindZ
+                    ),
+                })
+            end
+        end
+
+        ::continue::
+    end
+
     return violations
 end
 

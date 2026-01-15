@@ -50,14 +50,53 @@ function M.run()
             local options = { skipHidden = true }
             local violations = UIValidator.validate(panelEntity, nil, options)
 
-            -- Also validate each grid tab
+            -- Collect grid entities for cross-hierarchy check
             local grids = PlayerInventory.getGrids()
+            local activeGridEntity = nil
+
+            -- Validate each grid tab individually
             for tabId, gridEntity in pairs(grids or {}) do
                 print("[Test] Validating grid: " .. tostring(tabId))
                 local gridViolations = UIValidator.validate(gridEntity, nil, options)
                 for _, v in ipairs(gridViolations) do
                     table.insert(violations, v)
                 end
+
+                -- Track active grid for cross-hierarchy check
+                if tabId == "equipment" then -- Default active tab
+                    activeGridEntity = gridEntity
+                end
+            end
+
+            -- Check for cross-hierarchy overlaps between panel and active grid
+            if activeGridEntity then
+                print("[Test] Checking global overlap between panel and active grid...")
+                local globalViolations = UIValidator.checkGlobalOverlap(
+                    { panelEntity, activeGridEntity },
+                    options
+                )
+                for _, v in ipairs(globalViolations) do
+                    table.insert(violations, v)
+                end
+                print("[Test] Global overlap violations: " .. #globalViolations)
+            end
+
+            -- Check card z-order if there are any cards in the inventory
+            local cardRegistry = PlayerInventory.getCardRegistry and PlayerInventory.getCardRegistry()
+            if cardRegistry and next(cardRegistry) and activeGridEntity then
+                print("[Test] Checking card z-order occlusion...")
+                local cardPairs = {}
+                for cardEntity, _ in pairs(cardRegistry) do
+                    if cardEntity and registry:valid(cardEntity) then
+                        -- Cards should render ABOVE the grid
+                        table.insert(cardPairs, { front = cardEntity, behind = activeGridEntity })
+                    end
+                end
+                local occlusionViolations = UIValidator.checkZOrderOcclusion(cardPairs, options)
+                for _, v in ipairs(occlusionViolations) do
+                    table.insert(violations, v)
+                end
+                print("[Test] Z-order occlusion violations: " .. #occlusionViolations)
             end
 
             -- Report results

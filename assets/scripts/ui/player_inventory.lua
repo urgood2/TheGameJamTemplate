@@ -1018,6 +1018,12 @@ function PlayerInventory.getPanelEntity()
     return state.panelEntity
 end
 
+--- Get the card registry for validation/testing.
+-- @return table Map of cardEntity -> cardData
+function PlayerInventory.getCardRegistry()
+    return state.cardRegistry
+end
+
 function PlayerInventory.spawnDummyCards()
     if not state.initialized then
         initializeInventory()

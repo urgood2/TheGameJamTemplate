@@ -73,6 +73,15 @@ local STANDALONE_TESTS = {
     -- Schema & Validation
     "assets/scripts/tests/test_schema.lua",
     "assets/scripts/tests/test_dsl_strict.lua",
+    "assets/scripts/tests/test_dsl_strict_primitives.lua",
+    "assets/scripts/tests/test_dsl_strict_layouts.lua",
+    "assets/scripts/tests/test_dsl_strict_interactive.lua",
+
+    -- Showcase/Docs acceptance
+    "assets/scripts/tests/test_primitive_showcases.lua",
+    "assets/scripts/tests/test_layout_showcases.lua",
+    "assets/scripts/tests/test_pattern_showcases.lua",
+    "assets/scripts/tests/test_showcase_gallery.lua",
 
     -- Standalone detection (game-only feature errors)
     "assets/scripts/tests/test_standalone_detection.lua",

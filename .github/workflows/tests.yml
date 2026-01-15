@@ -19,7 +19,7 @@ jobs:
           sudo apt-get install -y lua5.4
 
       - name: Run standalone Lua tests
-        run: lua assets/scripts/tests/run_standalone.lua
+        run: lua5.4 assets/scripts/tests/run_standalone.lua
 
   unit:
     runs-on: ubuntu-latest

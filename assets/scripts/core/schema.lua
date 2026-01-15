@@ -539,7 +539,7 @@ Schema.UI_SPRITE_PANEL = {
         -- Sprite
         sprite      = { type = "string",   required = false },
         borders     = { type = "table",    required = false }, -- [left, top, right, bottom] or { left, top, right, bottom }
-        sizing      = { type = "string",   required = false, enum = { "fit_content", "fixed", "stretch" } },
+        sizing      = { type = "string",   required = false, enum = { "fit_content", "fixed", "stretch", "fit_sprite" } },
         tint        = { type = "string",   required = false },
 
         -- Structure

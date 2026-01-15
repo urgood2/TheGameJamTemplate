@@ -382,14 +382,14 @@ local function buildTooltipDef(tag, count, thresholds, accent)
     
     local children = {}
     
-    children[#children + 1] = dsl.text(tag .. " Synergy", {
+    children[#children + 1] = dsl.strict.text(tag .. " Synergy", {
         color = accent,
         fontSize = tooltipStyle.titleFontSize,
         fontName = tooltipStyle.fontName,
         align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER)
     })
     
-    children[#children + 1] = dsl.text("Cards in deck: " .. tostring(count), {
+    children[#children + 1] = dsl.strict.text("Cards in deck: " .. tostring(count), {
         color = tooltipStyle.muted,
         fontSize = tooltipStyle.fontSize,
         fontName = tooltipStyle.fontName,
@@ -402,7 +402,7 @@ local function buildTooltipDef(tag, count, thresholds, accent)
         local bonus = describeBonus(tag, threshold)
         local tierText = string.format("%s Tier %d (%d+): %s", indicator, i, threshold, bonus)
         
-        children[#children + 1] = dsl.text(tierText, {
+        children[#children + 1] = dsl.strict.text(tierText, {
             color = isActive and tooltipStyle.active or tooltipStyle.muted,
             fontSize = tooltipStyle.fontSize,
             fontName = tooltipStyle.fontName,
@@ -413,7 +413,7 @@ local function buildTooltipDef(tag, count, thresholds, accent)
     if nextThreshold then
         local needed = nextThreshold - count
         local hintText = string.format("%d more card%s for Tier %d", needed, needed == 1 and "" or "s", countThresholdsReached(count, thresholds) + 1)
-        children[#children + 1] = dsl.text(hintText, {
+        children[#children + 1] = dsl.strict.text(hintText, {
             color = accent,
             fontSize = tooltipStyle.fontSize,
             fontName = tooltipStyle.fontName,
@@ -421,7 +421,7 @@ local function buildTooltipDef(tag, count, thresholds, accent)
         })
     end
     
-    return dsl.root {
+    return dsl.strict.root {
         config = {
             color = tooltipStyle.bg,
             padding = tooltipStyle.padding,
@@ -431,7 +431,7 @@ local function buildTooltipDef(tag, count, thresholds, accent)
             shadow = true,
         },
         children = {
-            dsl.vbox {
+            dsl.strict.vbox {
                 config = {
                     color = tooltipStyle.inner,
                     padding = 8,

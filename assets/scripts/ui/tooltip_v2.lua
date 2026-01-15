@@ -331,7 +331,7 @@ local function buildNameBox(name, opts)
         })
     end
 
-    return dsl.root {
+    return dsl.strict.root {
         config = {
             color = Style.bgColor,
             minWidth = Style.BOX_WIDTH,
@@ -367,7 +367,7 @@ local function buildDescriptionBox(description, opts)
         })
         
         -- Wrap text in a container with maxWidth to enable word wrapping
-        local textWrapper = dsl.vbox {
+        local textWrapper = dsl.strict.vbox {
             config = {
                 maxWidth = textAreaWidth,
                 align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
@@ -377,10 +377,10 @@ local function buildDescriptionBox(description, opts)
         table.insert(children, textWrapper)
     else
         -- Empty placeholder (spacer)
-        table.insert(children, dsl.spacer(textAreaWidth, Style.minDescHeight))
+        table.insert(children, dsl.strict.spacer(textAreaWidth, Style.minDescHeight))
     end
-    
-    return dsl.root {
+
+    return dsl.strict.root {
         config = {
             color = Style.bgColor,
             minWidth = Style.BOX_WIDTH,
@@ -398,37 +398,37 @@ end
 
 -- Build a single stat row (label: value)
 local function buildStatRow(label, value)
-    local labelNode = dsl.text(tostring(label) .. ":", {
+    local labelNode = dsl.strict.text(tostring(label) .. ":", {
         fontSize = Style.statLabelFontSize,
         color = Style.labelColor,
         fontName = getFontName(),
         shadow = false,
     })
-    
-    local valueNode = dsl.text(tostring(value), {
+
+    local valueNode = dsl.strict.text(tostring(value), {
         fontSize = Style.statValueFontSize,
         color = Style.valueColor,
         fontName = getFontName(),
         shadow = false,
     })
-    
-    return dsl.hbox {
+
+    return dsl.strict.hbox {
         config = {
             padding = 2,
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
         },
-        children = { labelNode, dsl.spacer(4), valueNode }
+        children = { labelNode, dsl.strict.spacer(4), valueNode }
     }
 end
 
 -- Build a tag pill
 local function buildTagPill(tag)
     local tagColor = Style.tagColors[tag] or Style.defaultTagColor
-    
+
     -- Calculate pill height based on font size + padding for proper centering
     local pillHeight = Style.tagFontSize + 6  -- font size + vertical padding
-    
-    return dsl.hbox {
+
+    return dsl.strict.hbox {
         config = {
             color = getColor(tagColor),
             padding = 3,
@@ -436,7 +436,7 @@ local function buildTagPill(tag)
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
         },
         children = {
-            dsl.text(tostring(tag), {
+            dsl.strict.text(tostring(tag), {
                 fontSize = Style.tagFontSize,
                 color = "white",
                 fontName = getFontName(),
@@ -465,7 +465,7 @@ local function buildInfoBox(info, opts)
         
         if #statRows > 0 then
             -- Wrap stats in a vbox
-            table.insert(children, dsl.vbox {
+            table.insert(children, dsl.strict.vbox {
                 config = {
                     padding = 2,
                     align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
@@ -474,17 +474,17 @@ local function buildInfoBox(info, opts)
             })
         end
     end
-    
+
     -- Tag pills
     if info and info.tags and #info.tags > 0 then
         local pillNodes = {}
         for _, tag in ipairs(info.tags) do
             table.insert(pillNodes, buildTagPill(tag))
-            table.insert(pillNodes, dsl.spacer(4, 1))  -- Small gap between pills
+            table.insert(pillNodes, dsl.strict.spacer(4, 1))  -- Small gap between pills
         end
             table.remove(pillNodes)
-        
-        table.insert(children, dsl.hbox {
+
+        table.insert(children, dsl.strict.hbox {
             config = {
                 padding = 2,
                 align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
@@ -492,13 +492,13 @@ local function buildInfoBox(info, opts)
             children = pillNodes
         })
     end
-    
+
     -- If no content, add spacer
     if #children == 0 then
-        table.insert(children, dsl.spacer(Style.BOX_WIDTH - Style.infoPadding * 2, Style.minInfoHeight))
+        table.insert(children, dsl.strict.spacer(Style.BOX_WIDTH - Style.infoPadding * 2, Style.minInfoHeight))
     end
-    
-    return dsl.root {
+
+    return dsl.strict.root {
         config = {
             color = Style.bgColor,
             minWidth = Style.BOX_WIDTH,
@@ -510,8 +510,8 @@ local function buildInfoBox(info, opts)
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
             shadow = true,
         },
-        children = { 
-            dsl.vbox {
+        children = {
+            dsl.strict.vbox {
                 config = {
                     padding = 2,
                     align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),

@@ -1,0 +1,297 @@
+{
+  "name": "UI Test-First Documentation System",
+  "branchName": "feature/ui-test-first-docs",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Validation Engine Core",
+      "description": "As a developer, I want a validation engine that can check props against schemas so that I catch configuration errors at dev time.",
+      "acceptanceCriteria": [
+        "Validator can check required fields and report missing ones",
+        "Validator can check types (string, number, table, function, boolean)",
+        "Validator can check enum values against allowed list",
+        "Validator detects unknown properties",
+        "Validator suggests corrections for typos using string similarity"
+      ],
+      "priority": 1,
+      "passes": true,
+      "dependsOn": [],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-002",
+      "title": "Component Schemas",
+      "description": "As a developer, I want prop schemas defined for all UI components so that the validator knows what to check.",
+      "acceptanceCriteria": [
+        "Schema exists for all primitive components (text, image, anim, spacer)",
+        "Schema exists for all layout components (vbox, hbox, root, padding)",
+        "Schema exists for all interactive components (button, spriteButton)",
+        "Schema exists for panel components (spritePanel with borders/decorations)",
+        "Each schema defines required fields, optional fields, and types"
+      ],
+      "priority": 1,
+      "passes": true,
+      "dependsOn": [
+        "US-001"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-003",
+      "title": "Strict API Entry Point",
+      "description": "As a developer, I want to access strict validation via dsl.strict.* so that I can opt-in to validation without changing existing code.",
+      "acceptanceCriteria": [
+        "dsl.strict.vbox, dsl.strict.hbox, dsl.strict.text etc. are accessible",
+        "Strict functions validate props before delegating to regular DSL",
+        "Errors include component name, property name, and file location",
+        "Errors include 'Did you mean?' suggestions for typos",
+        "Regular dsl.* functions remain unchanged (no breaking changes)"
+      ],
+      "priority": 1,
+      "passes": true,
+      "dependsOn": [
+        "US-002"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-004",
+      "title": "Test Runner Core",
+      "description": "As a developer, I want a test runner that can execute describe/it blocks so that I can write and run tests.",
+      "acceptanceCriteria": [
+        "describe() and it() functions are available for test structure",
+        "Tests report pass/fail with clear output",
+        "Failed tests show assertion details and stack traces",
+        "Runner can execute all tests in a directory",
+        "Runner exits with appropriate exit code (0 for pass, 1 for fail)"
+      ],
+      "priority": 2,
+      "passes": true,
+      "dependsOn": [],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-005",
+      "title": "Test Matchers",
+      "description": "As a developer, I want expect() matchers so that I can write expressive test assertions.",
+      "acceptanceCriteria": [
+        "expect(x).to_be(y) for equality checks",
+        "expect(x).to_contain(y) for string/table containment",
+        "expect(x).to_be_truthy() and to_be_falsy()",
+        "expect(x).to_throw() for error checking",
+        "expect(x).to_equal(y) for deep table equality",
+        "Failed matchers show expected vs actual values"
+      ],
+      "priority": 2,
+      "passes": true,
+      "dependsOn": [
+        "US-004"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-006",
+      "title": "Test Runner Features",
+      "description": "As a developer, I want advanced test runner features so that I can iterate quickly.",
+      "acceptanceCriteria": [
+        "Filter tests by name pattern (e.g., --filter 'vbox')",
+        "Watch mode re-runs tests on file changes",
+        "Verbose mode shows all assertion details",
+        "Timing stats show duration per test and total",
+        "Summary shows passed/failed/skipped counts"
+      ],
+      "priority": 3,
+      "passes": true,
+      "dependsOn": [
+        "US-005"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-007",
+      "title": "Standalone Test Execution",
+      "description": "As a developer, I want tests to run without the game engine so that CI can validate changes quickly.",
+      "acceptanceCriteria": [
+        "Tests can run via standalone Lua interpreter",
+        "Mock/stub layer provides minimal DSL simulation",
+        "Test suite completes in under 5 seconds",
+        "Works in GitHub Actions CI environment",
+        "Clear error if game-only features are accidentally used"
+      ],
+      "priority": 3,
+      "passes": true,
+      "dependsOn": [
+        "US-006"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-008",
+      "title": "Primitive Component Tests",
+      "description": "As a developer, I want tests for all primitive UI components so that I have confidence in basic building blocks.",
+      "acceptanceCriteria": [
+        "Tests for dsl.strict.text (content, fontSize, color, align)",
+        "Tests for dsl.strict.image (sprite, size, tint)",
+        "Tests for dsl.strict.anim (sprite, frames, speed)",
+        "Tests for dsl.strict.spacer (width, height)",
+        "Each test validates both valid and invalid prop combinations"
+      ],
+      "priority": 2,
+      "passes": true,
+      "dependsOn": [
+        "US-003",
+        "US-005"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-009",
+      "title": "Layout Component Tests",
+      "description": "As a developer, I want tests for all layout UI components so that I have confidence in composition.",
+      "acceptanceCriteria": [
+        "Tests for dsl.strict.vbox (children, spacing, align)",
+        "Tests for dsl.strict.hbox (children, spacing, align)",
+        "Tests for dsl.strict.root (config, children)",
+        "Tests for nested layouts (vbox inside hbox)",
+        "Tests validate children is required and must be array"
+      ],
+      "priority": 2,
+      "passes": true,
+      "dependsOn": [
+        "US-003",
+        "US-005"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-010",
+      "title": "Interactive Component Tests",
+      "description": "As a developer, I want tests for interactive UI components so that I have confidence in user interactions.",
+      "acceptanceCriteria": [
+        "Tests for dsl.strict.button (onClick, children, disabled)",
+        "Tests for dsl.strict.spriteButton (sprite, borders, onClick)",
+        "Tests validate onClick is a function when provided",
+        "Tests for hover states and disabled states",
+        "Tests for spritePanel with decorations array"
+      ],
+      "priority": 2,
+      "passes": true,
+      "dependsOn": [
+        "US-003",
+        "US-005"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-011",
+      "title": "Showcase Gallery Viewer",
+      "description": "As a developer, I want a gallery viewer so that I can browse UI examples visually.",
+      "acceptanceCriteria": [
+        "Gallery displays list of available showcases by category",
+        "Selecting a showcase shows visual preview",
+        "Source code is displayed alongside preview",
+        "Keyboard navigation (up/down to browse, enter to select)",
+        "Categories: primitives, layouts, patterns"
+      ],
+      "priority": 4,
+      "passes": true,
+      "dependsOn": [],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-012",
+      "title": "Primitive Showcases",
+      "description": "As a developer, I want showcase examples for primitive components so that I can learn by example.",
+      "acceptanceCriteria": [
+        "Showcase for text with various sizes, colors, alignments",
+        "Showcase for image with sizing and tinting",
+        "Showcase for anim with different frame rates",
+        "Showcase for spacer usage in layouts",
+        "Each showcase includes prop documentation comments"
+      ],
+      "priority": 4,
+      "passes": true,
+      "dependsOn": [
+        "US-011"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-013",
+      "title": "Layout Showcases",
+      "description": "As a developer, I want showcase examples for layout components so that I can understand composition.",
+      "acceptanceCriteria": [
+        "Showcase for vbox with various spacing and alignment",
+        "Showcase for hbox with various spacing and alignment",
+        "Showcase for nested layouts (complex compositions)",
+        "Showcase for root with different config options",
+        "Each showcase demonstrates common patterns"
+      ],
+      "priority": 4,
+      "passes": true,
+      "dependsOn": [
+        "US-011"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-014",
+      "title": "Pattern Showcases",
+      "description": "As a developer, I want showcase examples for common UI patterns so that I can copy proven solutions.",
+      "acceptanceCriteria": [
+        "Showcase for tooltip pattern",
+        "Showcase for modal/dialog pattern",
+        "Showcase for inventory grid pattern",
+        "Showcase for button with icon and label",
+        "Showcase for panel with decorations"
+      ],
+      "priority": 4,
+      "passes": true,
+      "dependsOn": [
+        "US-011"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-015",
+      "title": "API Reference Documentation",
+      "description": "As a developer, I want LuaDoc comments on all DSL functions so that I can see docs in my editor.",
+      "acceptanceCriteria": [
+        "All dsl.strict.* functions have LuaDoc comments",
+        "Comments document all parameters with types",
+        "Comments include usage examples",
+        "Comments note which fields are required vs optional",
+        "Enum fields list all valid values"
+      ],
+      "priority": 5,
+      "passes": true,
+      "dependsOn": [
+        "US-003"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-016",
+      "title": "Usage Guide Documentation",
+      "description": "As a developer, I want Markdown guides so that I can understand the system holistically.",
+      "acceptanceCriteria": [
+        "Guide: Getting started with dsl.strict",
+        "Guide: Writing UI tests",
+        "Guide: Using the showcase gallery",
+        "Guide: Adding new components to the strict system",
+        "All guides in docs/ui/ directory"
+      ],
+      "priority": 5,
+      "passes": true,
+      "dependsOn": [
+        "US-003",
+        "US-006",
+        "US-011"
+      ],
+      "completionNotes": "Completed by agent"
+    }
+  ],
+  "metadata": {
+    "updatedAt": "2026-01-14T13:37:37.196Z"
+  }
+}

@@ -25,10 +25,10 @@ Usage:
         width = 600,
         height = 400,
         content = function(dsl)
-            return dsl.vbox {
+            return dsl.strict.vbox {
                 children = {
-                    dsl.text("Line 1"),
-                    dsl.text("Line 2")
+                    dsl.strict.text("Line 1"),
+                    dsl.strict.text("Line 2")
                 }
             }
         end,
@@ -193,7 +193,7 @@ local function buildButton(text, opts)
 
     local buttonColor = opts.color and util.getColor(opts.color) or util.getColor("gray")
 
-    return dsl.root {
+    return dsl.strict.root {
         config = {
             color = buttonColor,
             emboss = 2,
@@ -214,7 +214,7 @@ local function buildButton(text, opts)
             end,
         },
         children = {
-            dsl.text(text, {
+            dsl.strict.text(text, {
                 fontSize = 16,
                 color = "white",
                 shadow = true
@@ -240,7 +240,7 @@ local function buildModalUI(config)
             contentNode = config.content
         end
     else
-        contentNode = dsl.spacer(10)
+        contentNode = dsl.strict.spacer(10)
     end
 
     -- Build buttons
@@ -254,7 +254,7 @@ local function buildModalUI(config)
         }))
     end
 
-    local buttonRow = dsl.hbox {
+    local buttonRow = dsl.strict.hbox {
         config = { spacing = 10, align = "center" },
         children = buttonNodes
     }
@@ -263,21 +263,21 @@ local function buildModalUI(config)
     local children = {}
 
     if title and title ~= "" then
-        table.insert(children, dsl.text(title, {
+        table.insert(children, dsl.strict.text(title, {
             fontSize = 24,
             color = "gold",
             shadow = true
         }))
-        table.insert(children, dsl.spacer(8))
-        table.insert(children, dsl.divider("horizontal", { color = "gray", thickness = 2, length = width - 50 }))
-        table.insert(children, dsl.spacer(12))
+        table.insert(children, dsl.strict.spacer(8))
+        table.insert(children, dsl.strict.divider("horizontal", { color = "gray", thickness = 2, length = width - 50 }))
+        table.insert(children, dsl.strict.spacer(12))
     end
 
     table.insert(children, contentNode)
-    table.insert(children, dsl.spacer(16))
+    table.insert(children, dsl.strict.spacer(16))
     table.insert(children, buttonRow)
 
-    local modalDef = dsl.root {
+    local modalDef = dsl.strict.root {
         config = {
             color = color,
             padding = 20,
@@ -286,7 +286,7 @@ local function buildModalUI(config)
             minHeight = height,
         },
         children = {
-            dsl.vbox {
+            dsl.strict.vbox {
                 config = { spacing = 4 },
                 children = children
             }
@@ -406,7 +406,7 @@ function modal.alert(message, opts)
         width = opts.width or DEFAULT_WIDTH,
         height = opts.height,
         content = function(d)
-            return d.text(message, {
+            return d.strict.text(message, {
                 fontSize = 18,
                 color = "white",
                 shadow = true
@@ -436,7 +436,7 @@ function modal.confirm(message, opts)
         width = opts.width or DEFAULT_WIDTH,
         height = opts.height,
         content = function(d)
-            return d.text(message, {
+            return d.strict.text(message, {
                 fontSize = 18,
                 color = "white",
                 shadow = true

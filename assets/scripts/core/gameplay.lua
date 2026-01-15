@@ -792,7 +792,7 @@ local function makeTooltipPill(text, opts)
         shadow = opts.shadow,
         coded = useCoded
     }
-    return dsl.hbox {
+    return dsl.strict.hbox {
         config = cfg,
         children = { makeTooltipTextDef(displayText, textOpts) }
     }
@@ -814,7 +814,7 @@ local function makeTooltipValueBox(text, opts)
         shadow = opts.shadow,
         coded = opts.coded  -- NEW: pass through coded option
     }
-    return dsl.hbox {
+    return dsl.strict.hbox {
         config = cfg,
         children = { makeTooltipTextDef(text, textOpts) }
     }
@@ -823,7 +823,7 @@ end
 local function makeTooltipRow(label, value, opts)
     opts = opts or {}
     if value == nil then return nil end
-    return dsl.hbox {
+    return dsl.strict.hbox {
         config = {
             align = opts.align or bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
             padding = opts.rowPadding or tooltipStyle.rowPadding
@@ -893,7 +893,7 @@ local function makeSimpleTooltip(title, body, opts)
     end
 
     local innerPad = tooltipStyle.innerPadding
-    local v = dsl.vbox {
+    local v = dsl.strict.vbox {
         config = {
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
             color = tooltipStyle.innerColor,
@@ -903,7 +903,7 @@ local function makeSimpleTooltip(title, body, opts)
         children = rows
     }
 
-    local root = dsl.root {
+    local root = dsl.strict.root {
         config = {
             color = tooltipStyle.bgColor,
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
@@ -3764,7 +3764,7 @@ function makeWandTooltip(wand_def)
     local rows = {}
 
     if wand_def.id then
-        table.insert(rows, dsl.hbox {
+        table.insert(rows, dsl.strict.hbox {
             config = { align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
                 padding = tooltipStyle.rowPadding },
             children = {
@@ -3799,14 +3799,14 @@ function makeWandTooltip(wand_def)
         addLine(L("wand.label.always_casts", "always casts"), table.concat(wand_def.always_cast_cards, ", "))
     end
 
-    local v = dsl.vbox {
+    local v = dsl.strict.vbox {
         config = { align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
             color = tooltipStyle.innerColor,
             padding = tooltipStyle.innerPadding },
         children = rows
     }
 
-    local root = dsl.root {
+    local root = dsl.strict.root {
         config = {
             color = tooltipStyle.bgColor,
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
@@ -3871,7 +3871,7 @@ function makeCardTooltip(card_def, opts)
     local rows = {}
 
     if cardId then
-        table.insert(rows, dsl.hbox {
+        table.insert(rows, dsl.strict.hbox {
             config = {
                 align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
                 padding = rowPadding
@@ -3978,7 +3978,7 @@ function makeCardTooltip(card_def, opts)
             end
         end
         if #pillDefs > 0 then
-            table.insert(rows, dsl.hbox {
+            table.insert(rows, dsl.strict.hbox {
                 config = {
                     align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
                     padding = rowPadding
@@ -3989,7 +3989,7 @@ function makeCardTooltip(card_def, opts)
     end
 
     -- Single column layout for card tooltips
-    local v = dsl.vbox {
+    local v = dsl.strict.vbox {
         config = {
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
             color = tooltipStyle.innerColor,
@@ -3998,7 +3998,7 @@ function makeCardTooltip(card_def, opts)
         children = rows
     }
 
-    local root = dsl.root {
+    local root = dsl.strict.root {
         config = {
             color = tooltipStyle.bgColor,
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
@@ -4474,14 +4474,14 @@ function StatTooltipSystem.makeSectionHeader(groupId, opts)
     opts = opts or {}
     -- Don't use string.upper() as it doesn't handle UTF-8 properly
     local label = StatTooltipSystem.getGroupLabel(groupId)
-    return dsl.hbox {
+    return dsl.strict.hbox {
         config = {
             color = opts.headerBg or tooltipStyle.labelBg,
             padding = opts.headerPadding or 3,
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
         },
         children = {
-            dsl.text(label, {
+            dsl.strict.text(label, {
                 fontSize = opts.headerFontSize or 10,
                 color = opts.headerColor or tooltipStyle.labelColor,
                 shadow = false
@@ -4566,7 +4566,7 @@ end
 local function buildNColumnBody(rows, columnCount, opts)
     opts = opts or {}
     columnCount = columnCount or 2
-    if #rows == 0 then return dsl.vbox { config = { padding = 0 }, children = {} } end
+    if #rows == 0 then return dsl.strict.vbox { config = { padding = 0 }, children = {} } end
 
     local columns = {}
     for i = 1, columnCount do columns[i] = {} end
@@ -4580,14 +4580,14 @@ local function buildNColumnBody(rows, columnCount, opts)
     local children = {}
     for _, col in ipairs(columns) do
         if #col > 0 then
-            children[#children + 1] = dsl.vbox {
+            children[#children + 1] = dsl.strict.vbox {
                 config = { align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP), padding = opts.columnPadding or 0 },
                 children = col
             }
         end
     end
 
-    return dsl.hbox {
+    return dsl.strict.hbox {
         config = { align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP), color = opts.innerColor, padding = opts.padding or 0 },
         children = children
     }
@@ -4646,7 +4646,7 @@ local function makeDetailedStatsTooltip(snapshot)
     -- Note: padding only on root to prevent overflow, inner body has no extra padding
     local v = buildNColumnBody(rows, 5, { innerColor = tooltipStyle.innerColor, padding = 0, columnPadding = 2 })
 
-    local root = dsl.root {
+    local root = dsl.strict.root {
         config = {
             color = tooltipStyle.bgColor,
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
@@ -4723,7 +4723,7 @@ function stats_tooltip.makeTooltip(snapshot)
     -- Use 3 columns for better layout, padding only on root
     local v = buildNColumnBody(rows, 3, { innerColor = tooltipStyle.innerColor, padding = 0, columnPadding = 4 })
 
-    local root = dsl.root {
+    local root = dsl.strict.root {
         config = {
             color = tooltipStyle.bgColor,
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),

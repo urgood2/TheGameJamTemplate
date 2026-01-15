@@ -391,10 +391,10 @@ local function pill(text, opts)
 
     config = attachTooltip(config, opts.tooltip)
 
-    return dsl.hbox{
+    return dsl.strict.hbox {
         config = config,
         children = {
-            dsl.text(label, { color = opts.textColor or colors.text, fontSize = opts.fontSize or 13 })
+            dsl.strict.text(label, { color = opts.textColor or colors.text, fontSize = opts.fontSize or 13 })
         }
     }
 end
@@ -419,10 +419,10 @@ local function iconPill(iconId, opts)
 
     config = attachTooltip(config, opts.tooltip)
 
-    return dsl.hbox{
+    return dsl.strict.hbox {
         config = config,
         children = {
-            dsl.anim(iconId, { w = ICON_SIZE, h = ICON_SIZE, shadow = false })
+            dsl.strict.anim(iconId, { w = ICON_SIZE, h = ICON_SIZE, shadow = false })
         }
     }
 end
@@ -450,7 +450,7 @@ local function actionBox(card)
 end
 
 local function wrapNested(row)
-    return dsl.hbox{
+    return dsl.strict.hbox {
         config = {
             color = colors.nested,
             padding = 6,
@@ -548,7 +548,7 @@ local function buildBlockRow(block, depth, label)
 
     local bg = depth == 1 and colors.row or colors.nested
 
-    return dsl.hbox{
+    return dsl.strict.hbox {
         config = {
             color = bg,
             padding = 8,
@@ -562,7 +562,7 @@ local function buildBlockRow(block, depth, label)
 end
 
 local function buildCloseButton()
-    return dsl.hbox{
+    return dsl.strict.hbox {
         config = {
             id = "exec_graph_close_btn",
             color = resolveColor("red"),
@@ -577,7 +577,7 @@ local function buildCloseButton()
             canCollide = true,
         },
         children = {
-            dsl.text("X", { fontSize = 14, color = resolveColor("white") })
+            dsl.strict.text("X", { fontSize = 14, color = resolveColor("white") })
         }
     }
 end
@@ -594,21 +594,21 @@ local function buildRoot(blocks, opts)
     local headerText = opts and opts.title or defaultTitle
     local subtitle = opts and opts.wandId and (wandPrefix .. tostring(opts.wandId)) or nil
 
-    local titleColumn = dsl.vbox{
+    local titleColumn = dsl.strict.vbox {
         config = {
             color = Col(0, 0, 0, 0),
             padding = 0,
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
         },
         children = subtitle and {
-            dsl.text(headerText, { fontSize = 16, color = colors.text }),
-            dsl.text(subtitle, { fontSize = 12, color = colors.text })
+            dsl.strict.text(headerText, { fontSize = 16, color = colors.text }),
+            dsl.strict.text(subtitle, { fontSize = 12, color = colors.text })
         } or {
-            dsl.text(headerText, { fontSize = 16, color = colors.text })
+            dsl.strict.text(headerText, { fontSize = 16, color = colors.text })
         }
     }
 
-    local headerRow = dsl.hbox{
+    local headerRow = dsl.strict.hbox {
         config = {
             color = colors.backdrop,
             padding = 8,
@@ -617,7 +617,7 @@ local function buildRoot(blocks, opts)
         children = { titleColumn, buildCloseButton() }
     }
 
-    local column = dsl.vbox{
+    local column = dsl.strict.vbox {
         config = {
             color = colors.backdrop,
             padding = 10,
@@ -626,7 +626,7 @@ local function buildRoot(blocks, opts)
         children = rows
     }
 
-    return dsl.root{
+    return dsl.strict.root {
         config = {
             color = colors.backdrop,
             padding = 12,

@@ -201,6 +201,20 @@ function M.runValidation()
             results.violations = violations
 
             print("\n================================================================================")
+
+            -- Auto-exit after test completion if AUTO_EXIT_AFTER_TEST is set
+            local autoExit = os.getenv("AUTO_EXIT_AFTER_TEST") == "1"
+            if autoExit then
+                print("[Test] AUTO_EXIT_AFTER_TEST=1, exiting in 0.5s...")
+                timer.after_opts({
+                    delay = 0.5,
+                    action = function()
+                        print("[Test] Exiting with code: " .. (#errors == 0 and "0 (success)" or "1 (failure)"))
+                        os.exit(#errors == 0 and 0 or 1)
+                    end,
+                    tag = "test_auto_exit"
+                })
+            end
         end,
         tag = "real_inventory_validation"
     })

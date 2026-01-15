@@ -320,3 +320,49 @@ TestRunner.describe("UIValidator Full Validation", function()
     end)
 
 end)
+
+TestRunner.describe("UITestUtils Module", function()
+
+    TestRunner.it("module loads without error", function()
+        local UITestUtils = require("tests.ui_test_utils")
+        TestRunner.assert_not_nil(UITestUtils, "UITestUtils module should load")
+    end)
+
+    TestRunner.it("spawnAndWait spawns UI and returns entity", function()
+        local UITestUtils = require("tests.ui_test_utils")
+        local dsl = require("ui.ui_syntax_sugar")
+
+        local ui = dsl.root {
+            config = { padding = 10 },
+            children = {}
+        }
+
+        local entity = UITestUtils.spawnAndWait(ui, { x = 100, y = 100 })
+
+        TestRunner.assert_not_nil(entity, "should return entity")
+        TestRunner.assert_true(registry:valid(entity), "entity should be valid")
+
+        dsl.remove(entity)
+    end)
+
+    TestRunner.it("assertNoErrors passes for valid UI", function()
+        local UITestUtils = require("tests.ui_test_utils")
+        local dsl = require("ui.ui_syntax_sugar")
+
+        local ui = dsl.root {
+            config = { padding = 10, minWidth = 100, minHeight = 100 },
+            children = {}
+        }
+        local entity = UITestUtils.spawnAndWait(ui, { x = 200, y = 200 })
+
+        -- Should not throw
+        local success = pcall(function()
+            UITestUtils.assertNoErrors(entity)
+        end)
+
+        TestRunner.assert_true(success, "assertNoErrors should pass for valid UI")
+
+        dsl.remove(entity)
+    end)
+
+end)

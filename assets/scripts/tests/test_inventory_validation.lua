@@ -115,10 +115,8 @@ TestRunner.describe("Inventory Slot Non-Overlap", function()
 
 end)
 
--- Return module for test runner registration
-return {
-    name = "Inventory Validation Tests",
-    run = function()
-        -- Tests are registered via describe/it
-    end
-}
+-- Run tests when executed directly
+return function()
+    TestRunner.reset()
+    TestRunner.run_all()
+end

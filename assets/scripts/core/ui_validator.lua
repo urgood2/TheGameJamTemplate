@@ -134,6 +134,8 @@ function UIValidator.getAllBounds(entity)
         local bounds = UIValidator.getBounds(ent)
         if bounds then
             result[ent] = bounds
+            -- stash entity id for clearer parent reporting downstream
+            bounds.entity = ent
         end
 
         -- Get children from GameObject
@@ -213,7 +215,7 @@ end
 function UIValidator.checkContainment(entity)
     local violations = {}
 
-    local function checkEntity(ent, parentBounds)
+    local function checkEntity(ent, parentBounds, parentId)
         if not ent or not registry:valid(ent) then return end
 
         local bounds = UIValidator.getBounds(ent)
@@ -227,7 +229,7 @@ function UIValidator.checkContainment(entity)
             bounds.allowEscape = allowEscape
 
             local v = UIValidator.checkContainmentWithBounds(
-                "parent", parentBounds,
+                parentId or "parent", parentBounds,
                 ent, bounds
             )
             for _, violation in ipairs(v) do
@@ -239,20 +241,20 @@ function UIValidator.checkContainment(entity)
         local go = component_cache.get(ent, GameObject)
         if go and go.orderedChildren then
             for _, child in ipairs(go.orderedChildren) do
-                checkEntity(child, bounds)
+                checkEntity(child, bounds, ent)
             end
         end
     end
 
-    checkEntity(entity, nil)
+    checkEntity(entity, nil, nil)
     return violations
 end
 
 ---Get window bounds
 ---@return table {x, y, w, h}
 function UIValidator.getWindowBounds()
-    local w = globals and globals.screenWidth or 1280
-    local h = globals and globals.screenHeight or 720
+    local w = (globals and globals.screenWidth and globals.screenWidth()) or 1280
+    local h = (globals and globals.screenHeight and globals.screenHeight()) or 720
     return { x = 0, y = 0, w = w, h = h }
 end
 
@@ -488,6 +490,8 @@ local ruleChecks = {
     window_bounds = function(entity) return UIValidator.checkWindowBounds(entity) end,
     sibling_overlap = function(entity) return UIValidator.checkSiblingOverlap(entity) end,
     z_order_hierarchy = function(entity) return UIValidator.checkZOrder(entity) end,
+    layer_consistency = function(entity) return UIValidator.checkRenderConsistency(entity) end,
+    space_consistency = function(_) return {} end, -- space is evaluated within checkRenderConsistency
 }
 
 ---Validate a UI entity and return all violations
@@ -497,19 +501,36 @@ local ruleChecks = {
 function UIValidator.validate(entity, rules)
     local violations = {}
 
-    if not entity or not registry:valid(entity) then
+    if not entity then
         return violations
     end
 
     -- Determine which rules to run
-    local rulesToRun = rules or { "containment", "window_bounds", "sibling_overlap", "z_order_hierarchy" }
+    local rulesToRun = rules or {
+        "containment",
+        "window_bounds",
+        "sibling_overlap",
+        "z_order_hierarchy",
+        "layer_consistency",
+    }
+
+    -- Rules that don't require valid registry entities (work from render log)
+    local renderLogRules = {
+        layer_consistency = true,
+        space_consistency = true,
+    }
+
+    local isValidEntity = registry and registry:valid(entity)
 
     for _, ruleName in ipairs(rulesToRun) do
         local checkFn = ruleChecks[ruleName]
         if checkFn then
-            local v = checkFn(entity)
-            for _, violation in ipairs(v) do
-                table.insert(violations, violation)
+            -- Skip entity-based rules for invalid entities, but allow render log rules
+            if renderLogRules[ruleName] or isValidEntity then
+                local v = checkFn(entity)
+                for _, violation in ipairs(v) do
+                    table.insert(violations, violation)
+                end
             end
         end
     end
@@ -568,21 +589,52 @@ function UIValidator.validateAndReport(entity)
     return #errors > 0
 end
 
+-- Normalize layer identifier to a stable string so parent/child comparisons match
+local function normalizeLayerId(layer)
+    if not layer then return "nil" end
+    if type(layer) == "table" then
+        if layer.name then return tostring(layer.name) end
+        if layer.id then return tostring(layer.id) end
+    end
+    return tostring(layer)
+end
+
+-- Normalize draw space to "Screen"/"World" (or fallback tostring)
+local function normalizeSpace(space, layer)
+    if space == nil then return "nil" end
+
+    local dc = layer and layer.DrawCommandSpace
+    if dc then
+        if space == dc.Screen then return "Screen" end
+        if space == dc.World then return "World" end
+    end
+
+    if DrawCommandSpace then
+        if space == DrawCommandSpace.Screen then return "Screen" end
+        if space == DrawCommandSpace.World then return "World" end
+    end
+
+    if type(space) == "string" then return space end
+    return tostring(space)
+end
+
 ---Track render info for entities (call this instead of direct command_buffer calls)
 ---@param parentUI number|nil Parent UI entity (nil for roots)
----@param layerName string Layer name (e.g., "layers.ui")
+---@param layer any Layer userdata or name
 ---@param entities table[] Entities being rendered
 ---@param z number Z-order
----@param space string DrawCommandSpace ("Screen" or "World")
-function UIValidator.trackRender(parentUI, layerName, entities, z, space)
+---@param space any DrawCommandSpace value
+function UIValidator.trackRender(parentUI, layer, entities, z, space)
     local frameNum = globals and globals.frameCount or 0
+    local layerName = normalizeLayerId(layer)
+    local spaceName = normalizeSpace(space, layer)
 
     for _, entity in ipairs(entities) do
         renderLog[entity] = {
             parent = parentUI,
             layer = layerName,
             z = z,
-            space = space,
+            space = spaceName,
             frame = frameNum,
         }
     end
@@ -596,10 +648,7 @@ end
 ---@param space userdata DrawCommandSpace
 function UIValidator.queueDrawEntities(parentUI, layer, entities, z, space)
     -- Track for validation
-    local layerName = tostring(layer) -- Convert layer to string for comparison
-    local spaceName = space == (layer and layer.DrawCommandSpace and layer.DrawCommandSpace.Screen) and "Screen" or "World"
-
-    UIValidator.trackRender(parentUI, layerName, entities, z, spaceName)
+    UIValidator.trackRender(parentUI, layer, entities, z, space)
 
     -- Perform actual render (only if command_buffer exists)
     if command_buffer and command_buffer.queueDrawBatchedEntities then

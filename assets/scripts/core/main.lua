@@ -1059,6 +1059,23 @@ function main.init()
         end
     end
 
+    -- Run UIValidator tests (set RUN_UI_VALIDATOR_TESTS=1 to enable)
+    local runUIValidatorTests = os.getenv("RUN_UI_VALIDATOR_TESTS") == "1"
+    if runUIValidatorTests then
+        local ok, test_module = pcall(require, "tests.run_ui_validator_tests")
+        if ok and test_module and test_module.run then
+            log_debug("[UIValidator] Running tests...")
+            local success = test_module.run()
+            if success then
+                log_debug("[UIValidator] All tests passed!")
+            else
+                log_warn("[UIValidator] Some tests FAILED - check console output")
+            end
+        else
+            log_warn("[UIValidator] Could not load test module: " .. tostring(test_module))
+        end
+    end
+
     -- Legacy tooltip hide timer - no longer needed with DSL tooltips
     -- Tooltips now hide via onStopHover handlers in the DSL system
     -- This timer was used for mouse-following tooltips which are being phased out

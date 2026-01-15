@@ -431,4 +431,34 @@ TestRunner.describe("UIValidator Tracked Render Wrappers", function()
         TestRunner.assert_equals("space_consistency", violations[1].type, "type should be space_consistency")
     end)
 
+    TestRunner.it("validate surfaces layer mismatch via default rules", function()
+        local UIValidator = require("core.ui_validator")
+
+        UIValidator.clearRenderLog()
+
+        local parentUI = 4000
+        local child = 4001
+
+        UIValidator.trackRender(nil, "layers.ui", { parentUI }, 10, "Screen")
+        UIValidator.trackRender(parentUI, "layers.fx", { child }, 20, "Screen")
+
+        local violations = UIValidator.validate(parentUI)
+
+        local found = false
+        for _, v in ipairs(violations) do
+            if v.type == "layer_consistency" then
+                found = true
+                break
+            end
+        end
+
+        TestRunner.assert_true(found, "should surface layer mismatch via default validate rules")
+    end)
+
 end)
+
+-- Run tests when executed directly
+return function()
+    TestRunner.reset()
+    TestRunner.run_all()
+end

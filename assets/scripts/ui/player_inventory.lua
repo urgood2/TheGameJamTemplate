@@ -567,10 +567,10 @@ end
 local function snapItemsToSlots()
     local activeGrid = state.grids[state.activeTab]
     if not activeGrid then return end
-    
+
     local inputState = input and input.getState and input.getState()
     local draggedEntity = inputState and inputState.cursor_dragging_target
-    
+
     local items = grid.getAllItems(activeGrid)
     for slotIndex, itemEntity in pairs(items) do
         if itemEntity and registry:valid(itemEntity) then

@@ -624,8 +624,38 @@ function InventoryGridInit.centerItemOnSlot(itemEntity, slotEntity)
         return
     end
 
-    local slotX = slotTransform.visualX or slotTransform.actualX or 0
-    local slotY = slotTransform.visualY or slotTransform.actualY or 0
+    -- FIX: Compute absolute position from grid.actualX + slot.offset
+    --
+    -- Why this approach instead of slot.visualX:
+    -- - Slots are UI children: grid -> slot, with offset being local grid cell position
+    -- - slot.visualX depends on MoveWithMaster having run (spring animation)
+    -- - When grid becomes visible, setEntityVisible sets grid.actualX to screen coords
+    -- - But slot.visualX may still be stale (springs haven't updated yet)
+    -- - By using grid.actualX (target position) + slot.offset (local cell position),
+    --   we get the correct screen coordinate immediately, without waiting for springs
+    --
+    -- Cards render via DrawCommandSpace.Screen using raw Transform coordinates,
+    -- so card position must be in absolute screen coordinates.
+
+    local slotRole = component_cache.get(slotEntity, InheritedProperties)
+    local slotOffsetX = slotRole and slotRole.offset and slotRole.offset.x or 0
+    local slotOffsetY = slotRole and slotRole.offset and slotRole.offset.y or 0
+
+    -- Get the grid (parent) entity and its transform
+    local gridEntity = slotRole and slotRole.master
+    local gridTransform = gridEntity and component_cache.get(gridEntity, Transform)
+
+    -- Compute absolute position: grid.actualX (target screen position) + slot.offset (local cell position)
+    local slotX, slotY
+    if gridTransform then
+        slotX = (gridTransform.actualX or 0) + slotOffsetX
+        slotY = (gridTransform.actualY or 0) + slotOffsetY
+    else
+        -- Fallback to slot's visual position if no parent found
+        slotX = slotTransform.visualX or 0
+        slotY = slotTransform.visualY or 0
+    end
+
     local slotW = slotTransform.actualW or 64
     local slotH = slotTransform.actualH or 64
 
@@ -639,22 +669,36 @@ function InventoryGridInit.centerItemOnSlot(itemEntity, slotEntity)
     local itemKey = tostring(itemEntity)
     if not _centerDebugLogged[itemKey] then
         _centerDebugLogged[itemKey] = true
-        log_debug(string.format(
-            "[CENTER-DEBUG] Centering item=%s on slot=%s\n" ..
-            "  Slot: pos=(%.1f, %.1f) size=(%.1f, %.1f)\n" ..
-            "  Item: size=(%.1f, %.1f) [Expected: ~48x64 for resized card]\n" ..
-            "  Calculated center: (%.1f, %.1f)\n" ..
-            "  Offset applied: (%.1f, %.1f)",
-            itemKey, tostring(slotEntity),
-            slotX, slotY, slotW, slotH,
-            itemW, itemH,
-            centerX, centerY,
-            centerX - slotX, centerY - slotY
+
+        local gridX = gridTransform and gridTransform.actualX or -1
+        local gridY = gridTransform and gridTransform.actualY or -1
+
+        -- Check if item is in screen space (uses C++ marker check)
+        local isScreenSpace = transform and transform.is_screen_space and transform.is_screen_space(itemEntity) or false
+        local go = component_cache.get(itemEntity, GameObject)
+        local collisionEnabled = go and go.state and go.state.collisionEnabled or false
+
+        print(string.format(
+            "[CENTER-DEBUG] item=%s slot=%s grid=%s\n" ..
+            "  Grid: actual=(%.1f, %.1f)\n" ..
+            "  Slot: offset=(%.1f, %.1f) size=(%.1f, %.1f) -> computed=(%.1f, %.1f)\n" ..
+            "  Item: pos=(%.1f, %.1f) size=(%.1f, %.1f) isScreenSpace=%s collisionEnabled=%s\n" ..
+            "  Setting item pos to: (%.1f, %.1f)",
+            itemKey, tostring(slotEntity), tostring(gridEntity),
+            gridX, gridY,
+            slotOffsetX, slotOffsetY, slotW, slotH, slotX, slotY,
+            itemTransform.visualX or 0, itemTransform.visualY or 0, itemW, itemH,
+            tostring(isScreenSpace), tostring(collisionEnabled),
+            centerX, centerY
         ))
     end
 
+    -- Set both actual (collision) and visual (render) positions to match
+    -- This ensures collision and render are aligned immediately without waiting for springs
     itemTransform.actualX = centerX
     itemTransform.actualY = centerY
+    itemTransform.visualX = centerX
+    itemTransform.visualY = centerY
 end
 
 --- Clear debug log cache (useful for repeated testing)

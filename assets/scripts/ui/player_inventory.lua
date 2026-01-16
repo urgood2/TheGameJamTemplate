@@ -364,27 +364,49 @@ end
 -- Returns the grid entity after injection.
 local function injectGridAsChild(tabId, parentEntity)
     local cfg = TAB_CONFIG[tabId]
-    if not cfg then return nil end
+    if not cfg then
+        print("[DEBUG:injectGridAsChild] No TAB_CONFIG for tabId: " .. tostring(tabId))
+        return nil
+    end
 
     local gridDef = createGridDefinition(tabId)
-    if not gridDef then return nil end
+    if not gridDef then
+        print("[DEBUG:injectGridAsChild] createGridDefinition returned nil for: " .. tostring(tabId))
+        return nil
+    end
+
+    print("[DEBUG:injectGridAsChild] Attempting AddChild for tabId=" .. tostring(tabId))
+    print("[DEBUG:injectGridAsChild]   panelEntity valid: " .. tostring(state.panelEntity and registry:valid(state.panelEntity)))
+    print("[DEBUG:injectGridAsChild]   parentEntity valid: " .. tostring(parentEntity and registry:valid(parentEntity)))
+    print("[DEBUG:injectGridAsChild]   gridDef.config.id: " .. tostring(gridDef.config and gridDef.config.id))
 
     -- Use ui.box.AddChild to inject the grid definition as a child
     ui.box.AddChild(registry, state.panelEntity, gridDef, parentEntity)
+
+    print("[DEBUG:injectGridAsChild] AddChild called, now searching for grid by ID: " .. tostring(cfg.id))
 
     -- Get the grid entity by its ID after it's been added
     local gridEntity = ui.box.GetUIEByID(registry, state.panelEntity, cfg.id)
     if not gridEntity then
         log_warn("[PlayerInventory] Failed to find grid entity after AddChild: " .. cfg.id)
+        print("[DEBUG:injectGridAsChild] FAILED to find grid entity after AddChild!")
+        -- Print UI tree for debugging
+        if ui.box.DebugPrint then
+            print("[DEBUG:injectGridAsChild] UI Tree:\n" .. ui.box.DebugPrint(registry, state.panelEntity, 0))
+        end
         return nil
     end
+
+    print("[DEBUG:injectGridAsChild] Found gridEntity: " .. tostring(gridEntity))
 
     -- Initialize the grid with InventoryGridInit
     local success = InventoryGridInit.initializeIfGrid(gridEntity, cfg.id)
     if success then
         log_debug("[PlayerInventory] Grid '" .. tabId .. "' injected and initialized")
+        print("[DEBUG:injectGridAsChild] Grid '" .. tabId .. "' SUCCESSFULLY injected and initialized")
     else
         log_warn("[PlayerInventory] Grid '" .. tabId .. "' init failed!")
+        print("[DEBUG:injectGridAsChild] Grid '" .. tabId .. "' init FAILED!")
     end
 
     return gridEntity
@@ -392,16 +414,24 @@ end
 
 -- Sets visibility of a grid and its items using state tags (for injected child grids)
 local function setGridVisible(gridEntity, visible)
-    if not gridEntity or not registry:valid(gridEntity) then return end
+    print("[DEBUG:setGridVisible] gridEntity=" .. tostring(gridEntity) .. ", visible=" .. tostring(visible))
+    if not gridEntity or not registry:valid(gridEntity) then
+        print("[DEBUG:setGridVisible] Invalid gridEntity, returning early")
+        return
+    end
 
     if visible then
         -- Add default_state to make grid visible
         if ui and ui.box and ui.box.AddStateTagToUIBox then
+            print("[DEBUG:setGridVisible] Adding default_state tag to grid")
             ui.box.AddStateTagToUIBox(registry, gridEntity, "default_state")
+        else
+            print("[DEBUG:setGridVisible] WARNING: AddStateTagToUIBox not available!")
         end
     else
         -- Clear state tags to hide
         if ui and ui.box and ui.box.ClearStateTagsFromUIBox then
+            print("[DEBUG:setGridVisible] Clearing state tags from grid")
             ui.box.ClearStateTagsFromUIBox(registry, gridEntity)
         end
     end
@@ -927,19 +957,38 @@ local function initializeInventory()
     end
 
     -- Get the grid content container to inject grids as children
+    print("[DEBUG:initializeInventory] Looking for grid content container: " .. tostring(GRID_CONTENT_ID))
     state.gridContentEntity = ui.box.GetUIEByID(registry, state.panelEntity, GRID_CONTENT_ID)
     if not state.gridContentEntity then
         log_warn("[PlayerInventory] Could not find grid content container: " .. GRID_CONTENT_ID)
+        print("[DEBUG:initializeInventory] FAILED to find grid content container!")
+        -- Print UI tree to see what's there
+        if ui.box.DebugPrint then
+            print("[DEBUG:initializeInventory] Panel UI Tree:\n" .. ui.box.DebugPrint(registry, state.panelEntity, 0))
+        end
+    else
+        print("[DEBUG:initializeInventory] Found gridContentEntity: " .. tostring(state.gridContentEntity))
+        print("[DEBUG:initializeInventory] gridContentEntity valid: " .. tostring(registry:valid(state.gridContentEntity)))
     end
 
     -- Inject grids as children of the content container (not as separate top-level UI boxes)
+    print("[DEBUG:initializeInventory] Starting grid injection, TAB_ORDER count: " .. tostring(#TAB_ORDER))
     for _, tabId in ipairs(TAB_ORDER) do
+        print("[DEBUG:initializeInventory] Injecting grid for tab: " .. tostring(tabId))
         local gridEntity = injectGridAsChild(tabId, state.gridContentEntity)
         state.grids[tabId] = gridEntity
+        print("[DEBUG:initializeInventory] Grid entity for " .. tostring(tabId) .. ": " .. tostring(gridEntity))
 
         -- Initially hide all grids except the active tab
         local isActive = (tabId == state.activeTab)
+        print("[DEBUG:initializeInventory] Tab " .. tostring(tabId) .. " isActive: " .. tostring(isActive) .. ", activeTab=" .. tostring(state.activeTab))
         setGridVisible(gridEntity, isActive)
+    end
+
+    -- Print final UI tree after all grids injected
+    print("[DEBUG:initializeInventory] Final UI tree after grid injection:")
+    if ui.box.DebugPrint then
+        print(ui.box.DebugPrint(registry, state.panelEntity, 0))
     end
     
     setupSignalHandlers()
@@ -952,20 +1001,28 @@ local function initializeInventory()
 end
 
 function PlayerInventory.open()
+    print("[DEBUG:PlayerInventory.open] Called, initialized=" .. tostring(state.initialized))
     if not state.initialized then
         initializeInventory()
     end
 
-    if state.isVisible then return end
+    if state.isVisible then
+        print("[DEBUG:PlayerInventory.open] Already visible, returning")
+        return
+    end
 
     -- Show the panel (still use position-based visibility for the panel itself)
+    print("[DEBUG:PlayerInventory.open] Showing panel at " .. tostring(state.panelX) .. ", " .. tostring(state.panelY))
     setEntityVisible(state.panelEntity, true, state.panelX, state.panelY, "panel")
 
     -- Grids are now children of the panel - use state tag visibility
+    print("[DEBUG:PlayerInventory.open] Setting grid visibility, grid count: " .. tostring(#TAB_ORDER))
     for tabId, gridEntity in pairs(state.grids) do
         local isActive = (tabId == state.activeTab)
+        print("[DEBUG:PlayerInventory.open] Tab " .. tostring(tabId) .. ": gridEntity=" .. tostring(gridEntity) .. ", isActive=" .. tostring(isActive))
         setGridVisible(gridEntity, isActive)
         if isActive then
+            print("[DEBUG:PlayerInventory.open] Syncing box and root for active grid")
             syncBoxAndRoot(gridEntity)
         end
     end
@@ -981,6 +1038,7 @@ function PlayerInventory.open()
     end
 
     log_debug("[PlayerInventory] Opened")
+    print("[DEBUG:PlayerInventory.open] Open complete")
 end
 
 function PlayerInventory.close()

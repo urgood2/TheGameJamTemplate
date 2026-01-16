@@ -36,7 +36,8 @@ struct TypeTraits {
                t == UITypeEnum::TEXT ||
                t == UITypeEnum::OBJECT ||
                t == UITypeEnum::INPUT_TEXT ||
-               t == UITypeEnum::SLIDER_UI;
+               t == UITypeEnum::SLIDER_UI ||
+               t == UITypeEnum::FILLER;
     }
 
     /// Types that need content-based sizing (text measurement, sprite size, etc.)
@@ -86,6 +87,7 @@ struct TypeTraits {
             case UITypeEnum::RECT_SHAPE:           return "RECT_SHAPE";
             case UITypeEnum::TEXT:                 return "TEXT";
             case UITypeEnum::OBJECT:               return "OBJECT";
+            case UITypeEnum::FILLER:               return "FILLER";
             default:                               return "UNKNOWN";
         }
     }

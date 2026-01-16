@@ -2249,127 +2249,52 @@ namespace ui
     
     
     // Assign the given state tag to all elements in the given UI box (including owned objects)
+    // Migrated to use traversal::forEachWithObjects utility (Phase 3.1)
     auto box::AssignStateTagsToUIBox(entt::registry &registry, entt::entity uiBox, const std::string &stateName) -> void
     {
         using namespace entity_gamestate_management;
 
-        struct StackEntry {
-            entt::entity uiElement{entt::null};
-        };
+        if (!registry.valid(uiBox)) return;
 
-        // 1) Read root info
-    if (!registry.valid(uiBox)) return;
         auto const *uiBoxComp = registry.try_get<UIBoxComponent>(uiBox);
         if (!uiBoxComp) return;
-        
-        if (registry.any_of<StateTag>(uiBox))
-        {
-            registry.get<StateTag>(uiBox).add_tag(stateName);
-        } else {
-            registry.emplace<StateTag>(uiBox, stateName);
-        }
-        
-        
-        entt::entity root = uiBoxComp->uiRoot.value_or(entt::null);
-        if (root == entt::null) return;
-        
-        
 
-        // 2) Prepare DFS stack
-        std::stack<StackEntry> stack;
-        stack.push({root});
-
-        // SPDLOG_DEBUG("=== Begin AssignStateTagsToUIBox (state='{}') ===", stateName);
-
-        // 3) DFS traversal (same as AssignLayerOrderComponents)
-        while (!stack.empty())
-        {
-            auto e = stack.top().uiElement;
-            stack.pop();
-            if (!registry.valid(e))
-                continue;
-
-            // 4) Apply the given state tag to this element
-            if (registry.any_of<StateTag>(e))
-            {
+        // Helper to add state tag to an entity
+        auto addStateTag = [&](entt::entity e) {
+            if (!registry.valid(e)) return;
+            if (registry.any_of<StateTag>(e)) {
                 registry.get<StateTag>(e).add_tag(stateName);
             } else {
                 registry.emplace<StateTag>(e, stateName);
             }
+        };
 
-            // 5) If this element owns an object, give it the same tag
-            if (auto cfg = registry.try_get<UIConfig>(e))
-            {
-                if (cfg->object)
-                {
-                    entt::entity obj = cfg->object.value();
-                    if (registry.valid(obj))
-                    {
-                        if (registry.any_of<StateTag>(obj))
-                        {
-                            registry.get<StateTag>(obj).add_tag(stateName);
-                        } else {
-                            registry.emplace<StateTag>(obj, stateName);
-                        }
-                    }
-                }
-            }
+        // Tag the box itself
+        addStateTag(uiBox);
 
-            // 6) Push children (reverse for visual order consistency)
-            if (auto node = registry.try_get<transform::GameObject>(e))
-            {
-                for (auto it = node->orderedChildren.rbegin();
-                    it != node->orderedChildren.rend();
-                    ++it)
-                {
-                    if (registry.valid(*it))
-                        stack.push({*it});
-                }
-            }
-        }
+        // Get the root element
+        entt::entity root = uiBoxComp->uiRoot.value_or(entt::null);
+        if (root == entt::null) return;
 
-        // SPDLOG_DEBUG("=== Done AssignStateTagsToUIBox for box {} (state='{}') ===",
-        //              static_cast<int>(uiBox), stateName);
+        // Tag all elements and their owned objects using traversal utility
+        traversal::forEachWithObjects(registry, root, addStateTag);
     }
     
     
-    // do the opposite of ClearStateTags: add the tag to all elements in the box
+    // Add the tag to all elements in the box (opposite of ClearStateTags)
+    // Migrated to use traversal::forEachWithObjects utility (Phase 3.2)
     auto box::AddStateTagToUIBox(entt::registry &registry, entt::entity uiBox, const std::string &tagToAdd) -> void
     {
         using namespace entity_gamestate_management;
 
-        struct StackEntry { entt::entity uiElement{entt::null}; };
-
-        // 1) Validate root
         if (!registry.valid(uiBox)) return;
+
         auto const *uiBoxComp = registry.try_get<UIBoxComponent>(uiBox);
         if (!uiBoxComp) return;
 
-        // 2) Add tag to the box itself
-        if (registry.all_of<StateTag>(uiBox)) {
-            registry.get<StateTag>(uiBox).add_tag(tagToAdd);
-        } else {
-            StateTag tag{};
-            tag.add_tag(tagToAdd);
-            registry.emplace<StateTag>(uiBox, std::move(tag));
-        }
-        applyStateEffectsToEntity(registry, uiBox);
-
-        // 3) Find the root
-        entt::entity root = uiBoxComp->uiRoot.value_or(entt::null);
-        if (root == entt::null) return;
-
-        std::stack<StackEntry> stack;
-        stack.push({root});
-
-        // 4) DFS traversal
-        while (!stack.empty())
-        {
-            auto e = stack.top().uiElement;
-            stack.pop();
-            if (!registry.valid(e)) continue;
-
-            // 5) Add or modify the tag
+        // Helper to add state tag to an entity and apply effects
+        auto addTagAndApply = [&](entt::entity e) {
+            if (!registry.valid(e)) return;
             if (registry.all_of<StateTag>(e)) {
                 registry.get<StateTag>(e).add_tag(tagToAdd);
             } else {
@@ -2377,177 +2302,75 @@ namespace ui
                 tag.add_tag(tagToAdd);
                 registry.emplace<StateTag>(e, std::move(tag));
             }
-
             applyStateEffectsToEntity(registry, e);
+        };
 
-            // 6) If it owns an object, propagate
-            if (auto cfg = registry.try_get<UIConfig>(e)) {
-                if (cfg->object) {
-                    entt::entity obj = cfg->object.value();
-                    if (registry.valid(obj)) {
-                        if (registry.all_of<StateTag>(obj)) {
-                            registry.get<StateTag>(obj).add_tag(tagToAdd);
-                        } else {
-                            StateTag tag{};
-                            tag.add_tag(tagToAdd);
-                            registry.emplace<StateTag>(obj, std::move(tag));
-                        }
-                        applyStateEffectsToEntity(registry, obj);
-                    }
-                }
-            }
+        // Add tag to the box itself
+        addTagAndApply(uiBox);
 
-            // 7) Push children
-            if (auto node = registry.try_get<transform::GameObject>(e)) {
-                for (auto it = node->orderedChildren.rbegin(); it != node->orderedChildren.rend(); ++it) {
-                    if (registry.valid(*it))
-                        stack.push({*it});
-                }
-            }
-        }
+        // Get the root element
+        entt::entity root = uiBoxComp->uiRoot.value_or(entt::null);
+        if (root == entt::null) return;
 
-        // SPDLOG_DEBUG("=== Done ReverseClearStateTagsFromUIBox for box {} with tag '{}' ===",
-        //              static_cast<int>(uiBox), tagToAdd);
+        // Add tag to all elements and their owned objects using traversal utility
+        traversal::forEachWithObjects(registry, root, addTagAndApply);
     }
 
     
     //-----------------------------------------------------------------------------
     // Clear all StateTags in a given UI box hierarchy (including owned objects)
+    // Migrated to use traversal::forEachWithObjects utility (Phase 3.3)
     //-----------------------------------------------------------------------------
     auto box::ClearStateTagsFromUIBox(entt::registry &registry, entt::entity uiBox) -> void
     {
         using namespace entity_gamestate_management;
 
-        struct StackEntry {
-            entt::entity uiElement{entt::null};
-        };
-
-        // 1) Validate and fetch root
         if (!registry.valid(uiBox)) return;
+
         auto const *uiBoxComp = registry.try_get<UIBoxComponent>(uiBox);
         if (!uiBoxComp) return;
 
-        // Clear state tag on the box itself
-        if (registry.all_of<StateTag>(uiBox))
-        {
-            registry.get<StateTag>(uiBox).clear();
-            applyStateEffectsToEntity(registry, uiBox);
-        }
-
-        entt::entity root = uiBoxComp->uiRoot.value_or(entt::null);
-        if (root == entt::null) return;
-
-        // 2) Prepare DFS stack
-        std::stack<StackEntry> stack;
-        stack.push({root});
-
-        // 3) DFS traversal
-        while (!stack.empty())
-        {
-            auto e = stack.top().uiElement;
-            stack.pop();
-            if (!registry.valid(e))
-                continue;
-
-            // 4) Clear the state tag for this element
-            if (registry.all_of<StateTag>(e))
-            {
+        // Helper to clear state tag from an entity and apply effects
+        auto clearTagAndApply = [&](entt::entity e) {
+            if (!registry.valid(e)) return;
+            if (registry.all_of<StateTag>(e)) {
                 registry.get<StateTag>(e).clear();
                 applyStateEffectsToEntity(registry, e);
             }
+        };
 
-            // 5) Clear for any owned object (UIConfig.object)
-            if (auto cfg = registry.try_get<UIConfig>(e))
-            {
-                if (cfg->object)
-                {
-                    entt::entity obj = cfg->object.value();
-                    if (registry.valid(obj) && registry.all_of<StateTag>(obj))
-                    {
-                        registry.get<StateTag>(obj).clear();
-                        applyStateEffectsToEntity(registry, obj);
-                    }
-                }
-            }
-            
+        // Clear state tag on the box itself
+        clearTagAndApply(uiBox);
 
-            // 6) Push children (reverse for visual order consistency)
-            if (auto node = registry.try_get<transform::GameObject>(e))
-            {
-                for (auto it = node->orderedChildren.rbegin();
-                    it != node->orderedChildren.rend();
-                    ++it)
-                {
-                    if (registry.valid(*it))
-                        stack.push({*it});
-                }
-            }
-        }
+        // Get the root element
+        entt::entity root = uiBoxComp->uiRoot.value_or(entt::null);
+        if (root == entt::null) return;
 
-        // SPDLOG_DEBUG("=== Done ClearStateTagsFromUIBox for box {} ===",
-        //              static_cast<int>(uiBox));
+        // Clear state tags for all elements and their owned objects using traversal utility
+        traversal::forEachWithObjects(registry, root, clearTagAndApply);
     }
     
+    // Set transform spring enabled state for all elements in a UI box
+    // Migrated to use traversal::forEachWithObjects utility (Phase 3.4)
     auto box::SetTransformSpringsEnabledInUIBox(entt::registry &registry, entt::entity uiBox, bool enabled) -> void
     {
         using namespace transform;
 
-        struct StackEntry {
-            entt::entity uiElement{entt::null};
-        };
-
-        // 1) Validate root
         if (!registry.valid(uiBox)) return;
+
         auto const *uiBoxComp = registry.try_get<UIBoxComponent>(uiBox);
         if (!uiBoxComp) return;
 
-        // Apply to the box’s own transform if it has one
-        if (auto t = registry.try_get<transform::Transform>(uiBox))
-        {
-            auto tryEnableSpring = [&](entt::entity springEnt)
-            {
-                if (registry.valid(springEnt))
-                {
-                    if (auto spring = registry.try_get<Spring>(springEnt))
-                        spring->enabled = enabled;
-                }
-            };
-
-            tryEnableSpring(t->x);
-            tryEnableSpring(t->y);
-            tryEnableSpring(t->w);
-            tryEnableSpring(t->h);
-            tryEnableSpring(t->r);
-            tryEnableSpring(t->s);
-        }
-
-        entt::entity root = uiBoxComp->uiRoot.value_or(entt::null);
-        if (root == entt::null) return;
-
-        // 2) Prepare DFS stack
-        std::stack<StackEntry> stack;
-        stack.push({root});
-
-        // 3) Traverse all descendants
-        while (!stack.empty())
-        {
-            auto e = stack.top().uiElement;
-            stack.pop();
-            if (!registry.valid(e))
-                continue;
-
-            // 4) If this entity has a transform, toggle its springs
-            if (auto t = registry.try_get<transform::Transform>(e))
-            {
-                auto tryEnableSpring = [&](entt::entity springEnt)
-                {
-                    if (registry.valid(springEnt))
-                    {
+        // Helper to toggle springs on an entity's transform
+        auto toggleSprings = [&](entt::entity e) {
+            if (!registry.valid(e)) return;
+            if (auto t = registry.try_get<transform::Transform>(e)) {
+                auto tryEnableSpring = [&](entt::entity springEnt) {
+                    if (registry.valid(springEnt)) {
                         if (auto spring = registry.try_get<Spring>(springEnt))
                             spring->enabled = enabled;
                     }
                 };
-
                 tryEnableSpring(t->x);
                 tryEnableSpring(t->y);
                 tryEnableSpring(t->w);
@@ -2555,49 +2378,17 @@ namespace ui
                 tryEnableSpring(t->r);
                 tryEnableSpring(t->s);
             }
+        };
 
-            // 5) If this element owns an object, apply same rule
-            if (auto cfg = registry.try_get<UIConfig>(e))
-            {
-                if (cfg->object)
-                {
-                    entt::entity obj = cfg->object.value();
-                    if (registry.valid(obj))
-                    {
-                        if (auto t = registry.try_get<transform::Transform>(obj))
-                        {
-                            auto tryEnableSpring = [&](entt::entity springEnt)
-                            {
-                                if (registry.valid(springEnt))
-                                {
-                                    if (auto spring = registry.try_get<Spring>(springEnt))
-                                        spring->enabled = enabled;
-                                }
-                            };
+        // Apply to the box itself
+        toggleSprings(uiBox);
 
-                            tryEnableSpring(t->x);
-                            tryEnableSpring(t->y);
-                            tryEnableSpring(t->w);
-                            tryEnableSpring(t->h);
-                            tryEnableSpring(t->r);
-                            tryEnableSpring(t->s);
-                        }
-                    }
-                }
-            }
+        // Get the root element
+        entt::entity root = uiBoxComp->uiRoot.value_or(entt::null);
+        if (root == entt::null) return;
 
-            // 6) Push children (reverse order for visual consistency)
-            if (auto node = registry.try_get<GameObject>(e))
-            {
-                for (auto it = node->orderedChildren.rbegin();
-                    it != node->orderedChildren.rend();
-                    ++it)
-                {
-                    if (registry.valid(*it))
-                        stack.push({*it});
-                }
-            }
-        }
+        // Toggle springs for all elements and their owned objects using traversal utility
+        traversal::forEachWithObjects(registry, root, toggleSprings);
     }
 
     

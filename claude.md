@@ -318,10 +318,40 @@ end
 | `ACTION_STATE` | `"ACTION"` | Combat/survivors phase |
 | `SHOP_STATE` | `"SHOP"` | Shop between rounds |
 
-**For UI boxes**, use the UI-specific functions:
+**For DSL UI boxes**, use the UI-specific functions (NOT `add_state_tag`):
 ```lua
+-- Add a state tag to UI box (box visible when ANY assigned state is active)
 ui.box.AddStateTagToUIBox(entity, PLANNING_STATE)
+
+-- Assign state tag (replaces existing tags - box visible ONLY in this state)
 ui.box.AssignStateTagsToUIBox(entity, PLANNING_STATE)
+
+-- For proper z-ordering with cards, set draw layer to sprites
+if ui and ui.box and ui.box.set_draw_layer then
+    ui.box.set_draw_layer(entity, "sprites")
+end
+```
+
+**Complete DSL box with state visibility example:**
+```lua
+local dsl = require("ui.ui_syntax_sugar")
+
+local markerDef = dsl.hbox {
+    config = { padding = 4, minWidth = 48, minHeight = 32 },
+    children = { dsl.anim("my-sprite.png", { w = 48, h = 32 }) }
+}
+
+local entity = dsl.spawn({ x = 100, y = 200 }, markerDef, "ui", z_orders.ui_tooltips + 100)
+
+-- Set draw layer for proper z-ordering
+ui.box.set_draw_layer(entity, "sprites")
+
+-- Make visible only during PLANNING phase
+ui.box.AssignStateTagsToUIBox(entity, PLANNING_STATE)
+
+-- CRITICAL: Remove default state tag so state-based visibility works!
+-- Without this, the box won't render because it still has "default_state"
+remove_default_state_tag(entity)
 ```
 
 **Checking active state:**

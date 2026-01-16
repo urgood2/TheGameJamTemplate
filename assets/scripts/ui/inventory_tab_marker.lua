@@ -1,15 +1,16 @@
 --[[
 ================================================================================
-INVENTORY TAB MARKER - Standalone sprite visible in planning phase
+INVENTORY TAB MARKER - DSL-based UI box with sprite above inventory panel
 ================================================================================
 
-Simple standalone sprite that appears above the inventory panel during planning.
+A clickable tab marker that appears above the inventory panel during planning.
+Uses DSL hbox with state tags for visibility (AssignStateTagsToUIBox pattern).
 
 USAGE:
 ------
 local InventoryTabMarker = require("ui.inventory_tab_marker")
 
--- Called automatically via signal, but can also init manually:
+-- Called automatically via signal when entering PLANNING phase
 InventoryTabMarker.init()
 
 ================================================================================
@@ -18,7 +19,7 @@ InventoryTabMarker.init()
 local InventoryTabMarker = {}
 
 local signal = require("external.hump.signal")
-local component_cache = require("core.component_cache")
+local dsl = require("ui.ui_syntax_sugar")
 local z_orders = require("core.z_orders")
 local timer = require("core.timer")
 
@@ -27,12 +28,19 @@ local MARKER_WIDTH = 48
 local MARKER_HEIGHT = 32
 local MARKER_Z = z_orders.ui_tooltips + 200  -- Above inventory UI
 local TIMER_GROUP = "inventory_tab_marker"
+local RENDER_LAYER = "ui"
+
+-- Match inventory panel dimensions for positioning (from player_inventory.lua)
+-- PANEL_HEIGHT = HEADER(32) + TABS(32) + GRID(212) + FOOTER(36) + PADDING(20) = 332
+local INVENTORY_PANEL_HEIGHT = 332
+local GAP_ABOVE_PANEL = 8  -- Gap between marker and panel top
 
 local state = {
     entity = nil,
     initialized = false,
     signalHandler = nil,
-    renderTimerActive = false,
+    markerX = 0,
+    markerY = 0,
 }
 
 local function calculatePosition()
@@ -43,94 +51,83 @@ local function calculatePosition()
         return nil, nil
     end
 
-    -- Position at center-bottom area of screen (above where inventory panel would be)
-    local x = screenW / 2 - MARKER_WIDTH / 2
-    local y = screenH - 300  -- Roughly above the inventory panel
+    -- Calculate where the inventory panel top would be
+    local panelY = screenH - INVENTORY_PANEL_HEIGHT - 10
+
+    -- Position marker centered horizontally, just above the panel
+    local x = (screenW - MARKER_WIDTH) / 2
+    local y = panelY - MARKER_HEIGHT - GAP_ABOVE_PANEL
 
     return x, y
 end
 
+local function createMarkerDefinition()
+    return dsl.hbox {
+        config = {
+            padding = 0,
+            minWidth = MARKER_WIDTH,
+            minHeight = MARKER_HEIGHT,
+            backgroundColor = "red",  -- Debug: visible background
+        },
+        children = {
+            dsl.anim(SPRITE_NAME, { w = MARKER_WIDTH, h = MARKER_HEIGHT, shadow = false })
+        }
+    }
+end
+
 local function createMarker()
-    print("[InventoryTabMarker] createMarker called")
     local x, y = calculatePosition()
     if not x or not y then
-        print("[InventoryTabMarker] Cannot create marker - screen dimensions not ready")
+        log_warn("[InventoryTabMarker] Cannot create marker - screen dimensions not ready")
         return nil
     end
-    print("[InventoryTabMarker] Creating marker at (" .. x .. ", " .. y .. ")")
 
-    local entity = animation_system.createAnimatedObjectWithTransform(
-        SPRITE_NAME, true, x, y, nil, true
-    )
-    print("[InventoryTabMarker] Entity created: " .. tostring(entity))
+    state.markerX = x
+    state.markerY = y
+
+    -- Spawn the DSL box
+    local markerDef = createMarkerDefinition()
+    local entity = dsl.spawn({ x = x, y = y }, markerDef, RENDER_LAYER, MARKER_Z)
 
     if not entity or not registry:valid(entity) then
         log_warn("[InventoryTabMarker] Failed to create marker entity")
         return nil
     end
 
-    -- Resize to desired dimensions
-    animation_system.resizeAnimationObjectsInEntityToFit(entity, MARKER_WIDTH, MARKER_HEIGHT)
-
-    -- Set z-order
-    if layer_order_system and layer_order_system.assignZIndexToEntity then
-        layer_order_system.assignZIndexToEntity(entity, MARKER_Z)
+    -- Set draw layer to sprites for proper z-ordering (same pattern as player_inventory.lua)
+    if ui and ui.box and ui.box.set_draw_layer then
+        ui.box.set_draw_layer(entity, "sprites")
+        log_debug("[InventoryTabMarker] Set draw layer to sprites")
     end
 
-    -- Set screen-space for fixed UI positioning
-    transform.set_space(entity, "screen")
-
-    -- Use legacy pipeline for rendering - it handles screen-space sprites
-    local animComp = component_cache.get(entity, AnimationQueueComponent)
-    if animComp then
-        animComp.drawWithLegacyPipeline = true
+    -- Assign PLANNING_STATE tag so box is only visible during planning phase
+    if ui and ui.box and ui.box.AssignStateTagsToUIBox and PLANNING_STATE then
+        ui.box.AssignStateTagsToUIBox(entity, PLANNING_STATE)
+        log_debug("[InventoryTabMarker] Assigned PLANNING_STATE tag to marker")
+    else
+        log_warn("[InventoryTabMarker] Could not assign state tag - ui.box.AssignStateTagsToUIBox or PLANNING_STATE not available")
     end
 
-    -- Make visible during PLANNING phase using the proper state tag
-    -- CRITICAL: Must remove default_state first, otherwise entity is always visible!
+    -- CRITICAL: Remove default state tag so state-based visibility works
     if remove_default_state_tag then
         remove_default_state_tag(entity)
-    end
-    if add_state_tag and PLANNING_STATE then
-        add_state_tag(entity, PLANNING_STATE)
+        log_debug("[InventoryTabMarker] Removed default state tag")
     end
 
     log_debug("[InventoryTabMarker] Created marker at (" .. x .. ", " .. y .. ")")
 
+    -- Debug: check entity transform
+    local t = component_cache.get(entity, Transform)
+    if t then
+        log_debug("[InventoryTabMarker] Transform: x=" .. tostring(t.actualX) .. " y=" .. tostring(t.actualY) .. " w=" .. tostring(t.actualW) .. " h=" .. tostring(t.actualH))
+    else
+        log_warn("[InventoryTabMarker] No Transform component on marker entity!")
+    end
+
     return entity
 end
 
--- No explicit render timer needed - legacy pipeline handles screen-space sprites
-local function setupRenderTimer()
-    -- Kept for API compatibility but does nothing now
-end
-
-local function showMarker()
-    if not state.entity or not registry:valid(state.entity) then
-        return
-    end
-
-    if add_state_tag and PLANNING_STATE then
-        add_state_tag(state.entity, PLANNING_STATE)
-    end
-
-    log_debug("[InventoryTabMarker] Marker shown")
-end
-
-local function hideMarker()
-    if not state.entity or not registry:valid(state.entity) then
-        return
-    end
-
-    if remove_state_tag and PLANNING_STATE then
-        remove_state_tag(state.entity, PLANNING_STATE)
-    end
-
-    log_debug("[InventoryTabMarker] Marker hidden")
-end
-
 function InventoryTabMarker.init()
-    print("[InventoryTabMarker] init() called, initialized=" .. tostring(state.initialized))
     if state.initialized then
         return
     end
@@ -138,7 +135,6 @@ function InventoryTabMarker.init()
     state.entity = createMarker()
 
     if state.entity then
-        setupRenderTimer()
         state.initialized = true
         log_debug("[InventoryTabMarker] Initialized")
     end
@@ -146,10 +142,13 @@ end
 
 function InventoryTabMarker.destroy()
     timer.kill_group(TIMER_GROUP)
-    state.renderTimerActive = false
 
     if state.entity and registry:valid(state.entity) then
-        registry:destroy(state.entity)
+        if ui and ui.box and ui.box.Remove then
+            ui.box.Remove(registry, state.entity)
+        else
+            registry:destroy(state.entity)
+        end
     end
     state.entity = nil
     state.initialized = false
@@ -166,37 +165,28 @@ function InventoryTabMarker.getEntity()
     return state.entity
 end
 
--- Register signal handler to initialize when game enters PLANNING phase
+-- Register signal handler to initialize when entering planning
 state.signalHandler = function(data)
-    print("[InventoryTabMarker] game_state_changed received: " .. tostring(data and data.current))
     if data and data.current == "PLANNING" then
         if not state.initialized then
             InventoryTabMarker.init()
-        else
-            showMarker()
         end
-    elseif data and data.current ~= "PLANNING" then
-        hideMarker()
     end
 end
 
 signal.register("game_state_changed", state.signalHandler)
 
-print("[InventoryTabMarker] Module loaded - signal registered")
-
 -- Also try to init after a short delay if we're already in planning
 timer.after_opts({
     delay = 0.5,
     action = function()
-        print("[InventoryTabMarker] Delayed init check - PLANNING_STATE=" .. tostring(PLANNING_STATE))
         if is_state_active and is_state_active(PLANNING_STATE) then
-            print("[InventoryTabMarker] Planning state is active - initializing")
             InventoryTabMarker.init()
-        else
-            print("[InventoryTabMarker] Planning state not active yet")
         end
     end,
     tag = "marker_delayed_init"
 })
+
+log_debug("[InventoryTabMarker] Module loaded")
 
 return InventoryTabMarker

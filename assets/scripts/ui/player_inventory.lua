@@ -202,18 +202,37 @@ local function setEntityVisible(entity, visible, onscreenX, onscreenY, dbgLabel)
     local targetX = onscreenX
     local targetY = visible and onscreenY or (onscreenY + OFFSCREEN_Y_OFFSET)
 
+    -- Update Transform for the main entity
     local t = component_cache.get(entity, Transform)
     if t then
         t.actualX = targetX
         t.actualY = targetY
     end
 
+    -- Update InheritedProperties offset (used by layout system)
+    local role = component_cache.get(entity, InheritedProperties)
+    if role and role.offset then
+        role.offset.x = targetX
+        role.offset.y = targetY
+    end
+
+    -- For UIBox entities, also update the uiRoot
     local boxComp = component_cache.get(entity, UIBoxComponent)
     if boxComp and boxComp.uiRoot and registry:valid(boxComp.uiRoot) then
         local rt = component_cache.get(boxComp.uiRoot, Transform)
         if rt then
             rt.actualX = targetX
             rt.actualY = targetY
+        end
+        local rootRole = component_cache.get(boxComp.uiRoot, InheritedProperties)
+        if rootRole and rootRole.offset then
+            rootRole.offset.x = targetX
+            rootRole.offset.y = targetY
+        end
+
+        -- Force layout recalculation
+        if ui and ui.box and ui.box.RenewAlignment then
+            ui.box.RenewAlignment(registry, entity)
         end
     end
 
@@ -394,13 +413,18 @@ local function switchTab(tabId)
     log_debug("[PlayerInventory] Switched tab: " .. oldTab .. " -> " .. tabId)
 end
 
+local CLOSE_BUTTON_SIZE = 24
+
 local function createHeader()
+    -- Header width: panel content area = PANEL_WIDTH - 2*PANEL_PADDING
+    -- But we need to account for the header's own padding
+    local headerContentWidth = PANEL_WIDTH - 2 * PANEL_PADDING
     return dsl.strict.hbox {
         config = {
             color = "dark_lavender",
             padding = { 8, 6 },
             emboss = 2,
-            minWidth = GRID_WIDTH,
+            minWidth = headerContentWidth,
             minHeight = HEADER_HEIGHT,
         },
         children = {
@@ -409,26 +433,41 @@ local function createHeader()
                 color = "gold",
                 shadow = true,
             }),
-            dsl.strict.spacer(1),
+            dsl.strict.spacer(1), -- Push close button to the right
+            dsl.strict.button("X", {
+                id = "close_btn",
+                minWidth = CLOSE_BUTTON_SIZE,
+                minHeight = CLOSE_BUTTON_SIZE,
+                fontSize = 12,
+                color = "darkred",
+                onClick = function()
+                    local PlayerInventory = require("ui.player_inventory")
+                    PlayerInventory.close()
+                end,
+            }),
         },
     }
 end
 
+-- Legacy createCloseButton for backward compatibility (if called elsewhere)
 local function createCloseButton(panelX, panelY, panelWidth)
     local closeButtonDef = dsl.strict.button("X", {
-        id = "close_btn",
-        minWidth = 24,
-        minHeight = 24,
+        id = "close_btn_legacy",
+        minWidth = CLOSE_BUTTON_SIZE,
+        minHeight = CLOSE_BUTTON_SIZE,
         fontSize = 12,
         color = "darkred",
         onClick = function()
             PlayerInventory.close()
         end,
     })
-    
-    local closeX = panelX + panelWidth - 30
-    local closeY = panelY + PANEL_PADDING + 4
-    
+
+    -- Position button with consistent margins matching PANEL_PADDING
+    -- Right margin: button right edge should be PANEL_PADDING from panel right edge
+    -- Top margin: button top edge should be PANEL_PADDING from panel top edge
+    local closeX = panelX + panelWidth - PANEL_PADDING - CLOSE_BUTTON_SIZE
+    local closeY = panelY + PANEL_PADDING
+
     local closeEntity = dsl.spawn({ x = closeX, y = closeY }, closeButtonDef, RENDER_LAYER, CARD_Z + 10)
     -- NOTE: Do NOT call set_draw_layer() - keeps close button on sprites layer with cards
 
@@ -778,9 +817,12 @@ local function initializeInventory()
     state.panelEntity = dsl.spawn({ x = state.panelX, y = state.panelY + OFFSCREEN_Y_OFFSET }, panelDef, RENDER_LAYER, PANEL_Z)
     -- NOTE: Do NOT call set_draw_layer() - keeps panel on sprites layer with cards for proper z-ordering
 
-    state.closeButtonEntity = createCloseButton(state.panelX, state.panelY, PANEL_WIDTH)
-    setEntityVisible(state.closeButtonEntity, false, state.panelX + PANEL_WIDTH - 30, state.panelY + PANEL_PADDING + 4, "close")
-    
+    -- Close button is now part of the header in the panel hierarchy
+    state.closeButtonEntity = ui.box.GetUIEByID(registry, state.panelEntity, "close_btn")
+    if not state.closeButtonEntity then
+        log_debug("[PlayerInventory] WARNING: Could not find close_btn in panel hierarchy")
+    end
+
     state.tabButtons = {}
     for _, tabId in ipairs(TAB_ORDER) do
         local btnEntity = ui.box.GetUIEByID(registry, state.panelEntity, "tab_" .. tabId)
@@ -812,7 +854,7 @@ function PlayerInventory.open()
     if state.isVisible then return end
     
     setEntityVisible(state.panelEntity, true, state.panelX, state.panelY, "panel")
-    setEntityVisible(state.closeButtonEntity, true, state.panelX + PANEL_WIDTH - 30, state.panelY + PANEL_PADDING + 4, "close")
+    -- Close button is now part of the panel hierarchy, no separate setEntityVisible needed
     setEntityVisible(state.tabButtonEntity, false, state.tabButtonX, state.tabButtonY, "tab_btn")
 
     for tabId, gridEntity in pairs(state.grids) do
@@ -838,7 +880,7 @@ function PlayerInventory.close()
     if not state.isVisible then return end
 
     setEntityVisible(state.panelEntity, false, state.panelX, state.panelY, "panel")
-    setEntityVisible(state.closeButtonEntity, false, state.panelX + PANEL_WIDTH - 30, state.panelY + PANEL_PADDING + 4, "close")
+    -- Close button is now part of the panel hierarchy, no separate setEntityVisible needed
     setEntityVisible(state.tabButtonEntity, true, state.tabButtonX, state.tabButtonY, "tab_btn")
 
     for tabId, gridEntity in pairs(state.grids) do
@@ -903,11 +945,7 @@ function PlayerInventory.destroy()
     end
     state.grids = {}
     
-    if state.closeButtonEntity and registry:valid(state.closeButtonEntity) then
-        if ui and ui.box and ui.box.Remove then
-            ui.box.Remove(registry, state.closeButtonEntity)
-        end
-    end
+    -- Close button is part of panel hierarchy, cleaned up when panel is removed
     state.closeButtonEntity = nil
     
     if state.tabButtonEntity and registry:valid(state.tabButtonEntity) then
@@ -1006,6 +1044,24 @@ end
 
 function PlayerInventory.getLockedCards()
     return state.lockedCards
+end
+
+--- Get the main panel entity for validation/testing.
+-- @return number|nil Panel entity or nil if not initialized
+function PlayerInventory.getPanelEntity()
+    return state.panelEntity
+end
+
+--- Get the close button entity for validation/testing.
+-- @return entity|nil Close button entity
+function PlayerInventory.getCloseButtonEntity()
+    return state.closeButtonEntity
+end
+
+--- Get the card registry for validation/testing.
+-- @return table Map of cardEntity -> cardData
+function PlayerInventory.getCardRegistry()
+    return state.cardRegistry
 end
 
 function PlayerInventory.spawnDummyCards()

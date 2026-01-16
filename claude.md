@@ -934,6 +934,165 @@ dsl.spriteButton {
 
 ---
 
+## UI Validation (MANDATORY)
+
+**ALWAYS validate UI after creating or modifying UI components.** Use `UIValidator` to catch layout bugs before they become visual issues.
+
+### Validation Workflow
+
+```lua
+local UIValidator = require("core.ui_validator")
+local dsl = require("ui.ui_syntax_sugar")
+
+-- 1. Create UI
+local myPanel = dsl.root {
+    config = { padding = 10, minWidth = 200, minHeight = 150 },
+    children = { dsl.text("Hello") }
+}
+local entity = dsl.spawn({ x = 100, y = 100 }, myPanel)
+
+-- 2. ALWAYS validate after spawn
+local violations = UIValidator.validate(entity)
+local errors = UIValidator.getErrors(violations)
+
+if #errors > 0 then
+    print("[UI ERROR] Found " .. #errors .. " validation errors:")
+    for _, e in ipairs(errors) do
+        print("  " .. e.type .. ": " .. e.message)
+    end
+end
+```
+
+### Quick Validation Patterns
+
+```lua
+-- Validate with skipHidden (for tab-based UIs with off-screen content)
+local violations = UIValidator.validate(entity, nil, { skipHidden = true })
+
+-- Validate specific rules only
+local violations = UIValidator.validate(entity, { "containment", "window_bounds" })
+
+-- Check cross-hierarchy overlaps (elements from different entity trees)
+local globalViolations = UIValidator.checkGlobalOverlap({ panelEntity, gridEntity })
+
+-- Check explicit z-order assertions (card should render above grid)
+local pairs = { { front = cardEntity, behind = gridEntity } }
+local zViolations = UIValidator.checkZOrderOcclusion(pairs)
+```
+
+### Violation Types and Fixes
+
+| Violation | Severity | Cause | Fix |
+|-----------|----------|-------|-----|
+| `containment` | error | Child escapes parent bounds | Increase parent `minWidth`/`minHeight`, add padding, or set `allowEscape = true` on child |
+| `window_bounds` | error | UI outside screen | Clamp spawn position, use responsive positioning like `screenWidth() - width` |
+| `sibling_overlap` | warning | Same-parent siblings overlap | Increase `spacing` in vbox/hbox, or set `allowOverlap = true` if intentional |
+| `z_order_hierarchy` | warning | Child z-order ≤ parent | Use `layer_order_system.assignZIndexToEntity(child, parentZ + 10)` |
+| `global_overlap` | warning | Cross-hierarchy elements overlap | Adjust layout/positions, or increase z-order of element that should be on top |
+| `z_order_occlusion` | error | Entity expected in front has lower z-order | Increase z-order of "front" entity |
+| `layer_consistency` | error | Parent/child on different render layers | Ensure all related UI renders to same layer (e.g., all to `layers.ui`) |
+| `space_consistency` | error | Mixed Screen/World DrawCommandSpace | Ensure all related UI uses same space (Screen for HUD, World for game UI) |
+| `text_zero_offset` | warning | Text element has no padding from parent | Add padding to parent container or text element |
+
+### Opt-Out Flags
+
+For intentional violations, use config flags:
+
+```lua
+-- Child intentionally escapes parent (tooltips, dropdowns)
+dsl.box {
+    config = { allowEscape = true },
+    children = { ... }
+}
+
+-- Siblings intentionally overlap (stacked cards)
+dsl.box {
+    config = { allowOverlap = true },
+    children = { ... }
+}
+```
+
+### UITestUtils for Test-Driven UI
+
+```lua
+local UITestUtils = require("tests.ui_test_utils")
+local dsl = require("ui.ui_syntax_sugar")
+
+-- Spawn and wait for layout to complete
+local entity = UITestUtils.spawnAndWait(myUIDef, { x = 100, y = 100 })
+
+-- Assert no validation errors (throws on failure)
+UITestUtils.assertNoErrors(entity)
+
+-- Assert no errors for specific rules
+UITestUtils.assertNoErrors(entity, { "containment", "window_bounds" })
+
+-- Cleanup when done
+UITestUtils.cleanup(entity)
+```
+
+### Integrating with Existing UI Modules
+
+When modifying UI modules like `player_inventory.lua`, add getters for test access:
+
+```lua
+-- In your UI module
+function MyUI.getPanelEntity()
+    return state.panelEntity
+end
+
+function MyUI.getGrids()
+    return state.grids
+end
+```
+
+Then validate in tests:
+
+```lua
+local panelEntity = MyUI.getPanelEntity()
+local violations = UIValidator.validate(panelEntity, nil, { skipHidden = true })
+```
+
+### Running UI Tests
+
+**IMPORTANT: Always kill the app process after testing.** The game window stays open unless explicitly killed.
+
+**Test different game states:**
+- `MAIN_MENU` - Test main menu UI
+- `IN_GAME` (planning phase) - Test inventory, deck builder, etc.
+- `IN_GAME` (action phase) - Test combat UI, health bars, etc.
+
+**Running the PlayerInventory validation test:**
+
+```bash
+# Run test and auto-exit (RECOMMENDED)
+AUTO_START_MAIN_GAME=1 RUN_REAL_INVENTORY_TEST=1 AUTO_EXIT_AFTER_TEST=1 ./build/raylib-cpp-cmake-template
+
+# With output capture and process kill (if AUTO_EXIT fails)
+(AUTO_START_MAIN_GAME=1 RUN_REAL_INVENTORY_TEST=1 AUTO_EXIT_AFTER_TEST=1 ./build/raylib-cpp-cmake-template 2>&1 & sleep 15; kill $!) | grep -E "(VALIDATION|PASS|FAIL|warning|error)"
+```
+
+**Environment variables for testing:**
+| Variable | Purpose |
+|----------|---------|
+| `AUTO_START_MAIN_GAME=1` | Skip main menu, go directly to IN_GAME state |
+| `RUN_REAL_INVENTORY_TEST=1` | Run PlayerInventory UI validation test |
+| `AUTO_EXIT_AFTER_TEST=1` | Exit app after test completes (prevents hanging) |
+
+**Pattern for running tests that need specific game states:**
+
+```bash
+# Always use this pattern to avoid leaving app running:
+(ENVVARS ./build/raylib-cpp-cmake-template 2>&1 & sleep N; kill $!) | grep/tail
+
+# The subshell with & runs app in background
+# sleep N waits for test to complete
+# kill $! kills the app process
+# Pipe to grep/tail filters output
+```
+
+---
+
 ## Content Creation
 
 See [docs/content-creation/](docs/content-creation/) for full guides.
@@ -1071,6 +1230,7 @@ All modules in `assets/scripts/core/` - import with `require("core.<name>")`:
 | `fsm` | Declarative finite state machine (NEW) |
 | `pool` | Generic object pooling for allocation reduction (NEW) |
 | `debug` | Visual debugging: draw bounds, velocities, labels (NEW) |
+| `ui_validator` | Rule-based UI validation: containment, z-order, overlaps |
 | `entity_builder` | Entity creation with `create()`, `spawn()`, `quickSpawn()` |
 | `physics_builder` | Fluent physics body creation |
 | `shader_builder` | Fluent shader attachment |

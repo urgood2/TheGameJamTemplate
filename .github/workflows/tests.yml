@@ -5,6 +5,22 @@ on:
   pull_request:
 
 jobs:
+  # Lua standalone tests - fast validation without game engine
+  lua:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Lua
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lua5.4
+
+      - name: Run standalone Lua tests
+        run: lua5.4 assets/scripts/tests/run_standalone.lua
+
   unit:
     runs-on: ubuntu-latest
     timeout-minutes: 25

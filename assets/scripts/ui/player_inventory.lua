@@ -336,13 +336,13 @@ local function createGridForTab(tabId, x, y, visible)
     
     local spawnX = visible and x or -9999
     
-    local gridDef = dsl.inventoryGrid {
+    local gridDef = dsl.strict.inventoryGrid {
         id = cfg.id,
         rows = GRID_ROWS,
         cols = GRID_COLS,
         slotSize = { w = SLOT_WIDTH, h = SLOT_HEIGHT },
         slotSpacing = SLOT_SPACING,
-        
+
         config = {
             allowDragIn = true,
             allowDragOut = true,
@@ -351,11 +351,11 @@ local function createGridForTab(tabId, x, y, visible)
             padding = GRID_PADDING,
             backgroundColor = "blackberry",
         },
-        
+
         onSlotChange = function(gridEntity, slotIndex, oldItem, newItem)
             log_debug("[PlayerInventory:" .. tabId .. "] Slot " .. slotIndex .. " changed")
         end,
-        
+
         onSlotClick = function(gridEntity, slotIndex, button)
             if button == 2 then
                 local item = grid.getItemAtIndex(gridEntity, slotIndex)
@@ -419,7 +419,7 @@ local function createHeader()
     -- Header width: panel content area = PANEL_WIDTH - 2*PANEL_PADDING
     -- But we need to account for the header's own padding
     local headerContentWidth = PANEL_WIDTH - 2 * PANEL_PADDING
-    return dsl.hbox {
+    return dsl.strict.hbox {
         config = {
             color = "dark_lavender",
             padding = { 8, 6 },
@@ -428,19 +428,18 @@ local function createHeader()
             minHeight = HEADER_HEIGHT,
         },
         children = {
-            dsl.text("Inventory", {
+            dsl.strict.text("Inventory", {
                 fontSize = 14,
                 color = "gold",
                 shadow = true,
             }),
-            dsl.spacer(1), -- Push close button to the right
-            dsl.button("X", {
+            dsl.strict.spacer(1), -- Push close button to the right
+            dsl.strict.button("X", {
                 id = "close_btn",
                 minWidth = CLOSE_BUTTON_SIZE,
                 minHeight = CLOSE_BUTTON_SIZE,
                 fontSize = 12,
                 color = "darkred",
-                hover = true,
                 onClick = function()
                     local PlayerInventory = require("ui.player_inventory")
                     PlayerInventory.close()
@@ -452,13 +451,12 @@ end
 
 -- Legacy createCloseButton for backward compatibility (if called elsewhere)
 local function createCloseButton(panelX, panelY, panelWidth)
-    local closeButtonDef = dsl.button("X", {
+    local closeButtonDef = dsl.strict.button("X", {
         id = "close_btn_legacy",
         minWidth = CLOSE_BUTTON_SIZE,
         minHeight = CLOSE_BUTTON_SIZE,
         fontSize = 12,
         color = "darkred",
-        hover = true,
         onClick = function()
             PlayerInventory.close()
         end,
@@ -478,29 +476,28 @@ end
 
 local function createTabs()
     local tabChildren = {}
-    
+
     for _, tabId in ipairs(TAB_ORDER) do
         local cfg = TAB_CONFIG[tabId]
         local isActive = (tabId == state.activeTab)
-        
-        table.insert(tabChildren, dsl.button(cfg.icon, {
+
+        table.insert(tabChildren, dsl.strict.button(cfg.icon, {
             id = "tab_" .. tabId,
             minWidth = 28,
             minHeight = 24,
             fontSize = 10,
             color = isActive and "steel_blue" or "gray",
-            hover = true,
             onClick = function()
                 switchTab(tabId)
             end,
         }))
-        
+
         if tabId ~= TAB_ORDER[#TAB_ORDER] then
-            table.insert(tabChildren, dsl.spacer(2))
+            table.insert(tabChildren, dsl.strict.spacer(2))
         end
     end
-    
-    return dsl.hbox {
+
+    return dsl.strict.hbox {
         config = {
             color = "blackberry",
             padding = { 4, 2 },
@@ -512,7 +509,7 @@ local function createTabs()
 end
 
 local function createFooter()
-    return dsl.hbox {
+    return dsl.strict.hbox {
         config = {
             color = "dark_lavender",
             padding = { 6, 4 },
@@ -520,37 +517,35 @@ local function createFooter()
             minHeight = FOOTER_HEIGHT,
         },
         children = {
-            dsl.button("Name", {
+            dsl.strict.button("Name", {
                 id = "sort_name_btn",
                 minWidth = 50,
                 minHeight = 24,
                 fontSize = 10,
                 color = "purple_slate",
-                hover = true,
                 onClick = function()
                     log_debug("[PlayerInventory] Sort by name clicked")
                 end,
             }),
-            dsl.spacer(4),
-            dsl.button("Cost", {
+            dsl.strict.spacer(4),
+            dsl.strict.button("Cost", {
                 id = "sort_cost_btn",
                 minWidth = 50,
                 minHeight = 24,
                 fontSize = 10,
                 color = "purple_slate",
-                hover = true,
                 onClick = function()
                     log_debug("[PlayerInventory] Sort by cost clicked")
                 end,
             }),
-            dsl.spacer(1),
-            dsl.text("0 / 20", { id = "slot_count_text", fontSize = 10, color = "light_gray" }),
+            dsl.strict.spacer(1),
+            dsl.strict.text("0 / 20", { id = "slot_count_text", fontSize = 10, color = "light_gray" }),
         },
     }
 end
 
 local function createPanelDefinition()
-    return dsl.root {
+    return dsl.strict.root {
         config = {
             id = PANEL_ID,
             color = "blackberry",
@@ -564,7 +559,7 @@ local function createPanelDefinition()
         children = {
             createHeader(),
             createTabs(),
-            dsl.spacer(GRID_WIDTH, GRID_HEIGHT),
+            dsl.strict.spacer(GRID_WIDTH, GRID_HEIGHT),
             createFooter(),
         },
     }

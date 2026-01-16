@@ -156,40 +156,38 @@ end
 
 local function createHeader()
     local children = {
-        dsl.text(getWandTitle(), {
+        dsl.strict.text(getWandTitle(), {
             id = "wand_title_text",
             fontSize = 16,
             color = "gold",
             shadow = true,
         }),
-        dsl.spacer(1),
+        dsl.strict.spacer(1),
     }
 
     if state.wandCount > 1 then
-        table.insert(children, 1, dsl.button("<", {
+        table.insert(children, 1, dsl.strict.button("<", {
             id = "prev_wand_btn",
             fontSize = 14,
             color = "light_gray",
-            padding = { 6, 4 },
             onClick = function()
                 WandLoadoutUI.selectWand(state.currentWandIndex - 1)
             end,
         }))
-        table.insert(children, dsl.button(">", {
+        table.insert(children, dsl.strict.button(">", {
             id = "next_wand_btn",
             fontSize = 14,
             color = "light_gray",
-            padding = { 6, 4 },
             onClick = function()
                 WandLoadoutUI.selectWand(state.currentWandIndex + 1)
             end,
         }))
     end
 
-    return dsl.hbox {
+    return dsl.strict.hbox {
         config = {
             color = "dark_lavender",
-            padding = { 10, 6 },
+            padding = 10,
             emboss = 2,
             minWidth = PANEL_WIDTH - PANEL_PADDING * 2,
         },
@@ -202,7 +200,7 @@ end
 --------------------------------------------------------------------------------
 
 local function createTriggerSection()
-    local triggerGridDef = dsl.inventoryGrid {
+    local triggerGridDef = dsl.strict.inventoryGrid {
         id = "wand_trigger_grid",
         rows = 1,
         cols = 1,
@@ -225,16 +223,16 @@ local function createTriggerSection()
         end,
     }
 
-    return dsl.vbox {
+    return dsl.strict.vbox {
         config = {
             padding = 4,
         },
         children = {
-            dsl.text(getLocalizedText("ui.wand_loadout.trigger", "Trigger"), {
+            dsl.strict.text(getLocalizedText("ui.wand_loadout.trigger", "Trigger"), {
                 fontSize = 12,
                 color = "light_gray",
             }),
-            dsl.spacer(TRIGGER_SLOT_SIZE + 8, 4),
+            dsl.strict.spacer(TRIGGER_SLOT_SIZE + 8, 4),
             triggerGridDef,
         },
     }
@@ -245,7 +243,7 @@ end
 --------------------------------------------------------------------------------
 
 local function createActionSection()
-    local actionGridDef = dsl.inventoryGrid {
+    local actionGridDef = dsl.strict.inventoryGrid {
         id = "wand_action_grid",
         rows = ACTION_ROWS,
         cols = ACTION_COLS,
@@ -268,16 +266,16 @@ local function createActionSection()
         end,
     }
 
-    return dsl.vbox {
+    return dsl.strict.vbox {
         config = {
             padding = 4,
         },
         children = {
-            dsl.text(getLocalizedText("ui.wand_loadout.actions", "Actions"), {
+            dsl.strict.text(getLocalizedText("ui.wand_loadout.actions", "Actions"), {
                 fontSize = 12,
                 color = "light_gray",
             }),
-            dsl.spacer(ACTION_GRID_WIDTH, 4),
+            dsl.strict.spacer(ACTION_GRID_WIDTH, 4),
             actionGridDef,
         },
     }
@@ -288,13 +286,12 @@ end
 --------------------------------------------------------------------------------
 
 local function createCloseButton(panelX, panelY, panelWidth)
-    local closeButtonDef = dsl.button("X", {
+    local closeButtonDef = dsl.strict.button("X", {
         id = "wand_loadout_close_btn",
         minWidth = 24,
         minHeight = 24,
         fontSize = 14,
         color = "darkred",
-        hover = true,
         onClick = function()
             WandLoadoutUI.close()
         end,
@@ -316,20 +313,17 @@ end
 --------------------------------------------------------------------------------
 
 local function createPanelDefinition()
-    return dsl.root {
+    return dsl.strict.root {
         config = {
             id = PANEL_ID,
             color = "blackberry",
             padding = PANEL_PADDING,
-            emboss = 3,
-            minWidth = PANEL_WIDTH,
-            maxWidth = PANEL_WIDTH,
         },
         children = {
             createHeader(),
-            dsl.spacer(PANEL_WIDTH - PANEL_PADDING * 2, SECTION_SPACING),
+            dsl.strict.spacer(PANEL_WIDTH - PANEL_PADDING * 2, SECTION_SPACING),
             createTriggerSection(),
-            dsl.spacer(PANEL_WIDTH - PANEL_PADDING * 2, SECTION_SPACING),
+            dsl.strict.spacer(PANEL_WIDTH - PANEL_PADDING * 2, SECTION_SPACING),
             createActionSection(),
         },
     }

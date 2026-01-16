@@ -317,7 +317,7 @@ local function getStatBaseValue(statKey)
     return raw and raw.base or nil
 end
 
--- Returns color NAME for dsl.text()
+-- Returns color NAME for dsl.strict.text()
 local function getValueColor(value)
     if type(value) ~= "number" then return "white" end
     if value > 0 then return "mint_green" end
@@ -455,19 +455,19 @@ local function buildHeader(snapshot)
     local xpToNext = snapshot and snapshot.xp_to_next or 100
     local xpRatio = xpToNext > 0 and (xp / xpToNext) or 0
     
-    local titleRow = dsl.hbox {
+    local titleRow = dsl.strict.hbox {
         config = {
             padding = 0,
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
         },
         children = {
-            dsl.text(L("stats_panel.title", "Character Stats"), {
+            dsl.strict.text(L("stats_panel.title", "Character Stats"), {
                 fontSize = 16,
                 color = "apricot_cream",
                 shadow = true,
             }),
-            dsl.spacer(10),
-            dsl.text(string.format("Lv.%d", level), {
+            dsl.strict.spacer(10),
+            dsl.strict.text(string.format("Lv.%d", level), {
                 id = "header_level",
                 fontSize = 14,
                 color = "gold",
@@ -475,10 +475,10 @@ local function buildHeader(snapshot)
             }),
         }
     }
-    
-    local xpBar = dsl.progressBar({
+
+    local xpBar = dsl.strict.progressBar({
         id = "header_xp_bar",
-        getValue = function() 
+        getValue = function()
             local s = StatsPanel._state.snapshot
             if not s then return 0 end
             return s.xp_to_next > 0 and (s.xp / s.xp_to_next) or 0
@@ -488,14 +488,14 @@ local function buildHeader(snapshot)
         minWidth = PANEL_WIDTH - 40,
         minHeight = 8,
     })
-    
-    local xpText = dsl.text(string.format("%d / %d XP", xp, xpToNext), {
+
+    local xpText = dsl.strict.text(string.format("%d / %d XP", xp, xpToNext), {
         id = "header_xp_text",
         fontSize = 10,
         color = "gray",
     })
-    
-    return dsl.vbox {
+
+    return dsl.strict.vbox {
         config = {
             id = "stats_panel_header",
             padding = 8,
@@ -503,9 +503,9 @@ local function buildHeader(snapshot)
         },
         children = {
             titleRow,
-            dsl.spacer(4),
+            dsl.strict.spacer(4),
             xpBar,
-            dsl.spacer(2),
+            dsl.strict.spacer(2),
             xpText,
         }
     }
@@ -519,7 +519,7 @@ local function buildSectionHeader(sectionDef)
     -- Try to use emoji via localization if available
     local displayIcon = localization and localization.get("emoji." .. iconText) or iconText
     
-    return dsl.hbox {
+    return dsl.strict.hbox {
         config = {
             padding = 6,
             color = getColors().section_bg,
@@ -527,7 +527,7 @@ local function buildSectionHeader(sectionDef)
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
         },
         children = {
-            dsl.text(displayIcon .. " " .. sectionDef.label, {
+            dsl.strict.text(displayIcon .. " " .. sectionDef.label, {
                 fontSize = HEADER_FONT_SIZE,
                 color = "apricot_cream",
                 shadow = true,
@@ -562,17 +562,17 @@ local function buildStatRow(statKey, snapshot)
         local deltaStr = formatDelta(delta)
         if deltaStr then
             local deltaColor = delta > 0 and "mint_green" or "fiery_red"
-            table.insert(deltaChildren, dsl.text(deltaStr, {
+            table.insert(deltaChildren, dsl.strict.text(deltaStr, {
                 id = "stat_delta_" .. statKey,
                 fontSize = ROW_FONT_SIZE - 2,
                 color = deltaColor,
             }))
         end
     end
-    
+
     local tooltipBody = buildStatTooltipBody(statKey, value, snapshot)
-    
-    return dsl.hbox {
+
+    return dsl.strict.hbox {
         config = {
             id = "stat_row_" .. statKey,
             padding = 4,
@@ -583,12 +583,12 @@ local function buildStatRow(statKey, snapshot)
         },
         children = {
             -- Label (left-aligned)
-            dsl.text(label, {
+            dsl.strict.text(label, {
                 fontSize = ROW_FONT_SIZE,
                 color = "white",
             }),
             -- Spacer to push value right
-            dsl.hbox {
+            dsl.strict.hbox {
                 config = {
                     padding = 0,
                     minWidth = 1,  -- Flex spacer
@@ -597,18 +597,18 @@ local function buildStatRow(statKey, snapshot)
                 children = {}
             },
             -- Value + Delta (right side)
-            dsl.hbox {
+            dsl.strict.hbox {
                 config = {
                     padding = 0,
                     align = bit.bor(AlignmentFlag.HORIZONTAL_RIGHT, AlignmentFlag.VERTICAL_CENTER),
                 },
                 children = {
-                    dsl.text(formatted, {
+                    dsl.strict.text(formatted, {
                         id = "stat_value_" .. statKey,
                         fontSize = ROW_FONT_SIZE,
                         color = valueColor,
                     }),
-                    #deltaChildren > 0 and dsl.spacer(4) or nil,
+                    #deltaChildren > 0 and dsl.strict.spacer(4) or nil,
                     #deltaChildren > 0 and deltaChildren[1] or nil,
                 }
             },
@@ -624,16 +624,16 @@ local function buildElementalGrid(snapshot)
     local ELEM_COL_WIDTH = 70
     
     -- Header row
-    local headerRow = dsl.hbox {
+    local headerRow = dsl.strict.hbox {
         config = {
             padding = 2,
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
         },
         children = {
-            dsl.text("Element", { fontSize = 10, color = "gray", minWidth = ELEM_COL_WIDTH }),
-            dsl.text("Resist", { fontSize = 10, color = "gray", minWidth = COL_WIDTH }),
-            dsl.text("Damage", { fontSize = 10, color = "gray", minWidth = COL_WIDTH }),
-            dsl.text("Duration", { fontSize = 10, color = "gray", minWidth = COL_WIDTH }),
+            dsl.strict.text("Element", { fontSize = 10, color = "gray", minWidth = ELEM_COL_WIDTH }),
+            dsl.strict.text("Resist", { fontSize = 10, color = "gray", minWidth = COL_WIDTH }),
+            dsl.strict.text("Damage", { fontSize = 10, color = "gray", minWidth = COL_WIDTH }),
+            dsl.strict.text("Duration", { fontSize = 10, color = "gray", minWidth = COL_WIDTH }),
         }
     }
     
@@ -658,31 +658,31 @@ local function buildElementalGrid(snapshot)
             return val > 0 and "mint_green" or "fiery_red"
         end
         
-        table.insert(rows, dsl.hbox {
+        table.insert(rows, dsl.strict.hbox {
             config = {
                 id = "elem_row_" .. elemType,
                 padding = 2,
                 align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
             },
             children = {
-                dsl.text(displayName, {
+                dsl.strict.text(displayName, {
                     fontSize = ROW_FONT_SIZE - 1,
                     color = config.color,
                     minWidth = ELEM_COL_WIDTH,
                 }),
-                dsl.text(formatGridValue(data.resist, config.hasResist), {
+                dsl.strict.text(formatGridValue(data.resist, config.hasResist), {
                     id = "elem_" .. elemType .. "_resist",
                     fontSize = ROW_FONT_SIZE - 1,
                     color = getGridColor(data.resist, config.hasResist),
                     minWidth = COL_WIDTH,
                 }),
-                dsl.text(formatGridValue(data.damage, true), {
+                dsl.strict.text(formatGridValue(data.damage, true), {
                     id = "elem_" .. elemType .. "_damage",
                     fontSize = ROW_FONT_SIZE - 1,
                     color = getGridColor(data.damage, true),
                     minWidth = COL_WIDTH,
                 }),
-                dsl.text(formatGridValue(data.duration, config.hasDuration), {
+                dsl.strict.text(formatGridValue(data.duration, config.hasDuration), {
                     id = "elem_" .. elemType .. "_duration",
                     fontSize = ROW_FONT_SIZE - 1,
                     color = getGridColor(data.duration, config.hasDuration),
@@ -691,8 +691,8 @@ local function buildElementalGrid(snapshot)
             }
         })
     end
-    
-    return dsl.vbox {
+
+    return dsl.strict.vbox {
         config = {
             padding = 4,
         },
@@ -705,7 +705,7 @@ local function buildSection(sectionDef, snapshot)
     local children = {
         buildSectionHeader(sectionDef),
     }
-    
+
     if sectionDef.isGrid then
         -- Special grid layout for elements
         table.insert(children, buildElementalGrid(snapshot))
@@ -718,16 +718,16 @@ local function buildSection(sectionDef, snapshot)
                 table.insert(statRows, row)
             end
         end
-        
+
         if #statRows > 0 then
-            table.insert(children, dsl.vbox {
+            table.insert(children, dsl.strict.vbox {
                 config = { padding = 4 },
                 children = statRows,
             })
         end
     end
-    
-    return dsl.vbox {
+
+    return dsl.strict.vbox {
         config = {
             id = "section_" .. sectionDef.id,
             padding = 0,
@@ -738,13 +738,13 @@ end
 
 -- Build footer with keyboard hints
 local function buildFooter()
-    return dsl.hbox {
+    return dsl.strict.hbox {
         config = {
             padding = 6,
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
         },
         children = {
-            dsl.text("C: toggle   1-5: tabs   Esc: close", {
+            dsl.strict.text("C: toggle   1-5: tabs   Esc: close", {
                 fontSize = 9,
                 color = "gray",
             }),
@@ -780,7 +780,7 @@ local function buildSectionContent(sectionDef, snapshot)
     if sectionDef.isGrid then
         return buildElementalGrid(snapshot)
     end
-    
+
     local statRows = {}
     for _, statKey in ipairs(sectionDef.stats or {}) do
         local row = buildStatRow(statKey, snapshot)
@@ -788,12 +788,12 @@ local function buildSectionContent(sectionDef, snapshot)
             table.insert(statRows, row)
         end
     end
-    
+
     if #statRows == 0 then
-        return dsl.text("No stats available", { fontSize = 11, color = "gray" })
+        return dsl.strict.text("No stats available", { fontSize = 11, color = "gray" })
     end
-    
-    return dsl.vbox {
+
+    return dsl.strict.vbox {
         config = { padding = 4 },
         children = statRows,
     }
@@ -803,7 +803,7 @@ end
 local function buildPanelDefinition(snapshot)
     local _, screenH = getScreenSize()
     local scrollHeight = math.floor(screenH * 0.55)
-    
+
     local tabDefs = {}
     for _, sectionDef in ipairs(SECTIONS) do
         table.insert(tabDefs, {
@@ -811,7 +811,7 @@ local function buildPanelDefinition(snapshot)
             label = sectionDef.label,
             content = function()
                 local content = buildSectionContent(sectionDef, StatsPanel._state.snapshot or snapshot)
-                local scrollContent = dsl.vbox {
+                local scrollContent = dsl.strict.vbox {
                     config = { padding = 0 },
                     children = { content }
                 }
@@ -822,8 +822,8 @@ local function buildPanelDefinition(snapshot)
             end
         })
     end
-    
-    local tabContainer = dsl.tabs {
+
+    local tabContainer = dsl.strict.tabs {
         id = "stats_panel_tabs",
         tabs = tabDefs,
         activeTab = "combat",
@@ -835,8 +835,8 @@ local function buildPanelDefinition(snapshot)
         buttonPadding = 6,
         contentMinHeight = scrollHeight + 20,
     }
-    
-    return dsl.root {
+
+    return dsl.strict.root {
         config = {
             id = "stats_panel_v2_root",
             color = getColors().bg,
@@ -848,13 +848,13 @@ local function buildPanelDefinition(snapshot)
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
         },
         children = {
-            dsl.vbox {
+            dsl.strict.vbox {
                 config = { padding = 0 },
                 children = {
                     buildHeader(snapshot),
-                    dsl.spacer(4),
+                    dsl.strict.spacer(4),
                     tabContainer,
-                    dsl.spacer(4),
+                    dsl.strict.spacer(4),
                     buildFooter(),
                 }
             }

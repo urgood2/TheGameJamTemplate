@@ -321,7 +321,7 @@ local function createSingleGrid(tabId, x, y, visible)
     
     local spawnX = visible and x or OFFSCREEN_X
     
-    local gridDef = dsl.inventoryGrid {
+    local gridDef = dsl.strict.inventoryGrid {
         id = cfg.id,
         rows = cfg.rows,
         cols = cfg.cols,
@@ -386,7 +386,7 @@ end
 --------------------------------------------------------------------------------
 
 function InventoryGridDemo.createInfoBox(x, y)
-    local infoDef = dsl.vbox {
+    local infoDef = dsl.strict.vbox {
         config = {
             id = "demo_info_box",
             color = util.getColor("blackberry"),
@@ -396,20 +396,20 @@ function InventoryGridDemo.createInfoBox(x, y)
             minHeight = 280,
         },
         children = {
-            dsl.text("Inventory Demo", { fontSize = 18, color = "white", shadow = true }),
-            dsl.spacer(10),
-            dsl.divider("horizontal", { color = "apricot_cream", thickness = 1, length = 180 }),
-            dsl.spacer(10),
-            dsl.text("Drag cards to slots", { fontSize = 12, color = "light_gray" }),
-            dsl.text("Stack same cards (max 5)", { fontSize = 12, color = "light_gray" }),
-            dsl.spacer(8),
-            dsl.text("Slot 1: Fire only", { fontSize = 12, color = "fiery_red" }),
-            dsl.text("Slot 2: Ice only", { fontSize = 12, color = "baby_blue" }),
-            dsl.text("Slot 12: Locked", { fontSize = 12, color = "gray" }),
-            dsl.spacer(15),
-            dsl.text("Stats:", { fontSize = 14, color = "gold" }),
-            dsl.text("Slots: 0/12", { id = "stats_slots", fontSize = 12, color = "white" }),
-            dsl.text("Items: 0", { id = "stats_items", fontSize = 12, color = "white" }),
+            dsl.strict.text("Inventory Demo", { fontSize = 18, color = "white", shadow = true }),
+            dsl.strict.spacer(10),
+            dsl.strict.divider("horizontal", { color = "apricot_cream", thickness = 1, length = 180 }),
+            dsl.strict.spacer(10),
+            dsl.strict.text("Drag cards to slots", { fontSize = 12, color = "light_gray" }),
+            dsl.strict.text("Stack same cards (max 5)", { fontSize = 12, color = "light_gray" }),
+            dsl.strict.spacer(8),
+            dsl.strict.text("Slot 1: Fire only", { fontSize = 12, color = "fiery_red" }),
+            dsl.strict.text("Slot 2: Ice only", { fontSize = 12, color = "baby_blue" }),
+            dsl.strict.text("Slot 12: Locked", { fontSize = 12, color = "gray" }),
+            dsl.strict.spacer(15),
+            dsl.strict.text("Stats:", { fontSize = 14, color = "gold" }),
+            dsl.strict.text("Slots: 0/12", { id = "stats_slots", fontSize = 12, color = "white" }),
+            dsl.strict.text("Items: 0", { id = "stats_items", fontSize = 12, color = "white" }),
         },
     }
     
@@ -508,7 +508,7 @@ function InventoryGridDemo.createCustomPanel(x, y)
         iconHovered = false,
     }
     
-    local panelContainer = dsl.vbox {
+    local panelContainer = dsl.strict.vbox {
         config = { 
             id = "demo_custom_panel_container",
             padding = 10,
@@ -518,9 +518,9 @@ function InventoryGridDemo.createCustomPanel(x, y)
             minHeight = 145,
         },
         children = {
-            dsl.text("Custom Panel", { fontSize = 12, color = "gold", shadow = true }),
-            dsl.spacer(4),
-            dsl.text("(immediate-mode + hover)", { fontSize = 10, color = "light_gray" }),
+            dsl.strict.text("Custom Panel", { fontSize = 12, color = "gold", shadow = true }),
+            dsl.strict.spacer(4),
+            dsl.strict.text("(immediate-mode + hover)", { fontSize = 10, color = "light_gray" }),
         },
     }
     
@@ -640,7 +640,7 @@ function InventoryGridDemo.createSortButtons(x, y)
         return demoState.sortAscending and " ↑" or " ↓"
     end
     
-    local sortDef = dsl.hbox {
+    local sortDef = dsl.strict.hbox {
         config = {
             id = "demo_sort_buttons",
             padding = 4,
@@ -648,9 +648,9 @@ function InventoryGridDemo.createSortButtons(x, y)
             emboss = 2,
         },
         children = {
-            dsl.text("Sort:", { fontSize = 11, color = "light_gray" }),
-            dsl.spacer(4),
-            dsl.button("Name" .. getSortIndicator("name"), {
+            dsl.strict.text("Sort:", { fontSize = 11, color = "light_gray" }),
+            dsl.strict.spacer(4),
+            dsl.strict.button("Name" .. getSortIndicator("name"), {
                 id = "sort_name_btn",
                 minWidth = 60,
                 minHeight = 24,
@@ -661,8 +661,8 @@ function InventoryGridDemo.createSortButtons(x, y)
                     InventoryGridDemo.toggleSort("name")
                 end,
             }),
-            dsl.spacer(4),
-            dsl.button("Type" .. getSortIndicator("element"), {
+            dsl.strict.spacer(4),
+            dsl.strict.button("Type" .. getSortIndicator("element"), {
                 id = "sort_type_btn",
                 minWidth = 60,
                 minHeight = 24,
@@ -818,7 +818,7 @@ function InventoryGridDemo.createPostItTabs(windowX, windowY, windowW)
         local tabX = startX + (i - 1) * (tabWidth + tabSpacing)
         local tabId = tab.id
         
-        local tabDef = dsl.button(tab.label, {
+        local tabDef = dsl.strict.button(tab.label, {
             id = "tab_" .. tab.id,
             minWidth = tabWidth,
             minHeight = tabHeight,

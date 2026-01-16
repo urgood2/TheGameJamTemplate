@@ -1866,104 +1866,9 @@ namespace ui
         boxesBeingRemoved.erase(entity);
     }
 
-    // entity is a uibox.
-    // void box::Draw(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity)
-    // {
-    //     ZONE_SCOPED("UIBox::Draw");
-    //     // LATER: do not draw if already drawn this frame
-    //     auto *uiBox = registry.try_get<UIBoxComponent>(entity);
-    //     auto *uiState = registry.try_get<UIState>(entity);
-    //     auto *node = registry.try_get<transform::GameObject>(entity);
-
-    //     AssertThat(uiBox, Is().Not().EqualTo(nullptr));
-    //     AssertThat(uiState, Is().Not().EqualTo(nullptr));
-    //     AssertThat(node, Is().Not().EqualTo(nullptr));
-
-    //     // 🎨 Draw all child elements (except tooltips & alerts)
-    //     // Draw the box's child elements, not the ui root's. The ui hierarchy is stored in the ui root's children, so these would be special-case.
-    //     if (node)
-    //     {
-    //         ZONE_SCOPED("UIBox::DrawUIBOXChildren(notRoot)");
-    //         for (auto childEntry : node->children)
-    //         {
-    //             auto &entryName = childEntry.first;
-    //             auto child = childEntry.second;
-    //             auto *childUIElement = registry.try_get<UIElementComponent>(child);
-    //             auto *childUIBox = registry.try_get<UIBoxComponent>(child);
-
-    //             // TODO: use these identifiers later?
-    //             if (registry.valid(child) && childUIElement && entryName != "h_popup" && entryName != "alert")
-    //             {
-    //                 SPDLOG_DEBUG("drawing uibox child {}", entryName);
-    //                 // this is a ui element, not a ui box, draw the element itself, then the children
-    //                 ui::element::DrawSelf(layerPtr, registry, child);
-    //                 ui::element::DrawChildren(layerPtr, registry, child);
-    //             }
-    //             else if (childUIBox)
-    //             {
-    //                 SPDLOG_DEBUG("drawing uibox child {}", entryName);
-    //                 // this is a ui box, recursive draw
-    //                 box::Draw(layerPtr, registry, child);
-    //             }
-    //             // TODO: add alternative rendering if necessary for the uibox children. Not sure why this is necessary
-    //         }
-    //     }
-
-    //     // ✅ Only draw if visible
-    //     // draw the ui root's children. this is different from the uibox's children.
-    //     if (node->state.visible)
-    //     {
-    //         // LATER: not using draw hash
-    //         //  addToDrawHash(entity);  // Adds UI element to draw batch (optimization)
-
-    //         // 🎨 Draw the root UI element
-    //         if (uiBox->uiRoot)
-    //         {
-    //             ZONE_SCOPED("UIBox::Draw::RootElement");
-    //             // TODO: are child nodes in defs added to root's children, or to the ui box as children?
-    //             element::DrawSelf(layerPtr, registry, uiBox->uiRoot.value());
-    //             element::DrawChildren(layerPtr, registry, uiBox->uiRoot.value());
-    //         }
-
-    //         // 🖌 Draw elements in layers (ordered rendering)
-    //         // TODO: should elements in layers be excluded from other drawing like above? figure out
-    //         for (auto layerEntry : uiBox->drawLayers)
-    //         {
-    //             ZONE_SCOPED("UIBox::DrawIfLayer");
-    //             auto layerEntity = layerEntry.second;
-    //             if (registry.valid(layerEntity))
-    //             {
-    //                 auto *element = registry.try_get<UIElementComponent>(layerEntity);
-    //                 auto *uiBox = registry.try_get<UIBoxComponent>(layerEntity);
-    //                 // if not a UIelement, then call the draw self method for the component
-    //                 if (element)
-    //                 {
-    //                     ui::element::DrawSelf(layerPtr, registry, layerEntity);
-    //                     ui::element::DrawChildren(layerPtr, registry, layerEntity);
-    //                 }
-    //                 else if (uiBox)
-    //                 {
-    //                     box::Draw(layerPtr, registry, layerEntity);
-    //                 }
-    //             }
-    //         }
-    //     }
-
-    //     // REVIEW: alerts are the red pips on the top right. alerts can also be popups?
-    //     if (node->children.find("alert") != node->children.end())
-    //     {
-    //         ZONE_SCOPED("UIBox::Draw::Alert");
-    //         auto alert = node->children["alert"];
-    //         if (registry.valid(alert))
-    //         {
-    //             ui::element::DrawSelf(layerPtr, registry, alert);
-    //             ui::element::DrawChildren(layerPtr, registry, alert);
-    //         }
-    //     }
-
-    //     if (globals::drawDebugInfo)
-    //         transform::DrawBoundingBoxAndDebugInfo(&registry, entity, layerPtr);
-    // }
+    // NOTE: The old box::Draw function has been removed.
+    // Drawing is now handled by drawAllBoxesShaderEnabled() which uses a
+    // flattened draw list approach for better performance and proper scissor handling.
 
     void box::Recalculate(entt::registry &registry, entt::entity entity)
     {
@@ -2610,30 +2515,16 @@ namespace ui
 
     void box::Move(entt::registry &registry, entt::entity self, float dt)
     {
-        // auto *transform = registry.try_get<transform::Transform>(self);
-        // auto *uiBox = registry.try_get<UIBoxComponent>(self);
-
-        // AssertThat(transform, Is().Not().EqualTo(nullptr));
-        // AssertThat(uiBox, Is().Not().EqualTo(nullptr));
-
-        // transform::UpdateTransform(&registry, self, dt);
-        // transform::UpdateTransform(&registry, uiBox->uiRoot.value(), dt);
+        // DEPRECATED: This function is a no-op stub kept for Lua API compatibility.
+        // UI movement is now handled through transform springs and direct position updates.
+        (void)registry; (void)self; (void)dt;
     }
 
     void box::Drag(entt::registry &registry, entt::entity self, Vector2 offset, float dt)
     {
-        // auto *transform = registry.try_get<transform::Transform>(self);
-        // auto *node = registry.try_get<transform::GameObject>(self);
-        // auto *uiBox = registry.try_get<UIBoxComponent>(self);
-
-        // AssertThat(transform, Is().Not().EqualTo(nullptr));
-        // AssertThat(uiBox, Is().Not().EqualTo(nullptr));
-        // AssertThat(node, Is().Not().EqualTo(nullptr));
-
-        // // TODO: fill out missing transform functions in node component
-        // if (node->methods->onDrag)
-        //     node->methods->onDrag(registry, self);
-        // transform::UpdateTransform(&registry, uiBox->uiRoot.value(), dt);
+        // DEPRECATED: This function is a no-op stub kept for Lua API compatibility.
+        // UI dragging is now handled through the input system and direct position updates.
+        (void)registry; (void)self; (void)offset; (void)dt;
     }
 
     void box::AddChild(entt::registry &registry, entt::entity uiBox, UIElementTemplateNode uiElementDef, entt::entity parent)

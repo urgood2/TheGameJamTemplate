@@ -607,6 +607,11 @@ function InventoryGridInit.makeItemDraggable(itemEntity, gridEntity)
     end
 end
 
+--------------------------------------------------------------------------------
+-- Debug logging for centerItemOnSlot (debounced to avoid log spam)
+--------------------------------------------------------------------------------
+local _centerDebugLogged = {}  -- [entityKey] = true (debounce table)
+
 function InventoryGridInit.centerItemOnSlot(itemEntity, slotEntity)
     if not registry:valid(itemEntity) or not registry:valid(slotEntity) then
         return
@@ -651,11 +656,6 @@ function InventoryGridInit.centerItemOnSlot(itemEntity, slotEntity)
     itemTransform.actualX = centerX
     itemTransform.actualY = centerY
 end
-
---------------------------------------------------------------------------------
--- Debug logging for centerItemOnSlot (debounced to avoid log spam)
---------------------------------------------------------------------------------
-local _centerDebugLogged = {}  -- [entityKey] = true (debounce table)
 
 --- Clear debug log cache (useful for repeated testing)
 function InventoryGridInit.clearCenterDebugLog()

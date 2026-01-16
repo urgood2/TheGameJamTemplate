@@ -23,7 +23,7 @@ local dsl = require("ui.ui_syntax_sugar")
 local z_orders = require("core.z_orders")
 local timer = require("core.timer")
 
-local SPRITE_NAME = "inventory-tab-marker.png"
+-- local SPRITE_NAME = "inventory-tab-marker.png"
 local MARKER_WIDTH = 48
 local MARKER_HEIGHT = 32
 local MARKER_Z = z_orders.ui_tooltips + 200  -- Above inventory UI
@@ -62,17 +62,17 @@ local function calculatePosition()
 end
 
 local function createMarkerDefinition()
-    return dsl.hbox {
-        config = {
-            padding = 0,
-            minWidth = MARKER_WIDTH,
-            minHeight = MARKER_HEIGHT,
-            backgroundColor = "red",  -- Debug: visible background
-        },
-        children = {
-            dsl.anim(SPRITE_NAME, { w = MARKER_WIDTH, h = MARKER_HEIGHT, shadow = false })
-        }
-    }
+    -- return dsl.hbox {
+    --     config = {
+    --         padding = 0,
+    --         minWidth = MARKER_WIDTH,
+    --         minHeight = MARKER_HEIGHT,
+    --         backgroundColor = "red",  -- Debug: visible background
+    --     },
+    --     children = {
+    --         dsl.anim(SPRITE_NAME, { w = MARKER_WIDTH, h = MARKER_HEIGHT, shadow = false })
+    --     }
+    -- }
 end
 
 local function createMarker()
@@ -84,10 +84,6 @@ local function createMarker()
 
     state.markerX = x
     state.markerY = y
-
-    -- Spawn the DSL box
-    local markerDef = createMarkerDefinition()
-    local entity = dsl.spawn({ x = x, y = y }, markerDef, RENDER_LAYER, MARKER_Z)
 
     if not entity or not registry:valid(entity) then
         log_warn("[InventoryTabMarker] Failed to create marker entity")

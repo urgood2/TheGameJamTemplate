@@ -197,7 +197,7 @@ local function setEntityVisible(entity, visible, onscreenX, onscreenY, dbgLabel)
     if not entity or not registry:valid(entity) then return end
 
     local targetX = onscreenX
-    local targetY = visible and onscreenY or (onscreenY + OFFSCREEN_Y_OFFSET)
+    local targetY = visible and onscreenY or (GetScreenHeight())
 
     -- Update Transform for the main entity
     local t = component_cache.get(entity, Transform)
@@ -409,27 +409,31 @@ local function createHeader()
     -- Header width: panel content area = PANEL_WIDTH - 2*PANEL_PADDING
     -- But we need to account for the header's own padding
     local headerContentWidth = PANEL_WIDTH - 2 * PANEL_PADDING
-    return dsl.strict.hbox {
+    return dsl.hbox {
         config = {
             color = "dark_lavender",
-            padding = { 8, 6 },
-            emboss = 2,
-            minWidth = headerContentWidth,
-            minHeight = HEADER_HEIGHT,
+            -- emboss = 2,
+            padding = 3
+            -- minWidth = headerContentWidth,
+            -- minHeight = HEADER_HEIGHT,
         },
         children = {
-            dsl.strict.text("Inventory", {
+            dsl.text("Inventory", {
                 fontSize = 14,
                 color = "gold",
                 shadow = true,
             }),
-            dsl.strict.spacer(1), -- Push close button to the right
-            dsl.strict.button("X", {
+            
+            dsl.text("                                        ", {
+                fontSize = 14,
+                color = "gold",
+                shadow = false,
+            }),
+            -- dsl.strict.spacer(1), -- Push close button to the right
+            dsl.button("X", {
                 id = "close_btn",
-                minWidth = CLOSE_BUTTON_SIZE,
-                minHeight = CLOSE_BUTTON_SIZE,
                 fontSize = 12,
-                color = "darkred",
+                color = "dark_red",
                 onClick = function()
                     local PlayerInventory = require("ui.player_inventory")
                     PlayerInventory.close()
@@ -474,10 +478,8 @@ local function createTabs()
         local cfg = TAB_CONFIG[tabId]
         local isActive = (tabId == state.activeTab)
 
-        table.insert(tabChildren, dsl.strict.button(cfg.icon, {
+        table.insert(tabChildren, dsl.strict.button(cfg.label, {
             id = "tab_" .. tabId,
-            minWidth = 28,
-            minHeight = 24,
             fontSize = 10,
             color = isActive and "steel_blue" or "gray",
             onClick = function()
@@ -494,8 +496,6 @@ local function createTabs()
         config = {
             color = "blackberry",
             padding = { 4, 2 },
-            minWidth = GRID_WIDTH,
-            minHeight = TABS_HEIGHT,
         },
         children = tabChildren,
     }
@@ -520,7 +520,7 @@ local function createFooter()
                     log_debug("[PlayerInventory] Sort by name clicked")
                 end,
             }),
-            dsl.strict.spacer(4),
+            -- dsl.strict.spacer(4),
             dsl.strict.button("Cost", {
                 id = "sort_cost_btn",
                 minWidth = 50,
@@ -531,7 +531,7 @@ local function createFooter()
                     log_debug("[PlayerInventory] Sort by cost clicked")
                 end,
             }),
-            dsl.spacer(1),
+            -- dsl.spacer(1),
             dsl.text("0 / 18", { id = "slot_count_text", fontSize = 10, color = "light_gray" }),
         },
     }
@@ -544,15 +544,11 @@ local function createPanelDefinition()
             color = "blackberry",
             padding = PANEL_PADDING,
             emboss = 3,
-            minWidth = PANEL_WIDTH,
-            maxWidth = PANEL_WIDTH,
-            minHeight = PANEL_HEIGHT,
             -- maxHeight = PANEL_HEIGHT,
         },
         children = {
             createHeader(),
             createTabs(),
-            dsl.strict.spacer(GRID_WIDTH, GRID_HEIGHT * 1.2),
             createFooter(),
         },
     }
@@ -791,15 +787,13 @@ local function initializeInventory()
     -- make tab that sticks out the top
     local tabDef = dsl.hbox {
         config = {
-            padding = 8,
-            color = "blackberry",
         },
         children = {
             dsl.anim("inventory-tab-marker.png", { w = 64, h = 64 })
         }
     }
     
-    state.tabMarkerEntity = dsl.spawn({ x = 500, y = 500 }, tabDef, RENDER_LAYER, PANEL_Z + 1)
+    state.tabMarkerEntity = dsl.spawn({ x = 700, y = 500 }, tabDef, RENDER_LAYER, PANEL_Z - 1) -- Just below panel
     
     local ChildBuilder = require("core.child_builder")
 
@@ -811,10 +805,21 @@ local function initializeInventory()
         ui.box.set_draw_layer(state.tabMarkerEntity, "sprites")
     end
     
+    -- CRITICAL: Add state tags to UI boxes so they render
+    -- This propagates the state tag to all UI elements including the wrapped animated sprite
+    if ui and ui.box and ui.box.AddStateTagToUIBox then
+        ui.box.AddStateTagToUIBox(registry, state.tabMarkerEntity, "default_state")
+        ui.box.AddStateTagToUIBox(registry, state.panelEntity, "default_state")
+    end
+
+    
     ChildBuilder.for_entity(state.tabMarkerEntity)
       :attachTo(state.panelEntity)
-      :offset(0, -60)  -- 60px above card center
+      :offset(0, -66)  -- 60px above card center
       :apply()
+      
+    -- ui.box.ClearStateTagsFromUIBox(state.tabMarkerEntity)
+    -- ui.box.AssignStateTagsToUIBox(registry, state.tabMarkerEntity, PLANNING_STATE)
 
     -- Close button is now part of the header in the panel hierarchy
     state.closeButtonEntity = ui.box.GetUIEByID(registry, state.panelEntity, "close_btn")

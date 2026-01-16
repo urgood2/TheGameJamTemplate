@@ -96,7 +96,7 @@ local function createMarker()
 
     -- Set draw layer to sprites for proper z-ordering (same pattern as player_inventory.lua)
     if ui and ui.box and ui.box.set_draw_layer then
-        ui.box.set_draw_layer(entity, "sprites")
+        ui.box.set_draw_layer(entity, "ui")
         log_debug("[InventoryTabMarker] Set draw layer to sprites")
     end
 

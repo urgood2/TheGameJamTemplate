@@ -547,12 +547,12 @@ local function createPanelDefinition()
             minWidth = PANEL_WIDTH,
             maxWidth = PANEL_WIDTH,
             minHeight = PANEL_HEIGHT,
-            maxHeight = PANEL_HEIGHT,
+            -- maxHeight = PANEL_HEIGHT,
         },
         children = {
             createHeader(),
             createTabs(),
-            dsl.strict.spacer(GRID_WIDTH, GRID_HEIGHT),
+            dsl.strict.spacer(GRID_WIDTH, GRID_HEIGHT * 1.2),
             createFooter(),
         },
     }
@@ -787,13 +787,34 @@ local function initializeInventory()
         log_warn("[PlayerInventory] Cannot initialize - screen dimensions not ready")
         return
     end
+    
+    -- make tab that sticks out the top
+    local tabDef = dsl.hbox {
+        config = {
+            padding = 8,
+            color = "blackberry",
+        },
+        children = {
+            dsl.anim("inventory-tab-marker.png", { w = 64, h = 64 })
+        }
+    }
+    
+    state.tabMarkerEntity = dsl.spawn({ x = 500, y = 500 }, tabDef, RENDER_LAYER, PANEL_Z + 1)
+    
+    local ChildBuilder = require("core.child_builder")
 
     local panelDef = createPanelDefinition()
     state.panelEntity = dsl.spawn({ x = state.panelX, y = state.panelY + OFFSCREEN_Y_OFFSET }, panelDef, RENDER_LAYER, PANEL_Z)
     -- Explicitly set to sprites layer so z-ordering works with planning cards
     if ui and ui.box and ui.box.set_draw_layer then
         ui.box.set_draw_layer(state.panelEntity, "sprites")
+        ui.box.set_draw_layer(state.tabMarkerEntity, "sprites")
     end
+    
+    ChildBuilder.for_entity(state.tabMarkerEntity)
+      :attachTo(state.panelEntity)
+      :offset(0, -60)  -- 60px above card center
+      :apply()
 
     -- Close button is now part of the header in the panel hierarchy
     state.closeButtonEntity = ui.box.GetUIEByID(registry, state.panelEntity, "close_btn")

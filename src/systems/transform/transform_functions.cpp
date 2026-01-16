@@ -217,8 +217,7 @@ namespace transform
                 
                 if (registry->valid(child) == false) continue;
                 
-                if (globals::getDrawDebugInfo())
-                    DrawBoundingBoxAndDebugInfo(registry, child, layer);
+                DrawBoundingBoxAndDebugInfo(registry, child, layer);
                 auto &childNode = registry->get<GameObject>(child);
                 if (childNode.state.visible  && childNode.state.visible && childNode.methods.draw) {
                     childNode.methods.draw(layer, *registry, child);
@@ -1440,14 +1439,24 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
     auto DrawBoundingBoxAndDebugInfo(entt::registry *registry, entt::entity e, std::shared_ptr<layer::Layer> layer) -> void
     {
+        // Early exit if debug mode is not enabled
+        if (!globals::getDrawDebugInfo())
+            return;
+
+        // State-gate: only render debug info for entities whose state is currently active
+        if (registry->any_of<entity_gamestate_management::StateTag>(e)) {
+            const auto &stateTag = registry->get<entity_gamestate_management::StateTag>(e);
+            if (!entity_gamestate_management::active_states_instance().is_active(stateTag)) {
+                return;
+            }
+        }
+
         // respect screen/world space
         bool isScreenSpace = registry->any_of<collision::ScreenSpaceCollisionMarker>(e);
-        
+
         layer::DrawCommandSpace drawSpace = isScreenSpace ? layer::DrawCommandSpace::Screen : layer::DrawCommandSpace::World;
-        
+
         ZONE_SCOPED("DrawBoundingBoxAndDebugInfo");
-        // if (debugMode == false)
-        //     return;
 
         auto &node = registry->get<GameObject>(e);
         node.state.isUnderOverlay = globals::getUnderOverlay(); // LATER: not sure why this is here. move elsewhere?

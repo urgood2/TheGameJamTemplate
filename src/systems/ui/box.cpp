@@ -2488,106 +2488,11 @@ namespace ui
     void box::drawAllBoxes(entt::registry &registry,
                            std::shared_ptr<layer::Layer> layerPtr)
     {
-        // 1) Build a flat list in the exact order your old box::Draw would have used.
-        std::vector<UIDrawListItem> drawOrder;
-        drawOrder.reserve(200); // or an estimate of your total UI element count
-
-        // 2) Now draw them all with one tight fully owning group loop.  First, set up a group
-        //    of the "always‐present" components every drawable element needs:
-        // PERF: Initialize both cached view and group together on first call
-        if (uiGroupInitialized == false)
-        {
-            // This is a static group that will be reused for all draws.
-            // It contains the five components we need to draw any UI element.
-            uiGroupInitialized = true;
-            uiBoxViewInitialized = true;
-            globalUIBoxView = registry.view<UIBoxComponent>();
-
-            globalUIGroup = registry.group<
-                    UIElementComponent,
-                    UIConfig,
-                    UIState,
-                    transform::GameObject,
-                    transform::Transform
-                >(entt::get<>, entt::exclude<entity_gamestate_management::InactiveTag>);
-        }
-
-        // PERF: Use cached view for UIBoxComponent iteration
-        for (auto ent : globalUIBoxView)
-        {
-            // check if the entity is active
-            if (!entity_gamestate_management::active_states_instance().is_active(registry.get<entity_gamestate_management::StateTag>(ent)))
-                continue; // skip inactive entities
-            // TODO: probably sort these with layer order
-            buildUIBoxDrawList(registry, ent, drawOrder);
-        }
-
-        entt::entity uiBoxEntity{entt::null};
-        int drawOrderZIndex = 0;
-
-        // 3) Loop in our flattened order:
-        for (auto &drawListItem : drawOrder)
-        {
-            auto ent = drawListItem.e;
-
-            if (!registry.valid(ent))
-                continue;
-
-            // Pull the five group‐components by reference (O(1)):
-            auto &elemComp = globalUIGroup.get<UIElementComponent>(ent);
-            auto &cfg = globalUIGroup.get<UIConfig>(ent);
-            auto &st = globalUIGroup.get<UIState>(ent);
-            auto &node = globalUIGroup.get<transform::GameObject>(ent);
-            auto &xf = globalUIGroup.get<transform::Transform>(ent);
-
-            if (elemComp.uiBox != uiBoxEntity)
-            {
-                // If this is a new UIBox, set the current box entity.
-                uiBoxEntity = elemComp.uiBox;
-                drawOrderZIndex = registry.get<layer::LayerOrderComponent>(uiBoxEntity).zIndex;
-            }
-            
-            // 1) Check if the UI element is a scroll pane
-            if (cfg.uiType == UITypeEnum::SCROLL_PANE) {
-                auto &scr = registry.get<UIScrollComponent>(ent);
-                
-                // 1.1) Set the scissor rectangle to the pane’s screen-space bounds:
-                Rectangle r = {
-                    xf.getActualX() ,
-                    xf.getActualY() ,
-                    xf.getActualW() ,
-                    xf.getActualH()
-                };
-                
-                layer::QueueCommand<layer::CmdBeginScissorMode>(
-                    layerPtr, [r](layer::CmdBeginScissorMode *cmd) {
-                        cmd->area = r;
-                    }, drawOrderZIndex
-                );
-                
-                //TODO: apply this in the drawself method?
-                //TODO: also, modify scroll value based on mouse wheel
-                //TODO: how to know which scroll pane is being scrolled?
-                // 1.2) Push a little “local transform” so children draw offset by –offset:
-                // rlPushMatrix();
-                // rlTranslatef(vertical ? 0 : -scr.offset,
-                //             vertical ? -scr.offset : 0,
-                //             0);
-            }
-
-            // Finally call your lean DrawSelf that only does `try_get`
-            // for optional pieces (RoundedRectangleVerticesCache, etc.).
-            element::DrawSelf(layerPtr, ent, elemComp, cfg, st, node, xf, drawOrderZIndex);
-        }
-
-        // 4) If you still want to draw bounding boxes for each UIBox itself:
-        if (globals::getDrawDebugInfo())
-        {
-            for (auto box : globalUIBoxView)
-            {
-                transform::DrawBoundingBoxAndDebugInfo(&registry, box, layerPtr);
-            }
-        }
+        // Phase 5 consolidation: Delegate to the full-featured shader-enabled version.
+        // The shader-enabled version has proper scissor stack management and layer overrides,
+        // which were missing in this simpler version (it started scissor modes but never
+        // closed them properly).
+        drawAllBoxesShaderEnabled(registry, layerPtr);
     }
 
     void box::buildUIBoxDrawList(

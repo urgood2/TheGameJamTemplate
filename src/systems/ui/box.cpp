@@ -13,6 +13,11 @@
 #include "inventory_ui.hpp"
 #include "core/globals.hpp"
 #include "systems/ui/ui_data.hpp"
+
+// Phase 2 utility headers for box.cpp refactoring
+#include "systems/ui/traversal.hpp"
+#include "systems/ui/type_traits.hpp"
+#include "systems/ui/layout_metrics.hpp"
 namespace std {
 template<>
 struct hash<ui::UIElementTemplateNode> {
@@ -1134,14 +1139,21 @@ namespace ui
             auto &uiConfig = registry.get<UIConfig>(entity);
             auto &uiState = registry.get<UIState>(entity);
 
-            // Skip TEXT elements - they already include globalUIScaleFactor in font selection/measurement
+// Skip TEXT elements - they already include globalUIScaleFactor in font selection/measurement
+            // NOTE: TEXT and INPUT_TEXT already have global scale applied during measurement
+            // Applying it again here would cause double-scaling.
             const bool isText = uiConfig.uiType && uiConfig.uiType.value() == UITypeEnum::TEXT;
 
             // apply to content dimensions & transform scale, touch nothing else
             if (uiState.contentDimensions && !isText)
             {
-                uiState.contentDimensions->x *= globals::getGlobalUIScaleFactor();
-                uiState.contentDimensions->y *= globals::getGlobalUIScaleFactor();
+                bool isTextElement = (uiConfig.uiType == UITypeEnum::TEXT ||
+                                      uiConfig.uiType == UITypeEnum::INPUT_TEXT);
+                if (!isTextElement)
+                {
+                    uiState.contentDimensions->x *= globals::getGlobalUIScaleFactor();
+                    uiState.contentDimensions->y *= globals::getGlobalUIScaleFactor();
+                }
             }
 
             auto &transform = registry.get<transform::Transform>(entity);
@@ -1645,38 +1657,18 @@ namespace ui
             }
         }
 
-        // add padding to the final width and height.
-        if (selfUIConfig.uiType == UITypeEnum::HORIZONTAL_CONTAINER && !hasAtLeastOneContainerChild)
-        {
-            calcChildTransform.w += padding;
-            calcChildTransform.h += padding;
-        }
-        else if (selfUIConfig.uiType == UITypeEnum::HORIZONTAL_CONTAINER && hasAtLeastOneContainerChild)
-        {
-            calcChildTransform.w += padding;
-            calcChildTransform.h += padding;
-        }
-        else if (selfUIConfig.uiType == UITypeEnum::VERTICAL_CONTAINER && !hasAtLeastOneContainerChild)
-        {
-            // calcChildTransform.h += padding; // This is necessary for vertical containers containing elements
-            calcChildTransform.w += padding;
-        }
-        else if (selfUIConfig.uiType == UITypeEnum::VERTICAL_CONTAINER && hasAtLeastOneContainerChild)
-        {
-            calcChildTransform.w += padding;
-            calcChildTransform.h += padding; // This is necessary for vertical containers containing elements
-        }
-
+        // Add final padding to both dimensions for all container types.
+        // This consolidates previously scattered padding logic into one location.
+        // All containers (horizontal, vertical, root, scroll_pane) with children
+        // need padding added to both width and height for proper layout.
         if (hasAtLeastOneChild)
         {
-            if (selfUIConfig.uiType == UITypeEnum::HORIZONTAL_CONTAINER)
+            if (selfUIConfig.uiType == UITypeEnum::HORIZONTAL_CONTAINER ||
+                selfUIConfig.uiType == UITypeEnum::VERTICAL_CONTAINER ||
+                selfUIConfig.uiType == UITypeEnum::ROOT ||
+                selfUIConfig.uiType == UITypeEnum::SCROLL_PANE)
             {
-                // calcChildTransform.w += padding;
-                // calcChildTransform.h += padding;
-            }
-            else if (selfUIConfig.uiType == UITypeEnum::VERTICAL_CONTAINER && !hasAtLeastOneContainerChild)
-            {
-                // calcChildTransform.h += padding;
+                calcChildTransform.w += padding;
                 calcChildTransform.h += padding;
             }
         }
@@ -1918,6 +1910,10 @@ namespace ui
             // Apply scale to content dimensions - DO NOT reset scale as it would destroy user configuration
             uiState.contentDimensions = Vector2{calcCurrentNodeTransform.w * uiConfig.scale.value_or(1.0f), calcCurrentNodeTransform.h * uiConfig.scale.value_or(1.0f)};
             ui::element::SetValues(registry, uiElement, calcCurrentNodeTransform, forceRecalculateLayout);
+
+            // FIX: Removed scale reset to 1.0f
+            // User-specified scale should be preserved across layout recalculations.
+            // The original reset was destroying user configuration.
         }
         else if (uiConfig.uiType == UITypeEnum::FILLER || uiConfig.isFiller)
         {
@@ -1944,23 +1940,30 @@ namespace ui
     // Function to remove a group of elements from the UI system
     bool box::RemoveGroup(entt::registry &registry, entt::entity entity, const std::string &group)
     {
-        // Early return if entity is invalid - cannot access components on invalid entities
+// FIX: Check validity BEFORE accessing any components to prevent UB
         if (!registry.valid(entity))
         {
+            SPDLOG_WARN("RemoveGroup called with invalid entity");
             return false;
         }
 
-        // If this is a UIBox entity, get the actual UI root
-        auto *uiBoxCheck = registry.try_get<UIBoxComponent>(entity);
-        if (uiBoxCheck && uiBoxCheck->uiRoot && registry.valid(uiBoxCheck->uiRoot.value()))
+        // Try to get the UI root if this is a UIBox wrapper
+        auto *uiBox = registry.try_get<UIBoxComponent>(entity);
+        if (uiBox && uiBox->uiRoot)
         {
-            entity = uiBoxCheck->uiRoot.value();
+            entity = uiBox->uiRoot.value();
+            if (!registry.valid(entity))
+            {
+                SPDLOG_WARN("RemoveGroup: uiRoot is invalid");
+                return false;
+            }
         }
 
         auto *transform = registry.try_get<transform::Transform>(entity);
         auto *element = registry.try_get<UIElementComponent>(entity);
         auto *uiConfig = registry.try_get<UIConfig>(entity);
-        auto *uiBox = registry.try_get<UIBoxComponent>(entity);
+        // NOTE: uiBox already declared above (line ~1857), reuse it here
+        uiBox = registry.try_get<UIBoxComponent>(entity);
         auto *role = registry.try_get<transform::InheritedProperties>(entity);
 
         auto *node = registry.try_get<transform::GameObject>(entity);
@@ -2003,17 +2006,23 @@ namespace ui
     {
         std::vector<entt::entity> ingroup;
 
-        // Early return if entity is invalid - cannot access components on invalid entities
+// FIX: Check validity BEFORE accessing any components to prevent UB
         if (!registry.valid(entity))
         {
+            SPDLOG_WARN("GetGroup called with invalid entity");
             return {};
         }
 
-        // If this is a UIBox entity, get the actual UI root
-        auto *uiBoxCheck = registry.try_get<UIBoxComponent>(entity);
-        if (uiBoxCheck && uiBoxCheck->uiRoot && registry.valid(uiBoxCheck->uiRoot.value()))
+        // Try to get the UI root if this is a UIBox wrapper
+        auto *uiBox = registry.try_get<UIBoxComponent>(entity);
+        if (uiBox && uiBox->uiRoot)
         {
-            entity = uiBoxCheck->uiRoot.value();
+            entity = uiBox->uiRoot.value();
+            if (!registry.valid(entity))
+            {
+                SPDLOG_WARN("GetGroup: uiRoot is invalid");
+                return {};
+            }
         }
 
         auto *node = registry.try_get<transform::GameObject>(entity);

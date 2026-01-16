@@ -101,12 +101,12 @@ local TRANSPARENT_COLOR = Color and Color.new and Color.new(0, 0, 0, 0) or nil
 ---@field config? table Container configuration options
 ---@field spacing? number Gap between children in pixels (default: 0)
 ---@field padding? number Inner padding in pixels (default: 0)
----@field align? number AlignmentFlag bitmask for child alignment
+---@field align? number AlignmentFlag bitmask for child alignment (default: HORIZONTAL_CENTER | VERTICAL_CENTER)
 ---@field color? string|Color Background color name or Color object
 ---@field id? string Unique identifier for lookups
 
 --- Create a horizontal container that arranges children in a row.
---- Children are laid out left-to-right.
+--- Children are laid out left-to-right with centered alignment by default.
 ---
 --- **Example:**
 --- ```lua
@@ -122,6 +122,11 @@ local TRANSPARENT_COLOR = Color and Color.new and Color.new(0, 0, 0, 0) or nil
 ---@return table UIDefinition node for the horizontal container
 function dsl.hbox(tbl)
     tbl.type = "HORIZONTAL_CONTAINER"
+    -- Default to centered alignment so padding is applied to children
+    tbl.config = tbl.config or {}
+    if not tbl.config.align then
+        tbl.config.align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
+    end
     return def(tbl)
 end
 
@@ -130,12 +135,12 @@ end
 ---@field config? table Container configuration options
 ---@field spacing? number Gap between children in pixels (default: 0)
 ---@field padding? number Inner padding in pixels (default: 0)
----@field align? number AlignmentFlag bitmask for child alignment
+---@field align? number AlignmentFlag bitmask for child alignment (default: HORIZONTAL_CENTER | VERTICAL_CENTER)
 ---@field color? string|Color Background color name or Color object
 ---@field id? string Unique identifier for lookups
 
 --- Create a vertical container that arranges children in a column.
---- Children are laid out top-to-bottom.
+--- Children are laid out top-to-bottom with centered alignment by default.
 ---
 --- **Example:**
 --- ```lua
@@ -151,6 +156,11 @@ end
 ---@return table UIDefinition node for the vertical container
 function dsl.vbox(tbl)
     tbl.type = "VERTICAL_CONTAINER"
+    -- Default to centered alignment so padding is applied to children
+    tbl.config = tbl.config or {}
+    if not tbl.config.align then
+        tbl.config.align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
+    end
     return def(tbl)
 end
 
@@ -159,11 +169,12 @@ end
 ---@field config? table Root container configuration
 ---@field color? string|Color Background color name or Color object
 ---@field padding? number Inner padding in pixels (default: 0)
----@field align? number AlignmentFlag bitmask for content alignment
+---@field align? number AlignmentFlag bitmask for content alignment (default: HORIZONTAL_CENTER | VERTICAL_CENTER)
 ---@field id? string Unique identifier for lookups
 
 --- Create a root container for a UI hierarchy.
 --- This must be the top-level node passed to `dsl.spawn()`.
+--- Children are centered by default.
 ---
 --- **Example:**
 --- ```lua
@@ -179,6 +190,11 @@ end
 ---@return table UIDefinition node for the root container
 function dsl.root(tbl)
     tbl.type = "ROOT"
+    -- Default to centered alignment so padding is applied to children
+    tbl.config = tbl.config or {}
+    if not tbl.config.align then
+        tbl.config.align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
+    end
     return def(tbl)
 end
 

@@ -111,12 +111,14 @@ local GRID_Z = 850
 local CARD_Z = z_orders.ui_tooltips + 100  -- = 1000, above grid (850), below tooltips
 
 local OFFSCREEN_Y_OFFSET = 600
+local GRID_CONTENT_ID = "grid_content_container"
 
 local state = {
     initialized = false,
     isVisible = false,
     panelEntity = nil,
     closeButtonEntity = nil,
+    gridContentEntity = nil,  -- Container for all tab grids (children of panel)
     grids = {},
     tabButtons = {},
     activeTab = "equipment",
@@ -319,13 +321,13 @@ local function createSimpleCard(spriteName, x, y, cardData, gridEntity)
     return entity
 end
 
-local function createGridForTab(tabId, x, y, visible)
+-- Creates a grid definition (template node) WITHOUT spawning.
+-- Returns the DSL definition that can be passed to ui.box.AddChild
+local function createGridDefinition(tabId)
     local cfg = TAB_CONFIG[tabId]
     if not cfg then return nil end
-    
-    local spawnX = visible and x or -9999
-    
-    local gridDef = dsl.strict.inventoryGrid {
+
+    return dsl.strict.inventoryGrid {
         id = cfg.id,
         rows = GRID_ROWS,
         cols = GRID_COLS,
@@ -356,7 +358,67 @@ local function createGridForTab(tabId, x, y, visible)
             end
         end,
     }
-    
+end
+
+-- Injects a grid as a child of the content container and initializes it.
+-- Returns the grid entity after injection.
+local function injectGridAsChild(tabId, parentEntity)
+    local cfg = TAB_CONFIG[tabId]
+    if not cfg then return nil end
+
+    local gridDef = createGridDefinition(tabId)
+    if not gridDef then return nil end
+
+    -- Use ui.box.AddChild to inject the grid definition as a child
+    ui.box.AddChild(registry, state.panelEntity, gridDef, parentEntity)
+
+    -- Get the grid entity by its ID after it's been added
+    local gridEntity = ui.box.GetUIEByID(registry, state.panelEntity, cfg.id)
+    if not gridEntity then
+        log_warn("[PlayerInventory] Failed to find grid entity after AddChild: " .. cfg.id)
+        return nil
+    end
+
+    -- Initialize the grid with InventoryGridInit
+    local success = InventoryGridInit.initializeIfGrid(gridEntity, cfg.id)
+    if success then
+        log_debug("[PlayerInventory] Grid '" .. tabId .. "' injected and initialized")
+    else
+        log_warn("[PlayerInventory] Grid '" .. tabId .. "' init failed!")
+    end
+
+    return gridEntity
+end
+
+-- Sets visibility of a grid and its items using state tags (for injected child grids)
+local function setGridVisible(gridEntity, visible)
+    if not gridEntity or not registry:valid(gridEntity) then return end
+
+    if visible then
+        -- Add default_state to make grid visible
+        if ui and ui.box and ui.box.AddStateTagToUIBox then
+            ui.box.AddStateTagToUIBox(registry, gridEntity, "default_state")
+        end
+    else
+        -- Clear state tags to hide
+        if ui and ui.box and ui.box.ClearStateTagsFromUIBox then
+            ui.box.ClearStateTagsFromUIBox(registry, gridEntity)
+        end
+    end
+
+    -- Also handle items visibility
+    setGridItemsVisible(gridEntity, visible)
+end
+
+-- Legacy function for backward compatibility (spawns grid as separate UI box)
+local function createGridForTab(tabId, x, y, visible)
+    local cfg = TAB_CONFIG[tabId]
+    if not cfg then return nil end
+
+    local spawnX = visible and x or -9999
+    local gridDef = createGridDefinition(tabId)
+    if not gridDef then return nil end
+
     local gridEntity = dsl.spawn({ x = spawnX, y = y }, gridDef, RENDER_LAYER, GRID_Z)
     -- Explicitly set to sprites layer so z-ordering works with planning cards
     if ui and ui.box and ui.box.set_draw_layer then
@@ -369,7 +431,7 @@ local function createGridForTab(tabId, x, y, visible)
     else
         log_warn("[PlayerInventory] Grid '" .. tabId .. "' init failed!")
     end
-    
+
     return gridEntity
 end
 
@@ -381,15 +443,19 @@ local function switchTab(tabId)
     local oldTab = state.activeTab
     state.activeTab = tabId
 
+    -- Toggle visibility of grids using state tags (grids are children of the panel)
     for id, gridEntity in pairs(state.grids) do
         local isActive = (id == tabId)
-        setEntityVisible(gridEntity, isActive and state.isVisible, state.gridX, state.gridY, "grid:" .. tostring(id))
-        setGridItemsVisible(gridEntity, isActive and state.isVisible)
+        local shouldShow = isActive and state.isVisible
+        setGridVisible(gridEntity, shouldShow)
+
         if isActive and state.isVisible then
+            -- Force layout sync for the active grid
             syncBoxAndRoot(gridEntity)
         end
     end
-    
+
+    -- Update tab button highlighting
     for id, btnEntity in pairs(state.tabButtons or {}) do
         if btnEntity and registry:valid(btnEntity) then
             local isActive = (id == tabId)
@@ -399,7 +465,7 @@ local function switchTab(tabId)
             end
         end
     end
-    
+
     log_debug("[PlayerInventory] Switched tab: " .. oldTab .. " -> " .. tabId)
 end
 
@@ -537,6 +603,21 @@ local function createFooter()
     }
 end
 
+-- Creates a container that will hold all tab grids (grids are injected as children after spawn)
+local function createGridContentContainer()
+    return dsl.strict.vbox {
+        config = {
+            id = GRID_CONTENT_ID,
+            minWidth = GRID_WIDTH,
+            minHeight = GRID_HEIGHT,
+            maxWidth = GRID_WIDTH,
+            maxHeight = GRID_HEIGHT,
+            -- No background color - grids provide their own
+        },
+        children = {},  -- Grids will be injected here after panel spawn
+    }
+end
+
 local function createPanelDefinition()
     return dsl.strict.root {
         config = {
@@ -549,6 +630,7 @@ local function createPanelDefinition()
         children = {
             createHeader(),
             createTabs(),
+            createGridContentContainer(),
             createFooter(),
         },
     }
@@ -785,8 +867,21 @@ local function initializeInventory()
     end
     
     -- make tab that sticks out the top
+    -- local tabDef = dsl.hbox {
+    --     config = {
+    --     },
+    --     children = {
+    --         dsl.anim("inventory-tab-marker.png", { w = 64, h = 64 })
+    --     }
+    -- }
+    
     local tabDef = dsl.hbox {
         config = {
+            canCollide = true,
+            hover = true,
+            buttonCallback = function()
+                print("Clicked!")
+            end
         },
         children = {
             dsl.anim("inventory-tab-marker.png", { w = 64, h = 64 })
@@ -834,11 +929,21 @@ local function initializeInventory()
             state.tabButtons[tabId] = btnEntity
         end
     end
-    
+
+    -- Get the grid content container to inject grids as children
+    state.gridContentEntity = ui.box.GetUIEByID(registry, state.panelEntity, GRID_CONTENT_ID)
+    if not state.gridContentEntity then
+        log_warn("[PlayerInventory] Could not find grid content container: " .. GRID_CONTENT_ID)
+    end
+
+    -- Inject grids as children of the content container (not as separate top-level UI boxes)
     for _, tabId in ipairs(TAB_ORDER) do
-        local visible = false
-        local gridEntity = createGridForTab(tabId, state.gridX, state.gridY, visible)
+        local gridEntity = injectGridAsChild(tabId, state.gridContentEntity)
         state.grids[tabId] = gridEntity
+
+        -- Initially hide all grids except the active tab
+        local isActive = (tabId == state.activeTab)
+        setGridVisible(gridEntity, isActive)
     end
     
     setupSignalHandlers()
@@ -854,17 +959,16 @@ function PlayerInventory.open()
     if not state.initialized then
         initializeInventory()
     end
-    
-    if state.isVisible then return end
-    
-    setEntityVisible(state.panelEntity, true, state.panelX, state.panelY, "panel")
-    -- Close button is now part of the panel hierarchy, no separate setEntityVisible needed
-    -- Tab button stays visible at all times (clickable affordance)
 
+    if state.isVisible then return end
+
+    -- Show the panel (still use position-based visibility for the panel itself)
+    setEntityVisible(state.panelEntity, true, state.panelX, state.panelY, "panel")
+
+    -- Grids are now children of the panel - use state tag visibility
     for tabId, gridEntity in pairs(state.grids) do
         local isActive = (tabId == state.activeTab)
-        setEntityVisible(gridEntity, isActive, state.gridX, state.gridY, "grid:" .. tostring(tabId))
-        setGridItemsVisible(gridEntity, isActive)
+        setGridVisible(gridEntity, isActive)
         if isActive then
             syncBoxAndRoot(gridEntity)
         end
@@ -886,13 +990,12 @@ end
 function PlayerInventory.close()
     if not state.isVisible then return end
 
+    -- Hide the panel (position-based)
     setEntityVisible(state.panelEntity, false, state.panelX, state.panelY, "panel")
-    -- Close button is now part of the panel hierarchy, no separate setEntityVisible needed
-    -- Tab button stays visible at all times (clickable affordance)
 
+    -- Hide all grids using state tag visibility
     for tabId, gridEntity in pairs(state.grids) do
-        setEntityVisible(gridEntity, false, state.gridX, state.gridY, "grid:" .. tostring(tabId))
-        setGridItemsVisible(gridEntity, false)
+        setGridVisible(gridEntity, false)
     end
 
     state.isVisible = false
@@ -934,6 +1037,7 @@ function PlayerInventory.destroy()
     end
     state.cardRegistry = {}
     
+    -- Clean up grid data structures (grids are children of the panel, cleaned up with it)
     for tabId, gridEntity in pairs(state.grids) do
         if gridEntity and registry:valid(gridEntity) then
             local cfg = TAB_CONFIG[tabId]
@@ -948,13 +1052,13 @@ function PlayerInventory.destroy()
                 grid.cleanup(gridEntity)
                 dsl.cleanupGrid(cfg.id)
             end
-            if ui and ui.box and ui.box.Remove then
-                ui.box.Remove(registry, gridEntity)
-            end
+            -- NOTE: Don't call ui.box.Remove on grids - they're children of the panel
+            -- and will be cleaned up when the panel is removed
         end
     end
     state.grids = {}
-    
+    state.gridContentEntity = nil
+
     -- Close button is part of panel hierarchy, cleaned up when panel is removed
     state.closeButtonEntity = nil
 

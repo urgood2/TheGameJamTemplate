@@ -1,44 +1,42 @@
-[2026-01-17 02:24:23.813] [combined] [warning] This is a warning message.
-[2026-01-17 02:24:23.813] [combined] [error] This is an error message.
-[2026-01-17 02:24:24.580] [combined] [error] [shader_system.cpp:662] [shader] 3d_skew_aurora: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_aurora_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_aurora_fragment.fs
-[2026-01-17 02:24:24.653] [combined] [error] [shader_system.cpp:662] [shader] 3d_skew_polychrome: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_polychrome_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_polychrome_fragment.fs
-[2026-01-17 02:24:24.693] [combined] [error] [shader_system.cpp:662] [shader] efficient_pixel_outline: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/efficient_pixel_outline_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/efficient_pixel_outline_fragment.fs
-[2026-01-17 02:24:24.694] [combined] [error] [shader_system.cpp:662] [shader] efficient_pixel_outlines: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/efficient_pixel_outlines_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/efficient_pixel_outlines_fragment.fs
-[2026-01-17 02:24:24.698] [combined] [error] [shader_system.cpp:662] [shader] fade_zoom: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/fade_zoom_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/fade_zoom_fragment.fs
-[2026-01-17 02:24:24.704] [combined] [error] [shader_system.cpp:662] [shader] foil: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/foil_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/foil_fragment.fs
-[2026-01-17 02:24:24.708] [combined] [error] [shader_system.cpp:662] [shader] glow: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/glow_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/glow_fragment.fs
-[2026-01-17 02:24:24.709] [combined] [error] [shader_system.cpp:662] [shader] holo: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/holo_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/holo_fragment.fs
-[2026-01-17 02:24:24.719] [combined] [error] [shader_system.cpp:662] [shader] material_card_overlay: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/material_card_overlay_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/material_card_overlay_fragment.fs
-[2026-01-17 02:24:24.723] [combined] [error] [shader_system.cpp:662] [shader] negative: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/negative_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/negative_fragment.fs
-[2026-01-17 02:24:24.725] [combined] [error] [shader_system.cpp:662] [shader] negative_shine: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/negative_shine_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/negative_shine_fragment.fs
-[2026-01-17 02:24:24.741] [combined] [error] [shader_system.cpp:662] [shader] polychrome: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/polychrome_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/polychrome_fragment.fs
-[2026-01-17 02:24:24.749] [combined] [error] [shader_system.cpp:662] [shader] sakura_overlay: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/sakura_overlay_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/sakura_overlay_fragment.fs
-[2026-01-17 02:24:24.765] [combined] [error] [shader_system.cpp:662] [shader] voucher_sheen: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/voucher_sheen_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/voucher_sheen_fragment.fs
-[2026-01-17 02:24:25.406] [combined] [error] [localization.cpp:45] Failed to open font JSON file: localization/fonts.json
-[2026-01-17 02:24:25.406] [combined] [error] [localization.cpp:45] Failed to open font JSON file: localization/fonts.json
-[2026-01-17 02:24:28.707] [combined] [warning] [general] [Gameplay] Content validation found errors - check console output 
-[2026-01-17 02:24:34.499] [combined] [warning] [general] [gameplay] Failed to add card to PlayerInventory 
-[2026-01-17 02:24:34.611] [combined] [warning] [general] [gameplay] Failed to add card to PlayerInventory 
-[2026-01-17 02:24:34.697] [combined] [warning] [general] [gameplay] Failed to add card to PlayerInventory 
-[2026-01-17 02:24:34.808] [combined] [warning] [general] [gameplay] Failed to add card to PlayerInventory 
-[2026-01-17 02:24:34.900] [combined] [warning] [general] [gameplay] Failed to add card to PlayerInventory 
-[2026-01-17 02:24:35.015] [combined] [warning] [general] [gameplay] Failed to add card to PlayerInventory 
-[2026-01-17 02:24:35.101] [combined] [warning] [general] [gameplay] Failed to add card to PlayerInventory 
-[2026-01-17 02:24:35.212] [combined] [warning] [general] [gameplay] Failed to add card to PlayerInventory 
-[2026-01-17 02:24:37.832] [combined] [warning] [game.cpp:1600] Long GC pause detected: 5.08ms (threshold: 5ms)
-[2026-01-17 02:24:54.287] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-17 02:24:54.287] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-17 02:24:54.287] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-17 02:24:54.287] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-17 02:24:54.287] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-17 02:24:54.287] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-17 02:24:54.287] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-17 02:24:54.287] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-17 02:24:54.287] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-17 02:24:54.287] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-17 02:24:54.287] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-17 02:24:54.288] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-17 02:24:54.288] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-17 02:24:54.288] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-17 02:24:54.288] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-17 02:24:54.315] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type
+[2026-01-17 02:33:41.438] [combined] [warning] This is a warning message.
+[2026-01-17 02:33:41.438] [combined] [error] This is an error message.
+[2026-01-17 02:33:41.942] [combined] [error] [shader_system.cpp:662] [shader] 3d_skew_aurora: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_aurora_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_aurora_fragment.fs
+[2026-01-17 02:33:42.016] [combined] [error] [shader_system.cpp:662] [shader] 3d_skew_polychrome: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_polychrome_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_polychrome_fragment.fs
+[2026-01-17 02:33:42.055] [combined] [error] [shader_system.cpp:662] [shader] efficient_pixel_outline: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/efficient_pixel_outline_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/efficient_pixel_outline_fragment.fs
+[2026-01-17 02:33:42.055] [combined] [error] [shader_system.cpp:662] [shader] efficient_pixel_outlines: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/efficient_pixel_outlines_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/efficient_pixel_outlines_fragment.fs
+[2026-01-17 02:33:42.060] [combined] [error] [shader_system.cpp:662] [shader] fade_zoom: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/fade_zoom_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/fade_zoom_fragment.fs
+[2026-01-17 02:33:42.066] [combined] [error] [shader_system.cpp:662] [shader] foil: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/foil_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/foil_fragment.fs
+[2026-01-17 02:33:42.070] [combined] [error] [shader_system.cpp:662] [shader] glow: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/glow_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/glow_fragment.fs
+[2026-01-17 02:33:42.072] [combined] [error] [shader_system.cpp:662] [shader] holo: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/holo_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/holo_fragment.fs
+[2026-01-17 02:33:42.081] [combined] [error] [shader_system.cpp:662] [shader] material_card_overlay: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/material_card_overlay_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/material_card_overlay_fragment.fs
+[2026-01-17 02:33:42.085] [combined] [error] [shader_system.cpp:662] [shader] negative: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/negative_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/negative_fragment.fs
+[2026-01-17 02:33:42.086] [combined] [error] [shader_system.cpp:662] [shader] negative_shine: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/negative_shine_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/negative_shine_fragment.fs
+[2026-01-17 02:33:42.103] [combined] [error] [shader_system.cpp:662] [shader] polychrome: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/polychrome_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/polychrome_fragment.fs
+[2026-01-17 02:33:42.111] [combined] [error] [shader_system.cpp:662] [shader] sakura_overlay: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/sakura_overlay_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/sakura_overlay_fragment.fs
+[2026-01-17 02:33:42.127] [combined] [error] [shader_system.cpp:662] [shader] voucher_sheen: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/voucher_sheen_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/voucher_sheen_fragment.fs
+[2026-01-17 02:33:42.754] [combined] [error] [localization.cpp:45] Failed to open font JSON file: localization/fonts.json
+[2026-01-17 02:33:42.754] [combined] [error] [localization.cpp:45] Failed to open font JSON file: localization/fonts.json
+[2026-01-17 02:33:46.171] [combined] [warning] [general] [Gameplay] Content validation found errors - check console output 
+[2026-01-17 02:34:30.575] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-17 02:34:30.575] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-17 02:34:30.575] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-17 02:34:30.575] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-17 02:34:30.575] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-17 02:34:30.575] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-17 02:34:30.575] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-17 02:34:30.575] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-17 02:34:30.575] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-17 02:34:30.576] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-17 02:34:30.576] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-17 02:34:30.576] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-17 02:34:30.576] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-17 02:34:30.576] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-17 02:34:30.576] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-17 02:34:30.592] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-17 02:34:30.592] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-17 02:34:30.592] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-17 02:34:30.592] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-17 02:34:30.592] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-17 02:34:30.592] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-17 02:34:30.592] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-17 02:34:30.592] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_f

@@ -999,6 +999,19 @@ local myUI = dsl.root {
 local boxID = dsl.spawn({ x = 200, y = 200 }, myUI)
 ```
 
+**Container Alignment:** All containers (`dsl.root`, `dsl.vbox`, `dsl.hbox`) default to `HORIZONTAL_CENTER | VERTICAL_CENTER` alignment. This ensures padding is applied to children correctly. Override with `config.align` if needed:
+
+```lua
+-- Left-aligned children (override default centering)
+dsl.hbox {
+    config = {
+        padding = 10,
+        align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER)
+    },
+    children = { ... }
+}
+```
+
 ### Sprite Panels & Decorations
 
 See [docs/api/sprite-panels.md](docs/api/sprite-panels.md) for full documentation.

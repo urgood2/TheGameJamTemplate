@@ -103,6 +103,11 @@ target_link_libraries(unit_tests PRIVATE
     CommonSettings
 )
 
+# Link Tracy if enabled (needed by shader_system, physics_world, layer_command_buffer)
+if(TRACY_ENABLE AND NOT EMSCRIPTEN)
+    target_link_libraries(unit_tests PRIVATE Tracy::TracyClient)
+endif()
+
 gtest_discover_tests(unit_tests)
 
 # Add benchmark subdirectory

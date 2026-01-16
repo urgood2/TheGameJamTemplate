@@ -992,6 +992,7 @@ local zViolations = UIValidator.checkZOrderOcclusion(pairs)
 | `z_order_occlusion` | error | Entity expected in front has lower z-order | Increase z-order of "front" entity |
 | `layer_consistency` | error | Parent/child on different render layers | Ensure all related UI renders to same layer (e.g., all to `layers.ui`) |
 | `space_consistency` | error | Mixed Screen/World DrawCommandSpace | Ensure all related UI uses same space (Screen for HUD, World for game UI) |
+| `text_zero_offset` | warning | Text element has no padding from parent | Add padding to parent container or text element |
 
 ### Opt-Out Flags
 
@@ -1050,6 +1051,44 @@ Then validate in tests:
 ```lua
 local panelEntity = MyUI.getPanelEntity()
 local violations = UIValidator.validate(panelEntity, nil, { skipHidden = true })
+```
+
+### Running UI Tests
+
+**IMPORTANT: Always kill the app process after testing.** The game window stays open unless explicitly killed.
+
+**Test different game states:**
+- `MAIN_MENU` - Test main menu UI
+- `IN_GAME` (planning phase) - Test inventory, deck builder, etc.
+- `IN_GAME` (action phase) - Test combat UI, health bars, etc.
+
+**Running the PlayerInventory validation test:**
+
+```bash
+# Run test and auto-exit (RECOMMENDED)
+AUTO_START_MAIN_GAME=1 RUN_REAL_INVENTORY_TEST=1 AUTO_EXIT_AFTER_TEST=1 ./build/raylib-cpp-cmake-template
+
+# With output capture and process kill (if AUTO_EXIT fails)
+(AUTO_START_MAIN_GAME=1 RUN_REAL_INVENTORY_TEST=1 AUTO_EXIT_AFTER_TEST=1 ./build/raylib-cpp-cmake-template 2>&1 & sleep 15; kill $!) | grep -E "(VALIDATION|PASS|FAIL|warning|error)"
+```
+
+**Environment variables for testing:**
+| Variable | Purpose |
+|----------|---------|
+| `AUTO_START_MAIN_GAME=1` | Skip main menu, go directly to IN_GAME state |
+| `RUN_REAL_INVENTORY_TEST=1` | Run PlayerInventory UI validation test |
+| `AUTO_EXIT_AFTER_TEST=1` | Exit app after test completes (prevents hanging) |
+
+**Pattern for running tests that need specific game states:**
+
+```bash
+# Always use this pattern to avoid leaving app running:
+(ENVVARS ./build/raylib-cpp-cmake-template 2>&1 & sleep N; kill $!) | grep/tail
+
+# The subshell with & runs app in background
+# sleep N waits for test to complete
+# kill $! kills the app process
+# Pipe to grep/tail filters output
 ```
 
 ---

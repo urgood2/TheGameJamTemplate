@@ -25,6 +25,7 @@ local severities = {
     space_consistency = "error",
     global_overlap = "warning",      -- Cross-hierarchy overlaps
     z_order_occlusion = "error",     -- Higher-z entity behind lower-z entity
+    text_zero_offset = "warning",    -- Text element with no offset from parent (missing padding)
 }
 
 -- Render tracking (for manually-rendered entities)
@@ -691,6 +692,135 @@ function UIValidator.checkZOrder(entity, options)
     return violations
 end
 
+---Check if text elements have zero offset from their parent (potential missing padding)
+---@param entity number Root entity to check
+---@param options? table Options {skipHidden: boolean}
+---@return table[] violations
+function UIValidator.checkTextZeroOffset(entity, options)
+    local violations = {}
+    options = options or {}
+    local skipHidden = options.skipHidden
+
+    -- UI type enum value for TEXT elements (from UITypeEnum in C++)
+    local UI_TYPE_TEXT = 8
+
+    local function isTextElement(ent)
+        -- Check UIElementComponent.UIT for TEXT type (value 8)
+        local uiEl = component_cache.get(ent, UIElementComponent)
+        if uiEl and uiEl.UIT == UI_TYPE_TEXT then
+            return true
+        end
+
+        -- Fallback: Check GameObject.config for text (legacy/DSL elements)
+        local go = component_cache.get(ent, GameObject)
+        if go and go.config then
+            if go.config.text then return true end
+            if go.config.nodeType == "TEXT" then return true end
+        end
+
+        return false
+    end
+
+    local function checkTextOffset(textEntity, parentEntity)
+        local textBounds = UIValidator.getBounds(textEntity)
+        local parentBounds = UIValidator.getBounds(parentEntity)
+
+        if not textBounds or not parentBounds then return end
+
+        -- Skip hidden elements
+        if skipHidden and UIValidator.isEntityHidden(textEntity, textBounds) then
+            return
+        end
+
+        -- Get parent's padding from UILayoutConfig or GameObject.config
+        local parentPadding = 0
+        local layoutCfg = component_cache.get(parentEntity, UILayoutConfig)
+        if layoutCfg and layoutCfg.padding then
+            local p = layoutCfg.padding
+            if type(p) == "number" then
+                parentPadding = p
+            elseif type(p) == "table" then
+                parentPadding = p[1] or 0
+            end
+        else
+            -- Fallback to GameObject.config
+            local parentGo = component_cache.get(parentEntity, GameObject)
+            if parentGo and parentGo.config then
+                local p = parentGo.config.padding
+                if type(p) == "number" then
+                    parentPadding = p
+                elseif type(p) == "table" then
+                    parentPadding = p[1] or 0
+                end
+            end
+        end
+
+        -- Calculate text position relative to parent
+        local relX = textBounds.x - parentBounds.x
+        local relY = textBounds.y - parentBounds.y
+
+        -- If text is at exactly 0,0 relative to parent AND parent has padding configured,
+        -- this indicates the text isn't respecting the padding
+        if relX == 0 and relY == 0 and parentPadding > 0 then
+            table.insert(violations, {
+                type = "text_zero_offset",
+                severity = severities.text_zero_offset,
+                entity = textEntity,
+                parent = parentEntity,
+                message = string.format(
+                    "Text entity %s is at (0,0) relative to parent %s which has padding=%d",
+                    tostring(textEntity), tostring(parentEntity), parentPadding
+                ),
+            })
+        end
+
+        -- Also flag if text element's bounds exactly match parent's bounds
+        -- (suggests text fills entire parent with no margin)
+        if textBounds.x == parentBounds.x and
+           textBounds.y == parentBounds.y and
+           math.abs(textBounds.w - parentBounds.w) < 2 and
+           math.abs(textBounds.h - parentBounds.h) < 2 then
+            table.insert(violations, {
+                type = "text_zero_offset",
+                severity = severities.text_zero_offset,
+                entity = textEntity,
+                parent = parentEntity,
+                message = string.format(
+                    "Text entity %s bounds exactly match parent %s (no internal padding/margin)",
+                    tostring(textEntity), tostring(parentEntity)
+                ),
+            })
+        end
+    end
+
+    -- Recursively check all children (following both orderedChildren and UIBoxComponent.uiRoot)
+    local function checkEntity(ent, parent)
+        if not ent or not registry:valid(ent) then return end
+
+        -- If this is a text element and has a parent, check its offset
+        if parent and isTextElement(ent) then
+            checkTextOffset(ent, parent)
+        end
+
+        -- Check GameObject children
+        local go = component_cache.get(ent, GameObject)
+        if go and go.orderedChildren then
+            for _, child in ipairs(go.orderedChildren) do
+                checkEntity(child, ent)
+            end
+        end
+
+        -- Also follow UIBoxComponent.uiRoot for UIBox hierarchies
+        local uiBox = component_cache.get(ent, UIBoxComponent)
+        if uiBox and uiBox.uiRoot and registry:valid(uiBox.uiRoot) then
+            checkEntity(uiBox.uiRoot, ent)
+        end
+    end
+
+    checkEntity(entity, nil)
+    return violations
+end
+
 -- Rule check functions lookup (must be after function definitions)
 -- Each function accepts (entity, options) where options = {skipHidden: boolean}
 local ruleChecks = {
@@ -700,6 +830,7 @@ local ruleChecks = {
     z_order_hierarchy = function(entity, options) return UIValidator.checkZOrder(entity, options) end,
     layer_consistency = function(entity, _options) return UIValidator.checkRenderConsistency(entity) end,
     space_consistency = function(_entity, _options) return {} end, -- space is evaluated within checkRenderConsistency
+    text_zero_offset = function(entity, options) return UIValidator.checkTextZeroOffset(entity, options) end,
 }
 
 ---Validate a UI entity and return all violations
@@ -723,6 +854,7 @@ function UIValidator.validate(entity, rules, options)
         "sibling_overlap",
         "z_order_hierarchy",
         "layer_consistency",
+        "text_zero_offset",
     }
 
     -- Rules that don't require valid registry entities (work from render log)

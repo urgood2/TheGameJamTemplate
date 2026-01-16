@@ -287,6 +287,72 @@ script:setState(PLANNING_STATE)
 - Shorter, more readable syntax
 - Works with all state constants (PLANNING_STATE, COMBAT_STATE, etc.)
 
+### Game Phase Visibility (State Tags)
+
+Entities are rendered conditionally based on active game states. Use `PLANNING_STATE`, `ACTION_STATE`, `SHOP_STATE` etc. to control when entities are visible.
+
+**CRITICAL:** Do NOT use `"default_state"` for game phase visibility - use the proper state constants!
+
+```lua
+-- WRONG: Entity won't respect game phase visibility
+add_state_tag(entity, "default_state")
+
+-- CORRECT: Entity visible only during planning phase
+add_state_tag(entity, PLANNING_STATE)
+
+-- Show/hide based on phase
+if add_state_tag and PLANNING_STATE then
+    add_state_tag(entity, PLANNING_STATE)
+end
+
+-- Hide entity (remove from planning phase)
+if remove_state_tag and PLANNING_STATE then
+    remove_state_tag(entity, PLANNING_STATE)
+end
+```
+
+**Available state constants** (defined in `gameplay.lua`):
+| Constant | Value | Phase |
+|----------|-------|-------|
+| `PLANNING_STATE` | `"PLANNING"` | Card arrangement phase |
+| `ACTION_STATE` | `"ACTION"` | Combat/survivors phase |
+| `SHOP_STATE` | `"SHOP"` | Shop between rounds |
+
+**For UI boxes**, use the UI-specific functions:
+```lua
+ui.box.AddStateTagToUIBox(entity, PLANNING_STATE)
+ui.box.AssignStateTagsToUIBox(entity, PLANNING_STATE)
+```
+
+**Checking active state:**
+```lua
+if is_state_active and is_state_active(PLANNING_STATE) then
+    -- Currently in planning phase
+end
+```
+
+### Screen-Space Animated Sprites (CRITICAL)
+
+Animated sprites created with `animation_system.createAnimatedObjectWithTransform()` in screen-space need special handling to render:
+
+```lua
+-- Create screen-space sprite
+local entity = animation_system.createAnimatedObjectWithTransform(sprite, true, x, y, nil, true)
+transform.set_space(entity, "screen")
+
+-- CRITICAL: Enable legacy pipeline for automatic rendering
+local animComp = component_cache.get(entity, AnimationQueueComponent)
+if animComp then
+    animComp.drawWithLegacyPipeline = true
+end
+
+-- Set phase visibility
+remove_default_state_tag(entity)  -- Remove always-visible default
+add_state_tag(entity, PLANNING_STATE)  -- Only visible in planning
+```
+
+**Without `drawWithLegacyPipeline = true`**, screen-space animated sprites won't render automatically. UI boxes (`ui.box.Initialize()`) don't need this - they render through the UI system.
+
 ### Entity Links (Horizontal Dependencies)
 
 Use `script:linkTo()` for "die when target dies" behavior:

@@ -99,8 +99,6 @@ local GRID_HEIGHT = GRID_ROWS * SLOT_HEIGHT + (GRID_ROWS - 1) * SLOT_SPACING + G
 local HEADER_HEIGHT = 32
 local TABS_HEIGHT = 32
 local FOOTER_HEIGHT = 36
-local TAB_BUTTON_HEIGHT = 32
-local TAB_BUTTON_WIDTH = 48
 local PANEL_PADDING = 10
 local PANEL_WIDTH = GRID_WIDTH + PANEL_PADDING * 2
 local PANEL_HEIGHT = HEADER_HEIGHT + TABS_HEIGHT + GRID_HEIGHT + FOOTER_HEIGHT + PANEL_PADDING * 2
@@ -111,7 +109,6 @@ local GRID_Z = 850
 -- Cards must render ABOVE the panel (z=800) and grid slots (z=850).
 -- Must match UI_CARD_Z in inventory_grid_init.lua to prevent z-order reset conflicts.
 local CARD_Z = z_orders.ui_tooltips + 100  -- = 1000, above grid (850), below tooltips
-local TAB_BUTTON_Z = 750
 
 local OFFSCREEN_Y_OFFSET = 600
 
@@ -120,7 +117,6 @@ local state = {
     isVisible = false,
     panelEntity = nil,
     closeButtonEntity = nil,
-    tabButtonEntity = nil,  -- Always-visible protruding tab
     grids = {},
     tabButtons = {},
     activeTab = "equipment",
@@ -134,8 +130,6 @@ local state = {
     panelY = 0,
     gridX = 0,
     gridY = 0,
-    tabButtonX = 0,
-    tabButtonY = 0,
 }
 
 local function getLocalizedText(key, fallback)
@@ -767,61 +761,33 @@ function PlayerInventory.ensureInputHandler()
     setupInputHandler()
 end
 
-local function createTabButton()
-    local tabEntity = animation_system.createAnimatedObjectWithTransform(
-        "inventory-tab-marker.png", true, state.tabButtonX, state.tabButtonY, nil, true
-    )
-    
-    if not tabEntity or not registry:valid(tabEntity) then
-        log_warn("[PlayerInventory] Failed to create tab button entity")
-        return nil
-    end
-    
-    animation_system.resizeAnimationObjectsInEntityToFit(tabEntity, TAB_BUTTON_WIDTH, TAB_BUTTON_HEIGHT)
-    
-    if layer_order_system and layer_order_system.assignZIndexToEntity then
-        layer_order_system.assignZIndexToEntity(tabEntity, TAB_BUTTON_Z)
-    end
-
-    -- NOTE: Do NOT add ObjectAttachedToUITag - it excludes entities from shader rendering pipeline!
-
-    transform.set_space(tabEntity, "screen")
-    
-    if add_state_tag then
-        add_state_tag(tabEntity, "default_state")
-    end
-    
-    -- Make the tab button clickable via GameObject component
-    local go = component_cache.get(tabEntity, GameObject)
-    if go then
-        go.state.collisionEnabled = true
-        go.state.clickEnabled = true
-        go.methods.onClick = function(reg, entity)
-            PlayerInventory.toggle()
-        end
-    else
-        log_warn("[PlayerInventory] Tab button has no GameObject component")
-    end
-
-    return tabEntity
-end
-
-local function initializeInventory()
-    if state.initialized then return end
-
+local function calculatePositions()
     local screenW = globals.screenWidth()
     local screenH = globals.screenHeight()
+
+    -- Guard against invalid screen dimensions
+    if not screenW or not screenH or screenW <= 0 or screenH <= 0 then
+        log_debug("[PlayerInventory] Skipping position calc - screen not ready: " ..
+                  tostring(screenW) .. "x" .. tostring(screenH))
+        return false
+    end
 
     state.panelX = (screenW - PANEL_WIDTH) / 2
     state.panelY = screenH - PANEL_HEIGHT - 10
     state.gridX = state.panelX + PANEL_PADDING
     state.gridY = state.panelY + HEADER_HEIGHT + TABS_HEIGHT + PANEL_PADDING
-    
-    state.tabButtonX = screenW / 2
-    state.tabButtonY = state.panelY - TAB_BUTTON_HEIGHT / 2 + 4
-    
-    state.tabButtonEntity = createTabButton()
-    
+
+    return true
+end
+
+local function initializeInventory()
+    if state.initialized then return end
+
+    if not calculatePositions() then
+        log_warn("[PlayerInventory] Cannot initialize - screen dimensions not ready")
+        return
+    end
+
     local panelDef = createPanelDefinition()
     state.panelEntity = dsl.spawn({ x = state.panelX, y = state.panelY + OFFSCREEN_Y_OFFSET }, panelDef, RENDER_LAYER, PANEL_Z)
     -- Explicitly set to sprites layer so z-ordering works with planning cards
@@ -867,7 +833,7 @@ function PlayerInventory.open()
     
     setEntityVisible(state.panelEntity, true, state.panelX, state.panelY, "panel")
     -- Close button is now part of the panel hierarchy, no separate setEntityVisible needed
-    setEntityVisible(state.tabButtonEntity, false, state.tabButtonX, state.tabButtonY, "tab_btn")
+    -- Tab button stays visible at all times (clickable affordance)
 
     for tabId, gridEntity in pairs(state.grids) do
         local isActive = (tabId == state.activeTab)
@@ -896,7 +862,7 @@ function PlayerInventory.close()
 
     setEntityVisible(state.panelEntity, false, state.panelX, state.panelY, "panel")
     -- Close button is now part of the panel hierarchy, no separate setEntityVisible needed
-    setEntityVisible(state.tabButtonEntity, true, state.tabButtonX, state.tabButtonY, "tab_btn")
+    -- Tab button stays visible at all times (clickable affordance)
 
     for tabId, gridEntity in pairs(state.grids) do
         setEntityVisible(gridEntity, false, state.gridX, state.gridY, "grid:" .. tostring(tabId))
@@ -907,7 +873,7 @@ function PlayerInventory.close()
     signal.emit("player_inventory_closed")
 
     -- Restore planning cards to normal z-order
-    CardUIPolicy.restorePlanningCards()
+    CardUIPolicy.resetPlanningCards()
 
     log_debug("[PlayerInventory] Closed (hidden)")
 end
@@ -965,14 +931,7 @@ function PlayerInventory.destroy()
     
     -- Close button is part of panel hierarchy, cleaned up when panel is removed
     state.closeButtonEntity = nil
-    
-    if state.tabButtonEntity and registry:valid(state.tabButtonEntity) then
-        if ui and ui.box and ui.box.Remove then
-            ui.box.Remove(registry, state.tabButtonEntity)
-        end
-    end
-    state.tabButtonEntity = nil
-    
+
     if state.panelEntity and registry:valid(state.panelEntity) then
         if ui and ui.box and ui.box.Remove then
             ui.box.Remove(registry, state.panelEntity)
@@ -1115,7 +1074,7 @@ end
 if not state.gameStateHandlerRegistered then
     state.gameStateHandlerRegistered = true
     local gameStateHandler = function(data)
-        if data and data.current == "PLANNING" then
+        if data and (data.current == "PLANNING" or data.current == "ACTION") then
             setupInputHandler()
         end
     end
@@ -1123,7 +1082,7 @@ if not state.gameStateHandlerRegistered then
     table.insert(state.signalHandlers, { event = "game_state_changed", handler = gameStateHandler })
 end
 
--- Also setup immediately in case we're already in planning phase
+-- Also setup immediately in case we're already in a game phase
 timer.after_opts({
     delay = 0.1,
     action = function()

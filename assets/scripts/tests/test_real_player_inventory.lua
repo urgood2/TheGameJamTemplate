@@ -230,6 +230,52 @@ function M.runValidation()
                 print("[Test] Z-order occlusion violations: " .. #occlusionViolations)
             end
 
+            -- Check close button edge positioning
+            local closeButtonEntity = PlayerInventory.getCloseButtonEntity()
+            if closeButtonEntity and registry:valid(closeButtonEntity) then
+                print("[Test] Checking close button edge proximity...")
+
+                -- Debug: Print actual bounds
+                local panelBounds = UIValidator.getBounds(panelEntity)
+                local closeBounds = UIValidator.getBounds(closeButtonEntity)
+                if panelBounds then
+                    print(string.format("[Test] Panel bounds: x=%.0f, y=%.0f, w=%.0f, h=%.0f",
+                        panelBounds.x, panelBounds.y, panelBounds.w, panelBounds.h))
+                end
+                if closeBounds then
+                    print(string.format("[Test] Close button bounds: x=%.0f, y=%.0f, w=%.0f, h=%.0f",
+                        closeBounds.x, closeBounds.y, closeBounds.w, closeBounds.h))
+                end
+
+                -- Also check Transform positions
+                local panelT = component_cache.get(panelEntity, Transform)
+                local closeT = component_cache.get(closeButtonEntity, Transform)
+                if panelT then
+                    print(string.format("[Test] Panel Transform: actualX=%.0f, actualY=%.0f",
+                        panelT.actualX or 0, panelT.actualY or 0))
+                end
+                if closeT then
+                    print(string.format("[Test] Close button Transform: actualX=%.0f, actualY=%.0f",
+                        closeT.actualX or 0, closeT.actualY or 0))
+                end
+
+                local PANEL_PADDING = 10 -- Should match player_inventory.lua
+                local edgeViolations = UIValidator.checkEdgeProximity({
+                    {
+                        element = closeButtonEntity,
+                        container = panelEntity,
+                        edge = "top_right",
+                        expectedMargin = PANEL_PADDING,
+                    }
+                })
+                for _, v in ipairs(edgeViolations) do
+                    table.insert(violations, v)
+                end
+                print("[Test] Edge proximity violations: " .. #edgeViolations)
+            else
+                print("[Test] WARNING: Close button entity not found")
+            end
+
             -- Report results
             local errors = UIValidator.getErrors(violations)
             local warnings = UIValidator.getWarnings(violations)

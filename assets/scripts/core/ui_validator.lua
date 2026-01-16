@@ -26,6 +26,7 @@ local severities = {
     global_overlap = "warning",      -- Cross-hierarchy overlaps
     z_order_occlusion = "error",     -- Higher-z entity behind lower-z entity
     text_zero_offset = "warning",    -- Text element with no offset from parent (missing padding)
+    edge_proximity = "warning",      -- Element positioned incorrectly relative to container edge
 }
 
 -- Render tracking (for manually-rendered entities)
@@ -91,10 +92,10 @@ function UIValidator.getBounds(entity)
     -- Try Transform component first (for positioned entities)
     local transform = component_cache.get(entity, Transform)
     if transform then
-        local x = transform.actualX or transform.x or 0
-        local y = transform.actualY or transform.y or 0
-        local w = transform.w or 32
-        local h = transform.h or 32
+        local x = transform.actualX or 0
+        local y = transform.actualY or 0
+        local w = transform.actualW or 32
+        local h = transform.actualH or 32
         return { x = x, y = y, w = w, h = h }
     end
 
@@ -818,6 +819,119 @@ function UIValidator.checkTextZeroOffset(entity, options)
     end
 
     checkEntity(entity, nil)
+    return violations
+end
+
+---Check if elements are positioned correctly relative to their container edges
+---@param checks table[] Array of {element: entity, container: entity, edge: string, expectedMargin: number}
+---  edge can be: "top_left", "top_right", "bottom_left", "bottom_right", "top", "bottom", "left", "right"
+---@param options? table Options {tolerance: number (default 2)}
+---@return table[] violations
+function UIValidator.checkEdgeProximity(checks, options)
+    local violations = {}
+    options = options or {}
+    local tolerance = options.tolerance or 2
+
+    for _, check in ipairs(checks) do
+        local element = check.element
+        local container = check.container
+        local edge = check.edge
+        local expectedMargin = check.expectedMargin or 10
+
+        if not element or not registry:valid(element) then
+            goto continue
+        end
+        if not container or not registry:valid(container) then
+            goto continue
+        end
+
+        local elementBounds = UIValidator.getBounds(element)
+        local containerBounds = UIValidator.getBounds(container)
+
+        if not elementBounds or not containerBounds then
+            goto continue
+        end
+
+        -- Calculate actual margins
+        local leftMargin = elementBounds.x - containerBounds.x
+        local rightMargin = (containerBounds.x + containerBounds.w) - (elementBounds.x + elementBounds.w)
+        local topMargin = elementBounds.y - containerBounds.y
+        local bottomMargin = (containerBounds.y + containerBounds.h) - (elementBounds.y + elementBounds.h)
+
+        local marginIssues = {}
+
+        -- Check margins based on expected edge
+        if edge == "top_left" then
+            if math.abs(leftMargin - expectedMargin) > tolerance then
+                table.insert(marginIssues, string.format("left margin %.0f != expected %.0f", leftMargin, expectedMargin))
+            end
+            if math.abs(topMargin - expectedMargin) > tolerance then
+                table.insert(marginIssues, string.format("top margin %.0f != expected %.0f", topMargin, expectedMargin))
+            end
+        elseif edge == "top_right" then
+            if math.abs(rightMargin - expectedMargin) > tolerance then
+                table.insert(marginIssues, string.format("right margin %.0f != expected %.0f", rightMargin, expectedMargin))
+            end
+            if math.abs(topMargin - expectedMargin) > tolerance then
+                table.insert(marginIssues, string.format("top margin %.0f != expected %.0f", topMargin, expectedMargin))
+            end
+        elseif edge == "bottom_left" then
+            if math.abs(leftMargin - expectedMargin) > tolerance then
+                table.insert(marginIssues, string.format("left margin %.0f != expected %.0f", leftMargin, expectedMargin))
+            end
+            if math.abs(bottomMargin - expectedMargin) > tolerance then
+                table.insert(marginIssues, string.format("bottom margin %.0f != expected %.0f", bottomMargin, expectedMargin))
+            end
+        elseif edge == "bottom_right" then
+            if math.abs(rightMargin - expectedMargin) > tolerance then
+                table.insert(marginIssues, string.format("right margin %.0f != expected %.0f", rightMargin, expectedMargin))
+            end
+            if math.abs(bottomMargin - expectedMargin) > tolerance then
+                table.insert(marginIssues, string.format("bottom margin %.0f != expected %.0f", bottomMargin, expectedMargin))
+            end
+        elseif edge == "top" then
+            if math.abs(topMargin - expectedMargin) > tolerance then
+                table.insert(marginIssues, string.format("top margin %.0f != expected %.0f", topMargin, expectedMargin))
+            end
+        elseif edge == "bottom" then
+            if math.abs(bottomMargin - expectedMargin) > tolerance then
+                table.insert(marginIssues, string.format("bottom margin %.0f != expected %.0f", bottomMargin, expectedMargin))
+            end
+        elseif edge == "left" then
+            if math.abs(leftMargin - expectedMargin) > tolerance then
+                table.insert(marginIssues, string.format("left margin %.0f != expected %.0f", leftMargin, expectedMargin))
+            end
+        elseif edge == "right" then
+            if math.abs(rightMargin - expectedMargin) > tolerance then
+                table.insert(marginIssues, string.format("right margin %.0f != expected %.0f", rightMargin, expectedMargin))
+            end
+        end
+
+        if #marginIssues > 0 then
+            table.insert(violations, {
+                type = "edge_proximity",
+                severity = severities.edge_proximity,
+                entity = element,
+                container = container,
+                edge = edge,
+                expectedMargin = expectedMargin,
+                actualMargins = {
+                    left = leftMargin,
+                    right = rightMargin,
+                    top = topMargin,
+                    bottom = bottomMargin,
+                },
+                message = string.format(
+                    "Element %s not aligned to %s of container %s: %s",
+                    tostring(element), edge, tostring(container),
+                    table.concat(marginIssues, ", ")
+                ),
+            })
+        end
+
+        ::continue::
+    end
+
     return violations
 end
 

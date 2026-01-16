@@ -175,13 +175,13 @@ namespace ui
             }
             
             // if object, make sure the object is screen space, and so is the OBJECT container
-            if (config->object && registry.valid(config->object.value()))
+            if (config && config->object && registry.valid(config->object.value()))
             {
                 registry.emplace_or_replace<collision::ScreenSpaceCollisionMarker>(config->object.value());
-                
+
                 // make sure to mark the object as attached to UI, so it's not rendered doubly
                 registry.emplace_or_replace<ui::ObjectAttachedToUITag>(config->object.value());
-                
+
             }
 
             // If text, pre-calculate text bounds
@@ -1132,9 +1132,11 @@ namespace ui
             auto &uiConfig = registry.get<UIConfig>(entity);
             auto &uiState = registry.get<UIState>(entity);
 
-            // apply to content dimensions & transform scale, touch nothing else
+            // Skip TEXT elements - they already include globalUIScaleFactor in font selection/measurement
+            const bool isText = uiConfig.uiType && uiConfig.uiType.value() == UITypeEnum::TEXT;
 
-            if (uiState.contentDimensions)
+            // apply to content dimensions & transform scale, touch nothing else
+            if (uiState.contentDimensions && !isText)
             {
                 uiState.contentDimensions->x *= globals::getGlobalUIScaleFactor();
                 uiState.contentDimensions->y *= globals::getGlobalUIScaleFactor();
@@ -1142,8 +1144,11 @@ namespace ui
 
             auto &transform = registry.get<transform::Transform>(entity);
 
-            transform.setActualW(transform.getActualW() * globals::getGlobalUIScaleFactor());
-            transform.setActualH(transform.getActualH() * globals::getGlobalUIScaleFactor());
+            if (!isText)
+            {
+                transform.setActualW(transform.getActualW() * globals::getGlobalUIScaleFactor());
+                transform.setActualH(transform.getActualH() * globals::getGlobalUIScaleFactor());
+            }
 
             if (uiConfig.object)
             {
@@ -1486,73 +1491,62 @@ namespace ui
         
         
         // 2) If not a scroll pane, commit content size as before.
-        if (uiConfig.uiType != UITypeEnum::SCROLL_PANE) {;
+        if (uiConfig.uiType != UITypeEnum::SCROLL_PANE) {
             return {calcChildTransform.w, calcChildTransform.h};
         }
-        
-        
-        if (uiConfig.uiType == UITypeEnum::SCROLL_PANE) {
-            auto &scr = registry.emplace_or_replace<ui::UIScrollComponent>(uiElement);
-            
-            const float contentW = calcChildTransform.w;
-            const float contentH = calcChildTransform.h;
-            
-            SPDLOG_DEBUG("Setting up scroll pane on entity {}", static_cast<int>(uiElement));
-            
-            // Decide the viewport from UIConfig:
-            // 1) If explicit width/height given -> use them.
-            // 2) Else if only maxWidth/maxHeight -> clamp content to those -> that is the viewport.
-            // 3) Else -> viewport == content (no scroll yet).
-            auto pick = [](float content, std::optional<float> fixed, std::optional<float> maxv) {
-                if (fixed) return *fixed;
-                if (maxv)  return std::min(content, *maxv);
-                return content;
-            };
-            const float vpW_cfg = pick(contentW, uiConfig.width,  uiConfig.maxWidth);
-            const float vpH_cfg = pick(contentH, uiConfig.height, uiConfig.maxHeight);
 
-            // Set pane (current node) to viewport size
-            calcCurrentNodeTransform.x = parentUINodeRect.x;
-            calcCurrentNodeTransform.w = vpW_cfg;
-            calcCurrentNodeTransform.h = vpH_cfg;
+        // Handle SCROLL_PANE: set up viewport and scrolling
+        auto &scr = registry.emplace_or_replace<ui::UIScrollComponent>(uiElement);
 
-            // Clamp the pane itself (if you have mins)
-            ClampDimensionsToMinimumsIfPresent(uiConfig, /* <-- use current node */ calcCurrentNodeTransform);
+        const float contentW = calcChildTransform.w;
+        const float contentH = calcChildTransform.h;
 
-            // 4) Now commit ONCE
-            ui::element::SetValues(registry, uiElement, calcCurrentNodeTransform, /*force*/ true /* or pass through */);
+        SPDLOG_DEBUG("Setting up scroll pane on entity {}", static_cast<int>(uiElement));
 
-            // add onHover method that sets the active scroll pane
-            // node.methods.onHover = [uiElement](entt::registry &registry, entt::entity /*e*/) {
-            //     globals::inputState.activeScrollPane = uiElement;
-            // };
-            node.state.collisionEnabled = true; // enable collision for scroll pane
-            // node.state.hoverEnabled = true; // enable hover for scroll pane
-            
-            // Content: what children demanded (pre-viewport)
-            scr.contentSize  = { contentW, contentH };
+        // Decide the viewport from UIConfig:
+        // 1) If explicit width/height given -> use them.
+        // 2) Else if only maxWidth/maxHeight -> clamp content to those -> that is the viewport.
+        // 3) Else -> viewport == content (no scroll yet).
+        auto pick = [](float content, std::optional<float> fixed, std::optional<float> maxv) {
+            if (fixed) return *fixed;
+            if (maxv)  return std::min(content, *maxv);
+            return content;
+        };
+        const float vpW_cfg = pick(contentW, uiConfig.width,  uiConfig.maxWidth);
+        const float vpH_cfg = pick(contentH, uiConfig.height, uiConfig.maxHeight);
 
-            // Viewport: from config decision (post-viewport)
-            scr.viewportSize = { vpW_cfg, vpH_cfg };
+        // Set pane (current node) to viewport size
+        calcCurrentNodeTransform.x = parentUINodeRect.x;
+        calcCurrentNodeTransform.w = vpW_cfg;
+        calcCurrentNodeTransform.h = vpH_cfg;
 
-            // Vertical scroll range
-            scr.minOffset = 0.f;
-            scr.maxOffset = std::max(0.f, scr.contentSize.y - scr.viewportSize.y) + uiConfig.effectivePadding();
+        // Clamp the pane itself (if you have mins)
+        ClampDimensionsToMinimumsIfPresent(uiConfig, /* <-- use current node */ calcCurrentNodeTransform);
 
-            // Clamp any existing offset
-            scr.offset = std::clamp(scr.offset, scr.minOffset, scr.maxOffset);
-            scr.prevOffset = scr.offset;
+        // 4) Now commit ONCE
+        ui::element::SetValues(registry, uiElement, calcCurrentNodeTransform, /*force*/ true /* or pass through */);
 
-            // (Optional) tag all descendants so collision can cheaply test against parent pane
-            // This helper must DFS children of `uiElement` and set UIPaneParentRef{uiElement} on each.
-            markSubtreeWithRootPane(registry, uiElement, uiElement);
-            
-            return {vpW_cfg, vpH_cfg};
+        node.state.collisionEnabled = true; // enable collision for scroll pane
 
-        }
+        // Content: what children demanded (pre-viewport)
+        scr.contentSize  = { contentW, contentH };
 
-        
-        return {calcChildTransform.w, calcChildTransform.h};
+        // Viewport: from config decision (post-viewport)
+        scr.viewportSize = { vpW_cfg, vpH_cfg };
+
+        // Vertical scroll range
+        scr.minOffset = 0.f;
+        scr.maxOffset = std::max(0.f, scr.contentSize.y - scr.viewportSize.y) + uiConfig.effectivePadding();
+
+        // Clamp any existing offset
+        scr.offset = std::clamp(scr.offset, scr.minOffset, scr.maxOffset);
+        scr.prevOffset = scr.offset;
+
+        // (Optional) tag all descendants so collision can cheaply test against parent pane
+        // This helper must DFS children of `uiElement` and set UIPaneParentRef{uiElement} on each.
+        markSubtreeWithRootPane(registry, uiElement, uiElement);
+
+        return {vpW_cfg, vpH_cfg};
     }
 
     auto box::SubCalculateContainerSize(ui::LocalTransform &calcCurrentNodeTransform, ui::LocalTransform &parentUINodeRect, ui::UIConfig &selfUIConfig, ui::LocalTransform &calcChildTransform, float padding, transform::GameObject &node, entt::registry &registry, float factor, std::unordered_map<entt::entity, Vector2> &contentSizes) -> void
@@ -1821,15 +1815,9 @@ namespace ui
                 // TODO: scale down the object itself if that's possible. This will depend on the object type.
             }
 
-            // FIXME: testing, try applying scale to the element itself. Then reset the scale to 1.0f
-
+            // Apply scale to content dimensions - DO NOT reset scale as it would destroy user configuration
             uiState.contentDimensions = Vector2{calcCurrentNodeTransform.w * uiConfig.scale.value_or(1.0f), calcCurrentNodeTransform.h * uiConfig.scale.value_or(1.0f)};
             ui::element::SetValues(registry, uiElement, calcCurrentNodeTransform, forceRecalculateLayout);
-
-            if (uiConfig.scale)
-            {
-                uiConfig.scale = 1.0f;
-            }
         }
 
         ClampDimensionsToMinimumsIfPresent(uiConfig, calcCurrentNodeTransform);
@@ -1839,12 +1827,17 @@ namespace ui
     // Function to remove a group of elements from the UI system
     bool box::RemoveGroup(entt::registry &registry, entt::entity entity, const std::string &group)
     {
-        if (registry.valid(entity) == false)
+        // Early return if entity is invalid - cannot access components on invalid entities
+        if (!registry.valid(entity))
         {
-            auto *uiBox = registry.try_get<UIBoxComponent>(entity);
-            entity = uiBox->uiRoot.value();
-            if (registry.valid(entity) == false)
-                return false;
+            return false;
+        }
+
+        // If this is a UIBox entity, get the actual UI root
+        auto *uiBoxCheck = registry.try_get<UIBoxComponent>(entity);
+        if (uiBoxCheck && uiBoxCheck->uiRoot && registry.valid(uiBoxCheck->uiRoot.value()))
+        {
+            entity = uiBoxCheck->uiRoot.value();
         }
 
         auto *transform = registry.try_get<transform::Transform>(entity);
@@ -1853,21 +1846,18 @@ namespace ui
         auto *uiBox = registry.try_get<UIBoxComponent>(entity);
         auto *role = registry.try_get<transform::InheritedProperties>(entity);
 
-        auto &node = registry.get<transform::GameObject>(entity);
+        auto *node = registry.try_get<transform::GameObject>(entity);
+        if (!node)
+        {
+            return false;
+        }
 
         // Iterate over children and recursively remove them if they belong to the group
-        // node.children.erase(
-        //     std::remove_if(node.children.begin(), node.children.end(),
-        //         [&](entt::entity child) {
-        //             return RemoveGroup(registry, child, group);
-        //         }),
-        //     node.children.end()
-        // );
-        for (auto it = node.children.begin(); it != node.children.end();)
+        for (auto it = node->children.begin(); it != node->children.end();)
         {
             if (RemoveGroup(registry, it->second, group))
             {
-                it = node.children.erase(it); // Safe erase while iterating
+                it = node->children.erase(it); // Safe erase while iterating
             }
             else
             {
@@ -1881,9 +1871,13 @@ namespace ui
             return true;
         }
 
-        CalcTreeSizes(registry, uiBox->uiRoot.value(), {transform->getActualX(), transform->getActualY(), transform->getActualW(), transform->getActualH()}, true);
-        ui::element::SetWH(registry, uiBox->uiRoot.value());
-        transform::ConfigureAlignment(&registry, uiBox->uiRoot.value(), false, entt::null);
+        // Only recalculate if we have valid uiBox and transform
+        if (uiBox && uiBox->uiRoot && registry.valid(uiBox->uiRoot.value()) && transform)
+        {
+            CalcTreeSizes(registry, uiBox->uiRoot.value(), {transform->getActualX(), transform->getActualY(), transform->getActualW(), transform->getActualH()}, true);
+            ui::element::SetWH(registry, uiBox->uiRoot.value());
+            transform::ConfigureAlignment(&registry, uiBox->uiRoot.value(), false, entt::null);
+        }
 
         return false;
     }
@@ -1892,14 +1886,17 @@ namespace ui
     {
         std::vector<entt::entity> ingroup;
 
-        // If entity is invalid, set to its own ui root if possible, else return nullopt
+        // Early return if entity is invalid - cannot access components on invalid entities
         if (!registry.valid(entity))
         {
-            auto *uiBox = registry.try_get<UIBoxComponent>(entity);
-            if (uiBox && uiBox->uiRoot)
-                entity = uiBox->uiRoot.value();
-            else
-                return {};
+            return {};
+        }
+
+        // If this is a UIBox entity, get the actual UI root
+        auto *uiBoxCheck = registry.try_get<UIBoxComponent>(entity);
+        if (uiBoxCheck && uiBoxCheck->uiRoot && registry.valid(uiBoxCheck->uiRoot.value()))
+        {
+            entity = uiBoxCheck->uiRoot.value();
         }
 
         auto *node = registry.try_get<transform::GameObject>(entity);

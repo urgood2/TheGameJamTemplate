@@ -77,6 +77,7 @@ add_executable(unit_tests
     ${CMAKE_SOURCE_DIR}/src/systems/ui/ui_data.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/ui/core/ui_components.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/ui/box.cpp
+    ${CMAKE_SOURCE_DIR}/src/systems/ui/sizing_pass.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/layer/layer_command_buffer.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/save/save_file_io.cpp
     helpers/object_pool_stubs.cpp

@@ -2628,3 +2628,28 @@ CMakeUserPresets.json
 
 # Auto-generated files
 assets/all_uuids.json*
+.runtime_smoke.log
+.last_test_output.txt
+.inventory_runtime_smoke_15s.log
+.ralph-tui/ralph.lock
+.ralph-tui/session.json
+.ralph-tui/iterations/iteration-001-US-001.log
+.ralph-tui/iterations/iteration-001-US-011.log
+.ralph-tui/iterations/iteration-002-US-002.log
+.ralph-tui/iterations/iteration-002-US-012.log
+.ralph-tui/iterations/iteration-003-US-003.log
+.ralph-tui/iterations/iteration-003-US-013.log
+.ralph-tui/iterations/iteration-004-US-004.log
+.ralph-tui/iterations/iteration-008-US-008.log
+.ralph-tui/iterations/iteration-007-US-017.log
+.ralph-tui/iterations/iteration-007-US-007.log
+.ralph-tui/iterations/iteration-006-US-016.log
+.ralph-tui/iterations/iteration-005-US-015.log
+.ralph-tui/iterations/iteration-006-US-006.log
+.ralph-tui/iterations/iteration-005-US-005.log
+.ralph-tui/iterations/iteration-004-US-014.log
+.ralph-tui/iterations/iteration-010-US-010.log
+.ralph-tui/iterations/iteration-009-US-019.log
+.ralph-tui/iterations/iteration-009-US-009.log
+.ralph-tui/iterations/iteration-008-US-018.log
+tasks_backup/prd.json

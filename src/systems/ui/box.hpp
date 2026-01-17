@@ -77,6 +77,10 @@ namespace ui {
         auto AddChild(entt::registry& registry, entt::entity uiBox, UIElementTemplateNode uiElementDef, entt::entity parent) -> void;
         auto SetContainer(entt::registry &registry, entt::entity self, entt::entity container) -> void;
         auto DebugPrint(entt::registry &registry, entt::entity self, int indent = 0) -> std::string;
+        // Keeps a UIBox and its uiRoot transform in sync (position/size).
+        void SyncUIRootToBox(entt::registry &registry, entt::entity uiBox);
+        // Syncs all UIBoxes in the registry (uses cached view).
+        void SyncAllUIRootsToBoxes(entt::registry &registry);
         void TraverseUITreeBottomUp(entt::registry &registry, entt::entity rootUIElement, std::function<void(entt::entity)> visitor, bool excludeTopmostParent = false);
         void drawAllBoxes(entt::registry &registry,
             std::shared_ptr<layer::Layer> layerPtr);

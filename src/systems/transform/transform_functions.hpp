@@ -223,7 +223,12 @@ namespace transform
     auto HandleClickReleased(entt::registry *registry, entt::entity e) -> void;
     
     auto updateTransformCacheForAllTransforms() -> void;
-    
+
+    /**
+     * Update transformation matrices for a single entity.
+     */
+    auto UpdateTransformMatrices(entt::registry& registry, entt::entity e) -> void;
+
     /**
      * Set the offset for click or hover handling.
      */

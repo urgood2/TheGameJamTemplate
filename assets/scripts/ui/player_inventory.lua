@@ -33,6 +33,7 @@ local signal = require("external.hump.signal")
 local component_cache = require("core.component_cache")
 local timer = require("core.timer")
 local InventoryGridInit = require("ui.inventory_grid_init")
+local itemRegistry = require("core.item_location_registry")
 local shader_pipeline = _G.shader_pipeline
 local QuickEquip = require("ui.inventory_quick_equip")
 local z_orders = require("core.z_orders")
@@ -92,6 +93,10 @@ local SLOT_SPACING = 4
 local GRID_ROWS = 3
 local GRID_COLS = 6
 local GRID_PADDING = 6
+local TAB_MARKER_WIDTH = 64
+local TAB_MARKER_HEIGHT = 64
+local TAB_MARKER_OFFSET_X = 0
+local TAB_MARKER_OFFSET_Y = -66
 
 local GRID_WIDTH = GRID_COLS * SLOT_WIDTH + (GRID_COLS - 1) * SLOT_SPACING + GRID_PADDING * 2
 local GRID_HEIGHT = GRID_ROWS * SLOT_HEIGHT + (GRID_ROWS - 1) * SLOT_SPACING + GRID_PADDING * 2
@@ -111,14 +116,14 @@ local GRID_Z = 850
 local CARD_Z = z_orders.ui_tooltips + 100  -- = 1000, above grid (850), below tooltips
 
 local OFFSCREEN_Y_OFFSET = 600
-local GRID_CONTENT_ID = "grid_content_container"
 
 local state = {
     initialized = false,
     isVisible = false,
     panelEntity = nil,
     closeButtonEntity = nil,
-    gridContentEntity = nil,  -- Container for all tab grids (children of panel)
+    gridContainerEntity = nil,
+    activeGrid = nil,
     grids = {},
     tabButtons = {},
     activeTab = "equipment",
@@ -132,6 +137,7 @@ local state = {
     panelY = 0,
     gridX = 0,
     gridY = 0,
+    tabItems = {},
 }
 
 local function getLocalizedText(key, fallback)
@@ -171,27 +177,6 @@ local function logBoxBounds(label, entity)
     end
 end
 
---------------------------------------------------------------------------------
--- Bidirectional Box/Root Synchronization
---------------------------------------------------------------------------------
-
-local function syncBoxAndRoot(box)
-    local boxComp = component_cache.get(box, UIBoxComponent)
-    if not (boxComp and boxComp.uiRoot and registry:valid(boxComp.uiRoot)) then
-        return
-    end
-
-    local bt = component_cache.get(box, Transform)
-    local rt = component_cache.get(boxComp.uiRoot, Transform)
-    if bt and rt then
-        rt.actualX = bt.actualX  -- Sync root X FROM box
-        rt.actualY = bt.actualY  -- Sync root Y FROM box
-        bt.actualW = rt.actualW  -- Sync box width FROM root
-        bt.actualH = rt.actualH  -- Sync box height FROM root
-    end
-end
-
---------------------------------------------------------------------------------
 -- Visibility Control with Y-coordinate Support
 --------------------------------------------------------------------------------
 
@@ -238,21 +223,39 @@ local function setEntityVisible(entity, visible, onscreenX, onscreenY, dbgLabel)
     logBoxBounds(tostring(visible and "show" or "hide") .. ":" .. tostring(dbgLabel or ""), entity)
 end
 
+local function getTabMarkerPosition()
+    if not state.panelX or not state.panelY then
+        return nil, nil
+    end
+    local markerX = state.panelX + TAB_MARKER_OFFSET_X
+    local markerY = state.panelY + TAB_MARKER_OFFSET_Y
+    return markerX, markerY
+end
+
+local function setCardEntityVisible(itemEntity, visible)
+    if not itemEntity or not registry:valid(itemEntity) then return end
+    if visible then
+        if add_state_tag then
+            add_state_tag(itemEntity, "default_state")
+        end
+    else
+        if clear_state_tags then
+            clear_state_tags(itemEntity)
+        end
+    end
+end
+
+local function setAllCardsVisible(visible)
+    for itemEntity in pairs(state.cardRegistry) do
+        setCardEntityVisible(itemEntity, visible)
+    end
+end
+
 local function setGridItemsVisible(gridEntity, visible)
     if not gridEntity then return end
     local items = grid.getAllItems(gridEntity)
     for _, itemEntity in pairs(items) do
-        if itemEntity and registry:valid(itemEntity) then
-            if visible then
-                if add_state_tag then
-                    add_state_tag(itemEntity, "default_state")
-                end
-            else
-                if clear_state_tags then
-                    clear_state_tags(itemEntity)
-                end
-            end
-        end
+        setCardEntityVisible(itemEntity, visible)
     end
 end
 
@@ -302,6 +305,7 @@ local function createSimpleCard(spriteName, x, y, cardData, gridEntity)
         stackId = cardData.stackId,
         category = "card",
         cardData = cardData,
+        noVisualSnap = true,
     }
 
     if setScriptTableForEntityID then
@@ -341,6 +345,7 @@ local function createGridDefinition(tabId)
             slotSprite = "test-inventory-square-single.png",
             padding = GRID_PADDING,
             backgroundColor = "blackberry",
+            snapVisual = false,
         },
 
         onSlotChange = function(gridEntity, slotIndex, oldItem, newItem)
@@ -360,76 +365,125 @@ local function createGridDefinition(tabId)
     }
 end
 
--- Injects a grid as a child of the content container and initializes it.
--- Returns the grid entity after injection.
-local function injectGridAsChild(tabId, parentEntity)
+local function getTabSlotCount(tabId)
     local cfg = TAB_CONFIG[tabId]
-    if not cfg then return nil end
+    local rows = cfg and cfg.rows or GRID_ROWS
+    local cols = cfg and cfg.cols or GRID_COLS
+    return rows * cols
+end
 
-    local gridDef = createGridDefinition(tabId)
-    if not gridDef then return nil end
+local function getTabItemStore(tabId)
+    if not state.tabItems[tabId] then
+        state.tabItems[tabId] = {}
+    end
+    return state.tabItems[tabId]
+end
 
-    -- Use ui.box.AddChild to inject the grid definition as a child
-    ui.box.AddChild(registry, state.panelEntity, gridDef, parentEntity)
+local function findEmptyStoredSlot(tabId)
+    local store = getTabItemStore(tabId)
+    local slotCount = getTabSlotCount(tabId)
+    for i = 1, slotCount do
+        if not store[i] then
+            return i
+        end
+    end
+    return nil
+end
 
-    -- Get the grid entity by its ID after it's been added
-    local gridEntity = ui.box.GetUIEByID(registry, state.panelEntity, cfg.id)
-    if not gridEntity then
-        log_warn("[PlayerInventory] Failed to find grid entity after AddChild: " .. cfg.id)
+local function stashGridItems(tabId, gridEntity)
+    if not gridEntity then return end
+    local store = getTabItemStore(tabId)
+    for k in pairs(store) do
+        store[k] = nil
+    end
+
+    local items = grid.getAllItems(gridEntity)
+    for slotIndex, itemEntity in pairs(items) do
+        if itemEntity and registry:valid(itemEntity) then
+            store[slotIndex] = itemEntity
+            grid.removeItem(gridEntity, slotIndex)
+            setCardEntityVisible(itemEntity, false)
+        end
+    end
+end
+
+local function restoreGridItems(tabId, gridEntity)
+    if not gridEntity then return end
+    local store = state.tabItems[tabId]
+    if not store then return end
+
+    for slotIndex, itemEntity in pairs(store) do
+        if itemEntity and registry:valid(itemEntity) then
+            InventoryGridInit.makeItemDraggable(itemEntity, gridEntity)
+            local success, placedSlot = grid.addItem(gridEntity, itemEntity, slotIndex)
+            if success then
+                local slotEntity = grid.getSlotEntity(gridEntity, placedSlot or slotIndex)
+                if slotEntity then
+                    InventoryGridInit.centerItemOnSlot(itemEntity, slotEntity, false)
+                end
+                setCardEntityVisible(itemEntity, state.isVisible)
+            else
+                log_warn("[PlayerInventory] Failed to restore item to tab '" .. tostring(tabId) .. "' slot " .. tostring(slotIndex))
+            end
+        end
+    end
+end
+
+local function cleanupGridEntity(gridEntity, tabId)
+    if not gridEntity then return end
+
+    InventoryGridInit.unregisterGridForDragFeedback(gridEntity)
+
+    local cfg = TAB_CONFIG[tabId]
+    if cfg then
+        local slotCount = getTabSlotCount(tabId)
+        for i = 1, slotCount do
+            local slotEntity = grid.getSlotEntity(gridEntity, i)
+            if slotEntity then
+                InventoryGridInit.cleanupSlotMetadata(slotEntity)
+            end
+        end
+        itemRegistry.clearGrid(gridEntity)
+        grid.cleanup(gridEntity)
+        dsl.cleanupGrid(cfg.id)
+    end
+end
+
+local function injectGridForTab(tabId)
+    if not state.gridContainerEntity or not registry:valid(state.gridContainerEntity) then
+        log_warn("[PlayerInventory] Grid container not available for tab injection")
         return nil
     end
 
-    -- Initialize the grid with InventoryGridInit
-    local success = InventoryGridInit.initializeIfGrid(gridEntity, cfg.id)
-    if success then
-        log_debug("[PlayerInventory] Grid '" .. tabId .. "' injected and initialized")
-    else
-        log_warn("[PlayerInventory] Grid '" .. tabId .. "' init failed!")
-    end
-
-    return gridEntity
-end
-
--- Sets visibility of a grid and its items using state tags (for injected child grids)
-local function setGridVisible(gridEntity, visible)
-    if not gridEntity or not registry:valid(gridEntity) then return end
-
-    if visible then
-        -- Add default_state to make grid visible
-        if ui and ui.box and ui.box.AddStateTagToUIBox then
-            ui.box.AddStateTagToUIBox(registry, gridEntity, "default_state")
-        end
-    else
-        -- Clear state tags to hide
-        if ui and ui.box and ui.box.ClearStateTagsFromUIBox then
-            ui.box.ClearStateTagsFromUIBox(registry, gridEntity)
-        end
-    end
-
-    -- Also handle items visibility
-    setGridItemsVisible(gridEntity, visible)
-end
-
--- Legacy function for backward compatibility (spawns grid as separate UI box)
-local function createGridForTab(tabId, x, y, visible)
-    local cfg = TAB_CONFIG[tabId]
-    if not cfg then return nil end
-
-    local spawnX = visible and x or -9999
     local gridDef = createGridDefinition(tabId)
-    if not gridDef then return nil end
+    if not gridDef then
+        log_warn("[PlayerInventory] No grid definition for tab " .. tostring(tabId))
+        return nil
+    end
 
-    local gridEntity = dsl.spawn({ x = spawnX, y = y }, gridDef, RENDER_LAYER, GRID_Z)
-    -- Explicitly set to sprites layer so z-ordering works with planning cards
-    if ui and ui.box and ui.box.set_draw_layer then
-        ui.box.set_draw_layer(gridEntity, "sprites")
+    local replaced = ui.box.ReplaceChildren(state.gridContainerEntity, gridDef)
+    if not replaced then
+        log_warn("[PlayerInventory] Failed to replace grid container children for tab " .. tostring(tabId))
+        return nil
+    end
+
+    -- Reapply state tags so newly injected elements render
+    if ui and ui.box and ui.box.AddStateTagToUIBox then
+        ui.box.AddStateTagToUIBox(registry, state.panelEntity, "default_state")
+    end
+
+    local cfg = TAB_CONFIG[tabId]
+    local gridEntity = cfg and ui.box.GetUIEByID(registry, state.gridContainerEntity, cfg.id) or nil
+    if not gridEntity then
+        log_warn("[PlayerInventory] Could not find injected grid entity for tab " .. tostring(tabId))
+        return nil
     end
 
     local success = InventoryGridInit.initializeIfGrid(gridEntity, cfg.id)
     if success then
-        log_debug("[PlayerInventory] Grid '" .. tabId .. "' initialized at x=" .. spawnX)
+        log_debug("[PlayerInventory] Injected grid initialized for tab " .. tostring(tabId))
     else
-        log_warn("[PlayerInventory] Grid '" .. tabId .. "' init failed!")
+        log_warn("[PlayerInventory] Injected grid init failed for tab " .. tostring(tabId))
     end
 
     return gridEntity
@@ -441,17 +495,26 @@ local function switchTab(tabId)
     if state.activeTab == tabId then return end
 
     local oldTab = state.activeTab
+    local oldGrid = state.activeGrid
+
+    if oldGrid then
+        stashGridItems(oldTab, oldGrid)
+        cleanupGridEntity(oldGrid, oldTab)
+        state.grids[oldTab] = nil
+    end
+
     state.activeTab = tabId
+    state.activeGrid = injectGridForTab(tabId)
+    state.grids[tabId] = state.activeGrid
 
-    -- Toggle visibility of grids using state tags (grids are children of the panel)
-    for id, gridEntity in pairs(state.grids) do
-        local isActive = (id == tabId)
-        local shouldShow = isActive and state.isVisible
-        setGridVisible(gridEntity, shouldShow)
+    if state.activeGrid then
+        restoreGridItems(tabId, state.activeGrid)
+    end
 
-        if isActive and state.isVisible then
-            -- Force layout sync for the active grid
-            syncBoxAndRoot(gridEntity)
+    if state.isVisible then
+        setAllCardsVisible(false)
+        if state.activeGrid then
+            setGridItemsVisible(state.activeGrid, true)
         end
     end
 
@@ -599,18 +662,16 @@ local function createFooter()
     }
 end
 
--- Creates a container that will hold all tab grids (grids are injected as children after spawn)
-local function createGridContentContainer()
+local function createGridContainer()
     return dsl.strict.vbox {
         config = {
-            id = GRID_CONTENT_ID,
+            id = "inventory_grid_container",
+            padding = 0,
             minWidth = GRID_WIDTH,
             minHeight = GRID_HEIGHT,
-            maxWidth = GRID_WIDTH,
-            maxHeight = GRID_HEIGHT,
-            -- No background color - grids provide their own
+            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
         },
-        children = {},  -- Grids will be injected here after panel spawn
+        children = {}
     }
 end
 
@@ -621,19 +682,20 @@ local function createPanelDefinition()
             color = "blackberry",
             padding = PANEL_PADDING,
             emboss = 3,
-            -- maxHeight = PANEL_HEIGHT,
+            -- Grid area is a child container; active grid is injected at runtime
+            minHeight = HEADER_HEIGHT + TABS_HEIGHT + FOOTER_HEIGHT + PANEL_PADDING * 2,
         },
         children = {
             createHeader(),
             createTabs(),
-            createGridContentContainer(),
+            createGridContainer(),
             createFooter(),
         },
     }
 end
 
 local function snapItemsToSlots()
-    local activeGrid = state.grids[state.activeTab]
+    local activeGrid = state.activeGrid
     if not activeGrid then return end
 
     local inputState = input and input.getState and input.getState()
@@ -645,7 +707,7 @@ local function snapItemsToSlots()
             if itemEntity ~= draggedEntity then
                 local slotEntity = grid.getSlotEntity(activeGrid, slotIndex)
                 if slotEntity then
-                    InventoryGridInit.centerItemOnSlot(itemEntity, slotEntity)
+                    InventoryGridInit.centerItemOnSlot(itemEntity, slotEntity, false)
                 end
             end
         end
@@ -653,18 +715,11 @@ local function snapItemsToSlots()
 end
 
 local function isCardInActiveGrid(eid)
-    local activeGrid = state.grids[state.activeTab]
-    if not activeGrid then return true end
-    
-    for tabId, gridEntity in pairs(state.grids) do
-        if gridEntity then
-            local slotIndex = grid.findSlotContaining(gridEntity, eid)
-            if slotIndex then
-                return tabId == state.activeTab
-            end
-        end
-    end
-    return true
+    local activeGrid = state.activeGrid
+    if not activeGrid then return false end
+
+    local location = itemRegistry.getLocation(eid)
+    return location and location.grid == activeGrid
 end
 
 local function setupCardRenderTimer()
@@ -672,7 +727,7 @@ local function setupCardRenderTimer()
     
     timer.run_every_render_frame(function()
         if not state.isVisible then return end
-        
+
         snapItemsToSlots()
         
         local batchedCardBuckets = {}
@@ -746,10 +801,7 @@ local function setupSignalHandlers()
     end
     
     local function isOurGrid(gridEntity)
-        for _, ge in pairs(state.grids) do
-            if ge == gridEntity then return true end
-        end
-        return false
+        return gridEntity == state.activeGrid
     end
     
     registerHandler("grid_item_added", function(gridEntity, slotIndex, itemEntity)
@@ -875,18 +927,25 @@ local function initializeInventory()
         config = {
             canCollide = true,
             hover = true,
+            padding = 0,
+            minWidth = TAB_MARKER_WIDTH,
+            minHeight = TAB_MARKER_HEIGHT,
             buttonCallback = function()
-                print("Clicked!")
+                PlayerInventory.toggle()
             end
         },
         children = {
-            dsl.anim("inventory-tab-marker.png", { w = 64, h = 64 })
+            dsl.anim("inventory-tab-marker.png", { w = TAB_MARKER_WIDTH, h = TAB_MARKER_HEIGHT })
         }
     }
     
-    state.tabMarkerEntity = dsl.spawn({ x = 700, y = 500 }, tabDef, RENDER_LAYER, PANEL_Z - 1) -- Just below panel
-    
-    local ChildBuilder = require("core.child_builder")
+    local markerX, markerY = getTabMarkerPosition()
+    state.tabMarkerEntity = dsl.spawn(
+        { x = markerX or state.panelX, y = markerY or state.panelY },
+        tabDef,
+        RENDER_LAYER,
+        PANEL_Z - 1
+    ) -- Just below panel
 
     local panelDef = createPanelDefinition()
     state.panelEntity = dsl.spawn({ x = state.panelX, y = state.panelY + OFFSCREEN_Y_OFFSET }, panelDef, RENDER_LAYER, PANEL_Z)
@@ -904,10 +963,11 @@ local function initializeInventory()
     end
 
     
+    local ChildBuilder = require("core.child_builder")
     ChildBuilder.for_entity(state.tabMarkerEntity)
-      :attachTo(state.panelEntity)
-      :offset(0, -66)  -- 60px above card center
-      :apply()
+        :attachTo(state.panelEntity)
+        :offset(TAB_MARKER_OFFSET_X, TAB_MARKER_OFFSET_Y)
+        :apply()
       
     -- ui.box.ClearStateTagsFromUIBox(state.tabMarkerEntity)
     -- ui.box.AssignStateTagsToUIBox(registry, state.tabMarkerEntity, PLANNING_STATE)
@@ -918,6 +978,11 @@ local function initializeInventory()
         log_debug("[PlayerInventory] WARNING: Could not find close_btn in panel hierarchy")
     end
 
+    state.gridContainerEntity = ui.box.GetUIEByID(registry, state.panelEntity, "inventory_grid_container")
+    if not state.gridContainerEntity then
+        log_warn("[PlayerInventory] WARNING: Could not find inventory_grid_container in panel hierarchy")
+    end
+
     state.tabButtons = {}
     for _, tabId in ipairs(TAB_ORDER) do
         local btnEntity = ui.box.GetUIEByID(registry, state.panelEntity, "tab_" .. tabId)
@@ -926,20 +991,10 @@ local function initializeInventory()
         end
     end
 
-    -- Get the grid content container to inject grids as children
-    state.gridContentEntity = ui.box.GetUIEByID(registry, state.panelEntity, GRID_CONTENT_ID)
-    if not state.gridContentEntity then
-        log_warn("[PlayerInventory] Could not find grid content container: " .. GRID_CONTENT_ID)
-    end
-
-    -- Inject grids as children of the content container (not as separate top-level UI boxes)
-    for _, tabId in ipairs(TAB_ORDER) do
-        local gridEntity = injectGridAsChild(tabId, state.gridContentEntity)
-        state.grids[tabId] = gridEntity
-
-        -- Initially hide all grids except the active tab
-        local isActive = (tabId == state.activeTab)
-        setGridVisible(gridEntity, isActive)
+    state.activeGrid = injectGridForTab(state.activeTab)
+    if state.activeGrid then
+        state.grids[state.activeTab] = state.activeGrid
+        restoreGridItems(state.activeTab, state.activeGrid)
     end
     
     setupSignalHandlers()
@@ -958,19 +1013,26 @@ function PlayerInventory.open()
 
     if state.isVisible then return end
 
-    -- Show the panel (still use position-based visibility for the panel itself)
+    -- Show the panel
     setEntityVisible(state.panelEntity, true, state.panelX, state.panelY, "panel")
 
-    -- Grids are now children of the panel - use state tag visibility
-    for tabId, gridEntity in pairs(state.grids) do
-        local isActive = (tabId == state.activeTab)
-        setGridVisible(gridEntity, isActive)
-        if isActive then
-            syncBoxAndRoot(gridEntity)
+    state.isVisible = true
+
+    -- Ensure active grid exists for current tab
+    if not state.activeGrid then
+        state.activeGrid = injectGridForTab(state.activeTab)
+        if state.activeGrid then
+            state.grids[state.activeTab] = state.activeGrid
+            restoreGridItems(state.activeTab, state.activeGrid)
         end
     end
 
-    state.isVisible = true
+    setAllCardsVisible(false)
+    if state.activeGrid then
+        setGridItemsVisible(state.activeGrid, true)
+    end
+    snapItemsToSlots()
+
     signal.emit("player_inventory_opened")
 
     -- Elevate planning cards above the inventory panel
@@ -986,15 +1048,16 @@ end
 function PlayerInventory.close()
     if not state.isVisible then return end
 
-    -- Hide the panel (position-based)
+    -- Hide the panel
     setEntityVisible(state.panelEntity, false, state.panelX, state.panelY, "panel")
 
-    -- Hide all grids using state tag visibility
-    for tabId, gridEntity in pairs(state.grids) do
-        setGridVisible(gridEntity, false)
-    end
-
     state.isVisible = false
+
+    -- Keep cards aligned with the grid as it moves offscreen
+    snapItemsToSlots()
+
+    -- Hide all inventory cards (they are separate sprite entities)
+    setAllCardsVisible(false)
     signal.emit("player_inventory_closed")
 
     -- Restore planning cards to normal z-order
@@ -1033,27 +1096,14 @@ function PlayerInventory.destroy()
     end
     state.cardRegistry = {}
     
-    -- Clean up grid data structures (grids are children of the panel, cleaned up with it)
-    for tabId, gridEntity in pairs(state.grids) do
-        if gridEntity and registry:valid(gridEntity) then
-            local cfg = TAB_CONFIG[tabId]
-            if cfg then
-                local slotCount = GRID_ROWS * GRID_COLS
-                for i = 1, slotCount do
-                    local slotEntity = grid.getSlotEntity(gridEntity, i)
-                    if slotEntity then
-                        InventoryGridInit.cleanupSlotMetadata(slotEntity)
-                    end
-                end
-                grid.cleanup(gridEntity)
-                dsl.cleanupGrid(cfg.id)
-            end
-            -- NOTE: Don't call ui.box.Remove on grids - they're children of the panel
-            -- and will be cleaned up when the panel is removed
-        end
+    if state.activeGrid then
+        stashGridItems(state.activeTab, state.activeGrid)
+        cleanupGridEntity(state.activeGrid, state.activeTab)
     end
+    state.activeGrid = nil
     state.grids = {}
-    state.gridContentEntity = nil
+    state.tabItems = {}
+    state.gridContainerEntity = nil
 
     -- Close button is part of panel hierarchy, cleaned up when panel is removed
     state.closeButtonEntity = nil
@@ -1065,6 +1115,14 @@ function PlayerInventory.destroy()
     end
     state.panelEntity = nil
     state.tabButtons = {}
+    if state.tabMarkerEntity and registry:valid(state.tabMarkerEntity) then
+        if ui and ui.box and ui.box.Remove then
+            ui.box.Remove(registry, state.tabMarkerEntity)
+        else
+            registry:destroy(state.tabMarkerEntity)
+        end
+    end
+    state.tabMarkerEntity = nil
     
     state.initialized = false
     state.isVisible = false
@@ -1078,10 +1136,19 @@ function PlayerInventory.addCard(cardEntity, category, cardData)
     end
     
     category = category or state.activeTab
-    local gridEntity = state.grids[category]
-    if not gridEntity then
+    local cfg = TAB_CONFIG[category]
+    if not cfg then
         log_warn("[PlayerInventory] Unknown category: " .. tostring(category))
         return false
+    end
+    local gridEntity = state.grids[category]
+    if not gridEntity and category == state.activeTab then
+        state.activeGrid = injectGridForTab(state.activeTab)
+        state.grids[state.activeTab] = state.activeGrid
+        gridEntity = state.activeGrid
+        if gridEntity then
+            restoreGridItems(state.activeTab, gridEntity)
+        end
     end
     
     if cardData then
@@ -1093,34 +1160,71 @@ function PlayerInventory.addCard(cardEntity, category, cardData)
     -- Use CardUIPolicy for proper screen-space setup INCLUDING RESIZE
     -- This handles: transform space, z-order, resize to inventory slot size, interaction states
     CardUIPolicy.setupForScreenSpace(cardEntity)
+    local script = getScriptTableFromEntityID and getScriptTableFromEntityID(cardEntity)
+    if script then
+        script.noVisualSnap = true
+    end
 
-    -- Setup drag-drop with proper z-order management via InventoryGridInit
-    InventoryGridInit.makeItemDraggable(cardEntity, gridEntity)
+    if gridEntity then
+        -- Setup drag-drop with proper z-order management via InventoryGridInit
+        InventoryGridInit.makeItemDraggable(cardEntity, gridEntity)
 
-    local success, slotIndex = grid.addItem(gridEntity, cardEntity)
-    if success then
+        local success, slotIndex = grid.addItem(gridEntity, cardEntity)
+        if success then
         local slotEntity = grid.getSlotEntity(gridEntity, slotIndex)
         if slotEntity then
-            InventoryGridInit.centerItemOnSlot(cardEntity, slotEntity)
+            InventoryGridInit.centerItemOnSlot(cardEntity, slotEntity, false)
         end
-        log_debug("[PlayerInventory] Added card to " .. category .. " slot " .. slotIndex)
-        return true
+            setCardEntityVisible(cardEntity, state.isVisible)
+            log_debug("[PlayerInventory] Added card to " .. category .. " slot " .. slotIndex)
+            return true
+        end
+
+        return false
     end
-    
-    return false
+
+    -- Store for inactive tab; will be injected on demand
+    local slotIndex = findEmptyStoredSlot(category)
+    if not slotIndex then
+        log_warn("[PlayerInventory] No free slots in stored tab: " .. tostring(category))
+        return false
+    end
+
+    local store = getTabItemStore(category)
+    store[slotIndex] = cardEntity
+    InventoryGridInit.makeItemDraggable(cardEntity, nil)
+    setCardEntityVisible(cardEntity, false)
+    log_debug("[PlayerInventory] Queued card for tab " .. category .. " slot " .. slotIndex)
+    return true
 end
 
 function PlayerInventory.removeCard(cardEntity)
-    for tabId, gridEntity in pairs(state.grids) do
-        local slotIndex = grid.findSlotContaining(gridEntity, cardEntity)
+    if state.activeGrid then
+        local slotIndex = grid.findSlotContaining(state.activeGrid, cardEntity)
         if slotIndex then
-            grid.removeItem(gridEntity, slotIndex)
+            grid.removeItem(state.activeGrid, slotIndex)
             state.cardRegistry[cardEntity] = nil
             state.lockedCards[cardEntity] = nil
-            log_debug("[PlayerInventory] Removed card from " .. tabId .. " slot " .. slotIndex)
+            setCardEntityVisible(cardEntity, false)
+            log_debug("[PlayerInventory] Removed card from " .. state.activeTab .. " slot " .. slotIndex)
             return true
         end
     end
+
+    for tabId, store in pairs(state.tabItems) do
+        for slotIndex, itemEntity in pairs(store) do
+            if itemEntity == cardEntity then
+                store[slotIndex] = nil
+                itemRegistry.unregister(cardEntity)
+                state.cardRegistry[cardEntity] = nil
+                state.lockedCards[cardEntity] = nil
+                setCardEntityVisible(cardEntity, false)
+                log_debug("[PlayerInventory] Removed card from stored tab " .. tabId .. " slot " .. slotIndex)
+                return true
+            end
+        end
+    end
+
     return false
 end
 
@@ -1139,7 +1243,17 @@ function PlayerInventory.getGridForTab(tabId)
     if not state.initialized then
         return nil
     end
+    if tabId == state.activeTab then
+        return state.activeGrid
+    end
     return state.grids[tabId]
+end
+
+--- Get stored (inactive) tab items by slot index.
+-- @param tabId string Tab identifier
+-- @return table Map of slotIndex -> itemEntity (may be empty)
+function PlayerInventory.getStoredItemsForTab(tabId)
+    return state.tabItems[tabId] or {}
 end
 
 function PlayerInventory.getLockedCards()
@@ -1169,6 +1283,14 @@ function PlayerInventory.spawnDummyCards()
         initializeInventory()
     end
 
+    if not state.activeGrid then
+        state.activeGrid = injectGridForTab(state.activeTab)
+        if state.activeGrid then
+            state.grids[state.activeTab] = state.activeGrid
+            restoreGridItems(state.activeTab, state.activeGrid)
+        end
+    end
+
     local cards = {
         { id = "fireball", name = "Fireball", sprite = "card-new-test-action.png", element = "Fire", stackId = "fireball" },
         { id = "ice_shard", name = "Ice Shard", sprite = "card-new-test-action.png", element = "Ice", stackId = "ice_shard" },
@@ -1176,7 +1298,7 @@ function PlayerInventory.spawnDummyCards()
         { id = "modifier", name = "Modifier", sprite = "card-new-test-modifier.png", element = nil, stackId = "modifier" },
     }
 
-    local activeGrid = state.grids[state.activeTab]
+    local activeGrid = state.activeGrid
     for i, cardDef in ipairs(cards) do
         -- Pass gridEntity to createSimpleCard for proper drag setup
         local entity = createSimpleCard(cardDef.sprite, -9999, -9999, cardDef, activeGrid)
@@ -1185,8 +1307,9 @@ function PlayerInventory.spawnDummyCards()
             if success then
                 local slotEntity = grid.getSlotEntity(activeGrid, slotIndex)
                 if slotEntity then
-                    InventoryGridInit.centerItemOnSlot(entity, slotEntity)
+                    InventoryGridInit.centerItemOnSlot(entity, slotEntity, false)
                 end
+                setCardEntityVisible(entity, state.isVisible)
                 log_debug("[PlayerInventory] Added dummy card " .. cardDef.name .. " to slot " .. slotIndex)
             end
         end
@@ -1200,7 +1323,13 @@ end
 if not state.gameStateHandlerRegistered then
     state.gameStateHandlerRegistered = true
     local gameStateHandler = function(data)
-        if data and (data.current == "PLANNING" or data.current == "ACTION") then
+        if not data or not data.current then
+            return
+        end
+        if data.current == "PLANNING" and not state.initialized then
+            initializeInventory()
+        end
+        if data.current == "PLANNING" or data.current == "ACTION" then
             setupInputHandler()
         end
     end
@@ -1213,6 +1342,9 @@ timer.after_opts({
     delay = 0.1,
     action = function()
         setupInputHandler()
+        if not state.initialized and is_state_active and PLANNING_STATE and is_state_active(PLANNING_STATE) then
+            initializeInventory()
+        end
     end,
     tag = "player_inventory_input_setup"
 })

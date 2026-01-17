@@ -614,6 +614,12 @@ function grid.getCallbacks(gridEntity)
     return data.callbacks
 end
 
+function grid.getConfig(gridEntity)
+    local data = getGridComponent(gridEntity)
+    if not data then return nil end
+    return data.config
+end
+
 --------------------------------------------------------------------------------
 -- Grid Resize (with overflow detection)
 --------------------------------------------------------------------------------

@@ -172,7 +172,7 @@ function Bridge.handleDropOnInventory(gridEntity, slotIndex, droppedEntity)
             local InventoryGridInit = require("ui.inventory_grid_init")
             local slotEntity = grid.getSlotEntity(gridEntity, slotIndex)
             if slotEntity then
-                InventoryGridInit.centerItemOnSlot(droppedEntity, slotEntity)
+                InventoryGridInit.centerItemOnSlot(droppedEntity, slotEntity, false)
             end
             
             -- 5. Emit event

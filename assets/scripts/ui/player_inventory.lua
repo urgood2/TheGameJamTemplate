@@ -490,7 +490,9 @@ local function injectGridForTab(tabId)
     return gridEntity
 end
 
-
+-- Forward declarations for functions used in switchTab but defined later
+local applySorting
+local updateSortButtons
 
 local function switchTab(tabId)
     if state.activeTab == tabId then return end
@@ -673,7 +675,7 @@ local function getSortValue(cardData, field)
     return ""
 end
 
-local function updateSortButtons()
+updateSortButtons = function()
     if not (state.panelEntity and registry:valid(state.panelEntity)) then return end
     if not (ui and ui.box and ui.box.GetUIEByID) then return end
 
@@ -712,7 +714,7 @@ local function updateSortButtons()
     updateButton("sort_cost_btn", "cost", "Cost")
 end
 
-local function applySorting()
+applySorting = function()
     local activeGrid = state.activeGrid
     if not activeGrid or not state.sortField then return end
 

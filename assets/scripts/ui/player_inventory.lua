@@ -477,6 +477,7 @@ local function createHeader()
     local headerContentWidth = PANEL_WIDTH - 2 * PANEL_PADDING
     return dsl.hbox {
         config = {
+            id = "inventory_header",
             color = "dark_lavender",
             -- emboss = 2,
             padding = 3
@@ -484,19 +485,14 @@ local function createHeader()
             -- minHeight = HEADER_HEIGHT,
         },
         children = {
-            dsl.text("Inventory", {
+            dsl.strict.text("Inventory", {
+                id = "header_title",
                 fontSize = 14,
                 color = "gold",
                 shadow = true,
             }),
-            
-            dsl.text("                                        ", {
-                fontSize = 14,
-                color = "gold",
-                shadow = false,
-            }),
-            -- dsl.strict.spacer(1), -- Push close button to the right
-            dsl.button("X", {
+            dsl.filler(), -- Filler expands to push close button to the right edge
+            dsl.strict.button("X", {
                 id = "close_btn",
                 fontSize = 12,
                 color = "dark_red",

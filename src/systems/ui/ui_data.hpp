@@ -31,7 +31,7 @@ namespace ui
     };
     
     enum class UITypeEnum
-    {           
+    {
         NONE = 0,   // no type, for error checking
 
         // containers. (root is treated as a column if it has children)
@@ -45,7 +45,8 @@ namespace ui
         INPUT_TEXT = 6, // element, a text input ui element
         RECT_SHAPE = 7,   // element, box shape
         TEXT = 8,  // element, Simple text (not dynamic or animated)
-        OBJECT = 9 // element, game object (like animated text, sprite, etc.)
+        OBJECT = 9, // element, game object (like animated text, sprite, etc.)
+        FILLER = 10 // element, flexible space filler for hbox/vbox layouts
     };
 
     /**
@@ -375,6 +376,12 @@ namespace ui
         bool mid = false;                    // Marks the midpoint of a UI structure (transform.mid)
         std::optional<bool> noRole;          // Prevents the element from being assigned a role in the layout.
         std::optional<transform::InheritedProperties> role; // Role component for UI
+
+        // Filler-specific properties (for UITypeEnum::FILLER)
+        bool isFiller = false;              // True if this is a filler element
+        float flexWeight = 1.0f;            // Flex proportion for space distribution (default 1)
+        float maxFillSize = 0.0f;           // Maximum fill size in pixels (0 = unlimited)
+        float computedFillSize = 0.0f;      // Calculated size after distribution (set during layout)
 
         // Calculate effective padding with scale factors applied
         // Centralizes: padding.value_or(globals::getSettings().uiPadding) * scale.value_or(1.0f) * globals::getGlobalUIScaleFactor()
@@ -897,6 +904,22 @@ namespace ui
         
         Builder& addDecorations(const UIDecorations& decorations) {
             uiConfig.decorations = decorations;
+            return *this;
+        }
+
+        // Filler-specific builder methods
+        Builder& addIsFiller(const bool& isFiller) {
+            uiConfig.isFiller = isFiller;
+            return *this;
+        }
+
+        Builder& addFlexWeight(const float& flexWeight) {
+            uiConfig.flexWeight = flexWeight;
+            return *this;
+        }
+
+        Builder& addMaxFillSize(const float& maxFillSize) {
+            uiConfig.maxFillSize = maxFillSize;
             return *this;
         }
 

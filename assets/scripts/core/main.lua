@@ -25,6 +25,7 @@ local TextBuilderDemo = require("demos.text_builder_demo")
 local Text = require("core.text") -- TextBuilder system for fire-and-forget text
 local TutorialDialogueDemo = require("tutorial.dialogue.demo")
 local LightingDemo = require("demos.lighting_demo")
+local UIFillerDemo = require("demos.ui_filler_demo")
 -- local RenderGroupsTest = require("tests.test_render_groups_visual") -- Visual test for render groups (disabled: DrawRenderGroup command not registered)
 local SpecialItem = require("core.special_item")
 SaveManager = require("core.save_manager") -- Global for C++ debug UI access
@@ -84,7 +85,8 @@ local function record_telemetry_once(flag, event, props)
     record_telemetry(event, props)
 end
 
-local mainMenuEntities = {
+-- Global so demos can access main menu entities for repositioning
+mainMenuEntities = {
 }
 
 local MAIN_MENU_TIMER_GROUP = "main_menu"
@@ -1087,6 +1089,24 @@ function main.init()
         else
             log_warn("[RealInventoryTest] Could not load test module: " .. tostring(test_module))
         end
+    end
+
+    -- Run UI Filler demo (set RUN_UI_FILLER_DEMO=1 to enable)
+    local runUIFillerDemo = os.getenv("RUN_UI_FILLER_DEMO") == "1"
+    local autoExitAfterDemo = os.getenv("AUTO_EXIT_AFTER_DEMO") == "1"
+    if runUIFillerDemo then
+        timer.after(0.5, function()
+            log_debug("[UIFillerDemo] Starting UI Filler demo...")
+            UIFillerDemo.start()
+
+            if autoExitAfterDemo then
+                -- Exit after all demos complete (12 demos * ~6s each = ~72s, add buffer)
+                timer.after(90, function()
+                    log_debug("[UIFillerDemo] Auto-exit after demo")
+                    os.exit(0)
+                end, "ui_filler_demo_exit", "ui_filler_demo")
+            end
+        end, "ui_filler_demo_start", "ui_filler_demo")
     end
 
     -- Legacy tooltip hide timer - no longer needed with DSL tooltips

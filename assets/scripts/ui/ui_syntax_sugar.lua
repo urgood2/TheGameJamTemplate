@@ -777,7 +777,72 @@ function dsl.spacer(w, h)
 end
 
 ------------------------------------------------------------
--- 1️⃣1️⃣ Divider Element
+-- 1️⃣1️⃣ Filler Element
+-- Flexible space distribution for hbox/vbox containers.
+------------------------------------------------------------
+
+---@class FillerOpts
+---@field flex? number Flex weight for proportional distribution (default: 1)
+---@field maxFill? number Maximum expansion in pixels (0 = unlimited)
+
+--- Create a filler element that expands to claim remaining space in a container.
+---
+--- Fillers are invisible layout primitives that:
+--- - Claim remaining space after fixed-size children are measured
+--- - Respect flex weights for proportional distribution among multiple fillers
+--- - Are non-interactive (clicks pass through)
+--- - Work only as direct children of hbox/vbox containers
+---
+--- **Example:**
+--- ```lua
+--- -- Simple filler (pushes elements to edges)
+--- dsl.hbox {
+---     children = {
+---         dsl.text("Left"),
+---         dsl.filler(),
+---         dsl.text("Right"),
+---     }
+--- }
+---
+--- -- Filler with flex weight (proportional distribution)
+--- dsl.hbox {
+---     children = {
+---         dsl.text("A"),
+---         dsl.filler { flex = 1 },    -- Gets 1/3 of remaining space
+---         dsl.text("B"),
+---         dsl.filler { flex = 2 },    -- Gets 2/3 of remaining space
+---         dsl.text("C"),
+---     }
+--- }
+---
+--- -- Filler with max cap
+--- dsl.hbox {
+---     config = { minWidth = 400 },
+---     children = {
+---         dsl.text("Left"),
+---         dsl.filler { maxFill = 100 },  -- Expand up to 100px max
+---         dsl.text("Right"),
+---     }
+--- }
+--- ```
+---@param opts? FillerOpts Optional configuration
+---@return table UIDefinition node for the filler element
+function dsl.filler(opts)
+    opts = opts or {}
+    return def{
+        type = "FILLER",
+        config = {
+            isFiller = true,
+            flexWeight = opts.flex or 1,
+            maxFillSize = opts.maxFill or 0,
+            -- Fillers are non-interactive (no collision)
+            canCollide = false,
+        }
+    }
+end
+
+------------------------------------------------------------
+-- 1️⃣2️⃣ Divider Element
 -- Horizontal or vertical divider line.
 ------------------------------------------------------------
 
@@ -2113,6 +2178,7 @@ local STRICT_MAPPINGS = {
     { name = "dynamicText", fn = dsl.dynamicText, schema = Schema.UI_DYNAMIC_TEXT, positional = { "fn", "fontSize", "effect" } },
     { name = "anim",     fn = dsl.anim,         schema = Schema.UI_ANIM,         positional = { "id" } },
     { name = "spacer",   fn = dsl.spacer,       schema = Schema.UI_SPACER,       positional = { "w", "h" } },
+    { name = "filler",   fn = dsl.filler,       schema = Schema.UI_FILLER,       positional = {} },
     { name = "divider",  fn = dsl.divider,      schema = Schema.UI_DIVIDER,      positional = { "direction" } },
     { name = "iconLabel", fn = dsl.iconLabel,   schema = Schema.UI_ICON_LABEL,   positional = { "iconId", "label" } },
 

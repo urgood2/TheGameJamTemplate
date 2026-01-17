@@ -302,6 +302,16 @@ Schema.UI_SPACER = {
     }
 }
 
+Schema.UI_FILLER = {
+    _name = "UI_FILLER",
+    _fields = {
+        -- Flex weight for proportional space distribution (default: 1)
+        flex        = { type = "number",   required = false },
+        -- Maximum fill size in pixels (0 = unlimited)
+        maxFill     = { type = "number",   required = false },
+    }
+}
+
 Schema.UI_DIVIDER = {
     _name = "UI_DIVIDER",
     _fields = {

@@ -998,7 +998,8 @@ namespace ui
             auto &role = registry.get<transform::InheritedProperties>(entity);
 
             // 1. non - containers - rect, text, and object, always bottom of tree.
-            if (uiConfig.uiType == UITypeEnum::RECT_SHAPE || uiConfig.uiType == UITypeEnum::TEXT || uiConfig.uiType == UITypeEnum::OBJECT || uiConfig.uiType == UITypeEnum::INPUT_TEXT)
+            if (uiConfig.uiType == UITypeEnum::RECT_SHAPE || uiConfig.uiType == UITypeEnum::TEXT || uiConfig.uiType == UITypeEnum::OBJECT ||
+                uiConfig.uiType == UITypeEnum::INPUT_TEXT || uiConfig.uiType == UITypeEnum::FILLER || uiConfig.isFiller)
             {
                 if (uiConfig.uiType == UITypeEnum::OBJECT)
                 {
@@ -1103,7 +1104,8 @@ namespace ui
             auto &role = registry.get<transform::InheritedProperties>(entity);
 
             // 1. non - containers - rect, text, and object, always bottom of tree.
-            if (uiConfig.uiType == UITypeEnum::RECT_SHAPE || uiConfig.uiType == UITypeEnum::TEXT || uiConfig.uiType == UITypeEnum::OBJECT || uiConfig.uiType == UITypeEnum::INPUT_TEXT)
+            if (uiConfig.uiType == UITypeEnum::RECT_SHAPE || uiConfig.uiType == UITypeEnum::TEXT || uiConfig.uiType == UITypeEnum::OBJECT ||
+                uiConfig.uiType == UITypeEnum::INPUT_TEXT || uiConfig.uiType == UITypeEnum::FILLER || uiConfig.isFiller)
             {
                 continue;
             }
@@ -1311,8 +1313,10 @@ namespace ui
         // place at the given location, adding padding.
         role.offset = {runningTransform.x, runningTransform.y};
 
-        // am I a ui element?
-        if (uiConfig.uiType == UITypeEnum::RECT_SHAPE || uiConfig.uiType == UITypeEnum::TEXT || uiConfig.uiType == UITypeEnum::OBJECT || uiConfig.uiType == UITypeEnum::INPUT_TEXT)
+        // am I a ui element (non-container)?
+        if (uiConfig.uiType == UITypeEnum::RECT_SHAPE || uiConfig.uiType == UITypeEnum::TEXT ||
+            uiConfig.uiType == UITypeEnum::OBJECT || uiConfig.uiType == UITypeEnum::INPUT_TEXT ||
+            uiConfig.uiType == UITypeEnum::FILLER)
         {
             placeNonContainerUIE(registry, role, runningTransform, uiElement, parentType, uiState, uiConfig);
             return;
@@ -1480,16 +1484,19 @@ namespace ui
         
 
         SubCalculateContainerSize(calcCurrentNodeTransform, parentUINodeRect, uiConfig, calcChildTransform, padding, node, registry, factor, contentSizes);
-        
-        
 
         // final content size for this container
         calcCurrentNodeTransform.x = parentUINodeRect.x;
         calcCurrentNodeTransform.y = parentUINodeRect.y;
         ClampDimensionsToMinimumsIfPresent(uiConfig, calcChildTransform);
+
+        // Distribute remaining space to filler children after container size is known
+        // This must happen after ClampDimensionsToMinimumsIfPresent so we know the actual container size
+        Vector2 containerSize = { calcChildTransform.w, calcChildTransform.h };
+        DistributeFillerSpace(registry, uiElement, uiConfig, containerSize, contentSizes);
+
         ui::element::SetValues(registry, uiElement, calcCurrentNodeTransform, forceRecalculateLayout);
-        
-        
+
         // 2) If not a scroll pane, commit content size as before.
         if (uiConfig.uiType != UITypeEnum::SCROLL_PANE) {
             return {calcChildTransform.w, calcChildTransform.h};
@@ -1675,6 +1682,99 @@ namespace ui
         }
     }
 
+    auto box::DistributeFillerSpace(entt::registry &registry, entt::entity containerEntity, ui::UIConfig &containerConfig,
+                                    Vector2 containerSize, std::unordered_map<entt::entity, Vector2> &contentSizes) -> void
+    {
+        auto *node = registry.try_get<transform::GameObject>(containerEntity);
+        if (!node) return;
+
+        // Determine if this is a horizontal or vertical container
+        const bool isHorizontal = containerConfig.uiType == UITypeEnum::HORIZONTAL_CONTAINER;
+        const bool isVertical = containerConfig.uiType == UITypeEnum::VERTICAL_CONTAINER ||
+                                containerConfig.uiType == UITypeEnum::ROOT ||
+                                containerConfig.uiType == UITypeEnum::SCROLL_PANE;
+
+        if (!isHorizontal && !isVertical) return;
+
+        // Collect fillers and calculate fixed content size
+        std::vector<entt::entity> fillers;
+        float totalFixedSize = 0.0f;
+        float totalFlex = 0.0f;
+        float maxCrossAxisSize = 0.0f;
+        int childCount = 0;
+
+        for (auto child : node->orderedChildren) {
+            if (!registry.valid(child)) continue;
+            auto *childConfig = registry.try_get<UIConfig>(child);
+            if (!childConfig) continue;
+            childCount++;
+
+            if (childConfig->isFiller || childConfig->uiType == UITypeEnum::FILLER) {
+                fillers.push_back(child);
+                totalFlex += childConfig->flexWeight;
+            } else {
+                // Accumulate fixed child sizes (size only, not spacing)
+                auto it = contentSizes.find(child);
+                if (it != contentSizes.end()) {
+                    if (isHorizontal) {
+                        totalFixedSize += it->second.x;
+                        maxCrossAxisSize = std::max(maxCrossAxisSize, it->second.y);
+                    } else {
+                        totalFixedSize += it->second.y;
+                        maxCrossAxisSize = std::max(maxCrossAxisSize, it->second.x);
+                    }
+                }
+            }
+        }
+
+        if (fillers.empty()) return; // No fillers to distribute
+
+        // Calculate available space for fillers
+        // Available = Container Size - Fixed Children - Padding (including outer edges)
+        float padding = containerConfig.effectivePadding();
+        float primaryAxisSize = isHorizontal ? containerSize.x : containerSize.y;
+
+        // Total padding added by layout = inner gaps + outer edges = padding * (children + 1)
+        float totalPadding = padding * (static_cast<float>(childCount) + 1.0f);
+        float availableSpace = primaryAxisSize - totalFixedSize - totalPadding;
+
+        // Ensure non-negative
+        availableSpace = std::max(0.0f, availableSpace);
+
+        // Distribute space proportionally based on flex weights
+        for (auto filler : fillers) {
+            auto *fillerConfig = registry.try_get<UIConfig>(filler);
+            if (!fillerConfig) continue;
+
+            // Clear any persisted min constraints from previous layout passes
+            fillerConfig->minWidth.reset();
+            fillerConfig->minHeight.reset();
+
+            // Calculate this filler's share
+            float share = (totalFlex > 0.0f) ? (fillerConfig->flexWeight / totalFlex) * availableSpace : 0.0f;
+
+            // Apply maxFillSize cap if set
+            if (fillerConfig->maxFillSize > 0.0f) {
+                share = std::min(share, fillerConfig->maxFillSize);
+            }
+
+            // Round to nearest pixel
+            share = std::round(share);
+
+            // Store computed fill size
+            fillerConfig->computedFillSize = share;
+
+            // Update content sizes cache
+            // Filler takes share on primary axis, and matches max sibling height on cross-axis
+            if (isHorizontal) {
+                contentSizes[filler] = { share, maxCrossAxisSize };
+            } else {
+                contentSizes[filler] = { maxCrossAxisSize, share };
+            }
+
+        }
+    }
+
     void box::ClampDimensionsToMinimumsIfPresent(ui::UIConfig &uiConfig, ui::LocalTransform &calcTransform)
     {
         if (uiConfig.minWidth && uiConfig.minWidth.value() > calcTransform.w)
@@ -1817,6 +1917,23 @@ namespace ui
 
             // Apply scale to content dimensions - DO NOT reset scale as it would destroy user configuration
             uiState.contentDimensions = Vector2{calcCurrentNodeTransform.w * uiConfig.scale.value_or(1.0f), calcCurrentNodeTransform.h * uiConfig.scale.value_or(1.0f)};
+            ui::element::SetValues(registry, uiElement, calcCurrentNodeTransform, forceRecalculateLayout);
+        }
+        else if (uiConfig.uiType == UITypeEnum::FILLER || uiConfig.isFiller)
+        {
+            // Fillers initially have 0 size - their actual size is computed later
+            // in DistributeFillerSpace() after the parent container size is known.
+            // DistributeFillerSpace() sets minWidth/minHeight with the correct axis-aware values.
+            if (uiConfig.minWidth && uiConfig.minHeight) {
+                // Use dimensions set by DistributeFillerSpace()
+                calcCurrentNodeTransform.w = static_cast<float>(uiConfig.minWidth.value());
+                calcCurrentNodeTransform.h = static_cast<float>(uiConfig.minHeight.value());
+            } else {
+                // Initial pass: fillers contribute 0 size until DistributeFillerSpace() runs
+                calcCurrentNodeTransform.w = 0.0f;
+                calcCurrentNodeTransform.h = 0.0f;
+            }
+            uiState.contentDimensions = Vector2{calcCurrentNodeTransform.w, calcCurrentNodeTransform.h};
             ui::element::SetValues(registry, uiElement, calcCurrentNodeTransform, forceRecalculateLayout);
         }
 

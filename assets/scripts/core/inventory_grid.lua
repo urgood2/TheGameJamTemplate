@@ -263,7 +263,9 @@ function grid.setSlotLocked(gridEntity, slotIndex, locked)
     data.slots[slotIndex].locked = locked
 end
 
-function grid.canSlotAccept(gridEntity, slotIndex, itemEntity)
+function grid.canSlotAccept(gridEntity, slotIndex, itemEntity, opts)
+    opts = opts or {}
+    local allowOccupied = opts.allowOccupied == true
     local data = getGridComponent(gridEntity)
     if not data or not data.slots[slotIndex] then return false end
     
@@ -273,7 +275,7 @@ function grid.canSlotAccept(gridEntity, slotIndex, itemEntity)
         return false
     end
     
-    if slot.item and not data.config.stackable then
+    if slot.item and not data.config.stackable and not allowOccupied then
         return false
     end
     

@@ -3991,7 +3991,8 @@ UITypeEnum = {
     INPUT_TEXT = 6,  -- A text input UI element.
     RECT_SHAPE = 7,  -- A rectangular shape UI element.
     TEXT = 8,  -- A simple text UI element.
-    OBJECT = 9  -- A game object UI element.
+    OBJECT = 9,  -- A game object UI element.
+    FILLER = 10  -- A filler element that expands to fill remaining space in containers.
 }
 
 
@@ -4434,7 +4435,15 @@ UIConfig = {
     ---@type boolean|nil
     noRole = nil,  -- This element has no inherited properties role.
     ---@type InheritedProperties|nil
-    role = nil  -- The inherited properties role.
+    role = nil,  -- The inherited properties role.
+    ---@type boolean
+    isFiller = nil,  -- True if this is a filler element.
+    ---@type number
+    flexWeight = nil,  -- Flex proportion for filler space distribution.
+    ---@type number
+    maxFillSize = nil,  -- Maximum filler size in pixels (0 = unlimited).
+    ---@type number
+    computedFillSize = nil  -- Computed filler size after layout distribution.
 }
 
 
@@ -5294,6 +5303,27 @@ function UIConfigBuilder:addNPatchSourceTexture(...) end
 ---@param decorations UIDecorations
 ---@return self
 function UIConfigBuilder:addDecorations(...) end
+
+---
+--- Marks this element as a filler.
+---
+---@param isFiller boolean
+---@return self
+function UIConfigBuilder:addIsFiller(...) end
+
+---
+--- Sets filler flex weight for proportional distribution.
+---
+---@param flexWeight number
+---@return self
+function UIConfigBuilder:addFlexWeight(...) end
+
+---
+--- Sets maximum filler size in pixels (0 = unlimited).
+---
+---@param maxFillSize number
+---@return self
+function UIConfigBuilder:addMaxFillSize(...) end
 
 ---
 --- Constructs the final UIConfig object.

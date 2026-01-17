@@ -645,10 +645,15 @@ function InventoryGridInit.centerItemOnSlot(itemEntity, slotEntity, setVisual)
     local gridEntity = slotRole and slotRole.master
     local gridTransform = gridEntity and component_cache.get(gridEntity, Transform)
     local setVisualResolved = setVisual
-    if setVisualResolved == nil and gridEntity and grid.getConfig then
-        local gridConfig = grid.getConfig(gridEntity)
-        if gridConfig and gridConfig.snapVisual == false then
+    if setVisualResolved == nil then
+        local script = getScriptTableFromEntityID and getScriptTableFromEntityID(itemEntity)
+        if script and script.noVisualSnap then
             setVisualResolved = false
+        elseif gridEntity and grid.getConfig then
+            local gridConfig = grid.getConfig(gridEntity)
+            if gridConfig and gridConfig.snapVisual == false then
+                setVisualResolved = false
+            end
         end
     end
 

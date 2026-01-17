@@ -93,6 +93,9 @@ local SLOT_SPACING = 4
 local GRID_ROWS = 3
 local GRID_COLS = 6
 local GRID_PADDING = 6
+local TAB_MARKER_WIDTH = 64
+local TAB_MARKER_HEIGHT = 64
+local TAB_MARKER_OFFSET_Y = -66
 
 local GRID_WIDTH = GRID_COLS * SLOT_WIDTH + (GRID_COLS - 1) * SLOT_SPACING + GRID_PADDING * 2
 local GRID_HEIGHT = GRID_ROWS * SLOT_HEIGHT + (GRID_ROWS - 1) * SLOT_SPACING + GRID_PADDING * 2
@@ -173,27 +176,6 @@ local function logBoxBounds(label, entity)
     end
 end
 
---------------------------------------------------------------------------------
--- Bidirectional Box/Root Synchronization
---------------------------------------------------------------------------------
-
-local function syncBoxAndRoot(box)
-    local boxComp = component_cache.get(box, UIBoxComponent)
-    if not (boxComp and boxComp.uiRoot and registry:valid(boxComp.uiRoot)) then
-        return
-    end
-
-    local bt = component_cache.get(box, Transform)
-    local rt = component_cache.get(boxComp.uiRoot, Transform)
-    if bt and rt then
-        rt.actualX = bt.actualX  -- Sync root X FROM box
-        rt.actualY = bt.actualY  -- Sync root Y FROM box
-        bt.actualW = rt.actualW  -- Sync box width FROM root
-        bt.actualH = rt.actualH  -- Sync box height FROM root
-    end
-end
-
---------------------------------------------------------------------------------
 -- Visibility Control with Y-coordinate Support
 --------------------------------------------------------------------------------
 
@@ -238,6 +220,26 @@ local function setEntityVisible(entity, visible, onscreenX, onscreenY, dbgLabel)
     end
 
     logBoxBounds(tostring(visible and "show" or "hide") .. ":" .. tostring(dbgLabel or ""), entity)
+end
+
+local function getTabMarkerPosition()
+    if not state.panelX or not state.panelY then
+        return nil, nil
+    end
+    local markerX = state.panelX + (PANEL_WIDTH - TAB_MARKER_WIDTH) / 2
+    local markerY = state.panelY + TAB_MARKER_OFFSET_Y
+    return markerX, markerY
+end
+
+local function positionTabMarker()
+    if not state.tabMarkerEntity or not registry:valid(state.tabMarkerEntity) then
+        return
+    end
+    local markerX, markerY = getTabMarkerPosition()
+    if not markerX or not markerY then
+        return
+    end
+    setEntityVisible(state.tabMarkerEntity, true, markerX, markerY, "tab_marker")
 end
 
 local function setCardEntityVisible(itemEntity, visible)
@@ -313,6 +315,7 @@ local function createSimpleCard(spriteName, x, y, cardData, gridEntity)
         stackId = cardData.stackId,
         category = "card",
         cardData = cardData,
+        noVisualSnap = true,
     }
 
     if setScriptTableForEntityID then
@@ -734,10 +737,6 @@ local function setupCardRenderTimer()
     
     timer.run_every_render_frame(function()
         if not state.isVisible then return end
-        
-        if state.tabMarkerEntity then
-            syncBoxAndRoot(state.tabMarkerEntity)
-        end
 
         snapItemsToSlots()
         
@@ -938,18 +937,25 @@ local function initializeInventory()
         config = {
             canCollide = true,
             hover = true,
+            padding = 0,
+            minWidth = TAB_MARKER_WIDTH,
+            minHeight = TAB_MARKER_HEIGHT,
             buttonCallback = function()
-                print("Clicked!")
+                PlayerInventory.toggle()
             end
         },
         children = {
-            dsl.anim("inventory-tab-marker.png", { w = 64, h = 64 })
+            dsl.anim("inventory-tab-marker.png", { w = TAB_MARKER_WIDTH, h = TAB_MARKER_HEIGHT })
         }
     }
     
-    state.tabMarkerEntity = dsl.spawn({ x = 700, y = 500 }, tabDef, RENDER_LAYER, PANEL_Z - 1) -- Just below panel
-    
-    local ChildBuilder = require("core.child_builder")
+    local markerX, markerY = getTabMarkerPosition()
+    state.tabMarkerEntity = dsl.spawn(
+        { x = markerX or state.panelX, y = markerY or state.panelY },
+        tabDef,
+        RENDER_LAYER,
+        PANEL_Z - 1
+    ) -- Just below panel
 
     local panelDef = createPanelDefinition()
     state.panelEntity = dsl.spawn({ x = state.panelX, y = state.panelY + OFFSCREEN_Y_OFFSET }, panelDef, RENDER_LAYER, PANEL_Z)
@@ -967,11 +973,7 @@ local function initializeInventory()
     end
 
     
-    ChildBuilder.for_entity(state.tabMarkerEntity)
-      :attachTo(state.panelEntity)
-      :offset(0, -66)  -- 60px above card center
-      :apply()
-    syncBoxAndRoot(state.tabMarkerEntity)
+    positionTabMarker()
       
     -- ui.box.ClearStateTagsFromUIBox(state.tabMarkerEntity)
     -- ui.box.AssignStateTagsToUIBox(registry, state.tabMarkerEntity, PLANNING_STATE)
@@ -1019,9 +1021,7 @@ function PlayerInventory.open()
 
     -- Show the panel
     setEntityVisible(state.panelEntity, true, state.panelX, state.panelY, "panel")
-    if state.tabMarkerEntity then
-        syncBoxAndRoot(state.tabMarkerEntity)
-    end
+    positionTabMarker()
 
     state.isVisible = true
 
@@ -1057,9 +1057,7 @@ function PlayerInventory.close()
 
     -- Hide the panel
     setEntityVisible(state.panelEntity, false, state.panelX, state.panelY, "panel")
-    if state.tabMarkerEntity then
-        syncBoxAndRoot(state.tabMarkerEntity)
-    end
+    positionTabMarker()
 
     state.isVisible = false
 
@@ -1125,6 +1123,14 @@ function PlayerInventory.destroy()
     end
     state.panelEntity = nil
     state.tabButtons = {}
+    if state.tabMarkerEntity and registry:valid(state.tabMarkerEntity) then
+        if ui and ui.box and ui.box.Remove then
+            ui.box.Remove(registry, state.tabMarkerEntity)
+        else
+            registry:destroy(state.tabMarkerEntity)
+        end
+    end
+    state.tabMarkerEntity = nil
     
     state.initialized = false
     state.isVisible = false
@@ -1162,6 +1168,10 @@ function PlayerInventory.addCard(cardEntity, category, cardData)
     -- Use CardUIPolicy for proper screen-space setup INCLUDING RESIZE
     -- This handles: transform space, z-order, resize to inventory slot size, interaction states
     CardUIPolicy.setupForScreenSpace(cardEntity)
+    local script = getScriptTableFromEntityID and getScriptTableFromEntityID(cardEntity)
+    if script then
+        script.noVisualSnap = true
+    end
 
     if gridEntity then
         -- Setup drag-drop with proper z-order management via InventoryGridInit

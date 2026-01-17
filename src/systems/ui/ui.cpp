@@ -34,7 +34,8 @@ namespace ui {
                 {"INPUT_TEXT",           UITypeEnum::INPUT_TEXT},
                 {"RECT_SHAPE",           UITypeEnum::RECT_SHAPE},
                 {"TEXT",                 UITypeEnum::TEXT},
-                {"OBJECT",               UITypeEnum::OBJECT}
+                {"OBJECT",               UITypeEnum::OBJECT},
+                {"FILLER",               UITypeEnum::FILLER}
             }
         );
         auto& uiTypeEnum = rec.add_type("UITypeEnum");
@@ -49,6 +50,7 @@ namespace ui {
         rec.record_property("UITypeEnum", {"RECT_SHAPE", "7", "A rectangular shape UI element."});
         rec.record_property("UITypeEnum", {"TEXT", "8", "A simple text UI element."});
         rec.record_property("UITypeEnum", {"OBJECT", "9", "A game object UI element."});
+        rec.record_property("UITypeEnum", {"FILLER", "10", "A filler element that expands to fill remaining space in containers."});
         // 3) UIElementComponent
         lua.new_usertype<UIElementComponent>("UIElementComponent",
             sol::constructors<>(),
@@ -396,6 +398,11 @@ namespace ui {
             "mid",                     &UIConfig::mid,
             "noRole",                  &UIConfig::noRole,
             "role",                    &UIConfig::role,
+            // Filler layout
+            "isFiller",                &UIConfig::isFiller,
+            "flexWeight",              &UIConfig::flexWeight,
+            "maxFillSize",             &UIConfig::maxFillSize,
+            "computedFillSize",        &UIConfig::computedFillSize,
             
             
             "type_id", []() { return entt::type_hash<UIConfig>::value(); }
@@ -521,6 +528,11 @@ namespace ui {
         rec.record_property("UIConfig", {"mid", "boolean|nil", "A miscellaneous flag."});
         rec.record_property("UIConfig", {"noRole", "boolean|nil", "This element has no inherited properties role."});
         rec.record_property("UIConfig", {"role", "InheritedProperties|nil", "The inherited properties role."});
+        // Filler layout
+        rec.record_property("UIConfig", {"isFiller", "boolean", "True if this is a filler element."});
+        rec.record_property("UIConfig", {"flexWeight", "number", "Flex proportion for filler space distribution."});
+        rec.record_property("UIConfig", {"maxFillSize", "number", "Maximum filler size in pixels (0 = unlimited)."});
+        rec.record_property("UIConfig", {"computedFillSize", "number", "Computed filler size after layout distribution."});
 
         //=========================================================
         // Split UI Components (Phase 1 Migration)
@@ -846,6 +858,9 @@ namespace ui {
             "addNPatchInfo",                  &UIConfig::Builder::addNPatchInfo,
             "addNPatchSourceTexture",         &UIConfig::Builder::addNPatchSourceTexture,
             "addDecorations",                 &UIConfig::Builder::addDecorations,
+            "addIsFiller",                    &UIConfig::Builder::addIsFiller,
+            "addFlexWeight",                  &UIConfig::Builder::addFlexWeight,
+            "addMaxFillSize",                 &UIConfig::Builder::addMaxFillSize,
             "build",                          &UIConfig::Builder::build,
             "buildBundle",                    &UIConfig::Builder::buildBundle
         );
@@ -952,6 +967,9 @@ namespace ui {
         rec.record_method("UIConfigBuilder", {"addNPatchInfo", "---@param info NPatchInfo\n---@return self", "Sets the 9-patch info.", false, false});
         rec.record_method("UIConfigBuilder", {"addNPatchSourceTexture", "---@param texture string\n---@return self", "Sets the 9-patch texture.", false, false});
         rec.record_method("UIConfigBuilder", {"addDecorations", "---@param decorations UIDecorations\n---@return self", "Sets decorative sprite overlays.", false, false});
+        rec.record_method("UIConfigBuilder", {"addIsFiller", "---@param isFiller boolean\n---@return self", "Marks this element as a filler.", false, false});
+        rec.record_method("UIConfigBuilder", {"addFlexWeight", "---@param flexWeight number\n---@return self", "Sets filler flex weight for proportional distribution.", false, false});
+        rec.record_method("UIConfigBuilder", {"addMaxFillSize", "---@param maxFillSize number\n---@return self", "Sets maximum filler size in pixels (0 = unlimited).", false, false});
         rec.record_method("UIConfigBuilder", {"build", "---@param self UIConfigBuilder\n---@return UIConfig", "Constructs the final UIConfig object.", false, false});
         rec.record_method("UIConfigBuilder", {"buildBundle", "---@param self UIConfigBuilder\n---@return UIConfigBundle", "Builds UIConfig and extracts split components (UIStyleConfig, UILayoutConfig, UIInteractionConfig, UIContentConfig) into a bundle.", false, false});
 

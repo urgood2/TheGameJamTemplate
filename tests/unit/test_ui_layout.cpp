@@ -1,7 +1,10 @@
 // tests/unit/test_ui_layout.cpp
 #include <gtest/gtest.h>
 #include "systems/ui/ui_data.hpp"
+#include "systems/ui/box.hpp"
+#include "systems/transform/transform.hpp"
 #include "core/globals.hpp"
+#include <unordered_map>
 
 class UILayoutTest : public ::testing::Test {
 protected:
@@ -199,4 +202,88 @@ TEST_F(UILayoutTest, AlignmentFlags_NullptrDescription) {
     bool hasConflict = ui::hasConflictingAlignmentFlags(flags, nullptr);
 
     EXPECT_TRUE(hasConflict);
+}
+
+// ============================================================
+// Filler Distribution Tests
+// ============================================================
+
+TEST_F(UILayoutTest, FillerDistributionSubtractsPadding) {
+    entt::registry R;
+
+    // Container setup
+    const float padding = 4.0f;
+    const float containerWidth = 150.0f;
+    const float containerHeight = 20.0f;
+
+    auto container = R.create();
+    auto &containerGO = R.emplace<transform::GameObject>(container);
+    auto &containerCfg = R.emplace<ui::UIConfig>(container);
+    containerCfg.uiType = ui::UITypeEnum::HORIZONTAL_CONTAINER;
+    containerCfg.padding = padding;
+
+    std::unordered_map<entt::entity, Vector2> contentSizes;
+
+    auto addChild = [&](float w, float h, bool filler, float flex) {
+        auto e = R.create();
+        R.emplace<transform::GameObject>(e);
+        R.emplace<transform::Transform>(e);
+        auto &cfg = R.emplace<ui::UIConfig>(e);
+        cfg.uiType = filler ? ui::UITypeEnum::FILLER : ui::UITypeEnum::RECT_SHAPE;
+        cfg.isFiller = filler;
+        cfg.flexWeight = flex;
+        cfg.maxFillSize = 0.0f;
+        containerGO.orderedChildren.push_back(e);
+        contentSizes[e] = { filler ? 0.0f : w, filler ? 0.0f : h };
+        return e;
+    };
+
+    auto left = addChild(50.0f, 10.0f, false, 0.0f);
+    auto filler = addChild(0.0f, 0.0f, true, 1.0f);
+    auto right = addChild(30.0f, 10.0f, false, 0.0f);
+
+    const Vector2 containerSize{containerWidth, containerHeight};
+
+    ui::box::DistributeFillerSpace(R, container, containerCfg, containerSize, contentSizes);
+
+    const auto &fillerCfg = R.get<ui::UIConfig>(filler);
+    ASSERT_TRUE(contentSizes.contains(filler));
+
+    // Available space: 150 - (50+30) - padding*(children+1) = 150 - 80 - 16 = 54
+    EXPECT_FLOAT_EQ(fillerCfg.computedFillSize, 54.0f);
+    EXPECT_FLOAT_EQ(contentSizes[filler].x, 54.0f);
+    EXPECT_FLOAT_EQ(contentSizes[filler].y, 10.0f); // matches tallest sibling
+    EXPECT_FALSE(fillerCfg.minWidth.has_value());
+    EXPECT_FALSE(fillerCfg.minHeight.has_value());
+}
+
+TEST_F(UILayoutTest, FillerClearsPersistedMinDimensions) {
+    entt::registry R;
+
+    auto container = R.create();
+    auto &containerGO = R.emplace<transform::GameObject>(container);
+    auto &containerCfg = R.emplace<ui::UIConfig>(container);
+    containerCfg.uiType = ui::UITypeEnum::HORIZONTAL_CONTAINER;
+    containerCfg.padding = 4.0f;
+
+    std::unordered_map<entt::entity, Vector2> contentSizes;
+
+    auto filler = R.create();
+    R.emplace<transform::GameObject>(filler);
+    R.emplace<transform::Transform>(filler);
+    auto &fillerCfg = R.emplace<ui::UIConfig>(filler);
+    fillerCfg.uiType = ui::UITypeEnum::FILLER;
+    fillerCfg.isFiller = true;
+    fillerCfg.flexWeight = 1.0f;
+    fillerCfg.maxFillSize = 0.0f;
+    fillerCfg.minWidth = 999.0f;   // stale values from prior layout
+    fillerCfg.minHeight = 888.0f;
+    containerGO.orderedChildren.push_back(filler);
+    contentSizes[filler] = {0.0f, 0.0f};
+
+    ui::box::DistributeFillerSpace(R, container, containerCfg, {120.0f, 20.0f}, contentSizes);
+
+    EXPECT_FALSE(fillerCfg.minWidth.has_value());
+    EXPECT_FALSE(fillerCfg.minHeight.has_value());
+    EXPECT_GT(fillerCfg.computedFillSize, 0.0f);
 }

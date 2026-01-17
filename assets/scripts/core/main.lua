@@ -567,6 +567,13 @@ end
 function createTabDemo()
     print("[TRACE] createTabDemo called")
     local dsl = require("ui.ui_syntax_sugar")
+    local panelWidth = 420  -- Increased to fit 6 tabs (Game, Graphics, Audio, Sprites, Inventory, Gallery)
+    local gallerySafeMargins = {
+        left = 24,
+        right = panelWidth + 40,
+        top = 24,
+        bottom = 48,
+    }
     
     local tabDef = dsl.strict.root {
         config = {
@@ -707,7 +714,7 @@ function createTabDemo()
                                         onClick = function()
                                             if playSoundEffect then playSoundEffect("effects", "button-click") end
                                             -- Let the gallery auto-fit to safe screen bounds
-                                            GalleryViewer.showGlobal()
+                                            GalleryViewer.showGlobalWithOptions(nil, nil, { safeMargins = gallerySafeMargins })
                                             print("[GALLERY] Showcase gallery opened")
                                         end
                                     }),
@@ -732,7 +739,6 @@ function createTabDemo()
         }
     }
     
-    local panelWidth = 420  -- Increased to fit 6 tabs (Game, Graphics, Audio, Sprites, Inventory, Gallery)
     mainMenuEntities.tab_demo_uibox = dsl.spawn({ x = globals.screenWidth() - panelWidth - 20, y = 20 }, tabDef)
     ui.box.set_draw_layer(mainMenuEntities.tab_demo_uibox, "ui")
 
@@ -751,7 +757,7 @@ function createTabDemo()
             local ok, err = pcall(function()
                 local GalleryViewer = require("ui.showcase.gallery_viewer")
                 print("[GALLERY_TEST] Opening gallery (auto-fit)")
-                GalleryViewer.showGlobal()
+                GalleryViewer.showGlobalWithOptions(nil, nil, { safeMargins = gallerySafeMargins })
                 print("[GALLERY_TEST] Gallery opened successfully")
             end)
             if not ok then

@@ -119,6 +119,7 @@ function GalleryViewer.new(options)
     self._currentShowcaseIndex = 1
     self._flatList = ShowcaseRegistry.getFlatList()
     self._flatIndex = 1  -- Current position in flat list
+    self._lastFlatIndex = 1
     self._viewMode = "list"  -- "list" or "detail"
     self._panelMode = "preview"  -- "preview" or "source"
     self._scrollOffsets = { list = 0, preview = 0, source = 0 }
@@ -339,11 +340,11 @@ function GalleryViewer:_queueRebuild()
     self._rebuildScheduled = true
 
     -- Small delay to batch rapid navigation changes (e.g., holding W/S keys)
-    -- This reduces UI rebuilds when scrolling quickly through items
+    -- This reduces UI refresh work when scrolling quickly through items
     timer.after(0.05, function()
         self._rebuildScheduled = false
         if self._visible then
-            self:_rebuild()
+            self:_refreshUI()
         end
     end, self._timerGroup .. "_rebuild_once", self._timerGroup .. "_rebuild")
 end
@@ -373,12 +374,14 @@ end
 function GalleryViewer:_setPanelMode(mode)
     if mode ~= "preview" and mode ~= "source" then return end
     if self._panelMode ~= mode then
+        self:_captureScrollOffsets()
         self._panelMode = mode
         self:_queueRebuild()
     end
 end
 
 function GalleryViewer:_togglePanelMode()
+    self:_captureScrollOffsets()
     if self._panelMode == "preview" then
         self._panelMode = "source"
     else
@@ -473,6 +476,7 @@ function GalleryViewer:_rebuild()
         end, nil, self._timerGroup .. "_state_tags")
     end
     self:_restoreScrollOffsets()
+    self._lastFlatIndex = self._flatIndex
 end
 
 function GalleryViewer:_buildUI()
@@ -501,7 +505,13 @@ function GalleryViewer:_buildUI()
                         },
                         children = {
                             self:_buildCategoryList(),
-                            self:_buildPreviewPanel(showcase),
+                            dsl.strict.vbox {
+                                config = {
+                                    id = "gallery_panel_slot",
+                                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
+                                },
+                                children = { self:_buildPreviewPanel(showcase) }
+                            },
                         }
                     }
                 }
@@ -511,17 +521,20 @@ function GalleryViewer:_buildUI()
 end
 
 function GalleryViewer:_buildHeader()
-    local currentItem = self._flatList[self._flatIndex]
-    local categoryName = currentItem and ShowcaseRegistry.getCategoryName(currentItem.category) or "Gallery"
-    local showcaseName = currentItem and currentItem.showcase.name or ""
-    local totalCount = #self._flatList
-    local modeLabel = (self._panelMode == "preview") and "Preview" or "Source"
-    local statusText = categoryName
-    if showcaseName ~= "" then
-        statusText = statusText .. " > " .. showcaseName
-    end
-    if totalCount > 0 then
-        statusText = string.format("%s  (%d/%d)  |  View: %s", statusText, self._flatIndex, totalCount, modeLabel)
+    local function statusTextFn()
+        local currentItem = self._flatList[self._flatIndex]
+        local categoryName = currentItem and ShowcaseRegistry.getCategoryName(currentItem.category) or "Gallery"
+        local showcaseName = currentItem and currentItem.showcase.name or ""
+        local totalCount = #self._flatList
+        local modeLabel = (self._panelMode == "preview") and "Preview" or "Source"
+        local statusText = categoryName
+        if showcaseName ~= "" then
+            statusText = statusText .. " > " .. showcaseName
+        end
+        if totalCount > 0 then
+            statusText = string.format("%s  (%d/%d)  |  View: %s", statusText, self._flatIndex, totalCount, modeLabel)
+        end
+        return statusText
     end
 
     return dsl.strict.vbox {
@@ -534,7 +547,7 @@ function GalleryViewer:_buildHeader()
                 },
                 children = {
                     dsl.strict.text("UI Showcase Gallery", { fontSize = 18, color = "white", shadow = true }),
-                    dsl.strict.text(statusText, { fontSize = 11, color = "gray_light" }),
+                    dsl.dynamicText(statusTextFn, 11, "", { color = "gray_light", id = "gallery_header_status" }),
                 }
             },
             dsl.strict.spacer(4),
@@ -566,10 +579,13 @@ function GalleryViewer:_buildCategoryList()
             itemIndex = itemIndex + 1
             local isSelected = (itemIndex == self._flatIndex)
             local itemBgColor = isSelected and self._colors.selectedBg or self._colors.listBg
+            local itemId = string.format("gallery_item_%d", itemIndex)
+            local itemTextId = string.format("gallery_item_text_%d", itemIndex)
 
             local capturedIndex = itemIndex
             children[#children + 1] = dsl.strict.vbox {
                 config = {
+                    id = itemId,
                     padding = 6,
                     color = itemBgColor,
                     minWidth = self._listWidth,
@@ -582,6 +598,7 @@ function GalleryViewer:_buildCategoryList()
                 },
                 children = {
                     dsl.strict.text(string.format("%02d. %s", itemIndex, showcase.name), {
+                        id = itemTextId,
                         fontSize = 11,
                         color = isSelected and "white" or self._colors.textDim
                     })
@@ -736,6 +753,95 @@ function GalleryViewer:_buildPreviewPanel(showcase)
             contentNode,
         }
     }
+end
+
+--------------------------------------------------------------------------------
+-- Incremental Refresh (avoid rebuilding list scroll pane)
+--------------------------------------------------------------------------------
+
+function GalleryViewer:_setEntityColor(entity, colorValue)
+    if not entity or not registry or not registry.valid then return end
+    if not registry:valid(entity) then return end
+
+    local resolved = resolveColor(colorValue)
+    if UIStyleConfig then
+        local style = component_cache.get(entity, UIStyleConfig)
+        if style then
+            style.color = resolved
+            return
+        end
+    end
+
+    if UIConfig then
+        local cfg = component_cache.get(entity, UIConfig)
+        if cfg then
+            cfg.color = resolved
+        end
+    end
+end
+
+function GalleryViewer:_updateListSelection(previousIndex, currentIndex)
+    if not (self._entity and ui and ui.box and ui.box.GetUIEByID) then return end
+
+    local function updateIndex(index, isSelected)
+        if not index or index <= 0 then return end
+        local itemId = string.format("gallery_item_%d", index)
+        local textId = string.format("gallery_item_text_%d", index)
+
+        local item = ui.box.GetUIEByID(registry, self._entity, itemId)
+        if item then
+            self:_setEntityColor(item, isSelected and self._colors.selectedBg or self._colors.listBg)
+        end
+
+        local text = ui.box.GetUIEByID(registry, self._entity, textId)
+        if text then
+            self:_setEntityColor(text, isSelected and "white" or self._colors.textDim)
+        end
+    end
+
+    if previousIndex and previousIndex ~= currentIndex then
+        updateIndex(previousIndex, false)
+    end
+    updateIndex(currentIndex, true)
+end
+
+function GalleryViewer:_refreshPanel()
+    if not (self._entity and ui and ui.box and ui.box.GetUIEByID and ui.box.ReplaceChildren) then
+        return
+    end
+
+    local slot = ui.box.GetUIEByID(registry, self._entity, "gallery_panel_slot")
+    if not slot or not registry:valid(slot) then return end
+
+    local showcase = self:getCurrentShowcase()
+    local newPanel = self:_buildPreviewPanel(showcase)
+    ui.box.ReplaceChildren(slot, newPanel)
+
+    if ui.box.AddStateTagToUIBox then
+        ui.box.AddStateTagToUIBox(self._entity, "default_state")
+    end
+end
+
+function GalleryViewer:_refreshUI()
+    if not self._entity then return end
+
+    local selectionChanged = (self._lastFlatIndex ~= self._flatIndex)
+
+    self:_captureScrollOffsets()
+    if selectionChanged then
+        -- Reset preview/source scroll when switching showcases
+        self._scrollOffsets.preview = 0
+        self._scrollOffsets.source = 0
+    end
+
+    if selectionChanged then
+        self:_updateListSelection(self._lastFlatIndex, self._flatIndex)
+    end
+
+    self:_refreshPanel()
+    self:_restoreScrollOffsets()
+
+    self._lastFlatIndex = self._flatIndex
 end
 
 --------------------------------------------------------------------------------

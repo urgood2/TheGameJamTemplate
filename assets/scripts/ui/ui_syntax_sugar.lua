@@ -839,6 +839,10 @@ function dsl.divider(direction, opts)
                 color     = color(opts.color or "white"),
                 minWidth  = thickness,
                 minHeight = opts.length or 20,
+                padding   = 0,
+                shadow    = false,
+                emboss    = 0,
+                line_emboss = false,
             }
         }
     else
@@ -848,6 +852,10 @@ function dsl.divider(direction, opts)
                 color     = color(opts.color or "white"),
                 minWidth  = opts.length or 100,
                 minHeight = thickness,
+                padding   = 0,
+                shadow    = false,
+                emboss    = 0,
+                line_emboss = false,
             }
         }
     end

@@ -693,8 +693,13 @@ namespace game
                         Rectangle paneR = paneViewport(globals::getRegistry(), paneRef->pane);
 
                         // shift the element by negative scroll to match render position
+                        // if scroll displacement is already applied, avoid double-offsetting
+                        float adjustedTop = box.top;
+                        if (!go.scrollPaneDisplacement) {
+                            adjustedTop = box.top - scr.offset;
+                        }
                         Rectangle eltR{ box.left,
-                                        box.top  - scr.offset,
+                                        adjustedTop,
                                         box.width, box.height };
 
                         include = rectsOverlap(eltR, paneR);

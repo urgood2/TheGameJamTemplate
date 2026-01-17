@@ -26,7 +26,41 @@ component_cache = {}
 ---@class Q
 ---@field move fun(entity: number, x: number, y: number) Move entity to absolute position
 ---@field center fun(entity: number): number?, number? Get entity center (x, y or nil, nil)
+---@field visualCenter fun(entity: number): number?, number? Get entity visual center
 ---@field offset fun(entity: number, dx: number, dy: number) Move relative to current position
+---@field size fun(entity: number): number?, number? Get entity size
+---@field bounds fun(entity: number): number?, number?, number?, number? Get entity bounds
+---@field visualBounds fun(entity: number): number?, number?, number?, number? Get entity visual bounds
+---@field rotation fun(entity: number): number? Get entity rotation
+---@field setRotation fun(entity: number, radians: number): boolean Set entity rotation
+---@field rotate fun(entity: number, deltaRadians: number): boolean Rotate entity by delta
+---@field isValid fun(entity: number): boolean Check entity validity
+---@field ensure fun(entity: number, context?: string): number? Ensure entity is valid
+---@field distance fun(entity1: number, entity2: number): number? Distance between entities
+---@field direction fun(entity1: number, entity2: number): number?, number? Direction vector between entities
+---@field distanceToPoint fun(entity: number, x: number, y: number): number? Distance to point
+---@field isInRange fun(entity1: number, entity2: number, range: number): boolean Check range between entities
+---@field getTransform fun(entity: number): table? Get Transform component
+---@field withTransform fun(entity: number, fn: fun(transform: table)): boolean Run callback with Transform
+---@field getGameObject fun(entity: number): table? Get GameObject component
+---@field withGameObject fun(entity: number, fn: fun(gameObject: table)): boolean Run callback with GameObject
+---@field getAnimation fun(entity: number): table? Get AnimationQueueComponent
+---@field withAnimation fun(entity: number, fn: fun(animation: table)): boolean Run callback with AnimationQueueComponent
+---@field getUIConfig fun(entity: number): table? Get UIConfig component
+---@field withUIConfig fun(entity: number, fn: fun(uiConfig: table)): boolean Run callback with UIConfig
+---@field getCollision fun(entity: number): table? Get CollisionShape2D component
+---@field withCollision fun(entity: number, fn: fun(collision: table)): boolean Run callback with CollisionShape2D
+---@field components fun(entity: number, ...: string): table Get multiple components
+---@field velocity fun(entity: number): number?, number? Get physics velocity
+---@field setVelocity fun(entity: number, vx: number, vy: number): boolean Set physics velocity
+---@field speed fun(entity: number): number? Get physics speed
+---@field impulse fun(entity: number, ix: number, iy: number): boolean Apply impulse
+---@field force fun(entity: number, fx: number, fy: number): boolean Apply force
+---@field setSpin fun(entity: number, angularVel: number): boolean Set angular velocity
+---@field spin fun(entity: number): number? Get angular velocity
+---@field moveToward fun(entity: number, targetX: number, targetY: number, speed: number): boolean Move toward point
+---@field chase fun(entity: number, target: number, speed: number): boolean Move toward entity
+---@field flee fun(entity: number, threat: number, speed: number): boolean Move away from entity
 Q = {}
 
 ---------------------------------------------------------------------------
@@ -98,6 +132,14 @@ ShaderBuilder = {}
 ---@field after_opts fun(opts: TimerOptions) One-shot timer with options
 ---@field every fun(delay: number, action: fun(), tag?: string) Repeating timer
 ---@field every_opts fun(opts: TimerOptions) Repeating timer with options
+---@field cooldown fun(delay: number, condition: fun(): boolean, action: fun(), times?: number, after?: fun(), tag?: string, group?: string) Cooldown timer
+---@field cooldown_opts fun(opts: table) Cooldown timer with options
+---@field for_time fun(delay: number, action: fun(dt: number), after?: fun(), tag?: string, group?: string) For-time timer
+---@field for_time_opts fun(opts: table) For-time timer with options
+---@field tween_fields fun(delay: number, target: table, source: table, method?: fun(t:number): number, after?: fun(), tag?: string, group?: string) Tween table fields
+---@field tween_opts fun(opts: table) Tween table fields with options
+---@field delay fun(delay_or_opts: number|table, action?: fun(), opts?: table) One-shot delay helper
+---@field physics_every_opts fun(opts: table) Physics-step repeating timer with options
 ---@field cancel fun(tag: string) Cancel timer by tag
 ---@field sequence fun(tag?: string): TimerSequence Create timer sequence
 timer = {}

@@ -770,6 +770,16 @@ For one-off timers, use the `_opts` variants with named parameters:
 -- Better than timer.after(delay, action, tag, group)
 timer.after_opts({ delay = 2.0, action = function() end, tag = "my_timer" })
 timer.every_opts({ delay = 0.5, action = fn, times = 10, immediate = true, tag = "update" })
+
+-- One-shot delay helper (positional or opts)
+timer.delay(0.5, fn, { tag = "flash" })
+timer.delay({ delay = 0.5, action = fn, tag = "flash" })
+
+-- Tween options wrapper (table-field tween)
+timer.tween_opts({ delay = 0.4, target = transform, source = { alpha = 0 } })
+
+-- Physics-step timers
+timer.physics_every_opts({ action = fn, tag = "physics_tick" })
 ```
 
 ### ⚠️ Avoid: Positional API
@@ -905,6 +915,13 @@ local transform = Q.getTransform(entity)   -- Safe component get (returns nil if
 Q.withTransform(entity, function(t)        -- Execute only if valid
     t.actualX = t.actualX + 10
 end)
+
+local go = Q.getGameObject(entity)
+local anim = Q.getAnimation(entity)
+local uiConfig = Q.getUIConfig(entity)
+local collision = Q.getCollision(entity)
+
+local comps = Q.components(entity, "transform", "gameObject", "animation")
 ```
 
 ### Visual vs Authoritative Position

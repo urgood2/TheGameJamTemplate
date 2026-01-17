@@ -268,6 +268,103 @@ function Q.withTransform(entity, fn)
     return true
 end
 
+--- Get GameObject component
+--- @param entity number Entity ID
+--- @return table|nil gameObject The GameObject component, or nil
+function Q.getGameObject(entity)
+    return component_cache.get(entity, GameObject)
+end
+
+--- Execute callback with GameObject if entity is valid
+--- @param entity number Entity ID
+--- @param fn function Callback receiving GameObject
+--- @return boolean success True if callback was executed
+function Q.withGameObject(entity, fn)
+    local gameObject = component_cache.get(entity, GameObject)
+    if not gameObject then return false end
+    fn(gameObject)
+    return true
+end
+
+--- Get AnimationQueueComponent
+--- @param entity number Entity ID
+--- @return table|nil animation The AnimationQueueComponent, or nil
+function Q.getAnimation(entity)
+    return component_cache.get(entity, AnimationQueueComponent)
+end
+
+--- Execute callback with AnimationQueueComponent if entity is valid
+--- @param entity number Entity ID
+--- @param fn function Callback receiving AnimationQueueComponent
+--- @return boolean success True if callback was executed
+function Q.withAnimation(entity, fn)
+    local animation = component_cache.get(entity, AnimationQueueComponent)
+    if not animation then return false end
+    fn(animation)
+    return true
+end
+
+--- Get UIConfig component
+--- @param entity number Entity ID
+--- @return table|nil uiConfig The UIConfig component, or nil
+function Q.getUIConfig(entity)
+    return component_cache.get(entity, UIConfig)
+end
+
+--- Execute callback with UIConfig if entity is valid
+--- @param entity number Entity ID
+--- @param fn function Callback receiving UIConfig
+--- @return boolean success True if callback was executed
+function Q.withUIConfig(entity, fn)
+    local uiConfig = component_cache.get(entity, UIConfig)
+    if not uiConfig then return false end
+    fn(uiConfig)
+    return true
+end
+
+--- Get CollisionShape2D component
+--- @param entity number Entity ID
+--- @return table|nil collision The CollisionShape2D component, or nil
+function Q.getCollision(entity)
+    return component_cache.get(entity, CollisionShape2D)
+end
+
+--- Execute callback with CollisionShape2D if entity is valid
+--- @param entity number Entity ID
+--- @param fn function Callback receiving CollisionShape2D
+--- @return boolean success True if callback was executed
+function Q.withCollision(entity, fn)
+    local collision = component_cache.get(entity, CollisionShape2D)
+    if not collision then return false end
+    fn(collision)
+    return true
+end
+
+local component_shortcuts = {
+    transform = { key = "transform", component = Transform },
+    gameObject = { key = "gameObject", component = GameObject },
+    animation = { key = "animation", component = AnimationQueueComponent },
+    uiConfig = { key = "uiConfig", component = UIConfig },
+    collision = { key = "collision", component = CollisionShape2D },
+}
+
+--- Get multiple components in one call
+--- @param entity number Entity ID
+--- @param ... string Component short names (transform, gameObject, animation, uiConfig, collision)
+--- @return table components Table keyed by requested names
+function Q.components(entity, ...)
+    local result = {}
+    local count = select("#", ...)
+    for i = 1, count do
+        local name = select(i, ...)
+        local entry = component_shortcuts[name]
+        if entry then
+            result[entry.key] = component_cache.get(entity, entry.component)
+        end
+    end
+    return result
+end
+
 --------------------------------------------------------------------------------
 -- Physics Helpers (Chipmunk integration)
 --------------------------------------------------------------------------------

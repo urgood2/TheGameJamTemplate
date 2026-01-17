@@ -95,8 +95,8 @@ local GRID_COLS = 6
 local GRID_PADDING = 6
 local TAB_MARKER_WIDTH = 64
 local TAB_MARKER_HEIGHT = 64
-local TAB_MARKER_OFFSET_X = 0
-local TAB_MARKER_OFFSET_Y = -66
+local TAB_MARKER_OFFSET_X = 8
+local TAB_MARKER_OFFSET_Y = -64
 
 local GRID_WIDTH = GRID_COLS * SLOT_WIDTH + (GRID_COLS - 1) * SLOT_SPACING + GRID_PADDING * 2
 local GRID_HEIGHT = GRID_ROWS * SLOT_HEIGHT + (GRID_ROWS - 1) * SLOT_SPACING + GRID_PADDING * 2
@@ -543,8 +543,8 @@ local function createHeader()
             id = "inventory_header",
             color = "dark_lavender",
             -- emboss = 2,
-            padding = 3
-            -- minWidth = headerContentWidth,
+            padding = 3,
+            minWidth = headerContentWidth,
             -- minHeight = HEADER_HEIGHT,
         },
         children = {
@@ -620,7 +620,7 @@ local function createTabs()
     return dsl.strict.hbox {
         config = {
             color = "blackberry",
-            padding = { 4, 2 },
+            padding = 4,
         },
         children = tabChildren,
     }
@@ -630,15 +630,15 @@ local function createFooter()
     return dsl.strict.hbox {
         config = {
             color = "dark_lavender",
-            padding = { 6, 4 },
-            minWidth = GRID_WIDTH,
-            minHeight = FOOTER_HEIGHT,
+            padding = { 4 },
+            -- minWidth = GRID_WIDTH,
+            -- minHeight = FOOTER_HEIGHT,
         },
         children = {
             dsl.strict.button("Name", {
                 id = "sort_name_btn",
-                minWidth = 50,
-                minHeight = 24,
+                -- minWidth = 50,
+                -- minHeight = 24,
                 fontSize = 10,
                 color = "purple_slate",
                 onClick = function()
@@ -648,8 +648,8 @@ local function createFooter()
             -- dsl.strict.spacer(4),
             dsl.strict.button("Cost", {
                 id = "sort_cost_btn",
-                minWidth = 50,
-                minHeight = 24,
+                -- minWidth = 50,
+                -- minHeight = 24,
                 fontSize = 10,
                 color = "purple_slate",
                 onClick = function()
@@ -667,8 +667,8 @@ local function createGridContainer()
         config = {
             id = "inventory_grid_container",
             padding = 0,
-            minWidth = GRID_WIDTH,
-            minHeight = GRID_HEIGHT,
+            -- minWidth = GRID_WIDTH,
+            -- minHeight = GRID_HEIGHT,
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
         },
         children = {}
@@ -683,7 +683,7 @@ local function createPanelDefinition()
             padding = PANEL_PADDING,
             emboss = 3,
             -- Grid area is a child container; active grid is injected at runtime
-            minHeight = HEADER_HEIGHT + TABS_HEIGHT + FOOTER_HEIGHT + PANEL_PADDING * 2,
+            -- minHeight = HEADER_HEIGHT + TABS_HEIGHT + FOOTER_HEIGHT + PANEL_PADDING * 2,
         },
         children = {
             createHeader(),
@@ -928,8 +928,8 @@ local function initializeInventory()
             canCollide = true,
             hover = true,
             padding = 0,
-            minWidth = TAB_MARKER_WIDTH,
-            minHeight = TAB_MARKER_HEIGHT,
+            -- minWidth = TAB_MARKER_WIDTH,
+            -- minHeight = TAB_MARKER_HEIGHT,
             buttonCallback = function()
                 PlayerInventory.toggle()
             end

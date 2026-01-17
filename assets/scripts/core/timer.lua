@@ -165,8 +165,23 @@ end
 
 ---@class TimerForTimeOpts
 ---@field delay number|{[1]: number, [2]: number} Duration to run action
+---@field duration number|{[1]: number, [2]: number} Alternate name for duration
 ---@field action fun(dt: number) Action called each frame with dt
 ---@field after fun()? Callback after duration completes
+---@field tag string? Timer tag for cancellation
+---@field group string? Timer group
+
+---@class TimerTweenOpts
+---@field delay number|{[1]: number, [2]: number} Duration of tween
+---@field target table Target table to mutate
+---@field source table Fields to tween
+---@field method fun(t: number): number? Easing function (default: linear)
+---@field after fun()? Callback after tween completes
+---@field tag string? Timer tag for cancellation
+---@field group string? Timer group
+
+---@class TimerPhysicsEveryOpts
+---@field action fun() Callback executed each physics step
 ---@field tag string? Timer tag for cancellation
 ---@field group string? Timer group
 
@@ -214,9 +229,26 @@ end
 ---@param opts TimerForTimeOpts
 ---@return string tag The timer tag
 function timer.for_time_opts(opts)
-    assert(opts.delay, "timer.for_time_opts: delay required")
+    local duration = opts.delay or opts.duration
+    assert(duration, "timer.for_time_opts: delay or duration required")
     assert(opts.action, "timer.for_time_opts: action required")
-    return timer.for_time(opts.delay, opts.action, opts.after, opts.tag, opts.group)
+    return timer.for_time(duration, opts.action, opts.after, opts.tag, opts.group)
+end
+
+---@param opts TimerTweenOpts
+---@return string tag The timer tag
+function timer.tween_opts(opts)
+    assert(opts.delay, "timer.tween_opts: delay required")
+    assert(opts.target, "timer.tween_opts: target required")
+    assert(opts.source, "timer.tween_opts: source required")
+    return timer.tween_fields(opts.delay, opts.target, opts.source, opts.method, opts.after, opts.tag, opts.group)
+end
+
+---@param opts TimerPhysicsEveryOpts
+---@return string tag The timer tag
+function timer.physics_every_opts(opts)
+    assert(opts.action, "timer.physics_every_opts: action required")
+    return timer.every_physics_step(opts.action, opts.tag, opts.group)
 end
 
 --- Create a new TimerChain for fluent sequential timing
@@ -232,10 +264,23 @@ end
 -- Convenience Aliases (Friction-Reducing)
 --------------------------------------------------------
 
---- Alias for timer.after_opts - cleaner name for one-shot delays
---- @param opts TimerAfterOpts
+--- One-shot delay with both opts-table and positional signatures
+--- @param delay_or_opts number|TimerAfterOpts Delay in seconds or opts table
+--- @param action? fun() Callback when delay completes (positional signature)
+--- @param opts? { tag?: string, group?: string } Optional tag/group (positional signature)
 --- @return string tag
-timer.delay = timer.after_opts
+function timer.delay(delay_or_opts, action, opts)
+    if type(delay_or_opts) == "table" then
+        return timer.after_opts(delay_or_opts)
+    end
+
+    local delay = delay_or_opts
+    local config = opts or {}
+    if type(config) ~= "table" then
+        config = {}
+    end
+    return timer.after(delay, action, config.tag, config.group)
+end
 
 --- Infinite loop timer (times=0 means run forever)
 --- @param opts {delay: number, action: fun(), tag?: string, group?: string, immediate?: boolean}

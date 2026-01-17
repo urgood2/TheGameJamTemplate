@@ -95,6 +95,7 @@ local GRID_COLS = 6
 local GRID_PADDING = 6
 local TAB_MARKER_WIDTH = 64
 local TAB_MARKER_HEIGHT = 64
+local TAB_MARKER_OFFSET_X = 0
 local TAB_MARKER_OFFSET_Y = -66
 
 local GRID_WIDTH = GRID_COLS * SLOT_WIDTH + (GRID_COLS - 1) * SLOT_SPACING + GRID_PADDING * 2
@@ -223,11 +224,20 @@ local function setEntityVisible(entity, visible, onscreenX, onscreenY, dbgLabel)
 end
 
 local function getTabMarkerPosition()
-    if not state.panelX or not state.panelY then
+    local anchorX = state.panelX
+    local anchorY = state.panelY
+    if state.panelEntity and registry:valid(state.panelEntity) then
+        local panelT = component_cache.get(state.panelEntity, Transform)
+        if panelT then
+            anchorX = panelT.actualX or anchorX
+            anchorY = panelT.actualY or anchorY
+        end
+    end
+    if not anchorX or not anchorY then
         return nil, nil
     end
-    local markerX = state.panelX + (PANEL_WIDTH - TAB_MARKER_WIDTH) / 2
-    local markerY = state.panelY + TAB_MARKER_OFFSET_Y
+    local markerX = anchorX + TAB_MARKER_OFFSET_X
+    local markerY = anchorY + TAB_MARKER_OFFSET_Y
     return markerX, markerY
 end
 
@@ -238,6 +248,14 @@ local function positionTabMarker()
     local markerX, markerY = getTabMarkerPosition()
     if not markerX or not markerY then
         return
+    end
+    local t = component_cache.get(state.tabMarkerEntity, Transform)
+    if t then
+        local curX = t.actualX or t.visualX
+        local curY = t.actualY or t.visualY
+        if curX and curY and math.abs(curX - markerX) < 0.5 and math.abs(curY - markerY) < 0.5 then
+            return
+        end
     end
     setEntityVisible(state.tabMarkerEntity, true, markerX, markerY, "tab_marker")
 end
@@ -736,6 +754,7 @@ local function setupCardRenderTimer()
     local UI_CARD_Z = CARD_Z
     
     timer.run_every_render_frame(function()
+        positionTabMarker()
         if not state.isVisible then return end
 
         snapItemsToSlots()

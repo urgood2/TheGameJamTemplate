@@ -346,6 +346,7 @@ local function createGridDefinition(tabId)
             padding = GRID_PADDING,
             backgroundColor = "blackberry",
             snapVisual = false,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
         },
 
         onSlotChange = function(gridEntity, slotIndex, oldItem, newItem)
@@ -633,6 +634,7 @@ local function createFooter()
             padding = { 4 },
             -- minWidth = GRID_WIDTH,
             -- minHeight = FOOTER_HEIGHT,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
         },
         children = {
             dsl.strict.button("Name", {
@@ -669,7 +671,7 @@ local function createGridContainer()
             padding = 0,
             -- minWidth = GRID_WIDTH,
             -- minHeight = GRID_HEIGHT,
-            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
         },
         children = {}
     }

@@ -847,8 +847,9 @@ end
 function dsl.filler(opts)
     opts = opts or {}
     return def{
-        type = "FILLER",
+        type = "RECT_SHAPE",  -- Use RECT_SHAPE (a valid UITypeEnum) instead of non-existent "FILLER"
         config = {
+            color = TRANSPARENT_COLOR,  -- Invisible like spacer
             isFiller = true,
             flexWeight = opts.flex or 1,
             maxFillSize = opts.maxFill or 0,

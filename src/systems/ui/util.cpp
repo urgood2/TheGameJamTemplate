@@ -167,6 +167,11 @@ namespace ui
             node->children.clear();
             node->orderedChildren.clear();
         }
+        if (auto *cfg = registry.try_get<UIConfig>(entity)) {
+            if (cfg->object && registry.valid(cfg->object.value())) {
+                registry.destroy(cfg->object.value());
+            }
+        }
         registry.destroy(entity);
     }
 

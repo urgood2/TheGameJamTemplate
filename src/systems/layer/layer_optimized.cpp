@@ -610,6 +610,7 @@ namespace layer
             renderSliceOffscreenFromDrawList(globals::getRegistry(), c->drawList, c->startIndex, c->endIndex, layer, c->pad); 
         });
         RegisterRenderer<CmdRenderUISelfImmediate>(DrawCommandType::RenderUISelfImmediate, [](Layer* layer, CmdRenderUISelfImmediate* c) { 
+            ui::EnsureUIGroupInitialized(globals::getRegistry());
             auto &uiElementComp = ui::globalUIGroup.get<ui::UIElementComponent>(c->entity);
             auto &configComp = ui::globalUIGroup.get<ui::UIConfig>(c->entity);
             auto &stateComp = ui::globalUIGroup.get<ui::UIState>(c->entity);

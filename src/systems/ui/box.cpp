@@ -13,25 +13,12 @@
 #include "inventory_ui.hpp"
 #include "core/globals.hpp"
 #include "systems/ui/ui_data.hpp"
-namespace std {
-template<>
-struct hash<ui::UIElementTemplateNode> {
-    size_t operator()(ui::UIElementTemplateNode const &node) const noexcept {
-    // e.g. combine the address & some stable value,
-    // but simplest is to hash the pointer to it:
-    return reinterpret_cast<size_t>(&node);
-    }
-};
-template<>
-struct equal_to<ui::UIElementTemplateNode> {
-    bool operator()(ui::UIElementTemplateNode const &a,
-                    ui::UIElementTemplateNode const &b) const noexcept {
-    return &a == &b;
-    }
-};
-}
 
-
+// Phase 2 utility headers for box.cpp refactoring
+#include "systems/ui/traversal.hpp"
+#include "systems/ui/type_traits.hpp"
+#include "systems/ui/layout_metrics.hpp"
+#include "systems/ui/sizing_pass.hpp"
 namespace ui
 {
     namespace
@@ -103,8 +90,6 @@ namespace ui
         registry.emplace_or_replace<collision::ScreenSpaceCollisionMarker>(uiBoxEntity);
 
         std::stack<StackEntry> stack;
-        std::unordered_map<UIElementTemplateNode, entt::entity> nodeToEntity;
-
         stack.push({rootDef, uiElementParent});
 
         while (!stack.empty())
@@ -116,7 +101,6 @@ namespace ui
             entt::entity entity = element::Initialize(registry, parent, uiBoxEntity, def.type, def.config);
             // make screen space  no matter what
             registry.emplace_or_replace<collision::ScreenSpaceCollisionMarker>(entity);
-            nodeToEntity[def] = entity;
             auto *config = registry.try_get<UIConfig>(entity);
             
             // if ((int)entity == 840) {
@@ -165,7 +149,7 @@ namespace ui
             }
 
             // If object + button
-            if (def.type == UITypeEnum::OBJECT && config && config->buttonCallback)
+            if (def.type == UITypeEnum::OBJECT && config && config->buttonCallback && config->object && registry.valid(config->object.value()))
             {
                 auto &node = registry.get<transform::GameObject>(config->object.value());
                 node.state.clickEnabled = false;
@@ -927,242 +911,10 @@ namespace ui
     std::pair<float, float> box::CalcTreeSizes(entt::registry &registry, entt::entity uiElement, ui::LocalTransform parentUINodeRect,
                                                bool forceRecalculateLayout, std::optional<float> scale)
     {
-
-        struct StackEntry
-        {
-            entt::entity uiElement{entt::null};
-            ui::LocalTransform parentUINodeRect{};
-            bool forceRecalculateLayout{false};
-            std::optional<float> scale;
-        };
-
-        std::vector<StackEntry> processingOrder;
-        std::stack<StackEntry> stack;
-        std::unordered_map<entt::entity, Vector2> contentSizes; // contains calculated content size (calculated by each child, and self, while traversing tree bottom up)
-
-        stack.push({uiElement, parentUINodeRect, forceRecalculateLayout, scale}); // first (root) element
-
-        // Step 1: Collect nodes in top-down order (DFS)
-        while (!stack.empty())
-        {
-            auto entry = stack.top();
-            stack.pop();
-            processingOrder.push_back(entry);
-
-            auto *node = registry.try_get<transform::GameObject>(entry.uiElement);
-            if (!node)
-                continue;
-
-            // Push children onto stack (DFS order)
-            for (auto childEntry : node->orderedChildren)
-            {
-                auto child = childEntry;
-                if (registry.valid(child))
-                {
-                    auto &uiConfig = registry.get<UIConfig>(child);
-                    auto &uiState = registry.get<UIState>(child);
-                    stack.push({child, parentUINodeRect, forceRecalculateLayout, scale}); // TODO: does parentUINodeRect need to change?
-                }
-            }
-        }
-
-        // print out stack
-        // SPDLOG_DEBUG("Processing order: ");
-        for (auto it = processingOrder.rbegin(); it != processingOrder.rend(); ++it)
-        {
-            auto [entity, parentUINodeRect, forceRecalculateLayout, scale] = *it;
-            auto &uiConfig = registry.get<UIConfig>(entity);
-            auto &uiState = registry.get<UIState>(entity);
-            auto &nodeTransform = registry.get<transform::Transform>(entity);
-            auto &node = registry.get<transform::GameObject>(entity);
-            auto &role = registry.get<transform::InheritedProperties>(entity);
-            // SPDLOG_DEBUG("- entity {} | UIT: {} | parentUINodeRect: ({}, {}, {}, {}) | forceRecalculateLayout: {} | scale: {}", static_cast<int>(entity), magic_enum::enum_name<UITypeEnum>(uiConfig.uiType.value()), parentUINodeRect.x, parentUINodeRect.y, parentUINodeRect.w, parentUINodeRect.h, forceRecalculateLayout, scale.value_or(1.f) * globals::getGlobalUIScaleFactor());
-        }
-
-        auto &nodeTransform = registry.get<transform::Transform>(uiElement);
-        auto &node = registry.get<transform::GameObject>(uiElement);
-        auto &uiConfig = registry.get<UIConfig>(uiElement);
-        auto &uiState = registry.get<UIState>(uiElement);
-        LocalTransform calcCurrentNodeTransform{}; // Stores transformed values for current node
-        float padding = uiConfig.effectivePadding();
-
-        // Step 2: Process nodes in bottom-up order (ensuring child elements are always processed before parents), including the root element
-        for (auto it = processingOrder.rbegin(); it != processingOrder.rend(); ++it)
-        {
-            auto [entity, parentUINodeRect, forceRecalculateLayout, scale] = *it;
-
-            auto &uiConfig = registry.get<UIConfig>(entity);
-            auto &uiState = registry.get<UIState>(entity);
-            auto &nodeTransform = registry.get<transform::Transform>(entity);
-            auto &node = registry.get<transform::GameObject>(entity);
-            auto &role = registry.get<transform::InheritedProperties>(entity);
-
-            // 1. non - containers - rect, text, and object, always bottom of tree.
-            if (uiConfig.uiType == UITypeEnum::RECT_SHAPE || uiConfig.uiType == UITypeEnum::TEXT || uiConfig.uiType == UITypeEnum::OBJECT ||
-                uiConfig.uiType == UITypeEnum::INPUT_TEXT || uiConfig.uiType == UITypeEnum::FILLER || uiConfig.isFiller)
-            {
-                if (uiConfig.uiType == UITypeEnum::OBJECT)
-                {
-                    // debug
-                    // SPDLOG_DEBUG("Processing object entity {} (parent {})", static_cast<int>(entity), static_cast<int>(node.parent.value_or(entt::null)));
-                }
-                auto dimensions = TreeCalcSubNonContainer(registry, entity, parentUINodeRect, forceRecalculateLayout, scale, calcCurrentNodeTransform);
-                SPDLOG_DEBUG("Calculated content size for entity {}: ({}, {})", static_cast<int>(entity), dimensions.x, dimensions.y);
-                // Store content size for this child
-                contentSizes[entity] = dimensions;
-                continue;
-            }
-
-            // 2. containers - vertical, horizontal, root, scroll pane
-            auto dimensions = TreeCalcSubContainer(registry, entity, parentUINodeRect, forceRecalculateLayout, scale, calcCurrentNodeTransform, contentSizes);
-            SPDLOG_DEBUG("Calculated content size for container {}: ({}, {})", static_cast<int>(entity), dimensions.x, dimensions.y);
-            contentSizes[entity] = dimensions;
-        }
-
-        // set content sizes for all calculated nodes
-        Vector2 biggestSize{0.f, 0.f};
-        for (auto [uiElement, contentSize] : contentSizes)
-        {
-            auto &uiState = registry.get<UIState>(uiElement);
-            auto &transform = registry.get<transform::Transform>(uiElement);
-            uiState.contentDimensions = contentSize;
-            // transform.setActualW(contentSize.x);
-            // transform.setActualH(contentSize.y);
-            // transform.setVisualW(contentSize.x);
-            // transform.setVisualH(contentSize.y);
-            auto finalContentSize = contentSize;
-            
-            // if scroll pane, use viewport size instead of content size
-            if (auto scr = registry.try_get<ui::UIScrollComponent>(uiElement)) {
-                // use viewport for the actual/visual rect
-                transform.setActualW(scr->viewportSize.x);
-                transform.setActualH(scr->viewportSize.y);
-                transform.setVisualW(scr->viewportSize.x);
-                transform.setVisualH(scr->viewportSize.y);
-                
-                finalContentSize = Vector2{scr->viewportSize.x, contentSize.y};
-            } else {
-                // non-scroll nodes keep using their content size
-                transform.setActualW(contentSize.x);
-                transform.setActualH(contentSize.y);
-                transform.setVisualW(contentSize.x);
-                transform.setVisualH(contentSize.y);
-            }
-
-
-            if (finalContentSize.x > biggestSize.x)
-                biggestSize.x = finalContentSize.x;
-            if (finalContentSize.y > biggestSize.y)
-                biggestSize.y = finalContentSize.y;
-        }
-        // get last element, set uiroot size to this, uibox is invisible
-
-        auto &rootTransform = registry.get<transform::Transform>(uiElement);
-        rootTransform.setActualW(biggestSize.x + padding);
-        // rootTransform.setActualH(biggestSize.y - padding);
-        rootTransform.setActualH(biggestSize.y);
-
-        // is the first child a horizontal container that is not a scrollpane?? if so, add padding to the height
-        if (node.orderedChildren.size() > 0 && uiConfig.uiType != UITypeEnum::SCROLL_PANE)
-        {
-            rootTransform.setActualH(padding);
-
-            // root children, add padding * 2 + root child heights (+emboss if they have any)
-
-            for (auto childEntry : node.orderedChildren)
-            {
-                auto child = childEntry;
-                auto &childConfig = registry.get<UIConfig>(child);
-                auto &childState = registry.get<UIState>(child);
-                auto &childTransform = registry.get<transform::Transform>(child);
-                auto &childRole = registry.get<transform::InheritedProperties>(child);
-
-                auto incrementHeight = childState.contentDimensions->y + padding;
-                if (childConfig.emboss)
-                {
-                    incrementHeight += childConfig.emboss.value() * uiConfig.scale.value() * globals::getGlobalUIScaleFactor();
-                }
-
-                rootTransform.setActualH(rootTransform.getActualH() + incrementHeight);
-            }
-        }
-
-        auto &rootUIElementComp = registry.get<UIElementComponent>(uiElement);
-        auto &uiBoxTransform = registry.get<transform::Transform>(rootUIElementComp.uiBox);
-        uiBoxTransform.setActualW(rootTransform.getActualW());
-        uiBoxTransform.setActualH(rootTransform.getActualH());
-
-        // Step 3: check all containers to see if max width and height is exceeded, and adjust if necessary
-        for (auto it = processingOrder.rbegin(); it != processingOrder.rend(); ++it)
-        {
-            auto [entity, parentUINodeRect, forceRecalculateLayout, scale] = *it;
-
-            auto &uiConfig = registry.get<UIConfig>(entity);
-            auto &uiState = registry.get<UIState>(entity);
-            auto &nodeTransform = registry.get<transform::Transform>(entity);
-            auto &node = registry.get<transform::GameObject>(entity);
-            auto &role = registry.get<transform::InheritedProperties>(entity);
-
-            // 1. non - containers - rect, text, and object, always bottom of tree.
-            if (uiConfig.uiType == UITypeEnum::RECT_SHAPE || uiConfig.uiType == UITypeEnum::TEXT || uiConfig.uiType == UITypeEnum::OBJECT ||
-                uiConfig.uiType == UITypeEnum::INPUT_TEXT || uiConfig.uiType == UITypeEnum::FILLER || uiConfig.isFiller)
-            {
-                continue;
-            }
-
-            auto currentDims = contentSizes.at(entity);
-
-            // If max width or height doesn't exist or isn't exceeded, continue
-            if ((!uiConfig.maxWidth || currentDims.x <= uiConfig.maxWidth.value()) && (!uiConfig.maxHeight || currentDims.y <= uiConfig.maxHeight.value()))
-            {
-                continue;
-            }
-
-            // first, calculate the necessary scale factor to fit within the max dimensions.
-            auto scaleW = uiConfig.maxWidth ? uiConfig.maxWidth.value() / currentDims.x : 1.0f;
-            auto scaleH = uiConfig.maxHeight ? uiConfig.maxHeight.value() / currentDims.y : 1.0f;
-            auto scaling = std::min(scaleW, scaleH);
-
-            // then apply the scale factor to all sub element sizes. The alignment functions will take care of the rest.
-            element::ApplyScalingFactorToSizesInSubtree(registry, entity, scaling);
-        }
-
-        // step 4: scale all by global scale factor
-        for (auto it = processingOrder.rbegin(); it != processingOrder.rend(); ++it)
-        {
-            auto [entity, parentUINodeRect, forceRecalculateLayout, scale] = *it;
-            auto &uiConfig = registry.get<UIConfig>(entity);
-            auto &uiState = registry.get<UIState>(entity);
-
-            // Skip TEXT elements - they already include globalUIScaleFactor in font selection/measurement
-            const bool isText = uiConfig.uiType && uiConfig.uiType.value() == UITypeEnum::TEXT;
-
-            // apply to content dimensions & transform scale, touch nothing else
-            if (uiState.contentDimensions && !isText)
-            {
-                uiState.contentDimensions->x *= globals::getGlobalUIScaleFactor();
-                uiState.contentDimensions->y *= globals::getGlobalUIScaleFactor();
-            }
-
-            auto &transform = registry.get<transform::Transform>(entity);
-
-            if (!isText)
-            {
-                transform.setActualW(transform.getActualW() * globals::getGlobalUIScaleFactor());
-                transform.setActualH(transform.getActualH() * globals::getGlobalUIScaleFactor());
-            }
-
-            if (uiConfig.object)
-            {
-                ui::element::UpdateUIObjectScalingAndRecnter(&uiConfig, globals::getGlobalUIScaleFactor(), &transform);
-            }
-        }
-
-        auto rootContentSize = uiState.contentDimensions.value_or(Vector2{0.f, 0.f});
-        // set uibox size to root content size
-        // uiBoxTransform.setActualW(rootContentSize.x);
-        // uiBoxTransform.setActualH(rootContentSize.y);
-        return {rootContentSize.x, rootContentSize.y};
+        // Phase 4 refactoring: Delegate to SizingPass class which encapsulates
+        // the multi-pass layout algorithm in focused, testable methods.
+        layout::SizingPass pass(registry, uiElement, parentUINodeRect, forceRecalculateLayout, scale);
+        return pass.run();
     }
 
     /**
@@ -1533,7 +1285,7 @@ namespace ui
         // 4) Now commit ONCE
         ui::element::SetValues(registry, uiElement, calcCurrentNodeTransform, /*force*/ true /* or pass through */);
 
-        node.state.collisionEnabled = true; // enable collision for scroll pane
+node.state.collisionEnabled = true; // enable collision for scroll pane
 
         // Content: what children demanded (pre-viewport)
         scr.contentSize  = { contentW, contentH };
@@ -1645,38 +1397,18 @@ namespace ui
             }
         }
 
-        // add padding to the final width and height.
-        if (selfUIConfig.uiType == UITypeEnum::HORIZONTAL_CONTAINER && !hasAtLeastOneContainerChild)
-        {
-            calcChildTransform.w += padding;
-            calcChildTransform.h += padding;
-        }
-        else if (selfUIConfig.uiType == UITypeEnum::HORIZONTAL_CONTAINER && hasAtLeastOneContainerChild)
-        {
-            calcChildTransform.w += padding;
-            calcChildTransform.h += padding;
-        }
-        else if (selfUIConfig.uiType == UITypeEnum::VERTICAL_CONTAINER && !hasAtLeastOneContainerChild)
-        {
-            // calcChildTransform.h += padding; // This is necessary for vertical containers containing elements
-            calcChildTransform.w += padding;
-        }
-        else if (selfUIConfig.uiType == UITypeEnum::VERTICAL_CONTAINER && hasAtLeastOneContainerChild)
-        {
-            calcChildTransform.w += padding;
-            calcChildTransform.h += padding; // This is necessary for vertical containers containing elements
-        }
-
+        // Add final padding to both dimensions for all container types.
+        // This consolidates previously scattered padding logic into one location.
+        // All containers (horizontal, vertical, root, scroll_pane) with children
+        // need padding added to both width and height for proper layout.
         if (hasAtLeastOneChild)
         {
-            if (selfUIConfig.uiType == UITypeEnum::HORIZONTAL_CONTAINER)
+            if (selfUIConfig.uiType == UITypeEnum::HORIZONTAL_CONTAINER ||
+                selfUIConfig.uiType == UITypeEnum::VERTICAL_CONTAINER ||
+                selfUIConfig.uiType == UITypeEnum::ROOT ||
+                selfUIConfig.uiType == UITypeEnum::SCROLL_PANE)
             {
-                // calcChildTransform.w += padding;
-                // calcChildTransform.h += padding;
-            }
-            else if (selfUIConfig.uiType == UITypeEnum::VERTICAL_CONTAINER && !hasAtLeastOneContainerChild)
-            {
-                // calcChildTransform.h += padding;
+                calcChildTransform.w += padding;
                 calcChildTransform.h += padding;
             }
         }
@@ -1823,7 +1555,7 @@ namespace ui
 
             float scaleFactor = uiConfig.scale.value_or(1.0f);
 
-            if (uiConfig.ref_component && uiConfig.ref_value)
+            if (uiConfig.ref_entity && uiConfig.ref_component && uiConfig.ref_value && registry.valid(uiConfig.ref_entity.value()))
             {
                 // get component with reflection
                 auto comp = reflection::retrieveComponent(&registry, uiConfig.ref_entity.value(), uiConfig.ref_component.value());
@@ -1894,14 +1626,13 @@ namespace ui
             // TODO: minwidth respecting for other types of objects
             if (uiConfig.uiType == UITypeEnum::OBJECT)
             {
-                auto object = uiConfig.object.value();
-                // text, animated, or inventory grid object.
-                // if (globals::getRegistry().any_of<TextSystem::Text>(object) || globals::getRegistry().any_of<AnimationQueueComponent>(object) || globals::getRegistry().any_of<InventoryGrid>(object))
-                // {
-                auto &objectTransform = registry.get<transform::Transform>(object);
-                calcCurrentNodeTransform.w = objectTransform.getActualW();
-                calcCurrentNodeTransform.h = objectTransform.getActualH();
-                // }
+                if (uiConfig.object && registry.valid(uiConfig.object.value()))
+                {
+                    auto object = uiConfig.object.value();
+                    auto &objectTransform = registry.get<transform::Transform>(object);
+                    calcCurrentNodeTransform.w = objectTransform.getActualW();
+                    calcCurrentNodeTransform.h = objectTransform.getActualH();
+                }
             }
 
             if (uiConfig.maxWidth && calcCurrentNodeTransform.w > uiConfig.maxWidth.value())
@@ -1918,6 +1649,10 @@ namespace ui
             // Apply scale to content dimensions - DO NOT reset scale as it would destroy user configuration
             uiState.contentDimensions = Vector2{calcCurrentNodeTransform.w * uiConfig.scale.value_or(1.0f), calcCurrentNodeTransform.h * uiConfig.scale.value_or(1.0f)};
             ui::element::SetValues(registry, uiElement, calcCurrentNodeTransform, forceRecalculateLayout);
+
+            // FIX: Removed scale reset to 1.0f
+            // User-specified scale should be preserved across layout recalculations.
+            // The original reset was destroying user configuration.
         }
         else if (uiConfig.uiType == UITypeEnum::FILLER || uiConfig.isFiller)
         {
@@ -1944,23 +1679,30 @@ namespace ui
     // Function to remove a group of elements from the UI system
     bool box::RemoveGroup(entt::registry &registry, entt::entity entity, const std::string &group)
     {
-        // Early return if entity is invalid - cannot access components on invalid entities
+// FIX: Check validity BEFORE accessing any components to prevent UB
         if (!registry.valid(entity))
         {
+            SPDLOG_WARN("RemoveGroup called with invalid entity");
             return false;
         }
 
-        // If this is a UIBox entity, get the actual UI root
-        auto *uiBoxCheck = registry.try_get<UIBoxComponent>(entity);
-        if (uiBoxCheck && uiBoxCheck->uiRoot && registry.valid(uiBoxCheck->uiRoot.value()))
+        // Try to get the UI root if this is a UIBox wrapper
+        auto *uiBox = registry.try_get<UIBoxComponent>(entity);
+        if (uiBox && uiBox->uiRoot)
         {
-            entity = uiBoxCheck->uiRoot.value();
+            entity = uiBox->uiRoot.value();
+            if (!registry.valid(entity))
+            {
+                SPDLOG_WARN("RemoveGroup: uiRoot is invalid");
+                return false;
+            }
         }
 
         auto *transform = registry.try_get<transform::Transform>(entity);
         auto *element = registry.try_get<UIElementComponent>(entity);
         auto *uiConfig = registry.try_get<UIConfig>(entity);
-        auto *uiBox = registry.try_get<UIBoxComponent>(entity);
+        // NOTE: uiBox already declared above (line ~1857), reuse it here
+        uiBox = registry.try_get<UIBoxComponent>(entity);
         auto *role = registry.try_get<transform::InheritedProperties>(entity);
 
         auto *node = registry.try_get<transform::GameObject>(entity);
@@ -2003,17 +1745,23 @@ namespace ui
     {
         std::vector<entt::entity> ingroup;
 
-        // Early return if entity is invalid - cannot access components on invalid entities
+// FIX: Check validity BEFORE accessing any components to prevent UB
         if (!registry.valid(entity))
         {
+            SPDLOG_WARN("GetGroup called with invalid entity");
             return {};
         }
 
-        // If this is a UIBox entity, get the actual UI root
-        auto *uiBoxCheck = registry.try_get<UIBoxComponent>(entity);
-        if (uiBoxCheck && uiBoxCheck->uiRoot && registry.valid(uiBoxCheck->uiRoot.value()))
+        // Try to get the UI root if this is a UIBox wrapper
+        auto *uiBox = registry.try_get<UIBoxComponent>(entity);
+        if (uiBox && uiBox->uiRoot)
         {
-            entity = uiBoxCheck->uiRoot.value();
+            entity = uiBox->uiRoot.value();
+            if (!registry.valid(entity))
+            {
+                SPDLOG_WARN("GetGroup: uiRoot is invalid");
+                return {};
+            }
         }
 
         auto *node = registry.try_get<transform::GameObject>(entity);
@@ -2095,104 +1843,9 @@ namespace ui
         boxesBeingRemoved.erase(entity);
     }
 
-    // entity is a uibox.
-    // void box::Draw(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity)
-    // {
-    //     ZONE_SCOPED("UIBox::Draw");
-    //     // LATER: do not draw if already drawn this frame
-    //     auto *uiBox = registry.try_get<UIBoxComponent>(entity);
-    //     auto *uiState = registry.try_get<UIState>(entity);
-    //     auto *node = registry.try_get<transform::GameObject>(entity);
-
-    //     AssertThat(uiBox, Is().Not().EqualTo(nullptr));
-    //     AssertThat(uiState, Is().Not().EqualTo(nullptr));
-    //     AssertThat(node, Is().Not().EqualTo(nullptr));
-
-    //     // 🎨 Draw all child elements (except tooltips & alerts)
-    //     // Draw the box's child elements, not the ui root's. The ui hierarchy is stored in the ui root's children, so these would be special-case.
-    //     if (node)
-    //     {
-    //         ZONE_SCOPED("UIBox::DrawUIBOXChildren(notRoot)");
-    //         for (auto childEntry : node->children)
-    //         {
-    //             auto &entryName = childEntry.first;
-    //             auto child = childEntry.second;
-    //             auto *childUIElement = registry.try_get<UIElementComponent>(child);
-    //             auto *childUIBox = registry.try_get<UIBoxComponent>(child);
-
-    //             // TODO: use these identifiers later?
-    //             if (registry.valid(child) && childUIElement && entryName != "h_popup" && entryName != "alert")
-    //             {
-    //                 SPDLOG_DEBUG("drawing uibox child {}", entryName);
-    //                 // this is a ui element, not a ui box, draw the element itself, then the children
-    //                 ui::element::DrawSelf(layerPtr, registry, child);
-    //                 ui::element::DrawChildren(layerPtr, registry, child);
-    //             }
-    //             else if (childUIBox)
-    //             {
-    //                 SPDLOG_DEBUG("drawing uibox child {}", entryName);
-    //                 // this is a ui box, recursive draw
-    //                 box::Draw(layerPtr, registry, child);
-    //             }
-    //             // TODO: add alternative rendering if necessary for the uibox children. Not sure why this is necessary
-    //         }
-    //     }
-
-    //     // ✅ Only draw if visible
-    //     // draw the ui root's children. this is different from the uibox's children.
-    //     if (node->state.visible)
-    //     {
-    //         // LATER: not using draw hash
-    //         //  addToDrawHash(entity);  // Adds UI element to draw batch (optimization)
-
-    //         // 🎨 Draw the root UI element
-    //         if (uiBox->uiRoot)
-    //         {
-    //             ZONE_SCOPED("UIBox::Draw::RootElement");
-    //             // TODO: are child nodes in defs added to root's children, or to the ui box as children?
-    //             element::DrawSelf(layerPtr, registry, uiBox->uiRoot.value());
-    //             element::DrawChildren(layerPtr, registry, uiBox->uiRoot.value());
-    //         }
-
-    //         // 🖌 Draw elements in layers (ordered rendering)
-    //         // TODO: should elements in layers be excluded from other drawing like above? figure out
-    //         for (auto layerEntry : uiBox->drawLayers)
-    //         {
-    //             ZONE_SCOPED("UIBox::DrawIfLayer");
-    //             auto layerEntity = layerEntry.second;
-    //             if (registry.valid(layerEntity))
-    //             {
-    //                 auto *element = registry.try_get<UIElementComponent>(layerEntity);
-    //                 auto *uiBox = registry.try_get<UIBoxComponent>(layerEntity);
-    //                 // if not a UIelement, then call the draw self method for the component
-    //                 if (element)
-    //                 {
-    //                     ui::element::DrawSelf(layerPtr, registry, layerEntity);
-    //                     ui::element::DrawChildren(layerPtr, registry, layerEntity);
-    //                 }
-    //                 else if (uiBox)
-    //                 {
-    //                     box::Draw(layerPtr, registry, layerEntity);
-    //                 }
-    //             }
-    //         }
-    //     }
-
-    //     // REVIEW: alerts are the red pips on the top right. alerts can also be popups?
-    //     if (node->children.find("alert") != node->children.end())
-    //     {
-    //         ZONE_SCOPED("UIBox::Draw::Alert");
-    //         auto alert = node->children["alert"];
-    //         if (registry.valid(alert))
-    //         {
-    //             ui::element::DrawSelf(layerPtr, registry, alert);
-    //             ui::element::DrawChildren(layerPtr, registry, alert);
-    //         }
-    //     }
-
-    //     if (globals::drawDebugInfo)
-    //         transform::DrawBoundingBoxAndDebugInfo(&registry, entity, layerPtr);
-    // }
+    // NOTE: The old box::Draw function has been removed.
+    // Drawing is now handled by drawAllBoxesShaderEnabled() which uses a
+    // flattened draw list approach for better performance and proper scissor handling.
 
     void box::Recalculate(entt::registry &registry, entt::entity entity)
     {
@@ -2240,127 +1893,52 @@ namespace ui
     
     
     // Assign the given state tag to all elements in the given UI box (including owned objects)
+    // Migrated to use traversal::forEachWithObjects utility (Phase 3.1)
     auto box::AssignStateTagsToUIBox(entt::registry &registry, entt::entity uiBox, const std::string &stateName) -> void
     {
         using namespace entity_gamestate_management;
 
-        struct StackEntry {
-            entt::entity uiElement{entt::null};
-        };
+        if (!registry.valid(uiBox)) return;
 
-        // 1) Read root info
-    if (!registry.valid(uiBox)) return;
         auto const *uiBoxComp = registry.try_get<UIBoxComponent>(uiBox);
         if (!uiBoxComp) return;
-        
-        if (registry.any_of<StateTag>(uiBox))
-        {
-            registry.get<StateTag>(uiBox).add_tag(stateName);
-        } else {
-            registry.emplace<StateTag>(uiBox, stateName);
-        }
-        
-        
-        entt::entity root = uiBoxComp->uiRoot.value_or(entt::null);
-        if (root == entt::null) return;
-        
-        
 
-        // 2) Prepare DFS stack
-        std::stack<StackEntry> stack;
-        stack.push({root});
-
-        // SPDLOG_DEBUG("=== Begin AssignStateTagsToUIBox (state='{}') ===", stateName);
-
-        // 3) DFS traversal (same as AssignLayerOrderComponents)
-        while (!stack.empty())
-        {
-            auto e = stack.top().uiElement;
-            stack.pop();
-            if (!registry.valid(e))
-                continue;
-
-            // 4) Apply the given state tag to this element
-            if (registry.any_of<StateTag>(e))
-            {
+        // Helper to add state tag to an entity
+        auto addStateTag = [&](entt::entity e) {
+            if (!registry.valid(e)) return;
+            if (registry.any_of<StateTag>(e)) {
                 registry.get<StateTag>(e).add_tag(stateName);
             } else {
                 registry.emplace<StateTag>(e, stateName);
             }
+        };
 
-            // 5) If this element owns an object, give it the same tag
-            if (auto cfg = registry.try_get<UIConfig>(e))
-            {
-                if (cfg->object)
-                {
-                    entt::entity obj = cfg->object.value();
-                    if (registry.valid(obj))
-                    {
-                        if (registry.any_of<StateTag>(obj))
-                        {
-                            registry.get<StateTag>(obj).add_tag(stateName);
-                        } else {
-                            registry.emplace<StateTag>(obj, stateName);
-                        }
-                    }
-                }
-            }
+        // Tag the box itself
+        addStateTag(uiBox);
 
-            // 6) Push children (reverse for visual order consistency)
-            if (auto node = registry.try_get<transform::GameObject>(e))
-            {
-                for (auto it = node->orderedChildren.rbegin();
-                    it != node->orderedChildren.rend();
-                    ++it)
-                {
-                    if (registry.valid(*it))
-                        stack.push({*it});
-                }
-            }
-        }
+        // Get the root element
+        entt::entity root = uiBoxComp->uiRoot.value_or(entt::null);
+        if (root == entt::null) return;
 
-        // SPDLOG_DEBUG("=== Done AssignStateTagsToUIBox for box {} (state='{}') ===",
-        //              static_cast<int>(uiBox), stateName);
+        // Tag all elements and their owned objects using traversal utility
+        traversal::forEachWithObjects(registry, root, addStateTag);
     }
     
     
-    // do the opposite of ClearStateTags: add the tag to all elements in the box
+    // Add the tag to all elements in the box (opposite of ClearStateTags)
+    // Migrated to use traversal::forEachWithObjects utility (Phase 3.2)
     auto box::AddStateTagToUIBox(entt::registry &registry, entt::entity uiBox, const std::string &tagToAdd) -> void
     {
         using namespace entity_gamestate_management;
 
-        struct StackEntry { entt::entity uiElement{entt::null}; };
-
-        // 1) Validate root
         if (!registry.valid(uiBox)) return;
+
         auto const *uiBoxComp = registry.try_get<UIBoxComponent>(uiBox);
         if (!uiBoxComp) return;
 
-        // 2) Add tag to the box itself
-        if (registry.all_of<StateTag>(uiBox)) {
-            registry.get<StateTag>(uiBox).add_tag(tagToAdd);
-        } else {
-            StateTag tag{};
-            tag.add_tag(tagToAdd);
-            registry.emplace<StateTag>(uiBox, std::move(tag));
-        }
-        applyStateEffectsToEntity(registry, uiBox);
-
-        // 3) Find the root
-        entt::entity root = uiBoxComp->uiRoot.value_or(entt::null);
-        if (root == entt::null) return;
-
-        std::stack<StackEntry> stack;
-        stack.push({root});
-
-        // 4) DFS traversal
-        while (!stack.empty())
-        {
-            auto e = stack.top().uiElement;
-            stack.pop();
-            if (!registry.valid(e)) continue;
-
-            // 5) Add or modify the tag
+        // Helper to add state tag to an entity and apply effects
+        auto addTagAndApply = [&](entt::entity e) {
+            if (!registry.valid(e)) return;
             if (registry.all_of<StateTag>(e)) {
                 registry.get<StateTag>(e).add_tag(tagToAdd);
             } else {
@@ -2368,177 +1946,75 @@ namespace ui
                 tag.add_tag(tagToAdd);
                 registry.emplace<StateTag>(e, std::move(tag));
             }
-
             applyStateEffectsToEntity(registry, e);
+        };
 
-            // 6) If it owns an object, propagate
-            if (auto cfg = registry.try_get<UIConfig>(e)) {
-                if (cfg->object) {
-                    entt::entity obj = cfg->object.value();
-                    if (registry.valid(obj)) {
-                        if (registry.all_of<StateTag>(obj)) {
-                            registry.get<StateTag>(obj).add_tag(tagToAdd);
-                        } else {
-                            StateTag tag{};
-                            tag.add_tag(tagToAdd);
-                            registry.emplace<StateTag>(obj, std::move(tag));
-                        }
-                        applyStateEffectsToEntity(registry, obj);
-                    }
-                }
-            }
+        // Add tag to the box itself
+        addTagAndApply(uiBox);
 
-            // 7) Push children
-            if (auto node = registry.try_get<transform::GameObject>(e)) {
-                for (auto it = node->orderedChildren.rbegin(); it != node->orderedChildren.rend(); ++it) {
-                    if (registry.valid(*it))
-                        stack.push({*it});
-                }
-            }
-        }
+        // Get the root element
+        entt::entity root = uiBoxComp->uiRoot.value_or(entt::null);
+        if (root == entt::null) return;
 
-        // SPDLOG_DEBUG("=== Done ReverseClearStateTagsFromUIBox for box {} with tag '{}' ===",
-        //              static_cast<int>(uiBox), tagToAdd);
+        // Add tag to all elements and their owned objects using traversal utility
+        traversal::forEachWithObjects(registry, root, addTagAndApply);
     }
 
     
     //-----------------------------------------------------------------------------
     // Clear all StateTags in a given UI box hierarchy (including owned objects)
+    // Migrated to use traversal::forEachWithObjects utility (Phase 3.3)
     //-----------------------------------------------------------------------------
     auto box::ClearStateTagsFromUIBox(entt::registry &registry, entt::entity uiBox) -> void
     {
         using namespace entity_gamestate_management;
 
-        struct StackEntry {
-            entt::entity uiElement{entt::null};
-        };
-
-        // 1) Validate and fetch root
         if (!registry.valid(uiBox)) return;
+
         auto const *uiBoxComp = registry.try_get<UIBoxComponent>(uiBox);
         if (!uiBoxComp) return;
 
-        // Clear state tag on the box itself
-        if (registry.all_of<StateTag>(uiBox))
-        {
-            registry.get<StateTag>(uiBox).clear();
-            applyStateEffectsToEntity(registry, uiBox);
-        }
-
-        entt::entity root = uiBoxComp->uiRoot.value_or(entt::null);
-        if (root == entt::null) return;
-
-        // 2) Prepare DFS stack
-        std::stack<StackEntry> stack;
-        stack.push({root});
-
-        // 3) DFS traversal
-        while (!stack.empty())
-        {
-            auto e = stack.top().uiElement;
-            stack.pop();
-            if (!registry.valid(e))
-                continue;
-
-            // 4) Clear the state tag for this element
-            if (registry.all_of<StateTag>(e))
-            {
+        // Helper to clear state tag from an entity and apply effects
+        auto clearTagAndApply = [&](entt::entity e) {
+            if (!registry.valid(e)) return;
+            if (registry.all_of<StateTag>(e)) {
                 registry.get<StateTag>(e).clear();
                 applyStateEffectsToEntity(registry, e);
             }
+        };
 
-            // 5) Clear for any owned object (UIConfig.object)
-            if (auto cfg = registry.try_get<UIConfig>(e))
-            {
-                if (cfg->object)
-                {
-                    entt::entity obj = cfg->object.value();
-                    if (registry.valid(obj) && registry.all_of<StateTag>(obj))
-                    {
-                        registry.get<StateTag>(obj).clear();
-                        applyStateEffectsToEntity(registry, obj);
-                    }
-                }
-            }
-            
+        // Clear state tag on the box itself
+        clearTagAndApply(uiBox);
 
-            // 6) Push children (reverse for visual order consistency)
-            if (auto node = registry.try_get<transform::GameObject>(e))
-            {
-                for (auto it = node->orderedChildren.rbegin();
-                    it != node->orderedChildren.rend();
-                    ++it)
-                {
-                    if (registry.valid(*it))
-                        stack.push({*it});
-                }
-            }
-        }
+        // Get the root element
+        entt::entity root = uiBoxComp->uiRoot.value_or(entt::null);
+        if (root == entt::null) return;
 
-        // SPDLOG_DEBUG("=== Done ClearStateTagsFromUIBox for box {} ===",
-        //              static_cast<int>(uiBox));
+        // Clear state tags for all elements and their owned objects using traversal utility
+        traversal::forEachWithObjects(registry, root, clearTagAndApply);
     }
     
+    // Set transform spring enabled state for all elements in a UI box
+    // Migrated to use traversal::forEachWithObjects utility (Phase 3.4)
     auto box::SetTransformSpringsEnabledInUIBox(entt::registry &registry, entt::entity uiBox, bool enabled) -> void
     {
         using namespace transform;
 
-        struct StackEntry {
-            entt::entity uiElement{entt::null};
-        };
-
-        // 1) Validate root
         if (!registry.valid(uiBox)) return;
+
         auto const *uiBoxComp = registry.try_get<UIBoxComponent>(uiBox);
         if (!uiBoxComp) return;
 
-        // Apply to the box’s own transform if it has one
-        if (auto t = registry.try_get<transform::Transform>(uiBox))
-        {
-            auto tryEnableSpring = [&](entt::entity springEnt)
-            {
-                if (registry.valid(springEnt))
-                {
-                    if (auto spring = registry.try_get<Spring>(springEnt))
-                        spring->enabled = enabled;
-                }
-            };
-
-            tryEnableSpring(t->x);
-            tryEnableSpring(t->y);
-            tryEnableSpring(t->w);
-            tryEnableSpring(t->h);
-            tryEnableSpring(t->r);
-            tryEnableSpring(t->s);
-        }
-
-        entt::entity root = uiBoxComp->uiRoot.value_or(entt::null);
-        if (root == entt::null) return;
-
-        // 2) Prepare DFS stack
-        std::stack<StackEntry> stack;
-        stack.push({root});
-
-        // 3) Traverse all descendants
-        while (!stack.empty())
-        {
-            auto e = stack.top().uiElement;
-            stack.pop();
-            if (!registry.valid(e))
-                continue;
-
-            // 4) If this entity has a transform, toggle its springs
-            if (auto t = registry.try_get<transform::Transform>(e))
-            {
-                auto tryEnableSpring = [&](entt::entity springEnt)
-                {
-                    if (registry.valid(springEnt))
-                    {
+        // Helper to toggle springs on an entity's transform
+        auto toggleSprings = [&](entt::entity e) {
+            if (!registry.valid(e)) return;
+            if (auto t = registry.try_get<transform::Transform>(e)) {
+                auto tryEnableSpring = [&](entt::entity springEnt) {
+                    if (registry.valid(springEnt)) {
                         if (auto spring = registry.try_get<Spring>(springEnt))
                             spring->enabled = enabled;
                     }
                 };
-
                 tryEnableSpring(t->x);
                 tryEnableSpring(t->y);
                 tryEnableSpring(t->w);
@@ -2546,49 +2022,17 @@ namespace ui
                 tryEnableSpring(t->r);
                 tryEnableSpring(t->s);
             }
+        };
 
-            // 5) If this element owns an object, apply same rule
-            if (auto cfg = registry.try_get<UIConfig>(e))
-            {
-                if (cfg->object)
-                {
-                    entt::entity obj = cfg->object.value();
-                    if (registry.valid(obj))
-                    {
-                        if (auto t = registry.try_get<transform::Transform>(obj))
-                        {
-                            auto tryEnableSpring = [&](entt::entity springEnt)
-                            {
-                                if (registry.valid(springEnt))
-                                {
-                                    if (auto spring = registry.try_get<Spring>(springEnt))
-                                        spring->enabled = enabled;
-                                }
-                            };
+        // Apply to the box itself
+        toggleSprings(uiBox);
 
-                            tryEnableSpring(t->x);
-                            tryEnableSpring(t->y);
-                            tryEnableSpring(t->w);
-                            tryEnableSpring(t->h);
-                            tryEnableSpring(t->r);
-                            tryEnableSpring(t->s);
-                        }
-                    }
-                }
-            }
+        // Get the root element
+        entt::entity root = uiBoxComp->uiRoot.value_or(entt::null);
+        if (root == entt::null) return;
 
-            // 6) Push children (reverse order for visual consistency)
-            if (auto node = registry.try_get<GameObject>(e))
-            {
-                for (auto it = node->orderedChildren.rbegin();
-                    it != node->orderedChildren.rend();
-                    ++it)
-                {
-                    if (registry.valid(*it))
-                        stack.push({*it});
-                }
-            }
-        }
+        // Toggle springs for all elements and their owned objects using traversal utility
+        traversal::forEachWithObjects(registry, root, toggleSprings);
     }
 
     
@@ -2634,25 +2078,9 @@ namespace ui
         
         std::vector<ActiveScissor> scissorStack;
 
-        // 2) Now draw them all with one tight fully owning group loop.  First, set up a group
-        //    of the "always‐present" components every drawable element needs:
-        // PERF: Initialize both cached view and group together on first call
-        if (uiGroupInitialized == false)
-        {
-            // This is a static group that will be reused for all draws.
-            // It contains the five components we need to draw any UI element.
-            uiGroupInitialized = true;
-            uiBoxViewInitialized = true;
-            globalUIBoxView = registry.view<UIBoxComponent>();
-
-            globalUIGroup = registry.group<
-                UIElementComponent,
-                UIConfig,
-                UIState,
-                transform::GameObject,
-                transform::Transform
-              >(entt::get<>, entt::exclude<entity_gamestate_management::InactiveTag>);
-        }
+        // 2) Now draw them all with one tight fully owning group loop.
+        // PERF: Initialize cached view/group once before use.
+        EnsureUIGroupInitialized(registry);
 
         // PERF: Use cached view for UIBoxComponent iteration
         for (auto ent : globalUIBoxView)
@@ -2926,106 +2354,11 @@ namespace ui
     void box::drawAllBoxes(entt::registry &registry,
                            std::shared_ptr<layer::Layer> layerPtr)
     {
-        // 1) Build a flat list in the exact order your old box::Draw would have used.
-        std::vector<UIDrawListItem> drawOrder;
-        drawOrder.reserve(200); // or an estimate of your total UI element count
-
-        // 2) Now draw them all with one tight fully owning group loop.  First, set up a group
-        //    of the "always‐present" components every drawable element needs:
-        // PERF: Initialize both cached view and group together on first call
-        if (uiGroupInitialized == false)
-        {
-            // This is a static group that will be reused for all draws.
-            // It contains the five components we need to draw any UI element.
-            uiGroupInitialized = true;
-            uiBoxViewInitialized = true;
-            globalUIBoxView = registry.view<UIBoxComponent>();
-
-            globalUIGroup = registry.group<
-                    UIElementComponent,
-                    UIConfig,
-                    UIState,
-                    transform::GameObject,
-                    transform::Transform
-                >(entt::get<>, entt::exclude<entity_gamestate_management::InactiveTag>);
-        }
-
-        // PERF: Use cached view for UIBoxComponent iteration
-        for (auto ent : globalUIBoxView)
-        {
-            // check if the entity is active
-            if (!entity_gamestate_management::active_states_instance().is_active(registry.get<entity_gamestate_management::StateTag>(ent)))
-                continue; // skip inactive entities
-            // TODO: probably sort these with layer order
-            buildUIBoxDrawList(registry, ent, drawOrder);
-        }
-
-        entt::entity uiBoxEntity{entt::null};
-        int drawOrderZIndex = 0;
-
-        // 3) Loop in our flattened order:
-        for (auto &drawListItem : drawOrder)
-        {
-            auto ent = drawListItem.e;
-
-            if (!registry.valid(ent))
-                continue;
-
-            // Pull the five group‐components by reference (O(1)):
-            auto &elemComp = globalUIGroup.get<UIElementComponent>(ent);
-            auto &cfg = globalUIGroup.get<UIConfig>(ent);
-            auto &st = globalUIGroup.get<UIState>(ent);
-            auto &node = globalUIGroup.get<transform::GameObject>(ent);
-            auto &xf = globalUIGroup.get<transform::Transform>(ent);
-
-            if (elemComp.uiBox != uiBoxEntity)
-            {
-                // If this is a new UIBox, set the current box entity.
-                uiBoxEntity = elemComp.uiBox;
-                drawOrderZIndex = registry.get<layer::LayerOrderComponent>(uiBoxEntity).zIndex;
-            }
-            
-            // 1) Check if the UI element is a scroll pane
-            if (cfg.uiType == UITypeEnum::SCROLL_PANE) {
-                auto &scr = registry.get<UIScrollComponent>(ent);
-                
-                // 1.1) Set the scissor rectangle to the pane’s screen-space bounds:
-                Rectangle r = {
-                    xf.getActualX() ,
-                    xf.getActualY() ,
-                    xf.getActualW() ,
-                    xf.getActualH()
-                };
-                
-                layer::QueueCommand<layer::CmdBeginScissorMode>(
-                    layerPtr, [r](layer::CmdBeginScissorMode *cmd) {
-                        cmd->area = r;
-                    }, drawOrderZIndex
-                );
-                
-                //TODO: apply this in the drawself method?
-                //TODO: also, modify scroll value based on mouse wheel
-                //TODO: how to know which scroll pane is being scrolled?
-                // 1.2) Push a little “local transform” so children draw offset by –offset:
-                // rlPushMatrix();
-                // rlTranslatef(vertical ? 0 : -scr.offset,
-                //             vertical ? -scr.offset : 0,
-                //             0);
-            }
-
-            // Finally call your lean DrawSelf that only does `try_get`
-            // for optional pieces (RoundedRectangleVerticesCache, etc.).
-            element::DrawSelf(layerPtr, ent, elemComp, cfg, st, node, xf, drawOrderZIndex);
-        }
-
-        // 4) If you still want to draw bounding boxes for each UIBox itself:
-        if (globals::getDrawDebugInfo())
-        {
-            for (auto box : globalUIBoxView)
-            {
-                transform::DrawBoundingBoxAndDebugInfo(&registry, box, layerPtr);
-            }
-        }
+        // Phase 5 consolidation: Delegate to the full-featured shader-enabled version.
+        // The shader-enabled version has proper scissor stack management and layer overrides,
+        // which were missing in this simpler version (it started scissor modes but never
+        // closed them properly).
+        drawAllBoxesShaderEnabled(registry, layerPtr);
     }
 
     void box::buildUIBoxDrawList(
@@ -3050,42 +2383,75 @@ namespace ui
             return;
 
         // 1) Draw all direct children of this box (except tooltips & alerts)
-        //    This matches exactly your first loop in box::Draw:
-        for (auto const &entry : boxNode->children)
-        {
-            // entry.first is the name (string), entry.second is the entity
-            const auto &entryName = entry.first;
-            entt::entity child = entry.second;
-            
-            if (auto* tag = registry.try_get<StateTag>(child)) {
-                if (!is_active(*tag))
-                    continue; // skip inactive elements
-            }
-
-
-            auto *childUIElement = registry.try_get<UIElementComponent>(child);
-            auto *childUIBox = registry.try_get<UIBoxComponent>(child);
-            auto *childNode = registry.try_get<transform::GameObject>(child);
-
-            // Skip if not a valid entity or not visible
-            if (!registry.valid(child) || !childNode || !childNode->state.visible)
-                continue;
-
-            // If it’s a UIElement (and not “h_popup”/“alert”), push that element + its subtree:
-            if (childUIElement && entryName != "h_popup" && entryName != "alert")
+        //    Prefer orderedChildren for stable ordering; fall back to the map if empty.
+        if (!boxNode->orderedChildren.empty()) {
+            for (auto child : boxNode->orderedChildren)
             {
-                // DrawSelf + DrawChildren are replaced by a flattening of the element subtree:
-                
-                // pre‐draw of child + subtree, record at this depth
-                element::buildUIDrawList(registry, child, out, depth);
+                auto *childConfig = registry.try_get<UIConfig>(child);
+                std::string entryName = (childConfig && childConfig->id) ? *childConfig->id : std::string{};
+                if (entryName.empty()) {
+                    for (auto const &kv : boxNode->children) {
+                        if (kv.second == child) {
+                            entryName = kv.first;
+                            break;
+                        }
+                    }
+                }
+
+                if (auto* tag = registry.try_get<StateTag>(child)) {
+                    if (!is_active(*tag))
+                        continue; // skip inactive elements
+                }
+
+                auto *childUIElement = registry.try_get<UIElementComponent>(child);
+                auto *childUIBox = registry.try_get<UIBoxComponent>(child);
+                auto *childNode = registry.try_get<transform::GameObject>(child);
+
+                // Skip if not a valid entity or not visible
+                if (!registry.valid(child) || !childNode || !childNode->state.visible)
+                    continue;
+
+                // If it’s a UIElement (and not “h_popup”/“alert”), push that element + its subtree:
+                if (childUIElement && entryName != "h_popup" && entryName != "alert")
+                {
+                    element::buildUIDrawList(registry, child, out, depth);
+                }
+                // If it’s another UIBox, recurse fully into that box:
+                else if (childUIBox)
+                {
+                    buildUIBoxDrawList(registry, child, out, depth);
+                }
             }
-            // If it’s another UIBox, recurse fully into that box:
-            else if (childUIBox)
+        } else {
+            // Fallback: use map order when orderedChildren is not populated.
+            for (auto const &entry : boxNode->children)
             {
-                // recurse boxes at same depth
-                buildUIBoxDrawList(registry, child, out, depth);
+                // entry.first is the name (string), entry.second is the entity
+                const auto &entryName = entry.first;
+                entt::entity child = entry.second;
+
+                if (auto* tag = registry.try_get<StateTag>(child)) {
+                    if (!is_active(*tag))
+                        continue; // skip inactive elements
+                }
+
+                auto *childUIElement = registry.try_get<UIElementComponent>(child);
+                auto *childUIBox = registry.try_get<UIBoxComponent>(child);
+                auto *childNode = registry.try_get<transform::GameObject>(child);
+
+                // Skip if not a valid entity or not visible
+                if (!registry.valid(child) || !childNode || !childNode->state.visible)
+                    continue;
+
+                if (childUIElement && entryName != "h_popup" && entryName != "alert")
+                {
+                    element::buildUIDrawList(registry, child, out, depth);
+                }
+                else if (childUIBox)
+                {
+                    buildUIBoxDrawList(registry, child, out, depth);
+                }
             }
-            // else: skip everything else
         }
 
         // 2) If this box’s node is visible, draw its uiRoot first:
@@ -3143,30 +2509,16 @@ namespace ui
 
     void box::Move(entt::registry &registry, entt::entity self, float dt)
     {
-        // auto *transform = registry.try_get<transform::Transform>(self);
-        // auto *uiBox = registry.try_get<UIBoxComponent>(self);
-
-        // AssertThat(transform, Is().Not().EqualTo(nullptr));
-        // AssertThat(uiBox, Is().Not().EqualTo(nullptr));
-
-        // transform::UpdateTransform(&registry, self, dt);
-        // transform::UpdateTransform(&registry, uiBox->uiRoot.value(), dt);
+        // DEPRECATED: This function is a no-op stub kept for Lua API compatibility.
+        // UI movement is now handled through transform springs and direct position updates.
+        (void)registry; (void)self; (void)dt;
     }
 
     void box::Drag(entt::registry &registry, entt::entity self, Vector2 offset, float dt)
     {
-        // auto *transform = registry.try_get<transform::Transform>(self);
-        // auto *node = registry.try_get<transform::GameObject>(self);
-        // auto *uiBox = registry.try_get<UIBoxComponent>(self);
-
-        // AssertThat(transform, Is().Not().EqualTo(nullptr));
-        // AssertThat(uiBox, Is().Not().EqualTo(nullptr));
-        // AssertThat(node, Is().Not().EqualTo(nullptr));
-
-        // // TODO: fill out missing transform functions in node component
-        // if (node->methods->onDrag)
-        //     node->methods->onDrag(registry, self);
-        // transform::UpdateTransform(&registry, uiBox->uiRoot.value(), dt);
+        // DEPRECATED: This function is a no-op stub kept for Lua API compatibility.
+        // UI dragging is now handled through the input system and direct position updates.
+        (void)registry; (void)self; (void)offset; (void)dt;
     }
 
     void box::AddChild(entt::registry &registry, entt::entity uiBox, UIElementTemplateNode uiElementDef, entt::entity parent)

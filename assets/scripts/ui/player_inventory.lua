@@ -224,40 +224,12 @@ local function setEntityVisible(entity, visible, onscreenX, onscreenY, dbgLabel)
 end
 
 local function getTabMarkerPosition()
-    local anchorX = state.panelX
-    local anchorY = state.panelY
-    if state.panelEntity and registry:valid(state.panelEntity) then
-        local panelT = component_cache.get(state.panelEntity, Transform)
-        if panelT then
-            anchorX = panelT.actualX or anchorX
-            anchorY = panelT.actualY or anchorY
-        end
-    end
-    if not anchorX or not anchorY then
+    if not state.panelX or not state.panelY then
         return nil, nil
     end
-    local markerX = anchorX + TAB_MARKER_OFFSET_X
-    local markerY = anchorY + TAB_MARKER_OFFSET_Y
+    local markerX = state.panelX + TAB_MARKER_OFFSET_X
+    local markerY = state.panelY + TAB_MARKER_OFFSET_Y
     return markerX, markerY
-end
-
-local function positionTabMarker()
-    if not state.tabMarkerEntity or not registry:valid(state.tabMarkerEntity) then
-        return
-    end
-    local markerX, markerY = getTabMarkerPosition()
-    if not markerX or not markerY then
-        return
-    end
-    local t = component_cache.get(state.tabMarkerEntity, Transform)
-    if t then
-        local curX = t.actualX or t.visualX
-        local curY = t.actualY or t.visualY
-        if curX and curY and math.abs(curX - markerX) < 0.5 and math.abs(curY - markerY) < 0.5 then
-            return
-        end
-    end
-    setEntityVisible(state.tabMarkerEntity, true, markerX, markerY, "tab_marker")
 end
 
 local function setCardEntityVisible(itemEntity, visible)
@@ -754,7 +726,6 @@ local function setupCardRenderTimer()
     local UI_CARD_Z = CARD_Z
     
     timer.run_every_render_frame(function()
-        positionTabMarker()
         if not state.isVisible then return end
 
         snapItemsToSlots()
@@ -992,7 +963,11 @@ local function initializeInventory()
     end
 
     
-    positionTabMarker()
+    local ChildBuilder = require("core.child_builder")
+    ChildBuilder.for_entity(state.tabMarkerEntity)
+        :attachTo(state.panelEntity)
+        :offset(TAB_MARKER_OFFSET_X, TAB_MARKER_OFFSET_Y)
+        :apply()
       
     -- ui.box.ClearStateTagsFromUIBox(state.tabMarkerEntity)
     -- ui.box.AssignStateTagsToUIBox(registry, state.tabMarkerEntity, PLANNING_STATE)
@@ -1040,7 +1015,6 @@ function PlayerInventory.open()
 
     -- Show the panel
     setEntityVisible(state.panelEntity, true, state.panelX, state.panelY, "panel")
-    positionTabMarker()
 
     state.isVisible = true
 
@@ -1076,7 +1050,6 @@ function PlayerInventory.close()
 
     -- Hide the panel
     setEntityVisible(state.panelEntity, false, state.panelX, state.panelY, "panel")
-    positionTabMarker()
 
     state.isVisible = false
 

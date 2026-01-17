@@ -1189,6 +1189,9 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             UpdateTransform(e, dt, transform, role, node);
             UpdateTransformMatrices(*registry, e);
         });
+
+        // Keep UIBox roots synced to their boxes for collision correctness.
+        ui::box::SyncAllUIRootsToBoxes(*registry);
         
         
         

@@ -1,6 +1,7 @@
 #include "box.hpp"
 
 #include "entt/entity/fwd.hpp"
+#include <cmath>
 #include "spdlog/spdlog.h"
 #include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 #include "systems/layer/layer_command_buffer.hpp"
@@ -333,6 +334,101 @@ namespace ui
         // call resize func
         if (uiBox.onBoxResize) {
             uiBox.onBoxResize(self);
+        }
+    }
+
+    namespace {
+        constexpr float kUIRootSyncEpsilon = 0.01f;
+
+        inline bool needs_sync(float a, float b) {
+            return std::fabs(a - b) > kUIRootSyncEpsilon;
+        }
+    }
+
+    void box::SyncUIRootToBox(entt::registry &registry, entt::entity uiBox)
+    {
+        auto *boxComp = registry.try_get<UIBoxComponent>(uiBox);
+        if (!boxComp || !boxComp->uiRoot.has_value()) return;
+
+        entt::entity uiRoot = boxComp->uiRoot.value();
+        if (!registry.valid(uiRoot)) return;
+
+        auto *boxTransform = registry.try_get<transform::Transform>(uiBox);
+        auto *rootTransform = registry.try_get<transform::Transform>(uiRoot);
+        if (!boxTransform || !rootTransform) return;
+
+        // Access springs directly to avoid extra cache work unless a sync is needed.
+        auto &boxX = boxTransform->getXSpring();
+        auto &boxY = boxTransform->getYSpring();
+        auto &boxW = boxTransform->getWSpring();
+        auto &boxH = boxTransform->getHSpring();
+
+        auto &rootX = rootTransform->getXSpring();
+        auto &rootY = rootTransform->getYSpring();
+        auto &rootW = rootTransform->getWSpring();
+        auto &rootH = rootTransform->getHSpring();
+
+        const float boxActualX = boxX.targetValue;
+        const float boxActualY = boxY.targetValue;
+        const float boxVisualX = boxX.value;
+        const float boxVisualY = boxY.value;
+        const float rootActualX = rootX.targetValue;
+        const float rootActualY = rootY.targetValue;
+        const float rootVisualX = rootX.value;
+        const float rootVisualY = rootY.value;
+
+        const float rootActualW = rootW.targetValue;
+        const float rootActualH = rootH.targetValue;
+        const float rootVisualW = rootW.value;
+        const float rootVisualH = rootH.value;
+        const float boxActualW = boxW.targetValue;
+        const float boxActualH = boxH.targetValue;
+        const float boxVisualW = boxW.value;
+        const float boxVisualH = boxH.value;
+
+        const bool posMismatch =
+            needs_sync(rootActualX, boxActualX) || needs_sync(rootActualY, boxActualY) ||
+            needs_sync(rootVisualX, boxVisualX) || needs_sync(rootVisualY, boxVisualY);
+        const bool sizeMismatch =
+            needs_sync(boxActualW, rootActualW) || needs_sync(boxActualH, rootActualH) ||
+            needs_sync(boxVisualW, rootVisualW) || needs_sync(boxVisualH, rootVisualH);
+
+        if (!posMismatch && !sizeMismatch) return;
+
+        if (posMismatch) {
+            // Snap uiRoot position to the UIBox actual position for collision correctness.
+            rootX.targetValue = boxActualX;
+            rootY.targetValue = boxActualY;
+            rootX.value = boxVisualX;
+            rootY.value = boxVisualY;
+        }
+
+        if (sizeMismatch) {
+            // Keep UIBox size in sync with uiRoot (layout owns root size).
+            boxW.targetValue = rootActualW;
+            boxH.targetValue = rootActualH;
+            boxW.value = rootVisualW;
+            boxH.value = rootVisualH;
+        }
+
+        boxTransform->updateCachedValues(true);
+        rootTransform->updateCachedValues(true);
+        boxTransform->markDirty();
+        rootTransform->markDirty();
+        transform::UpdateTransformMatrices(registry, uiBox);
+        transform::UpdateTransformMatrices(registry, uiRoot);
+    }
+
+    void box::SyncAllUIRootsToBoxes(entt::registry &registry)
+    {
+        // PERF: reuse cached view when available
+        if (!uiBoxViewInitialized) {
+            uiBoxViewInitialized = true;
+            globalUIBoxView = registry.view<UIBoxComponent>();
+        }
+
+        for (auto ent : globalUIBoxView) {
+            SyncUIRootToBox(registry, ent);
         }
     }
 

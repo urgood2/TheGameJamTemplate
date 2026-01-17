@@ -612,7 +612,7 @@ end
 --------------------------------------------------------------------------------
 local _centerDebugLogged = {}  -- [entityKey] = true (debounce table)
 
-function InventoryGridInit.centerItemOnSlot(itemEntity, slotEntity)
+function InventoryGridInit.centerItemOnSlot(itemEntity, slotEntity, setVisual)
     if not registry:valid(itemEntity) or not registry:valid(slotEntity) then
         return
     end
@@ -644,6 +644,18 @@ function InventoryGridInit.centerItemOnSlot(itemEntity, slotEntity)
     -- Get the grid (parent) entity and its transform
     local gridEntity = slotRole and slotRole.master
     local gridTransform = gridEntity and component_cache.get(gridEntity, Transform)
+    local setVisualResolved = setVisual
+    if setVisualResolved == nil then
+        local script = getScriptTableFromEntityID and getScriptTableFromEntityID(itemEntity)
+        if script and script.noVisualSnap then
+            setVisualResolved = false
+        elseif gridEntity and grid.getConfig then
+            local gridConfig = grid.getConfig(gridEntity)
+            if gridConfig and gridConfig.snapVisual == false then
+                setVisualResolved = false
+            end
+        end
+    end
 
     -- Compute absolute position: grid.actualX (target screen position) + slot.offset (local cell position)
     local slotX, slotY
@@ -693,12 +705,13 @@ function InventoryGridInit.centerItemOnSlot(itemEntity, slotEntity)
         ))
     end
 
-    -- Set both actual (collision) and visual (render) positions to match
-    -- This ensures collision and render are aligned immediately without waiting for springs
+    -- Set actual (collision) position; visual optionally follows
     itemTransform.actualX = centerX
     itemTransform.actualY = centerY
-    itemTransform.visualX = centerX
-    itemTransform.visualY = centerY
+    if setVisualResolved ~= false then
+        itemTransform.visualX = centerX
+        itemTransform.visualY = centerY
+    end
 end
 
 --- Clear debug log cache (useful for repeated testing)

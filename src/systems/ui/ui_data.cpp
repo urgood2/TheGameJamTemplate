@@ -18,6 +18,23 @@ namespace ui {
     bool uiBoxViewInitialized = false;
     decltype(std::declval<entt::registry&>().view<UIBoxComponent>()) globalUIBoxView{};
 
+    void EnsureUIGroupInitialized(entt::registry& registry) {
+        if (!uiGroupInitialized) {
+            uiGroupInitialized = true;
+            globalUIGroup = registry.group<
+                UIElementComponent,
+                UIConfig,
+                UIState,
+                transform::GameObject,
+                transform::Transform
+            >(entt::get<>, entt::exclude<entity_gamestate_management::InactiveTag>);
+        }
+        if (!uiBoxViewInitialized) {
+            uiBoxViewInitialized = true;
+            globalUIBoxView = registry.view<UIBoxComponent>();
+        }
+    }
+
     bool hasConflictingAlignmentFlags(int flags, std::string* conflictDescription) {
         using Align = transform::InheritedProperties::Alignment;
 
@@ -58,4 +75,3 @@ namespace ui {
     }
 
 }
-

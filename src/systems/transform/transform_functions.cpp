@@ -441,9 +441,9 @@ namespace transform
         
         auto parentRetVal = GetMaster(e, selfTransform, selfRole, selfNode, parentTransform, parentRole);
         auto parent = parentRetVal.master.value();
+        auto* uiCfg = registry->try_get<ui::UIConfig>(e);
         // getmaster for a ui root entity returns the ui box's master, which is not what we want. if this is a ui root, use the immediate master instead.
-        if (ui::globalUIGroup.contains(e) &&
-            ui::globalUIGroup.get<ui::UIConfig>(e).uiType == ui::UITypeEnum::ROOT)
+        if (uiCfg && uiCfg->uiType == ui::UITypeEnum::ROOT)
         {
             parent = selfRole.master; // use the immediate master instead of the master of the ui box
         }
@@ -476,7 +476,7 @@ namespace transform
         fillParentTransformAndRole(parent, parentTransform, parentRole);
 
         // an object that is attached to a UI element (of type OBJECT) should use the immediate master
-        bool isUIElementObjectWrapper = ui::globalUIGroup.contains(e) && ui::globalUIGroup.get<ui::UIConfig>(e).uiType == ui::UITypeEnum::OBJECT;
+        bool isUIElementObjectWrapper = uiCfg && uiCfg->uiType == ui::UITypeEnum::OBJECT;
         bool isUIElementObject = registry->any_of<ui::ObjectAttachedToUITag>(e);
         if (isUIElementObject || isUIElementObjectWrapper) 
         { 
@@ -546,7 +546,7 @@ namespace transform
         }
         
         // hacky fix to ensure ui roots don't revolve strangely ?
-        if (isUIElementObject || isUIElementObjectWrapper || (ui::globalUIGroup.contains(e) && ui::globalUIGroup.get<ui::UIConfig>(e).uiType == ui::UITypeEnum::ROOT))
+        if (isUIElementObject || isUIElementObjectWrapper || (uiCfg && uiCfg->uiType == ui::UITypeEnum::ROOT))
         {
             tempRotatedOffset.x = selfRole.offset->x + layeredDisplacement.x; // ignore the additional offset if this is a UI element object (REVIEW: not sure if this is correct)
             tempRotatedOffset.y = selfRole.offset->y + layeredDisplacement.y;
@@ -1189,6 +1189,9 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             UpdateTransform(e, dt, transform, role, node);
             UpdateTransformMatrices(*registry, e);
         });
+
+        // Keep UIBox roots synced to their boxes for collision correctness.
+        ui::box::SyncAllUIRootsToBoxes(*registry);
         
         
         

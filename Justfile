@@ -50,6 +50,10 @@ build-debug-fast:
 	cmake -B build-debug -DCMAKE_BUILD_TYPE=Debug -DENABLE_UNIT_TESTS=OFF
 	cmake --build build-debug --target raylib-cpp-cmake-template -j4 --
 
+run-debug:
+	@nohup ./build-debug/raylib-cpp-cmake-template >/tmp/raylib-cpp-cmake-template.log 2>&1 &
+	@echo "Launched (log: /tmp/raylib-cpp-cmake-template.log)"
+
 build-release-fast:
 	cmake -B build-release -DCMAKE_BUILD_TYPE=Release -DENABLE_UNIT_TESTS=OFF
 	cmake --build build-release --target raylib-cpp-cmake-template -j4 --
@@ -89,6 +93,33 @@ test-asan:
 	cmake -B build-asan -DENABLE_UNIT_TESTS=ON -DENABLE_ASAN=ON -DCMAKE_BUILD_TYPE=Debug
 	cmake --build build-asan --target unit_tests
 	./build-asan/tests/unit_tests --gtest_color=yes
+
+# Run only UI sizing tests
+test-ui-sizing:
+	cmake -B build -DENABLE_UNIT_TESTS=ON
+	cmake --build build --target unit_tests
+	./build/tests/unit_tests --gtest_filter="UISizing*:UILayout*" --gtest_color=yes
+
+# =============================================================================
+# UI Baseline Testing (Lua-based layout verification)
+# =============================================================================
+
+# Capture UI baselines (run BEFORE refactoring)
+ui-baseline-capture:
+	@mkdir -p tests/baselines/ui
+	@echo "Starting UI baseline capture..."
+	@(AUTO_START_MAIN_GAME=1 CAPTURE_UI_BASELINES=1 AUTO_EXIT_AFTER_TEST=1 ./build/raylib-cpp-cmake-template 2>&1 & sleep 10; kill $! 2>/dev/null) | grep -E "(Baseline|ERROR|captured|skipped)" || true
+	@echo "Baselines saved to tests/baselines/ui/"
+
+# Verify no UI regressions (run AFTER changes)
+ui-verify:
+	@echo "Verifying UI layouts against baselines..."
+	@(AUTO_START_MAIN_GAME=1 VERIFY_UI_BASELINES=1 AUTO_EXIT_AFTER_TEST=1 ./build/raylib-cpp-cmake-template 2>&1 & sleep 10; kill $! 2>/dev/null) | grep -E "(Verify|PASS|FAIL|REGRESSION)" || true
+
+# Run full UI test suite
+ui-test-all: test-ui-sizing
+	@echo "Running comprehensive UI tests..."
+	@(AUTO_START_MAIN_GAME=1 RUN_REAL_INVENTORY_TEST=1 AUTO_EXIT_AFTER_TEST=1 ./build/raylib-cpp-cmake-template 2>&1 & sleep 15; kill $! 2>/dev/null) | grep -E "(VALIDATION|PASS|FAIL|warning|error)" || true
 
 # =============================================================================
 # Utilities

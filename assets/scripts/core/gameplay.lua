@@ -5530,11 +5530,11 @@ function initPlanningPhase()
     -- -------------------------------------------------------------------------- --
     --       GRID INVENTORY SYSTEM (Phase 5 Cleanup - Legacy Code Removed)       --
     -- -------------------------------------------------------------------------- --
-    -- Grid-based inventory is initialized lazily when opened via keybind (Tab/E keys)
-    -- No upfront entity creation needed - modules self-initialize on first open()
+    -- Grid-based inventory initializes when planning phase starts
+    -- Modules self-initialize before first open for correct sizing and input
     -- Legacy inventory_board_id and trigger_inventory_board_id have been removed
     log_debug("[gameplay] Using new grid inventory system (legacy boards removed)")
-    log_debug("[gameplay] PlayerInventory will initialize on Tab key press")
+    log_debug("[gameplay] PlayerInventory initializes at planning phase start")
     log_debug("[gameplay] WandLoadoutUI will initialize on E key press")
 
     -- for each board set, we get a corresponding index wand def to save, or if the index is out of range, we loop around.

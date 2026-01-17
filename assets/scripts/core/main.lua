@@ -25,6 +25,7 @@ local TextBuilderDemo = require("demos.text_builder_demo")
 local Text = require("core.text") -- TextBuilder system for fire-and-forget text
 local TutorialDialogueDemo = require("tutorial.dialogue.demo")
 local LightingDemo = require("demos.lighting_demo")
+local UIFillerDemo = require("demos.ui_filler_demo")
 -- local RenderGroupsTest = require("tests.test_render_groups_visual") -- Visual test for render groups (disabled: DrawRenderGroup command not registered)
 local SpecialItem = require("core.special_item")
 SaveManager = require("core.save_manager") -- Global for C++ debug UI access
@@ -84,7 +85,8 @@ local function record_telemetry_once(flag, event, props)
     record_telemetry(event, props)
 end
 
-local mainMenuEntities = {
+-- Global so demos can access main menu entities for repositioning
+mainMenuEntities = {
 }
 
 local MAIN_MENU_TIMER_GROUP = "main_menu"
@@ -452,7 +454,7 @@ function initMainMenu()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(util.getColor("jade_green"))  -- Resurrect 64 palette
+                :addColor(util.getColor("green_jade"))  -- Resurrect 64 palette
                 :addEmboss(2.0)
                 :addShadow(true)
                 :addHover(true) -- needed for button effect
@@ -510,7 +512,7 @@ function createInventoryTestButton()
     
     local buttonDef = dsl.strict.root {
         config = {
-            color = util.getColor("jade_green"),
+            color = util.getColor("green_jade"),
             padding = 8,
             emboss = 3,
         },
@@ -567,6 +569,13 @@ end
 function createTabDemo()
     print("[TRACE] createTabDemo called")
     local dsl = require("ui.ui_syntax_sugar")
+    local panelWidth = 420  -- Increased to fit 6 tabs (Game, Graphics, Audio, Sprites, Inventory, Gallery)
+    local gallerySafeMargins = {
+        left = 24,
+        right = panelWidth + 40,
+        top = 24,
+        bottom = 48,
+    }
     
     local tabDef = dsl.strict.root {
         config = {
@@ -578,7 +587,7 @@ function createTabDemo()
             dsl.strict.tabs {
                 id = "demo_tabs",
                 activeTab = "game",
-                contentMinWidth = 200,
+                contentMinWidth = 400,  -- Increased to fit 6 tabs
                 contentMinHeight = 120,
                 tabs = {
                     {
@@ -590,8 +599,8 @@ function createTabDemo()
                                 children = {
                                     dsl.strict.text("Game Settings", { fontSize = 16, color = "white", shadow = true }),
                                     dsl.strict.spacer(8),
-                                    dsl.strict.text("Speed: Normal", { fontSize = 12, color = "lightgray" }),
-                                    dsl.strict.text("Difficulty: Medium", { fontSize = 12, color = "lightgray" }),
+                                    dsl.strict.text("Speed: Normal", { fontSize = 12, color = "gray_light" }),
+                                    dsl.strict.text("Difficulty: Medium", { fontSize = 12, color = "gray_light" }),
                                 }
                             }
                         end
@@ -605,8 +614,8 @@ function createTabDemo()
                                 children = {
                                     dsl.strict.text("Graphics Settings", { fontSize = 16, color = "white", shadow = true }),
                                     dsl.strict.spacer(8),
-                                    dsl.strict.text("Fullscreen: Off", { fontSize = 12, color = "lightgray" }),
-                                    dsl.strict.text("VSync: On", { fontSize = 12, color = "lightgray" }),
+                                    dsl.strict.text("Fullscreen: Off", { fontSize = 12, color = "gray_light" }),
+                                    dsl.strict.text("VSync: On", { fontSize = 12, color = "gray_light" }),
                                 }
                             }
                         end
@@ -620,9 +629,9 @@ function createTabDemo()
                                 children = {
                                     dsl.strict.text("Audio Settings", { fontSize = 16, color = "white", shadow = true }),
                                     dsl.strict.spacer(8),
-                                    dsl.strict.text("Master: 100%", { fontSize = 12, color = "lightgray" }),
-                                    dsl.strict.text("Music: 80%", { fontSize = 12, color = "lightgray" }),
-                                    dsl.strict.text("SFX: 100%", { fontSize = 12, color = "lightgray" }),
+                                    dsl.strict.text("Master: 100%", { fontSize = 12, color = "gray_light" }),
+                                    dsl.strict.text("Music: 80%", { fontSize = 12, color = "gray_light" }),
+                                    dsl.strict.text("SFX: 100%", { fontSize = 12, color = "gray_light" }),
                                 }
                             }
                         end
@@ -645,11 +654,11 @@ function createTabDemo()
                                 children = {
                                     dsl.strict.text("Player Inventory Test", { fontSize = 16, color = "white", shadow = true }),
                                     dsl.strict.spacer(8),
-                                    dsl.strict.text("Status: " .. (PlayerInventory.isOpen() and "OPEN" or "CLOSED"), { fontSize = 12, color = "lightgray" }),
+                                    dsl.strict.text("Status: " .. (PlayerInventory.isOpen() and "OPEN" or "CLOSED"), { fontSize = 12, color = "gray_light" }),
                                     dsl.strict.spacer(12),
                                     dsl.strict.button("Open Inventory", {
                                         fontSize = 14,
-                                        color = "jade_green",
+                                        color = "green_jade",
                                         textColor = "white",
                                         minWidth = 140,
                                         onClick = function()
@@ -661,7 +670,7 @@ function createTabDemo()
                                     dsl.strict.spacer(4),
                                     dsl.strict.button("Close Inventory", {
                                         fontSize = 14,
-                                        color = "darkred",
+                                        color = "indian_red",
                                         textColor = "white",
                                         minWidth = 140,
                                         onClick = function()
@@ -673,7 +682,7 @@ function createTabDemo()
                                     dsl.strict.spacer(4),
                                     dsl.strict.button("Toggle Inventory", {
                                         fontSize = 14,
-                                        color = "steel_blue",
+                                        color = "blue_steel",
                                         textColor = "white",
                                         minWidth = 140,
                                         onClick = function()
@@ -686,14 +695,78 @@ function createTabDemo()
                             }
                         end
                     },
+                    {
+                        id = "gallery",
+                        label = "Gallery",
+                        content = function()
+                            local GalleryViewer = require("ui.showcase.gallery_viewer")
+                            return dsl.strict.vbox {
+                                config = { padding = 8 },
+                                children = {
+                                    dsl.strict.text("UI Showcase Gallery", { fontSize = 16, color = "white", shadow = true }),
+                                    dsl.strict.spacer(8),
+                                    dsl.strict.text("Browse UI component examples", { fontSize = 12, color = "gray_light" }),
+                                    dsl.strict.text("with live previews and code.", { fontSize = 12, color = "gray_light" }),
+                                    dsl.strict.spacer(12),
+                                    dsl.strict.button("Open Gallery", {
+                                        fontSize = 14,
+                                        color = "green_jade",
+                                        textColor = "white",
+                                        minWidth = 140,
+                                        onClick = function()
+                                            if playSoundEffect then playSoundEffect("effects", "button-click") end
+                                            -- Let the gallery auto-fit to safe screen bounds
+                                            GalleryViewer.showGlobalWithOptions(nil, nil, { safeMargins = gallerySafeMargins })
+                                            print("[GALLERY] Showcase gallery opened")
+                                        end
+                                    }),
+                                    dsl.strict.spacer(4),
+                                    dsl.strict.button("Close Gallery", {
+                                        fontSize = 14,
+                                        color = "indian_red",
+                                        textColor = "white",
+                                        minWidth = 140,
+                                        onClick = function()
+                                            if playSoundEffect then playSoundEffect("effects", "button-click") end
+                                            GalleryViewer.hideGlobal()
+                                            print("[GALLERY] Showcase gallery closed")
+                                        end
+                                    }),
+                                }
+                            }
+                        end
+                    },
                 }
             }
         }
     }
     
-    local panelWidth = 220
     mainMenuEntities.tab_demo_uibox = dsl.spawn({ x = globals.screenWidth() - panelWidth - 20, y = 20 }, tabDef)
     ui.box.set_draw_layer(mainMenuEntities.tab_demo_uibox, "ui")
+
+    -- Auto-open gallery for testing (one-shot, guarded by module-level flag)
+    if os.getenv and os.getenv("AUTO_TEST_GALLERY") == "1" and not _G._galleryTestScheduled then
+        _G._galleryTestScheduled = true
+        print("[GALLERY_TEST] Scheduling gallery auto-open in 0.5s")
+        local timer = require("core.timer")
+        timer.after(0.5, function()
+            print("[GALLERY_TEST] Timer fired!")
+            if _G._galleryTestOpened then
+                print("[GALLERY_TEST] Gallery already opened, skipping")
+                return
+            end
+            _G._galleryTestOpened = true
+            local ok, err = pcall(function()
+                local GalleryViewer = require("ui.showcase.gallery_viewer")
+                print("[GALLERY_TEST] Opening gallery (auto-fit)")
+                GalleryViewer.showGlobalWithOptions(nil, nil, { safeMargins = gallerySafeMargins })
+                print("[GALLERY_TEST] Gallery opened successfully")
+            end)
+            if not ok then
+                print("[GALLERY_TEST] ERROR:", err)
+            end
+        end)
+    end
 end
 
 function createPatchNotesButton()
@@ -857,6 +930,9 @@ function clearMainMenu()
         mainMenuEntities.patch_notes_button = nil
     end
     PatchNotesModal.destroy()
+    -- Clean up gallery viewer if open
+    local GalleryViewer = require("ui.showcase.gallery_viewer")
+    GalleryViewer.destroyGlobal()
     if mainMenuEntities.tab_demo_uibox and ui.box and ui.box.Remove then
         ui.box.Remove(registry, mainMenuEntities.tab_demo_uibox)
         local dsl = require("ui.ui_syntax_sugar")
@@ -1087,6 +1163,24 @@ function main.init()
         else
             log_warn("[RealInventoryTest] Could not load test module: " .. tostring(test_module))
         end
+    end
+
+    -- Run UI Filler demo (set RUN_UI_FILLER_DEMO=1 to enable)
+    local runUIFillerDemo = os.getenv("RUN_UI_FILLER_DEMO") == "1"
+    local autoExitAfterDemo = os.getenv("AUTO_EXIT_AFTER_DEMO") == "1"
+    if runUIFillerDemo then
+        timer.after(0.5, function()
+            log_debug("[UIFillerDemo] Starting UI Filler demo...")
+            UIFillerDemo.start()
+
+            if autoExitAfterDemo then
+                -- Exit after all demos complete (12 demos * ~6s each = ~72s, add buffer)
+                timer.after(90, function()
+                    log_debug("[UIFillerDemo] Auto-exit after demo")
+                    os.exit(0)
+                end, "ui_filler_demo_exit", "ui_filler_demo")
+            end
+        end, "ui_filler_demo_start", "ui_filler_demo")
     end
 
     -- Legacy tooltip hide timer - no longer needed with DSL tooltips

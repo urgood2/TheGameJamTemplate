@@ -89,8 +89,24 @@ local function color(c)
 end
 
 -- Cache a transparent color at module load time (used by dsl.spacer)
--- CRITICAL: Must use Color.new() to create proper userdata, not Lua table
+-- NOTE: We keep a fallback path to "blank" to avoid handler defaults (white fills)
 local TRANSPARENT_COLOR = Color and Color.new and Color.new(0, 0, 0, 0) or nil
+
+local function resolveSpacerColor()
+    if TRANSPARENT_COLOR and type(TRANSPARENT_COLOR) == "userdata" then
+        return TRANSPARENT_COLOR
+    end
+
+    if util and util.getColor then
+        local ok, colorValue = pcall(util.getColor, "blank")
+        if ok and type(colorValue) == "userdata" then
+            TRANSPARENT_COLOR = colorValue
+            return TRANSPARENT_COLOR
+        end
+    end
+
+    return "blank"
+end
 
 ------------------------------------------------------------
 -- 1️⃣ Base container constructors
@@ -769,15 +785,82 @@ function dsl.spacer(w, h)
     return def{
         type = "RECT_SHAPE",
         config = {
-            color    = TRANSPARENT_COLOR, -- Cached at module load, nil triggers skip in ui_definition_helper
+            color = resolveSpacerColor(),
             minWidth = w or 10,
             minHeight = h or w or 10,
+            instanceType = "spacer",
         }
     }
 end
 
 ------------------------------------------------------------
--- 1️⃣1️⃣ Divider Element
+-- 1️⃣1️⃣ Filler Element
+-- Flexible space distribution for hbox/vbox containers.
+------------------------------------------------------------
+
+---@class FillerOpts
+---@field flex? number Flex weight for proportional distribution (default: 1)
+---@field maxFill? number Maximum expansion in pixels (0 = unlimited)
+
+--- Create a filler element that expands to claim remaining space in a container.
+---
+--- Fillers are invisible layout primitives that:
+--- - Claim remaining space after fixed-size children are measured
+--- - Respect flex weights for proportional distribution among multiple fillers
+--- - Are non-interactive (clicks pass through)
+--- - Work only as direct children of hbox/vbox containers
+---
+--- **Example:**
+--- ```lua
+--- -- Simple filler (pushes elements to edges)
+--- dsl.hbox {
+---     children = {
+---         dsl.text("Left"),
+---         dsl.filler(),
+---         dsl.text("Right"),
+---     }
+--- }
+---
+--- -- Filler with flex weight (proportional distribution)
+--- dsl.hbox {
+---     children = {
+---         dsl.text("A"),
+---         dsl.filler { flex = 1 },    -- Gets 1/3 of remaining space
+---         dsl.text("B"),
+---         dsl.filler { flex = 2 },    -- Gets 2/3 of remaining space
+---         dsl.text("C"),
+---     }
+--- }
+---
+--- -- Filler with max cap
+--- dsl.hbox {
+---     config = { minWidth = 400 },
+---     children = {
+---         dsl.text("Left"),
+---         dsl.filler { maxFill = 100 },  -- Expand up to 100px max
+---         dsl.text("Right"),
+---     }
+--- }
+--- ```
+---@param opts? FillerOpts Optional configuration
+---@return table UIDefinition node for the filler element
+function dsl.filler(opts)
+    opts = opts or {}
+    return def{
+        type = "RECT_SHAPE",  -- Use RECT_SHAPE (a valid UITypeEnum) instead of non-existent "FILLER"
+        config = {
+            color = TRANSPARENT_COLOR,  -- Invisible like spacer
+            isFiller = true,
+            flexWeight = opts.flex or 1,
+            maxFillSize = opts.maxFill or 0,
+            -- Fillers are non-interactive (no collision)
+            canCollide = false,
+        }
+    }
+end
+
+------------------------------------------------------------
+-- 1️⃣2️⃣ Divider Element
 -- Horizontal or vertical divider line.
 ------------------------------------------------------------
 
@@ -822,6 +905,10 @@ function dsl.divider(direction, opts)
                 color     = color(opts.color or "white"),
                 minWidth  = thickness,
                 minHeight = opts.length or 20,
+                padding   = 0,
+                shadow    = false,
+                emboss    = 0,
+                line_emboss = false,
             }
         }
     else
@@ -831,6 +918,10 @@ function dsl.divider(direction, opts)
                 color     = color(opts.color or "white"),
                 minWidth  = opts.length or 100,
                 minHeight = thickness,
+                padding   = 0,
+                shadow    = false,
+                emboss    = 0,
+                line_emboss = false,
             }
         }
     end
@@ -2113,6 +2204,7 @@ local STRICT_MAPPINGS = {
     { name = "dynamicText", fn = dsl.dynamicText, schema = Schema.UI_DYNAMIC_TEXT, positional = { "fn", "fontSize", "effect" } },
     { name = "anim",     fn = dsl.anim,         schema = Schema.UI_ANIM,         positional = { "id" } },
     { name = "spacer",   fn = dsl.spacer,       schema = Schema.UI_SPACER,       positional = { "w", "h" } },
+    { name = "filler",   fn = dsl.filler,       schema = Schema.UI_FILLER,       positional = {} },
     { name = "divider",  fn = dsl.divider,      schema = Schema.UI_DIVIDER,      positional = { "direction" } },
     { name = "iconLabel", fn = dsl.iconLabel,   schema = Schema.UI_ICON_LABEL,   positional = { "iconId", "label" } },
 

@@ -182,38 +182,78 @@ dsl.vbox {
         -- VERTICAL_TOP=8, VERTICAL_CENTER=16, VERTICAL_BOTTOM=32
         source = [[
 dsl.vbox {
-    config = { minWidth = 200, color = "darkgray", padding = 8 },
+    config = {
+        minWidth = 220,
+        color = "darkgray",
+        padding = 8,
+        align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP)
+    },
     children = {
-        dsl.text("Left aligned", {
-            color = "white",
-            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER)
-        }),
-        dsl.text("Center aligned", {
-            color = "gold",
-            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
-        }),
-        dsl.text("Right aligned", {
-            color = "cyan",
-            align = bit.bor(AlignmentFlag.HORIZONTAL_RIGHT, AlignmentFlag.VERTICAL_CENTER)
-        }),
+        dsl.hbox {
+            config = {
+                minWidth = 200,
+                align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER)
+            },
+            children = {
+                dsl.text("Left aligned", { color = "white" })
+            }
+        },
+        dsl.hbox {
+            config = {
+                minWidth = 200,
+                align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
+            },
+            children = {
+                dsl.text("Center aligned", { color = "gold" })
+            }
+        },
+        dsl.hbox {
+            config = {
+                minWidth = 200,
+                align = bit.bor(AlignmentFlag.HORIZONTAL_RIGHT, AlignmentFlag.VERTICAL_CENTER)
+            },
+            children = {
+                dsl.text("Right aligned", { color = "cyan" })
+            }
+        },
     }
 }]],
         create = function()
             return dsl.vbox {
-                config = { minWidth = 200, color = "darkgray", padding = 8 },
+                config = {
+                    minWidth = 220,
+                    color = "darkgray",
+                    padding = 8,
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP)
+                },
                 children = {
-                    dsl.text("Left aligned", {
-                        color = "white",
-                        align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER)
-                    }),
-                    dsl.text("Center aligned", {
-                        color = "gold",
-                        align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
-                    }),
-                    dsl.text("Right aligned", {
-                        color = "cyan",
-                        align = bit.bor(AlignmentFlag.HORIZONTAL_RIGHT, AlignmentFlag.VERTICAL_CENTER)
-                    }),
+                    dsl.hbox {
+                        config = {
+                            minWidth = 200,
+                            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER)
+                        },
+                        children = {
+                            dsl.text("Left aligned", { color = "white" })
+                        }
+                    },
+                    dsl.hbox {
+                        config = {
+                            minWidth = 200,
+                            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
+                        },
+                        children = {
+                            dsl.text("Center aligned", { color = "gold" })
+                        }
+                    },
+                    dsl.hbox {
+                        config = {
+                            minWidth = 200,
+                            align = bit.bor(AlignmentFlag.HORIZONTAL_RIGHT, AlignmentFlag.VERTICAL_CENTER)
+                        },
+                        children = {
+                            dsl.text("Right aligned", { color = "cyan" })
+                        }
+                    },
                 }
             }
         end,
@@ -294,12 +334,14 @@ dsl.hbox {
         -- PROPS: Tinting is applied post-creation using animation_system
         -- animation_system.setFGColorForAllAnimationObjects(entity, r, g, b, a)
         source = [[
--- Create image then apply tint:
-local img = dsl.anim("ui-decor-test-1.png", { w = 48, h = 48 })
--- After spawning, call:
--- animation_system.setFGColorForAllAnimationObjects(entity, 255, 0, 0, 255)
+-- Create an image entity, then tint it with animation_system:
+local function tinted(sprite, tint)
+    local ent = animation_system.createAnimatedObjectWithTransform(sprite, true, 0, 0, nil, true)
+    animation_system.resizeAnimationObjectsInEntityToFit(ent, 48, 48)
+    animation_system.setFGColorForAllAnimationObjects(ent, tint)
+    return ui.definitions.wrapEntityInsideObjectElement(ent)
+end
 
--- Example shows labeled tinted images:
 dsl.hbox {
     config = { spacing = 8 },
     children = {
@@ -308,18 +350,44 @@ dsl.hbox {
             dsl.text("Normal", { fontSize = 10, color = "white" })
         }},
         dsl.vbox { children = {
-            dsl.anim("ui-decor-test-1.png", { w = 48, h = 48 }),  -- tint red
+            tinted("ui-decor-test-1.png", util.getColor("red")),
             dsl.text("Red tint", { fontSize = 10, color = "red" })
         }},
         dsl.vbox { children = {
-            dsl.anim("ui-decor-test-1.png", { w = 48, h = 48 }),  -- tint blue
+            tinted("ui-decor-test-1.png", util.getColor("cyan")),
             dsl.text("Blue tint", { fontSize = 10, color = "cyan" })
         }},
     }
 }]],
         create = function()
-            -- Note: Actual tinting requires animation_system call on spawned entity
-            -- This showcase demonstrates the visual layout
+            local function makeColor(r, g, b, a)
+                if Color and Color.new then
+                    return Color.new(r, g, b, a or 255)
+                end
+                return { r = r, g = g, b = b, a = a or 255 }
+            end
+
+            local function tintColor(name, fallback)
+                if util and util.getColor then
+                    local ok, c = pcall(util.getColor, name)
+                    if ok and c then return c end
+                end
+                return fallback or makeColor(255, 255, 255, 255)
+            end
+
+            local function tinted(sprite, tint)
+                if not (animation_system and animation_system.createAnimatedObjectWithTransform) then
+                    return dsl.anim(sprite, { w = 48, h = 48 })
+                end
+
+                local ent = animation_system.createAnimatedObjectWithTransform(sprite, true, 0, 0, nil, true)
+                animation_system.resizeAnimationObjectsInEntityToFit(ent, 48, 48)
+                if animation_system.setFGColorForAllAnimationObjects then
+                    animation_system.setFGColorForAllAnimationObjects(ent, tint)
+                end
+                return ui.definitions.wrapEntityInsideObjectElement(ent)
+            end
+
             return dsl.hbox {
                 config = { spacing = 8 },
                 children = {
@@ -328,12 +396,12 @@ dsl.hbox {
                         dsl.text("Normal", { fontSize = 10, color = "white" })
                     }},
                     dsl.vbox { children = {
-                        dsl.anim("ui-decor-test-1.png", { w = 48, h = 48 }),
-                        dsl.text("Red tint*", { fontSize = 10, color = "red" })
+                        tinted("ui-decor-test-1.png", tintColor("red", makeColor(255, 80, 80, 255))),
+                        dsl.text("Red tint", { fontSize = 10, color = "red" })
                     }},
                     dsl.vbox { children = {
-                        dsl.anim("ui-decor-test-1.png", { w = 48, h = 48 }),
-                        dsl.text("Blue tint*", { fontSize = 10, color = "cyan" })
+                        tinted("ui-decor-test-1.png", tintColor("cyan", makeColor(80, 180, 255, 255))),
+                        dsl.text("Blue tint", { fontSize = 10, color = "cyan" })
                     }},
                 }
             }
@@ -1266,7 +1334,11 @@ dsl.hbox {
         dsl.anim("ui-decor-test-1.png", { w = 24, h = 24 }),
         dsl.text("Toolbar Item", { color = "white" }),
         dsl.spacer(20),
-        dsl.button("Action", { color = "blue", textColor = "white" }),
+        dsl.button("Action", {
+            color = "blue",
+            textColor = "white",
+            onClick = function() print("Toolbar action") end
+        }),
     }
 }]],
         create = function()
@@ -1283,7 +1355,11 @@ dsl.hbox {
                     dsl.anim("ui-decor-test-1.png", { w = 24, h = 24 }),
                     dsl.text("Toolbar Item", { color = "white" }),
                     dsl.spacer(20),
-                    dsl.button("Action", { color = "blue", textColor = "white" }),
+                    dsl.button("Action", {
+                        color = "blue",
+                        textColor = "white",
+                        onClick = function() print("Toolbar action") end
+                    }),
                 }
             }
         end,
@@ -1372,7 +1448,11 @@ dsl.vbox {
             config = { spacing = 10, padding = 4, color = "slategray" },
             children = {
                 dsl.text("Row 3:", { color = "gold" }),
-                dsl.button("OK", { color = "green", textColor = "white" }),
+                dsl.button("OK", {
+                    color = "green",
+                    textColor = "white",
+                    onClick = function() print("Row action") end
+                }),
             }
         },
     }
@@ -1402,7 +1482,11 @@ dsl.vbox {
                         config = { spacing = 10, padding = 4, color = "slategray" },
                         children = {
                             dsl.text("Row 3:", { color = "gold" }),
-                            dsl.button("OK", { color = "green", textColor = "white" }),
+                            dsl.button("OK", {
+                                color = "green",
+                                textColor = "white",
+                                onClick = function() print("Row action") end
+                            }),
                         }
                     },
                 }
@@ -1438,8 +1522,16 @@ dsl.hbox {
                 dsl.hbox {
                     config = { spacing = 8 },
                     children = {
-                        dsl.button("Save", { color = "green", textColor = "white" }),
-                        dsl.button("Cancel", { color = "red", textColor = "white" }),
+                        dsl.button("Save", {
+                            color = "green",
+                            textColor = "white",
+                            onClick = function() print("Saved") end
+                        }),
+                        dsl.button("Cancel", {
+                            color = "red",
+                            textColor = "white",
+                            onClick = function() print("Cancelled") end
+                        }),
                     }
                 },
             }
@@ -1471,8 +1563,16 @@ dsl.hbox {
                             dsl.hbox {
                                 config = { spacing = 8 },
                                 children = {
-                                    dsl.button("Save", { color = "green", textColor = "white" }),
-                                    dsl.button("Cancel", { color = "red", textColor = "white" }),
+                                    dsl.button("Save", {
+                                        color = "green",
+                                        textColor = "white",
+                                        onClick = function() print("Saved") end
+                                    }),
+                                    dsl.button("Cancel", {
+                                        color = "red",
+                                        textColor = "white",
+                                        onClick = function() print("Cancelled") end
+                                    }),
                                 }
                             },
                         }
@@ -1881,7 +1981,14 @@ dsl.hbox {
     children = {
         -- Play button
         dsl.hbox {
-            config = { padding = 6, color = "green", hover = true, canCollide = true, emboss = 2 },
+            config = {
+                padding = 6,
+                color = "green",
+                hover = true,
+                canCollide = true,
+                emboss = 2,
+                buttonCallback = function() print("Play clicked!") end
+            },
             children = {
                 dsl.anim("ui-decor-test-1.png", { w = 16, h = 16, shadow = false }),
                 dsl.text("Play", { fontSize = 12, color = "white" }),
@@ -1889,7 +1996,14 @@ dsl.hbox {
         },
         -- Settings button
         dsl.hbox {
-            config = { padding = 6, color = "gray", hover = true, canCollide = true, emboss = 2 },
+            config = {
+                padding = 6,
+                color = "gray",
+                hover = true,
+                canCollide = true,
+                emboss = 2,
+                buttonCallback = function() print("Settings clicked!") end
+            },
             children = {
                 dsl.anim("ui-decor-test-1.png", { w = 16, h = 16, shadow = false }),
                 dsl.text("Settings", { fontSize = 12, color = "white" }),
@@ -1923,14 +2037,28 @@ dsl.hbox {
                         config = { spacing = 8 },
                         children = {
                             dsl.hbox {
-                                config = { padding = 6, color = "green", hover = true, canCollide = true, emboss = 2 },
+                                config = {
+                                    padding = 6,
+                                    color = "green",
+                                    hover = true,
+                                    canCollide = true,
+                                    emboss = 2,
+                                    buttonCallback = function() print("Play clicked!") end
+                                },
                                 children = {
                                     dsl.anim("ui-decor-test-1.png", { w = 16, h = 16, shadow = false }),
                                     dsl.text("Play", { fontSize = 12, color = "white" }),
                                 }
                             },
                             dsl.hbox {
-                                config = { padding = 6, color = "gray", hover = true, canCollide = true, emboss = 2 },
+                                config = {
+                                    padding = 6,
+                                    color = "gray",
+                                    hover = true,
+                                    canCollide = true,
+                                    emboss = 2,
+                                    buttonCallback = function() print("Settings clicked!") end
+                                },
                                 children = {
                                     dsl.anim("ui-decor-test-1.png", { w = 16, h = 16, shadow = false }),
                                     dsl.text("Settings", { fontSize = 12, color = "white" }),
@@ -2595,9 +2723,17 @@ dsl.vbox {
         dsl.spacer(8),
         dsl.hbox {
             children = {
-                dsl.button("Save", { color = "green", textColor = "white" }),
+                dsl.button("Save", {
+                    color = "green",
+                    textColor = "white",
+                    onClick = function() print("Settings saved") end
+                }),
                 dsl.spacer(8),
-                dsl.button("Cancel", { color = "red", textColor = "white" })
+                dsl.button("Cancel", {
+                    color = "red",
+                    textColor = "white",
+                    onClick = function() print("Settings cancelled") end
+                })
             }
         }
     }
@@ -2625,9 +2761,17 @@ dsl.vbox {
                     dsl.spacer(8),
                     dsl.hbox {
                         children = {
-                            dsl.button("Save", { color = "green", textColor = "white" }),
+                            dsl.button("Save", {
+                                color = "green",
+                                textColor = "white",
+                                onClick = function() print("Settings saved") end
+                            }),
                             dsl.spacer(8),
-                            dsl.button("Cancel", { color = "red", textColor = "white" })
+                            dsl.button("Cancel", {
+                                color = "red",
+                                textColor = "white",
+                                onClick = function() print("Settings cancelled") end
+                            })
                         }
                     }
                 }
@@ -2661,7 +2805,11 @@ dsl.vbox {
         dsl.hbox {
             config = { padding = 8, color = "dimgray" },
             children = {
-                dsl.button("Action", { color = "blue", textColor = "white" })
+                dsl.button("Action", {
+                    color = "blue",
+                    textColor = "white",
+                    onClick = function() print("Card action") end
+                })
             }
         }
     }
@@ -2689,7 +2837,11 @@ dsl.vbox {
                     dsl.hbox {
                         config = { padding = 8, color = "dimgray" },
                         children = {
-                            dsl.button("Action", { color = "blue", textColor = "white" })
+                            dsl.button("Action", {
+                                color = "blue",
+                                textColor = "white",
+                                onClick = function() print("Card action") end
+                            })
                         }
                     }
                 }

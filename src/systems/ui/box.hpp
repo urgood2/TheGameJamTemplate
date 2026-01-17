@@ -48,6 +48,20 @@ namespace ui {
         auto TreeCalcSubContainer(entt::registry &registry, entt::entity uiElement, ui::LocalTransform parentUINodeRect,
                 bool forceRecalculateLayout, std::optional<float> scale, LocalTransform &calcCurrentNodeTransform, std::unordered_map<entt::entity, Vector2> &contentSizes) -> Vector2;
         auto SubCalculateContainerSize(ui::LocalTransform &calcCurrentNodeTransform, ui::LocalTransform &parentUINodeRect, ui::UIConfig &uiConfig, ui::LocalTransform &calcChildTransform, float padding, transform::GameObject &node, entt::registry &registry, float factor, std::unordered_map<entt::entity, Vector2> &contentSizes) ->void;
+        /**
+         * @brief Distributes remaining space among filler children in a container.
+         *
+         * Called after fixed children are sized. Calculates available space and
+         * distributes it proportionally based on flex weights, respecting maxFillSize caps.
+         *
+         * @param registry The entity registry
+         * @param containerEntity The container with filler children
+         * @param containerConfig The container's UIConfig
+         * @param containerSize The container's calculated size (w, h)
+         * @param contentSizes Cache of child content sizes (updated with filler sizes)
+         */
+        auto DistributeFillerSpace(entt::registry &registry, entt::entity containerEntity, ui::UIConfig &containerConfig,
+                                   Vector2 containerSize, std::unordered_map<entt::entity, Vector2> &contentSizes) -> void;
         [[nodiscard]] auto GetUIEByID(entt::registry &registry, entt::entity node, const std::string &id) noexcept -> std::optional<entt::entity>;
         [[nodiscard]] std::optional<entt::entity> GetUIEByID(entt::registry &registry, const std::string &id) noexcept;
         // Function to remove a group of elements from the UI system
@@ -63,6 +77,10 @@ namespace ui {
         auto AddChild(entt::registry& registry, entt::entity uiBox, UIElementTemplateNode uiElementDef, entt::entity parent) -> void;
         auto SetContainer(entt::registry &registry, entt::entity self, entt::entity container) -> void;
         auto DebugPrint(entt::registry &registry, entt::entity self, int indent = 0) -> std::string;
+        // Keeps a UIBox and its uiRoot transform in sync (position/size).
+        void SyncUIRootToBox(entt::registry &registry, entt::entity uiBox);
+        // Syncs all UIBoxes in the registry (uses cached view).
+        void SyncAllUIRootsToBoxes(entt::registry &registry);
         void TraverseUITreeBottomUp(entt::registry &registry, entt::entity rootUIElement, std::function<void(entt::entity)> visitor, bool excludeTopmostParent = false);
         void drawAllBoxes(entt::registry &registry,
             std::shared_ptr<layer::Layer> layerPtr);

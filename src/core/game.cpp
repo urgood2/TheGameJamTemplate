@@ -693,8 +693,13 @@ namespace game
                         Rectangle paneR = paneViewport(globals::getRegistry(), paneRef->pane);
 
                         // shift the element by negative scroll to match render position
+                        // if scroll displacement is already applied, avoid double-offsetting
+                        float adjustedTop = box.top;
+                        if (!go.scrollPaneDisplacement) {
+                            adjustedTop = box.top - scr.offset;
+                        }
                         Rectangle eltR{ box.left,
-                                        box.top  - scr.offset,
+                                        adjustedTop,
                                         box.width, box.height };
 
                         include = rectsOverlap(eltR, paneR);
@@ -1557,7 +1562,7 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
 
             ZONE_SCOPED("UIElement Update");
             // static auto uiElementGroup = globals::getRegistry().group
-
+            ui::EnsureUIGroupInitialized(globals::getRegistry());
             ui::globalUIGroup.each([delta](entt::entity e, ui::UIElementComponent &uiElement, ui::UIConfig &uiConfig, ui::UIState &uiState, transform::GameObject &node, transform::Transform &transform) {
                 // check if the entity is active
                 if (!entity_gamestate_management::active_states_instance().is_active(globals::getRegistry().get<entity_gamestate_management::StateTag>(e)))

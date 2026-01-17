@@ -122,6 +122,28 @@ local function collectPlayerInventory()
             result[tabName] = tabData
 
             log_debug(string.format("[GridInventorySave] Collected %d cards from %s", #tabData, tabName))
+        else
+            -- Fallback: use stored inactive-tab items if available
+            local stored = PlayerInventory.getStoredItemsForTab and PlayerInventory.getStoredItemsForTab(tabName) or nil
+            if stored and next(stored) ~= nil then
+                local tabData = {}
+                for slotIndex, itemEntity in pairs(stored) do
+                    if itemEntity and registry:valid(itemEntity) then
+                        local cardId = getCardIdFromEntity(itemEntity)
+                        if cardId then
+                            table.insert(tabData, {
+                                slot = slotIndex,
+                                card_id = cardId,
+                                stack_count = 1,
+                            })
+                        end
+                    end
+                end
+
+                table.sort(tabData, function(a, b) return a.slot < b.slot end)
+                result[tabName] = tabData
+                log_debug(string.format("[GridInventorySave] Collected %d stored cards from %s", #tabData, tabName))
+            end
         end
     end
 

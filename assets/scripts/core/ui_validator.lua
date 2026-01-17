@@ -27,6 +27,10 @@ local severities = {
     z_order_occlusion = "error",     -- Higher-z entity behind lower-z entity
     text_zero_offset = "warning",    -- Text element with no offset from parent (missing padding)
     edge_proximity = "warning",      -- Element positioned incorrectly relative to container edge
+    filler_zero_size = "warning",    -- Filler computed size = 0 (layout misconfiguration)
+    filler_in_unsized = "info",      -- Filler in container with no size constraints (fills to 0)
+    filler_nested = "warning",       -- Filler not a direct child of hbox/vbox (undefined behavior)
+    filler_multiple = "info",        -- Multiple fillers with equal flex - may be intentional but verify
 }
 
 -- Render tracking (for manually-rendered entities)
@@ -935,6 +939,163 @@ function UIValidator.checkEdgeProximity(checks, options)
     return violations
 end
 
+---Check filler elements for potential issues
+---@param entity number Root entity to check
+---@param options? table {skipHidden: boolean}
+---@return table[] violations
+function UIValidator.checkFillers(entity, options)
+    local violations = {}
+    options = options or {}
+
+    if not entity or not registry or not registry:valid(entity) then
+        return violations
+    end
+
+    -- Check if component_cache is available for component lookups
+    if not component_cache or not component_cache.get then
+        return violations
+    end
+
+    local function isFiller(ent)
+        local config = component_cache.get(ent, UIConfig)
+        if config and (config.isFiller or config.uiType == 10) then -- 10 = FILLER enum
+            return true
+        end
+        return false
+    end
+
+    local function isHboxOrVbox(config)
+        if not config or not config.uiType then return false end
+        local uiType = config.uiType
+        -- HORIZONTAL_CONTAINER = 3, VERTICAL_CONTAINER = 2, ROOT = 1, SCROLL_PANE = 4
+        return uiType == 2 or uiType == 3 or uiType == 1 or uiType == 4
+    end
+
+    local function checkEntity(ent, parentConfig, parentId)
+        local config = component_cache.get(ent, UIConfig)
+        if not config then return end
+
+        -- Skip hidden if requested
+        if options.skipHidden then
+            local bounds = UIValidator.getBounds(ent)
+            if bounds and UIValidator.isHidden(bounds) then
+                return
+            end
+        end
+
+        -- Check if this is a filler
+        if config.isFiller or config.uiType == 10 then
+            -- Rule 1: filler_zero_size - Filler computed size is 0
+            local computedSize = config.computedFillSize or 0
+            if computedSize == 0 then
+                local transform = component_cache.get(ent, Transform)
+                local w = transform and transform.actualW or 0
+                local h = transform and transform.actualH or 0
+                if w == 0 and h == 0 then
+                    table.insert(violations, {
+                        type = "filler_zero_size",
+                        severity = severities.filler_zero_size,
+                        entity = ent,
+                        parent = parentId,
+                        message = string.format(
+                            "Filler %s has zero computed size. Container may lack minWidth/minHeight.",
+                            tostring(ent)
+                        ),
+                    })
+                end
+            end
+
+            -- Rule 2: filler_nested - Filler not in hbox/vbox
+            if parentConfig and not isHboxOrVbox(parentConfig) then
+                table.insert(violations, {
+                    type = "filler_nested",
+                    severity = severities.filler_nested,
+                    entity = ent,
+                    parent = parentId,
+                    message = string.format(
+                        "Filler %s is not a direct child of hbox/vbox (parent type: %s). Behavior undefined.",
+                        tostring(ent),
+                        tostring(parentConfig.uiType)
+                    ),
+                })
+            end
+
+            -- Rule 3: filler_in_unsized - Filler in container with no size constraints
+            if parentConfig then
+                local hasSize = (parentConfig.minWidth and parentConfig.minWidth > 0) or
+                               (parentConfig.minHeight and parentConfig.minHeight > 0) or
+                               (parentConfig.width and parentConfig.width > 0) or
+                               (parentConfig.height and parentConfig.height > 0)
+                if not hasSize then
+                    table.insert(violations, {
+                        type = "filler_in_unsized",
+                        severity = severities.filler_in_unsized,
+                        entity = ent,
+                        parent = parentId,
+                        message = string.format(
+                            "Filler %s in container %s with no size constraints (will fill to 0).",
+                            tostring(ent),
+                            tostring(parentId)
+                        ),
+                    })
+                end
+            end
+        end
+
+        -- Recurse into children and check container-level filler rules
+        local node = component_cache.get(ent, GameObject)
+        if node and node.orderedChildren then
+            -- Rule 4: filler_multiple - Check for multiple fillers with same flex in container
+            if isHboxOrVbox(config) then
+                local fillersByFlex = {}
+                for _, child in ipairs(node.orderedChildren) do
+                    if registry:valid(child) then
+                        local childConfig = component_cache.get(child, UIConfig)
+                        if childConfig and (childConfig.isFiller or childConfig.uiType == 10) then
+                            local flex = childConfig.flexWeight or 1
+                            fillersByFlex[flex] = (fillersByFlex[flex] or 0) + 1
+                        end
+                    end
+                end
+                -- Count total fillers and check for equal-flex duplicates
+                local totalFillers = 0
+                local hasEqualFlexFillers = false
+                for flex, count in pairs(fillersByFlex) do
+                    totalFillers = totalFillers + count
+                    if count > 1 then
+                        hasEqualFlexFillers = true
+                    end
+                end
+                -- Warn if multiple fillers with equal flex (may be intentional for even spacing)
+                if totalFillers > 1 and hasEqualFlexFillers then
+                    table.insert(violations, {
+                        type = "filler_multiple",
+                        severity = severities.filler_multiple,
+                        entity = ent,
+                        parent = nil,
+                        message = string.format(
+                            "Container %s has %d fillers with equal flex weights. Intentional if used for equal spacing.",
+                            tostring(ent),
+                            totalFillers
+                        ),
+                    })
+                end
+            end
+
+            for _, child in ipairs(node.orderedChildren) do
+                if registry:valid(child) then
+                    checkEntity(child, config, ent)
+                end
+            end
+        end
+    end
+
+    -- Start check from root
+    checkEntity(entity, nil, nil)
+
+    return violations
+end
+
 -- Rule check functions lookup (must be after function definitions)
 -- Each function accepts (entity, options) where options = {skipHidden: boolean}
 local ruleChecks = {
@@ -944,6 +1105,7 @@ local ruleChecks = {
     z_order_hierarchy = function(entity, options) return UIValidator.checkZOrder(entity, options) end,
     layer_consistency = function(entity, _options) return UIValidator.checkRenderConsistency(entity) end,
     space_consistency = function(_entity, _options) return {} end, -- space is evaluated within checkRenderConsistency
+    filler_validation = function(entity, options) return UIValidator.checkFillers(entity, options) end,
     text_zero_offset = function(entity, options) return UIValidator.checkTextZeroOffset(entity, options) end,
 }
 
@@ -969,6 +1131,7 @@ function UIValidator.validate(entity, rules, options)
         "z_order_hierarchy",
         "layer_consistency",
         "text_zero_offset",
+        "filler_validation",
     }
 
     -- Rules that don't require valid registry entities (work from render log)

@@ -127,6 +127,7 @@ local function visualFiller(opts)
 end
 
 -- Simple content block (green, for visibility)
+-- Uses container alignment to center text within the block
 local function contentBlock(label, width, height)
     return dsl.vbox {
         config = {
@@ -134,6 +135,8 @@ local function contentBlock(label, width, height)
             minWidth = width or 80,
             minHeight = height or 40,
             padding = 8,
+            -- Center children both horizontally and vertically within the block
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
         },
         children = {
             dsl.text(label, { fontSize = 14, color = "white" })
@@ -200,16 +203,20 @@ local function buildDemoQueue()
             },
             children = {
                 dsl.vbox {
-                    config = { spacing = 15 },
+                    config = { spacing = 15, minWidth = panelW - 40 },
                     children = {
-                        -- Title row
-                        dsl.hbox {
-                            children = {
-                                dsl.text(title, { fontSize = 28, color = colors.gold }),
-                            }
-                        },
-                        -- Description
-                        dsl.text(description, { fontSize = 14, color = colors.label }),
+                        -- Title row (left-aligned)
+                        dsl.text(title, {
+                            fontSize = 28,
+                            color = colors.gold,
+                            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
+                        }),
+                        -- Description (left-aligned)
+                        dsl.text(description, {
+                            fontSize = 14,
+                            color = colors.label,
+                            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
+                        }),
                         -- Divider
                         dsl.divider("horizontal", { color = colors.header, thickness = 2, length = panelW - 40 }),
                         -- Content area (the actual demo)
@@ -579,14 +586,25 @@ local function buildDemoQueue()
         name = "Pattern: Stats Display",
         duration = 6,
         spawn = function()
-            -- Helper for stat row
+            -- Width for stat rows: panel - padding - content padding
+            local statRowWidth = panelW - 60 - 30  -- 610px (matches available content width)
+
+            -- Helper for stat row: label on left, value pushed to right edge
             local function statRow(label, value, valueColor)
                 return dsl.hbox {
-                    config = { minWidth = panelW - 100, spacing = 0 },
+                    config = { minWidth = statRowWidth, spacing = 0 },
                     children = {
-                        labelText(label, { fontSize = 14 }),
+                        dsl.text(label, {
+                            fontSize = 14,
+                            color = colors.silver,
+                            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
+                        }),
                         dsl.filler(),
-                        dsl.text(value, { fontSize = 14, color = valueColor or colors.gold }),
+                        dsl.text(value, {
+                            fontSize = 14,
+                            color = valueColor or colors.gold,
+                            align = bit.bor(AlignmentFlag.HORIZONTAL_RIGHT, AlignmentFlag.VERTICAL_CENTER),
+                        }),
                     }
                 }
             end
@@ -599,15 +617,19 @@ local function buildDemoQueue()
                 },
                 children = {
                     dsl.vbox {
-                        config = { spacing = 8 },
+                        config = { spacing = 8, minWidth = statRowWidth },
                         children = {
-                            labelText("Character Stats", { fontSize = 18, color = colors.gold }),
-                            dsl.divider("horizontal", { color = colors.header, thickness = 1, length = panelW - 100 }),
+                            dsl.text("Character Stats", {
+                                fontSize = 18,
+                                color = colors.gold,
+                                align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
+                            }),
+                            dsl.divider("horizontal", { color = colors.header, thickness = 1, length = statRowWidth }),
                             statRow("Health", "100/100", colors.content),
                             statRow("Attack", "45", colors.red),
                             statRow("Defense", "32", colors.cyan),
                             statRow("Speed", "28"),
-                            dsl.divider("horizontal", { color = colors.header, thickness = 1, length = panelW - 100 }),
+                            dsl.divider("horizontal", { color = colors.header, thickness = 1, length = statRowWidth }),
                             statRow("Gold", "1,234"),
                             statRow("Experience", "7,890 / 10,000"),
                         }

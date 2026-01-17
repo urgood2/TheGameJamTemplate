@@ -2653,3 +2653,4 @@ assets/all_uuids.json*
 .ralph-tui/iterations/iteration-009-US-009.log
 .ralph-tui/iterations/iteration-008-US-018.log
 tasks_backup/prd.json
+debug.log

@@ -1,6 +1,9 @@
 # TODO Prototype - Organized Status Report
 > Last verified: Dec 29, 2025
 
+
+reade joshuashin/plans for the full demo content plan.
+
 -------------
 
 - ui planning.

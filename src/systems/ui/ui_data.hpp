@@ -1076,6 +1076,9 @@ namespace ui
     extern bool uiBoxViewInitialized;
     extern decltype(std::declval<entt::registry&>().view<UIBoxComponent>()) globalUIBoxView;
 
+    // Ensure global UI group/view caches are initialized before use.
+    void EnsureUIGroupInitialized(entt::registry& registry);
+
     // Detect conflicting alignment flags (e.g., VERTICAL_CENTER | VERTICAL_BOTTOM)
     // Returns true if conflicts exist, optionally fills conflictDescription with details
     bool hasConflictingAlignmentFlags(int flags, std::string* conflictDescription = nullptr);

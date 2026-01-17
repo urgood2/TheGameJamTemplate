@@ -1557,7 +1557,7 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
 
             ZONE_SCOPED("UIElement Update");
             // static auto uiElementGroup = globals::getRegistry().group
-
+            ui::EnsureUIGroupInitialized(globals::getRegistry());
             ui::globalUIGroup.each([delta](entt::entity e, ui::UIElementComponent &uiElement, ui::UIConfig &uiConfig, ui::UIState &uiState, transform::GameObject &node, transform::Transform &transform) {
                 // check if the entity is active
                 if (!entity_gamestate_management::active_states_instance().is_active(globals::getRegistry().get<entity_gamestate_management::StateTag>(e)))

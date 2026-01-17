@@ -63,13 +63,31 @@ void SizingPass::buildProcessingOrder() {
         if (!node) continue;
 
         // Push children onto stack (reverse order for correct left-to-right processing)
-        for (auto childEntry : node->orderedChildren) {
-            auto child = childEntry;
-            if (reg_.valid(child)) {
-                // Verify child has required components
-                if (reg_.all_of<UIConfig, UIState>(child)) {
-                    stack.push({child, parentRect_, forceRecalc_, scale_});
-                }
+        LocalTransform nextParentRect = entry.parentRect;
+        if (auto* parentTransform = reg_.try_get<transform::Transform>(entry.entity)) {
+            nextParentRect = {
+                parentTransform->getActualX(),
+                parentTransform->getActualY(),
+                parentTransform->getActualW(),
+                parentTransform->getActualH()
+            };
+        }
+
+        auto pushChild = [&](entt::entity child) {
+            if (!reg_.valid(child)) return;
+            if (reg_.all_of<UIConfig, UIState>(child)) {
+                stack.push({child, nextParentRect, forceRecalc_, scale_});
+            }
+        };
+
+        if (!node->orderedChildren.empty()) {
+            for (auto child : node->orderedChildren) {
+                pushChild(child);
+            }
+        } else {
+            // Fallback: when orderedChildren is empty, traverse the named map.
+            for (auto const &kv : node->children) {
+                pushChild(kv.second);
             }
         }
     }
@@ -228,10 +246,13 @@ void SizingPass::applyGlobalScale() {
             }
         }
 
-        // Apply to transform dimensions
+        // Apply to transform dimensions (skip text elements which were already scaled during measurement)
         auto& transform = reg_.get<transform::Transform>(entity);
-        transform.setActualW(transform.getActualW() * globalScale);
-        transform.setActualH(transform.getActualH() * globalScale);
+        bool isTextElement = TypeTraits::isTextElement(uiConfig.uiType.value_or(UITypeEnum::NONE));
+        if (!isTextElement) {
+            transform.setActualW(transform.getActualW() * globalScale);
+            transform.setActualH(transform.getActualH() * globalScale);
+        }
 
         // Update attached object scaling
         if (uiConfig.object) {

@@ -316,13 +316,14 @@ namespace ui
         }
 
         // Assign roles for UI objects
-        if (uiElement->UIT == UITypeEnum::OBJECT && !uiConfig->noRole.value_or(false))
+        if (uiElement->UIT == UITypeEnum::OBJECT && !uiConfig->noRole.value_or(false) &&
+            uiConfig->object && registry.valid(uiConfig->object.value()))
         {
             transform::AssignRole(&registry, uiConfig->object.value(), transform::InheritedProperties::Type::RoleInheritor, entity, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Weak, std::nullopt, transform::InheritedProperties::Sync::Weak);
         }
 
         // Handle reference values
-        if (uiConfig->ref_component && uiConfig->ref_value)
+        if (uiConfig->ref_entity && uiConfig->ref_component && uiConfig->ref_value && registry.valid(uiConfig->ref_entity.value()))
         {
             auto comp = reflection::retrieveComponent(&registry, uiConfig->ref_entity.value(), uiConfig->ref_component.value());
             auto value = reflection::retrieveFieldByString(comp, uiConfig->ref_component.value(), uiConfig->ref_value.value());
@@ -643,10 +644,16 @@ namespace ui
         if (uiConfig->object)
         {
             auto objectEntity = uiConfig->object.value();
+            if (!registry.valid(objectEntity)) {
+                return;
+            }
 
             auto *objectTransform = registry.try_get<transform::Transform>(objectEntity);
             auto *objectRole = registry.try_get<transform::InheritedProperties>(objectEntity);
             auto *objectNode = registry.try_get<transform::GameObject>(objectEntity);
+            if (!objectTransform || !objectRole || !objectNode) {
+                return;
+            }
 
             // TODO: so objects have node parents to be the ui element it is associated with?
             if (!uiConfig->noRole)
@@ -1184,9 +1191,9 @@ namespace ui
     void element::UpdateText(entt::registry &registry, entt::entity entity, UIConfig *config, UIState *state)
     {
 
-        if (!config->text.has_value())
-            return;
         if (!state)
+            return;
+        if (!config->text.has_value() && !config->ref_entity && !config->textGetter)
             return;
 
         // Ensure text drawable exists
@@ -1200,7 +1207,7 @@ namespace ui
         }
 
         // Check if the text needs updating from reference table
-        if (config->ref_entity && config->ref_component && config->ref_value)
+        if (config->ref_entity && config->ref_component && config->ref_value && registry.valid(config->ref_entity.value()))
         {
 
             auto comp = reflection::retrieveComponent(&registry, config->ref_entity.value(), config->ref_component.value());
@@ -1215,8 +1222,10 @@ namespace ui
                 // If text length changed and recalculation is allowed, trigger UI recalculation
                 if (!config->no_recalc && config->prev_ref_value && reflection::meta_any_to_string(config->prev_ref_value).size() != config->text->size())
                 {
-                    //TODO: doesn't this  need to be a uibox?
-                    ui::box::RenewAlignment(registry, entity);
+                    auto *uiElement = registry.try_get<UIElementComponent>(entity);
+                    if (uiElement && registry.valid(uiElement->uiBox)) {
+                        ui::box::RenewAlignment(registry, uiElement->uiBox);
+                    }
                 }
 
                 // Store updated text
@@ -1232,7 +1241,10 @@ namespace ui
                 config->text = result;
                 // renew alignment if text changed
                 
-                ui::box::RenewAlignment(registry, entity);
+                auto *uiElement = registry.try_get<UIElementComponent>(entity);
+                if (uiElement && registry.valid(uiElement->uiBox)) {
+                    ui::box::RenewAlignment(registry, uiElement->uiBox);
+                }
             }
         }
     }
@@ -1246,19 +1258,23 @@ namespace ui
         // AssertThat(config, Is().Not().EqualTo(nullptr));
 
         // Step 1: Update the object reference if it has changed
-        if (elementConfig->ref_component && elementConfig->ref_value)
+        if (elementConfig->ref_entity && elementConfig->ref_component && elementConfig->ref_value && registry.valid(elementConfig->ref_entity.value()))
         {
             auto comp = reflection::retrieveComponent(&registry, elementConfig->ref_entity.value(), elementConfig->ref_component.value());
             auto value = reflection::retrieveFieldByString(comp, elementConfig->ref_component.value(), elementConfig->ref_value.value());
             if (value != elementConfig->prev_ref_value)
             {
                 elementConfig->object = value.cast<entt::entity>();
-                ui::box::Recalculate(registry, entity);
+                auto *uiElement = registry.try_get<UIElementComponent>(entity);
+                if (uiElement && registry.valid(uiElement->uiBox)) {
+                    ui::box::Recalculate(registry, uiElement->uiBox);
+                }
+                elementConfig->prev_ref_value = value;
             }
         }
 
         // Step 2: Ensure object exists before proceeding
-        if (!elementConfig->object)
+        if (!elementConfig->object || !registry.valid(elementConfig->object.value()))
             return;
 
         // auto *objectConfig = registry.try_get<UIConfig>(config->object.value());
@@ -1273,6 +1289,23 @@ namespace ui
         // }
 
         // Step 3: Refresh object movement state
+        if (!objectConfig) {
+            objectConfig = &registry.emplace_or_replace<UIConfig>(elementConfig->object.value());
+        }
+        if (!objectTransform) {
+            objectTransform = registry.try_get<transform::Transform>(elementConfig->object.value());
+        }
+        if (!objectRole) {
+            objectRole = registry.try_get<transform::InheritedProperties>(elementConfig->object.value());
+        }
+        if (!objectNode) {
+            objectNode = registry.try_get<transform::GameObject>(elementConfig->object.value());
+        }
+        if (!objectTransform || !objectRole || !objectNode) {
+            SPDLOG_ERROR("UI Element: UpdateObject missing components for object entity {}", static_cast<int>(elementConfig->object.value()));
+            return;
+        }
+
         objectConfig->refreshMovement = true;
 
         // Step 4: Handle hover state synchronization
@@ -1965,6 +1998,13 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         auto& layoutConfig = registry.get<UILayoutConfig>(entity);
         auto& interactionConfig = registry.get<UIInteractionConfig>(entity);
         auto& contentConfig = registry.get<UIContentConfig>(entity);
+
+        // Sync split components from legacy UIConfig to avoid stale handler data.
+        // Until UIConfig is fully retired, keep split components authoritative here.
+        styleConfig = extractStyle(*config);
+        layoutConfig = extractLayout(*config);
+        interactionConfig = extractInteraction(*config);
+        contentConfig = extractContent(*config);
 
         // Style field accessors from UIStyleConfig
         const auto& stylingType = styleConfig.stylingType;
@@ -2849,6 +2889,11 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         // Handle button delay
         if (uiConfig->buttonDelay)
         {
+            if (!uiConfig->buttonDelayStart || !uiConfig->buttonDelayEnd) {
+                uiConfig->buttonDelayStart = main_loop::mainLoop.realtimeTimer;
+                uiConfig->buttonDelayEnd = main_loop::mainLoop.realtimeTimer + uiConfig->buttonDelay.value();
+                uiConfig->buttonDelayProgress = 0.0f;
+            }
             // if (uiConfig->buttonCallback)
             //     uiConfig->buttonTemp = uiConfig->buttonCallback;
             // uiConfig->buttonCallback = std::nullopt;
@@ -2882,7 +2927,9 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         // Handle text update
         if (uiElement->UIT == UITypeEnum::TEXT)
         {
-            UpdateText(registry, entity, &globalUIGroup.get<ui::UIConfig>(entity), &globalUIGroup.get<UIState>(entity));
+            if (auto *state = registry.try_get<UIState>(entity)) {
+                UpdateText(registry, entity, uiConfig, state);
+            }
         }
 
         // Handle object update
@@ -2891,29 +2938,31 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             // void ui::element::UpdateObject(entt::registry &registry, entt::entity entity, ui::UIConfig *elementConfig, transform::GameObject *elementNode, ui::UIConfig *objectConfig, transform::Transform *objectTransform, transform::InheritedProperties *objectRole, transform::GameObject *objectNode)
 
             // uiConfig
-
+            if (!uiConfig->object || !registry.valid(uiConfig->object.value())) {
+                return;
+            }
             auto object = uiConfig->object.value();
-            auto roleView = registry.view<transform::InheritedProperties>();
-     
 
             if (registry.any_of<ui::UIConfig>(object) == false){
-                // no uiconfig entity. emplace one.
                 registry.emplace_or_replace<ui::UIConfig>(object);
             }
-            
-            // skip if transform is destroyed
-            if (!registry.valid(object) || !registry.any_of<transform::Transform>(object))
+
+            auto *objectTransform = registry.try_get<transform::Transform>(object);
+            auto *objectRole = registry.try_get<transform::InheritedProperties>(object);
+            auto *objectNode = registry.try_get<transform::GameObject>(object);
+
+            if (!objectTransform || !objectRole || !objectNode)
             {
-                SPDLOG_ERROR("UI Element: UpdateObject: Object entity {} does not have a Transform component or is not valid.", static_cast<int>(object));
+                SPDLOG_ERROR("UI Element: UpdateObject: Object entity {} missing required components.", static_cast<int>(object));
                 return;
             }
 
-            UpdateObject(registry, entity, &globalUIGroup.get<ui::UIConfig>(entity), 
-                         &globalUIGroup.get<transform::GameObject>(entity), 
-                         &globalUIGroup.get<ui::UIConfig>(object), 
-                         &globalUIGroup.get<transform::Transform>(object), 
-                         &roleView.get<transform::InheritedProperties>(object), 
-                         &globalUIGroup.get<transform::GameObject>(object));
+            UpdateObject(registry, entity, uiConfig,
+                         node,
+                         registry.try_get<ui::UIConfig>(object),
+                         objectTransform,
+                         objectRole,
+                         objectNode);
         }
 
         // Call Node update (assuming it exists)
@@ -2928,17 +2977,14 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         if (!registry.valid(entity)) return false;
         
         auto *uiElement = registry.try_get<UIElementComponent>(entity);
-        auto *uiBox = registry.try_get<UIBoxComponent>(entity);
         auto *node = registry.try_get<transform::GameObject>(entity);
 
-        if (!uiElement || !uiBox || !node) return false;
+        if (!uiElement || !node) return false;
 
-        if (node->state.collisionEnabled)
-        {
-            transform::CheckCollisionWithPoint(&registry, entity, cursorPosition);
-        }
+        if (!node->state.collisionEnabled)
+            return false;
 
-        return false; // No collision if `canCollide` is disabled
+        return transform::CheckCollisionWithPoint(&registry, entity, cursorPosition);
     }
 
     void element::Click(entt::registry &registry, entt::entity entity)

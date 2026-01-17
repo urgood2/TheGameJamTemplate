@@ -19,25 +19,6 @@
 #include "systems/ui/type_traits.hpp"
 #include "systems/ui/layout_metrics.hpp"
 #include "systems/ui/sizing_pass.hpp"
-namespace std {
-template<>
-struct hash<ui::UIElementTemplateNode> {
-    size_t operator()(ui::UIElementTemplateNode const &node) const noexcept {
-    // e.g. combine the address & some stable value,
-    // but simplest is to hash the pointer to it:
-    return reinterpret_cast<size_t>(&node);
-    }
-};
-template<>
-struct equal_to<ui::UIElementTemplateNode> {
-    bool operator()(ui::UIElementTemplateNode const &a,
-                    ui::UIElementTemplateNode const &b) const noexcept {
-    return &a == &b;
-    }
-};
-}
-
-
 namespace ui
 {
     namespace
@@ -109,8 +90,6 @@ namespace ui
         registry.emplace_or_replace<collision::ScreenSpaceCollisionMarker>(uiBoxEntity);
 
         std::stack<StackEntry> stack;
-        std::unordered_map<UIElementTemplateNode, entt::entity> nodeToEntity;
-
         stack.push({rootDef, uiElementParent});
 
         while (!stack.empty())
@@ -122,7 +101,6 @@ namespace ui
             entt::entity entity = element::Initialize(registry, parent, uiBoxEntity, def.type, def.config);
             // make screen space  no matter what
             registry.emplace_or_replace<collision::ScreenSpaceCollisionMarker>(entity);
-            nodeToEntity[def] = entity;
             auto *config = registry.try_get<UIConfig>(entity);
             
             // if ((int)entity == 840) {
@@ -171,7 +149,7 @@ namespace ui
             }
 
             // If object + button
-            if (def.type == UITypeEnum::OBJECT && config && config->buttonCallback)
+            if (def.type == UITypeEnum::OBJECT && config && config->buttonCallback && config->object && registry.valid(config->object.value()))
             {
                 auto &node = registry.get<transform::GameObject>(config->object.value());
                 node.state.clickEnabled = false;
@@ -1307,7 +1285,7 @@ namespace ui
         // 4) Now commit ONCE
         ui::element::SetValues(registry, uiElement, calcCurrentNodeTransform, /*force*/ true /* or pass through */);
 
-        node.state.collisionEnabled = true; // enable collision for scroll pane
+node.state.collisionEnabled = true; // enable collision for scroll pane
 
         // Content: what children demanded (pre-viewport)
         scr.contentSize  = { contentW, contentH };
@@ -1577,7 +1555,7 @@ namespace ui
 
             float scaleFactor = uiConfig.scale.value_or(1.0f);
 
-            if (uiConfig.ref_component && uiConfig.ref_value)
+            if (uiConfig.ref_entity && uiConfig.ref_component && uiConfig.ref_value && registry.valid(uiConfig.ref_entity.value()))
             {
                 // get component with reflection
                 auto comp = reflection::retrieveComponent(&registry, uiConfig.ref_entity.value(), uiConfig.ref_component.value());
@@ -1648,14 +1626,13 @@ namespace ui
             // TODO: minwidth respecting for other types of objects
             if (uiConfig.uiType == UITypeEnum::OBJECT)
             {
-                auto object = uiConfig.object.value();
-                // text, animated, or inventory grid object.
-                // if (globals::getRegistry().any_of<TextSystem::Text>(object) || globals::getRegistry().any_of<AnimationQueueComponent>(object) || globals::getRegistry().any_of<InventoryGrid>(object))
-                // {
-                auto &objectTransform = registry.get<transform::Transform>(object);
-                calcCurrentNodeTransform.w = objectTransform.getActualW();
-                calcCurrentNodeTransform.h = objectTransform.getActualH();
-                // }
+                if (uiConfig.object && registry.valid(uiConfig.object.value()))
+                {
+                    auto object = uiConfig.object.value();
+                    auto &objectTransform = registry.get<transform::Transform>(object);
+                    calcCurrentNodeTransform.w = objectTransform.getActualW();
+                    calcCurrentNodeTransform.h = objectTransform.getActualH();
+                }
             }
 
             if (uiConfig.maxWidth && calcCurrentNodeTransform.w > uiConfig.maxWidth.value())
@@ -2101,25 +2078,9 @@ namespace ui
         
         std::vector<ActiveScissor> scissorStack;
 
-        // 2) Now draw them all with one tight fully owning group loop.  First, set up a group
-        //    of the "always‐present" components every drawable element needs:
-        // PERF: Initialize both cached view and group together on first call
-        if (uiGroupInitialized == false)
-        {
-            // This is a static group that will be reused for all draws.
-            // It contains the five components we need to draw any UI element.
-            uiGroupInitialized = true;
-            uiBoxViewInitialized = true;
-            globalUIBoxView = registry.view<UIBoxComponent>();
-
-            globalUIGroup = registry.group<
-                UIElementComponent,
-                UIConfig,
-                UIState,
-                transform::GameObject,
-                transform::Transform
-              >(entt::get<>, entt::exclude<entity_gamestate_management::InactiveTag>);
-        }
+        // 2) Now draw them all with one tight fully owning group loop.
+        // PERF: Initialize cached view/group once before use.
+        EnsureUIGroupInitialized(registry);
 
         // PERF: Use cached view for UIBoxComponent iteration
         for (auto ent : globalUIBoxView)
@@ -2422,42 +2383,75 @@ namespace ui
             return;
 
         // 1) Draw all direct children of this box (except tooltips & alerts)
-        //    This matches exactly your first loop in box::Draw:
-        for (auto const &entry : boxNode->children)
-        {
-            // entry.first is the name (string), entry.second is the entity
-            const auto &entryName = entry.first;
-            entt::entity child = entry.second;
-            
-            if (auto* tag = registry.try_get<StateTag>(child)) {
-                if (!is_active(*tag))
-                    continue; // skip inactive elements
-            }
-
-
-            auto *childUIElement = registry.try_get<UIElementComponent>(child);
-            auto *childUIBox = registry.try_get<UIBoxComponent>(child);
-            auto *childNode = registry.try_get<transform::GameObject>(child);
-
-            // Skip if not a valid entity or not visible
-            if (!registry.valid(child) || !childNode || !childNode->state.visible)
-                continue;
-
-            // If it’s a UIElement (and not “h_popup”/“alert”), push that element + its subtree:
-            if (childUIElement && entryName != "h_popup" && entryName != "alert")
+        //    Prefer orderedChildren for stable ordering; fall back to the map if empty.
+        if (!boxNode->orderedChildren.empty()) {
+            for (auto child : boxNode->orderedChildren)
             {
-                // DrawSelf + DrawChildren are replaced by a flattening of the element subtree:
-                
-                // pre‐draw of child + subtree, record at this depth
-                element::buildUIDrawList(registry, child, out, depth);
+                auto *childConfig = registry.try_get<UIConfig>(child);
+                std::string entryName = (childConfig && childConfig->id) ? *childConfig->id : std::string{};
+                if (entryName.empty()) {
+                    for (auto const &kv : boxNode->children) {
+                        if (kv.second == child) {
+                            entryName = kv.first;
+                            break;
+                        }
+                    }
+                }
+
+                if (auto* tag = registry.try_get<StateTag>(child)) {
+                    if (!is_active(*tag))
+                        continue; // skip inactive elements
+                }
+
+                auto *childUIElement = registry.try_get<UIElementComponent>(child);
+                auto *childUIBox = registry.try_get<UIBoxComponent>(child);
+                auto *childNode = registry.try_get<transform::GameObject>(child);
+
+                // Skip if not a valid entity or not visible
+                if (!registry.valid(child) || !childNode || !childNode->state.visible)
+                    continue;
+
+                // If it’s a UIElement (and not “h_popup”/“alert”), push that element + its subtree:
+                if (childUIElement && entryName != "h_popup" && entryName != "alert")
+                {
+                    element::buildUIDrawList(registry, child, out, depth);
+                }
+                // If it’s another UIBox, recurse fully into that box:
+                else if (childUIBox)
+                {
+                    buildUIBoxDrawList(registry, child, out, depth);
+                }
             }
-            // If it’s another UIBox, recurse fully into that box:
-            else if (childUIBox)
+        } else {
+            // Fallback: use map order when orderedChildren is not populated.
+            for (auto const &entry : boxNode->children)
             {
-                // recurse boxes at same depth
-                buildUIBoxDrawList(registry, child, out, depth);
+                // entry.first is the name (string), entry.second is the entity
+                const auto &entryName = entry.first;
+                entt::entity child = entry.second;
+
+                if (auto* tag = registry.try_get<StateTag>(child)) {
+                    if (!is_active(*tag))
+                        continue; // skip inactive elements
+                }
+
+                auto *childUIElement = registry.try_get<UIElementComponent>(child);
+                auto *childUIBox = registry.try_get<UIBoxComponent>(child);
+                auto *childNode = registry.try_get<transform::GameObject>(child);
+
+                // Skip if not a valid entity or not visible
+                if (!registry.valid(child) || !childNode || !childNode->state.visible)
+                    continue;
+
+                if (childUIElement && entryName != "h_popup" && entryName != "alert")
+                {
+                    element::buildUIDrawList(registry, child, out, depth);
+                }
+                else if (childUIBox)
+                {
+                    buildUIBoxDrawList(registry, child, out, depth);
+                }
             }
-            // else: skip everything else
         }
 
         // 2) If this box’s node is visible, draw its uiRoot first:

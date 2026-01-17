@@ -5,8 +5,10 @@
 #include <gtest/gtest.h>
 #include "systems/ui/ui_data.hpp"
 #include "systems/ui/box.hpp"
+#include "systems/ui/sizing_pass.hpp"
 #include "systems/transform/transform.hpp"
 #include "core/globals.hpp"
+#include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 #include <entt/entt.hpp>
 
 class UISizingTest : public ::testing::Test {
@@ -272,4 +274,102 @@ TEST_F(UISizingTest, MinDimensions_OnlyOneSet) {
 
     EXPECT_FLOAT_EQ(transform.w, 100.0f); // Clamped to minWidth
     EXPECT_FLOAT_EQ(transform.h, 30.0f);  // Unchanged (no minHeight)
+}
+
+// ============================================================
+// Global Scale Application Tests
+// ============================================================
+
+TEST_F(UISizingTest, GlobalScale_AppliedOnceForNonText) {
+    globals::setGlobalUIScaleFactor(2.0f);
+
+    // Root container
+    auto root = createUIEntity(ui::UITypeEnum::ROOT);
+    auto child = createUIEntity(ui::UITypeEnum::RECT_SHAPE);
+
+    auto &rootNode = registry.get<transform::GameObject>(root);
+    rootNode.orderedChildren.push_back(child);
+
+    auto &childTransform = registry.get<transform::Transform>(child);
+    childTransform.setActualW(50.f);
+    childTransform.setActualH(20.f);
+
+    ui::layout::SizingPass pass(registry, root, ui::LocalTransform{}, false, std::nullopt);
+    pass.run();
+
+    // With global scale 2.0, child width should double
+    EXPECT_FLOAT_EQ(childTransform.getActualW(), 100.f);
+    EXPECT_FLOAT_EQ(childTransform.getActualH(), 40.f);
+}
+
+TEST_F(UISizingTest, GlobalScale_NotDoubleAppliedForText) {
+    globals::setGlobalUIScaleFactor(2.0f);
+
+    auto root = createUIEntity(ui::UITypeEnum::ROOT);
+    auto text = createUIEntity(ui::UITypeEnum::TEXT);
+
+    auto &rootNode = registry.get<transform::GameObject>(root);
+    rootNode.orderedChildren.push_back(text);
+
+    auto &textConfig = registry.get<ui::UIConfig>(text);
+    textConfig.text = "abc";
+
+    ui::layout::SizingPass pass(registry, root, ui::LocalTransform{}, false, std::nullopt);
+    pass.run();
+
+    auto &state = registry.get<ui::UIState>(text);
+    auto &transform = registry.get<transform::Transform>(text);
+
+    ASSERT_TRUE(state.contentDimensions.has_value());
+
+    // Ensure transform matches measured content (i.e., no extra global scaling applied)
+    EXPECT_NEAR(transform.getActualW(), state.contentDimensions->x, 1e-4);
+    EXPECT_NEAR(transform.getActualH(), state.contentDimensions->y, 1e-4);
+}
+
+// ============================================================
+// Traversal and draw list regressions
+// ============================================================
+
+TEST_F(UISizingTest, SizingPass_UsesChildrenMapWhenOrderedChildrenEmpty) {
+    // Root container without orderedChildren but with children map entries
+    auto root = createUIEntity(ui::UITypeEnum::VERTICAL_CONTAINER);
+    auto child = createUIEntity(ui::UITypeEnum::RECT_SHAPE);
+
+    auto &rootNode = registry.get<transform::GameObject>(root);
+    rootNode.children["popup"] = child; // only in map
+
+    ui::layout::SizingPass pass(registry, root, ui::LocalTransform{}, false, std::nullopt);
+    pass.run();
+
+    const auto &order = pass.processingOrder();
+    ASSERT_EQ(order.size(), 2u);
+    EXPECT_EQ(order[0].entity, root);
+    EXPECT_EQ(order[1].entity, child);
+}
+
+TEST_F(UISizingTest, BuildUIBoxDrawList_SkipsPopupNamedChild) {
+    // UIBox with child referenced only by map name "h_popup"
+    entt::entity box = registry.create();
+    registry.emplace<ui::UIBoxComponent>(box);
+    registry.emplace<transform::Transform>(box);
+    registry.emplace<transform::GameObject>(box);
+    entity_gamestate_management::assignDefaultStateTag(registry, box);
+
+    entt::entity popup = createUIEntity(ui::UITypeEnum::RECT_SHAPE);
+    registry.emplace<ui::UIElementComponent>(popup, ui::UIElementComponent{.uiBox = box});
+    entity_gamestate_management::assignDefaultStateTag(registry, popup);
+
+    auto &boxNode = registry.get<transform::GameObject>(box);
+    boxNode.children["h_popup"] = popup;
+    boxNode.orderedChildren.push_back(popup);
+
+    // ensure id is empty so name comes from map
+    registry.get<ui::UIConfig>(popup).id.reset();
+    registry.get<transform::GameObject>(popup).state.visible = true;
+
+    std::vector<ui::UIDrawListItem> drawOrder;
+    ui::box::buildUIBoxDrawList(registry, box, drawOrder, 0);
+
+    EXPECT_TRUE(drawOrder.empty()); // "h_popup" should be filtered out
 }

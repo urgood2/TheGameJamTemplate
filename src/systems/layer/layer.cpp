@@ -2216,6 +2216,8 @@ void renderSliceOffscreenFromDrawList(
     size_t startIndex, size_t endIndex, Layer* layerPtr,
     float pad) {
 
+  ui::EnsureUIGroupInitialized(registry);
+
   Camera2D *camera = nullptr;
   if (camera_manager::IsActive()) {
     camera = camera_manager::Current();

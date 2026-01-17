@@ -25,8 +25,9 @@ viewer:update(dt)
 viewer:destroy()
 
 Keyboard Controls:
-- W/S: Navigate through showcases (up/down)
-- A/D or E: Toggle Preview/Source panel
+- UP/DOWN or W/S: Navigate through showcases (up/down)
+- LEFT/RIGHT or A/D: Toggle Preview/Source panel
+- ENTER or SPACE: Toggle Preview/Source panel
 - ESC: Close viewer
 ================================================================================
 ]]
@@ -88,14 +89,13 @@ end
 local GalleryViewer = {}
 GalleryViewer.__index = GalleryViewer
 
--- Key mappings (using only supported keys - WASD + ESCAPE)
--- Note: Arrow keys (KEY_UP, KEY_DOWN) and ENTER are not supported by isKeyPressed
+-- Key mappings (supports arrows + WASD + Enter/Space)
 local KEY_MAPPINGS = {
-    up = { "KEY_W" },
-    down = { "KEY_S" },
-    left = { "KEY_A" },
-    right = { "KEY_D" },
-    select = { "KEY_E" },  -- E toggles preview/source
+    up = { "KEY_UP", "KEY_W" },
+    down = { "KEY_DOWN", "KEY_S" },
+    left = { "KEY_LEFT", "KEY_A" },
+    right = { "KEY_RIGHT", "KEY_D" },
+    select = { "KEY_ENTER", "KEY_SPACE", "KEY_E" },  -- E toggles preview/source
     back = { "KEY_ESCAPE" },
 }
 
@@ -551,7 +551,7 @@ function GalleryViewer:_buildHeader()
                 }
             },
             dsl.strict.spacer(4),
-            dsl.strict.text("W/S: item  A/D or E: toggle Preview/Source  Mouse wheel: scroll  ESC: close", { fontSize = 10, color = "gray" }),
+            dsl.strict.text("Up/Down or W/S: item  Left/Right, A/D, or Enter/Space: toggle Preview/Source  Mouse wheel: scroll  ESC: close", { fontSize = 10, color = "gray" }),
         }
     }
 end

@@ -122,6 +122,7 @@ function GalleryViewer.new(options)
     self._viewMode = "list"  -- "list" or "detail"
     self._panelMode = "preview"  -- "preview" or "source"
     self._scrollOffsets = { list = 0, preview = 0, source = 0 }
+    self._rebuildScheduled = false
 
     -- UI dimensions
     self._desiredWidth = options.width or 700
@@ -160,6 +161,19 @@ function GalleryViewer.new(options)
     self._inputPollingActive = false
 
     return self
+end
+
+function GalleryViewer:_applyOptions(options)
+    if not options then return end
+
+    if options.width ~= nil then self._desiredWidth = options.width end
+    if options.height ~= nil then self._desiredHeight = options.height end
+    if options.minWidth ~= nil then self._minWidth = options.minWidth end
+    if options.minHeight ~= nil then self._minHeight = options.minHeight end
+    if options.gap ~= nil then self._gap = options.gap end
+    if options.minListWidth ~= nil then self._minListWidth = options.minListWidth end
+    if options.minPreviewWidth ~= nil then self._minPreviewWidth = options.minPreviewWidth end
+    if options.safeMargins ~= nil then self._safeMargins = options.safeMargins end
 end
 
 --------------------------------------------------------------------------------
@@ -223,8 +237,10 @@ function GalleryViewer:_applyLayout(x, y)
     local availableW = math.max(240, screenW - margins.left - margins.right)
     local availableH = math.max(200, screenH - margins.top - margins.bottom)
 
-    local targetW = clamp(self._desiredWidth, self._minWidth, availableW)
-    local targetH = clamp(self._desiredHeight, self._minHeight, availableH)
+    local minW = math.min(self._minWidth, availableW)
+    local minH = math.min(self._minHeight, availableH)
+    local targetW = clamp(self._desiredWidth, minW, availableW)
+    local targetH = clamp(self._desiredHeight, minH, availableH)
 
     self._width = targetW
     self._height = targetH
@@ -318,6 +334,20 @@ function GalleryViewer:_restoreScrollOffsets()
     end
 end
 
+function GalleryViewer:_queueRebuild()
+    if self._rebuildScheduled then return end
+    self._rebuildScheduled = true
+
+    -- Small delay to batch rapid navigation changes (e.g., holding W/S keys)
+    -- This reduces UI rebuilds when scrolling quickly through items
+    timer.after(0.05, function()
+        self._rebuildScheduled = false
+        if self._visible then
+            self:_rebuild()
+        end
+    end, self._timerGroup .. "_rebuild_once", self._timerGroup .. "_rebuild")
+end
+
 --------------------------------------------------------------------------------
 -- Navigation
 --------------------------------------------------------------------------------
@@ -325,14 +355,14 @@ end
 function GalleryViewer:_navigateUp()
     if self._flatIndex > 1 then
         self._flatIndex = self._flatIndex - 1
-        self:_rebuild()
+        self:_queueRebuild()
     end
 end
 
 function GalleryViewer:_navigateDown()
     if self._flatIndex < #self._flatList then
         self._flatIndex = self._flatIndex + 1
-        self:_rebuild()
+        self:_queueRebuild()
     end
 end
 
@@ -344,7 +374,7 @@ function GalleryViewer:_setPanelMode(mode)
     if mode ~= "preview" and mode ~= "source" then return end
     if self._panelMode ~= mode then
         self._panelMode = mode
-        self:_rebuild()
+        self:_queueRebuild()
     end
 end
 
@@ -354,13 +384,13 @@ function GalleryViewer:_togglePanelMode()
     else
         self._panelMode = "preview"
     end
-    self:_rebuild()
+    self:_queueRebuild()
 end
 
 function GalleryViewer:_goBack()
     if self._viewMode == "detail" then
         self._viewMode = "list"
-        self:_rebuild()
+        self:_queueRebuild()
     else
         self:hide()
     end
@@ -375,7 +405,9 @@ function GalleryViewer:_startInputPolling()
     if self._inputPollingActive then return end
     self._inputPollingActive = true
 
-    timer.every(0.05, function()
+    -- Poll input at 100ms intervals (10 FPS) - sufficient for keyboard navigation
+    -- Faster polling (50ms) causes noticeable CPU overhead
+    timer.every(0.1, function()
         if not self._visible then return end
         self:_pollInput()
     end, 0, false, nil, nil, self._timerGroup .. "_input")
@@ -417,14 +449,28 @@ function GalleryViewer:_rebuild()
     self:_cleanup(true)
     if not self._visible then return end
 
-    local ui = self:_buildUI()
-    if ui and dsl.spawn then
+    local uiDef = self:_buildUI()
+    if uiDef and dsl.spawn then
         self._entity = dsl.spawn(
             { x = self._position.x, y = self._position.y },
-            ui,
+            uiDef,
             "ui",
             2000  -- High z-order for overlay
         )
+        if ui and ui.box and ui.box.set_draw_layer then
+            ui.box.set_draw_layer(self._entity, "ui")
+        end
+
+        -- Add state tags so UI elements are included in collision detection
+        -- Deferred by one frame to ensure UI tree is fully constructed
+        local entity = self._entity
+        timer.after(0, function()
+            if entity and registry and registry:valid(entity) then
+                if ui and ui.box and ui.box.AddStateTagToUIBox then
+                    ui.box.AddStateTagToUIBox(entity, "default_state")
+                end
+            end
+        end, nil, self._timerGroup .. "_state_tags")
     end
     self:_restoreScrollOffsets()
 end
@@ -531,7 +577,7 @@ function GalleryViewer:_buildCategoryList()
                     canCollide = true,
                     buttonCallback = function()
                         self._flatIndex = capturedIndex
-                        self:_rebuild()
+                        self:_queueRebuild()
                     end
                 },
                 children = {
@@ -579,18 +625,16 @@ function GalleryViewer:_buildPreviewPanel(showcase)
         end
     end
 
-    -- Build source code display
-    local sourceLines = {}
+    -- Build source code display as a single text block (more efficient than per-line elements)
+    local sourceText = ""
     if showcase and showcase.source then
+        local lines = {}
         local lineIndex = 0
         for line in showcase.source:gmatch("[^\n]+") do
             lineIndex = lineIndex + 1
-            sourceLines[#sourceLines + 1] = dsl.strict.text(string.format("%3d  %s", lineIndex, line), {
-                fontSize = 9,
-                color = self._colors.sourceCodeText,
-                fontName = "monospace"
-            })
+            lines[#lines + 1] = string.format("%3d  %s", lineIndex, line)
         end
+        sourceText = table.concat(lines, "\n")
     end
 
     local tabButtonWidth = 90
@@ -625,13 +669,21 @@ function GalleryViewer:_buildPreviewPanel(showcase)
 
     local contentNode
     if self._panelMode == "source" then
+        -- Use single text element for all source code (much more efficient)
         local sourceContent = dsl.strict.vbox {
             config = {
                 padding = 2,
                 align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
             },
-            children = (#sourceLines > 0) and sourceLines or {
-                dsl.strict.text("-- No source available", { fontSize = 9, color = "gray" })
+            children = {
+                dsl.strict.text(
+                    (sourceText ~= "") and sourceText or "-- No source available",
+                    {
+                        fontSize = 9,
+                        color = (sourceText ~= "") and self._colors.sourceCodeText or "gray",
+                        fontName = "monospace"
+                    }
+                )
             }
         }
 
@@ -702,7 +754,10 @@ function GalleryViewer:_cleanup(keepInput)
 
     if not keepInput then
         timer.kill_group(self._timerGroup .. "_input")
+        timer.kill_group(self._timerGroup .. "_rebuild")
+        timer.kill_group(self._timerGroup .. "_state_tags")
         self._inputPollingActive = false  -- Allow timer to be recreated on next show()
+        self._rebuildScheduled = false
     end
 end
 
@@ -718,6 +773,20 @@ local _globalViewer = nil
 function GalleryViewer.showGlobal(x, y)
     if not _globalViewer then
         _globalViewer = GalleryViewer.new()
+    end
+    _globalViewer:show(x, y)
+    return _globalViewer
+end
+
+--- Show a global gallery viewer instance with optional overrides
+---@param x number|nil X position
+---@param y number|nil Y position
+---@param options table|nil Overrides for size/margins
+function GalleryViewer.showGlobalWithOptions(x, y, options)
+    if not _globalViewer then
+        _globalViewer = GalleryViewer.new(options)
+    else
+        _globalViewer:_applyOptions(options)
     end
     _globalViewer:show(x, y)
     return _globalViewer

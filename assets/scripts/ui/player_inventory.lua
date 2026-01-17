@@ -352,6 +352,7 @@ local function createGridDefinition(tabId)
             slotSprite = "test-inventory-square-single.png",
             padding = GRID_PADDING,
             backgroundColor = "blackberry",
+            snapVisual = false,
         },
 
         onSlotChange = function(gridEntity, slotIndex, oldItem, newItem)
@@ -713,7 +714,7 @@ local function snapItemsToSlots()
             if itemEntity ~= draggedEntity then
                 local slotEntity = grid.getSlotEntity(activeGrid, slotIndex)
                 if slotEntity then
-                    InventoryGridInit.centerItemOnSlot(itemEntity, slotEntity)
+                    InventoryGridInit.centerItemOnSlot(itemEntity, slotEntity, false)
                 end
             end
         end
@@ -734,6 +735,10 @@ local function setupCardRenderTimer()
     timer.run_every_render_frame(function()
         if not state.isVisible then return end
         
+        if state.tabMarkerEntity then
+            syncBoxAndRoot(state.tabMarkerEntity)
+        end
+
         snapItemsToSlots()
         
         local batchedCardBuckets = {}
@@ -966,6 +971,7 @@ local function initializeInventory()
       :attachTo(state.panelEntity)
       :offset(0, -66)  -- 60px above card center
       :apply()
+    syncBoxAndRoot(state.tabMarkerEntity)
       
     -- ui.box.ClearStateTagsFromUIBox(state.tabMarkerEntity)
     -- ui.box.AssignStateTagsToUIBox(registry, state.tabMarkerEntity, PLANNING_STATE)
@@ -1013,6 +1019,9 @@ function PlayerInventory.open()
 
     -- Show the panel
     setEntityVisible(state.panelEntity, true, state.panelX, state.panelY, "panel")
+    if state.tabMarkerEntity then
+        syncBoxAndRoot(state.tabMarkerEntity)
+    end
 
     state.isVisible = true
 
@@ -1048,6 +1057,9 @@ function PlayerInventory.close()
 
     -- Hide the panel
     setEntityVisible(state.panelEntity, false, state.panelX, state.panelY, "panel")
+    if state.tabMarkerEntity then
+        syncBoxAndRoot(state.tabMarkerEntity)
+    end
 
     state.isVisible = false
 
@@ -1157,10 +1169,10 @@ function PlayerInventory.addCard(cardEntity, category, cardData)
 
         local success, slotIndex = grid.addItem(gridEntity, cardEntity)
         if success then
-            local slotEntity = grid.getSlotEntity(gridEntity, slotIndex)
-            if slotEntity then
-                InventoryGridInit.centerItemOnSlot(cardEntity, slotEntity)
-            end
+        local slotEntity = grid.getSlotEntity(gridEntity, slotIndex)
+        if slotEntity then
+            InventoryGridInit.centerItemOnSlot(cardEntity, slotEntity, false)
+        end
             setCardEntityVisible(cardEntity, state.isVisible)
             log_debug("[PlayerInventory] Added card to " .. category .. " slot " .. slotIndex)
             return true
@@ -1293,7 +1305,7 @@ function PlayerInventory.spawnDummyCards()
             if success then
                 local slotEntity = grid.getSlotEntity(activeGrid, slotIndex)
                 if slotEntity then
-                    InventoryGridInit.centerItemOnSlot(entity, slotEntity)
+                    InventoryGridInit.centerItemOnSlot(entity, slotEntity, false)
                 end
                 setCardEntityVisible(entity, state.isVisible)
                 log_debug("[PlayerInventory] Added dummy card " .. cardDef.name .. " to slot " .. slotIndex)
@@ -1309,7 +1321,13 @@ end
 if not state.gameStateHandlerRegistered then
     state.gameStateHandlerRegistered = true
     local gameStateHandler = function(data)
-        if data and (data.current == "PLANNING" or data.current == "ACTION") then
+        if not data or not data.current then
+            return
+        end
+        if data.current == "PLANNING" and not state.initialized then
+            initializeInventory()
+        end
+        if data.current == "PLANNING" or data.current == "ACTION" then
             setupInputHandler()
         end
     end
@@ -1322,6 +1340,9 @@ timer.after_opts({
     delay = 0.1,
     action = function()
         setupInputHandler()
+        if not state.initialized and is_state_active and PLANNING_STATE and is_state_active(PLANNING_STATE) then
+            initializeInventory()
+        end
     end,
     tag = "player_inventory_input_setup"
 })

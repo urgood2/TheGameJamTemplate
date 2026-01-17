@@ -644,6 +644,13 @@ function InventoryGridInit.centerItemOnSlot(itemEntity, slotEntity, setVisual)
     -- Get the grid (parent) entity and its transform
     local gridEntity = slotRole and slotRole.master
     local gridTransform = gridEntity and component_cache.get(gridEntity, Transform)
+    local setVisualResolved = setVisual
+    if setVisualResolved == nil and gridEntity and grid.getConfig then
+        local gridConfig = grid.getConfig(gridEntity)
+        if gridConfig and gridConfig.snapVisual == false then
+            setVisualResolved = false
+        end
+    end
 
     -- Compute absolute position: grid.actualX (target screen position) + slot.offset (local cell position)
     local slotX, slotY
@@ -696,7 +703,7 @@ function InventoryGridInit.centerItemOnSlot(itemEntity, slotEntity, setVisual)
     -- Set actual (collision) position; visual optionally follows
     itemTransform.actualX = centerX
     itemTransform.actualY = centerY
-    if setVisual ~= false then
+    if setVisualResolved ~= false then
         itemTransform.visualX = centerX
         itemTransform.visualY = centerY
     end

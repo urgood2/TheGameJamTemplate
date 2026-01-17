@@ -102,6 +102,7 @@ local GRID_WIDTH = GRID_COLS * SLOT_WIDTH + (GRID_COLS - 1) * SLOT_SPACING + GRI
 local GRID_HEIGHT = GRID_ROWS * SLOT_HEIGHT + (GRID_ROWS - 1) * SLOT_SPACING + GRID_PADDING * 2
 
 local HEADER_HEIGHT = 32
+local HEADER_TITLE_PADDING = 5
 local TABS_HEIGHT = 32
 local FOOTER_HEIGHT = 36
 local PANEL_PADDING = 10
@@ -489,7 +490,9 @@ local function injectGridForTab(tabId)
     return gridEntity
 end
 
-
+-- Forward declarations for functions used in switchTab but defined later
+local applySorting
+local updateSortButtons
 
 local function switchTab(tabId)
     if state.activeTab == tabId then return end
@@ -530,6 +533,9 @@ local function switchTab(tabId)
     end
 
     log_debug("[PlayerInventory] Switched tab: " .. oldTab .. " -> " .. tabId)
+
+    applySorting()
+    updateSortButtons()
 end
 
 local CLOSE_BUTTON_SIZE = 24
@@ -543,20 +549,30 @@ local function createHeader()
             id = "inventory_header",
             color = "dark_lavender",
             -- emboss = 2,
-            padding = 3
-            -- minWidth = headerContentWidth,
+            padding = 0,
+            minWidth = headerContentWidth,
             -- minHeight = HEADER_HEIGHT,
         },
         children = {
-            dsl.strict.text("Inventory", {
-                id = "header_title",
-                fontSize = 14,
-                color = "gold",
-                shadow = true,
-            }),
+            dsl.strict.hbox {
+                config = {
+                    padding = HEADER_TITLE_PADDING,
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
+                },
+                children = {
+                    dsl.strict.text("Inventory", {
+                        id = "header_title",
+                        fontSize = 14,
+                        color = "gold",
+                        shadow = true,
+                    }),
+                },
+            },
             dsl.filler(), -- Filler expands to push close button to the right edge
             dsl.strict.button("X", {
                 id = "close_btn",
+                minWidth = CLOSE_BUTTON_SIZE,
+                minHeight = CLOSE_BUTTON_SIZE,
                 fontSize = 12,
                 color = "dark_red",
                 onClick = function()
@@ -626,6 +642,177 @@ local function createTabs()
     }
 end
 
+local function getCardDataForSort(entity)
+    local script = getScriptTableFromEntityID and getScriptTableFromEntityID(entity)
+    if script then return script end
+    return state.cardRegistry[entity]
+end
+
+local function getSortValue(cardData, field)
+    if not cardData then return field == "cost" and 0 or "" end
+
+    -- Card scripts store the original card definition in .cardData
+    local sourceData = cardData.cardData or cardData
+
+    if field == "name" then
+        -- Try to get the actual card name from the card definition
+        local nameVal = sourceData.name or cardData.id or ""
+        if type(nameVal) == "function" then
+            local ok, result = pcall(nameVal, sourceData)
+            nameVal = ok and result or ""
+        end
+        return tostring(nameVal or "")
+    end
+    if field == "cost" then
+        -- Cost is usually mana_cost in the card definition
+        local costVal = sourceData.mana_cost or sourceData.manaCost or sourceData.cost or sourceData.price or 0
+        if type(costVal) == "function" then
+            local ok, result = pcall(costVal, sourceData)
+            costVal = ok and result or 0
+        end
+        return tonumber(costVal) or 0
+    end
+    return ""
+end
+
+updateSortButtons = function()
+    if not (state.panelEntity and registry:valid(state.panelEntity)) then return end
+    if not (ui and ui.box and ui.box.GetUIEByID) then return end
+
+    local function updateButton(btnId, field, label)
+        local btnEntity = ui.box.GetUIEByID(registry, state.panelEntity, btnId)
+        if not btnEntity then return end
+
+        local isActive = state.sortField == field
+        local indicator = ""
+        if isActive then
+            indicator = state.sortAsc and " ^" or " v"
+        end
+        local textLabel = label .. indicator
+
+        local go = component_cache.get(btnEntity, GameObject)
+        local textEntity = go and go.orderedChildren and go.orderedChildren[1] or nil
+        if textEntity then
+            local uiText = component_cache.get(textEntity, UITextComponent)
+            if uiText then
+                uiText.text = textLabel
+            else
+                local textCfg = component_cache.get(textEntity, UIConfig)
+                if textCfg then
+                    textCfg.text = textLabel
+                end
+            end
+        end
+
+        local uiCfg = component_cache.get(btnEntity, UIConfig)
+        if uiCfg and _G.util and _G.util.getColor then
+            uiCfg.color = isActive and _G.util.getColor("steel_blue") or _G.util.getColor("purple_slate")
+        end
+    end
+
+    updateButton("sort_name_btn", "name", "Name")
+    updateButton("sort_cost_btn", "cost", "Cost")
+end
+
+applySorting = function()
+    local activeGrid = state.activeGrid
+    if not activeGrid or not state.sortField then return end
+
+    local items = grid.getItemList(activeGrid)
+    if not items or #items == 0 then return end
+
+    local itemsWithData = {}
+    for _, itemEntry in ipairs(items) do
+        local entity = itemEntry.item
+        if entity and registry:valid(entity) and not state.lockedCards[entity] then
+            local cardData = getCardDataForSort(entity)
+            table.insert(itemsWithData, {
+                entity = entity,
+                slotIndex = itemEntry.slot,
+                name = string.lower(getSortValue(cardData, "name")),
+                cost = getSortValue(cardData, "cost"),
+            })
+        end
+    end
+
+    if #itemsWithData == 0 then return end
+
+    local sortField = state.sortField
+    local ascending = state.sortAsc
+
+    table.sort(itemsWithData, function(a, b)
+        local valA = a[sortField]
+        local valB = b[sortField]
+
+        -- Compare primary field
+        if valA ~= valB then
+            if ascending then
+                return valA < valB
+            else
+                return valA > valB
+            end
+        end
+
+        -- Tiebreaker: use secondary field
+        local secA = sortField == "cost" and a.name or a.cost
+        local secB = sortField == "cost" and b.name or b.cost
+        if ascending then
+            return secA < secB
+        else
+            return secA > secB
+        end
+    end)
+
+    -- Temporarily hide cards during rearrangement to prevent render crashes
+    for _, item in ipairs(itemsWithData) do
+        setCardEntityVisible(item.entity, false)
+    end
+
+    -- Remove all items from their current slots
+    for _, item in ipairs(itemsWithData) do
+        grid.removeItem(activeGrid, item.slotIndex)
+    end
+
+    -- Add items back in sorted order
+    local capacity = grid.getCapacity(activeGrid)
+    local targetSlot = 1
+    for _, item in ipairs(itemsWithData) do
+        while targetSlot <= capacity do
+            local existing = grid.getItemAtIndex(activeGrid, targetSlot)
+            if not existing and not grid.isSlotLocked(activeGrid, targetSlot)
+                and grid.canSlotAccept(activeGrid, targetSlot, item.entity) then
+                break
+            end
+            targetSlot = targetSlot + 1
+        end
+        if targetSlot <= capacity then
+            grid.addItem(activeGrid, item.entity, targetSlot)
+            local slotEntity = grid.getSlotEntity(activeGrid, targetSlot)
+            if slotEntity then
+                InventoryGridInit.centerItemOnSlot(item.entity, slotEntity, false)
+            end
+            targetSlot = targetSlot + 1
+        end
+    end
+
+    -- Restore visibility after rearrangement
+    for _, item in ipairs(itemsWithData) do
+        setCardEntityVisible(item.entity, true)
+    end
+end
+
+local function toggleSort(sortField)
+    if state.sortField == sortField then
+        state.sortAsc = not state.sortAsc
+    else
+        state.sortField = sortField
+        state.sortAsc = true
+    end
+
+    applySorting()
+    updateSortButtons()
+end
+
 local function createFooter()
     return dsl.strict.hbox {
         config = {
@@ -642,7 +829,7 @@ local function createFooter()
                 fontSize = 10,
                 color = "purple_slate",
                 onClick = function()
-                    log_debug("[PlayerInventory] Sort by name clicked")
+                    toggleSort("name")
                 end,
             }),
             -- dsl.strict.spacer(4),
@@ -653,7 +840,7 @@ local function createFooter()
                 fontSize = 10,
                 color = "purple_slate",
                 onClick = function()
-                    log_debug("[PlayerInventory] Sort by cost clicked")
+                    toggleSort("cost")
                 end,
             }),
             -- dsl.spacer(1),
@@ -990,6 +1177,8 @@ local function initializeInventory()
             state.tabButtons[tabId] = btnEntity
         end
     end
+
+    updateSortButtons()
 
     state.activeGrid = injectGridForTab(state.activeTab)
     if state.activeGrid then

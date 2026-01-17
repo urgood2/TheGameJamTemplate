@@ -425,7 +425,7 @@ local function restoreGridItems(tabId, gridEntity)
             if success then
                 local slotEntity = grid.getSlotEntity(gridEntity, placedSlot or slotIndex)
                 if slotEntity then
-                    InventoryGridInit.centerItemOnSlot(itemEntity, slotEntity)
+                    InventoryGridInit.centerItemOnSlot(itemEntity, slotEntity, false)
                 end
                 setCardEntityVisible(itemEntity, state.isVisible)
             else
@@ -1029,6 +1029,7 @@ function PlayerInventory.open()
     if state.activeGrid then
         setGridItemsVisible(state.activeGrid, true)
     end
+    snapItemsToSlots()
 
     signal.emit("player_inventory_opened")
 
@@ -1049,6 +1050,9 @@ function PlayerInventory.close()
     setEntityVisible(state.panelEntity, false, state.panelX, state.panelY, "panel")
 
     state.isVisible = false
+
+    -- Keep cards aligned with the grid as it moves offscreen
+    snapItemsToSlots()
 
     -- Hide all inventory cards (they are separate sprite entities)
     setAllCardsVisible(false)

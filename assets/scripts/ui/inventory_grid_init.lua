@@ -612,7 +612,7 @@ end
 --------------------------------------------------------------------------------
 local _centerDebugLogged = {}  -- [entityKey] = true (debounce table)
 
-function InventoryGridInit.centerItemOnSlot(itemEntity, slotEntity)
+function InventoryGridInit.centerItemOnSlot(itemEntity, slotEntity, setVisual)
     if not registry:valid(itemEntity) or not registry:valid(slotEntity) then
         return
     end
@@ -693,12 +693,13 @@ function InventoryGridInit.centerItemOnSlot(itemEntity, slotEntity)
         ))
     end
 
-    -- Set both actual (collision) and visual (render) positions to match
-    -- This ensures collision and render are aligned immediately without waiting for springs
+    -- Set actual (collision) position; visual optionally follows
     itemTransform.actualX = centerX
     itemTransform.actualY = centerY
-    itemTransform.visualX = centerX
-    itemTransform.visualY = centerY
+    if setVisual ~= false then
+        itemTransform.visualX = centerX
+        itemTransform.visualY = centerY
+    end
 end
 
 --- Clear debug log cache (useful for repeated testing)

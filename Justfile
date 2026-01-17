@@ -50,6 +50,10 @@ build-debug-fast:
 	cmake -B build-debug -DCMAKE_BUILD_TYPE=Debug -DENABLE_UNIT_TESTS=OFF
 	cmake --build build-debug --target raylib-cpp-cmake-template -j4 --
 
+run-debug:
+	@nohup ./build-debug/raylib-cpp-cmake-template >/tmp/raylib-cpp-cmake-template.log 2>&1 &
+	@echo "Launched (log: /tmp/raylib-cpp-cmake-template.log)"
+
 build-release-fast:
 	cmake -B build-release -DCMAKE_BUILD_TYPE=Release -DENABLE_UNIT_TESTS=OFF
 	cmake --build build-release --target raylib-cpp-cmake-template -j4 --

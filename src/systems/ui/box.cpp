@@ -1596,6 +1596,20 @@ namespace ui
 
             auto [child_w, child_h] = contentSizes.at(child); // child will always exist because they are processed first.
 
+            // Spacers should only affect the layout axis (not the cross axis)
+            const bool isSpacer = childUIConfig.instanceType && childUIConfig.instanceType.value() == "spacer";
+            if (isSpacer)
+            {
+                if (selfUIConfig.uiType == UITypeEnum::HORIZONTAL_CONTAINER)
+                {
+                    child_h = 0.f;
+                }
+                else
+                {
+                    child_w = 0.f;
+                }
+            }
+
             // self can be horizontal or vertical.
 
             if (childUIConfig.uiType == UITypeEnum::VERTICAL_CONTAINER || childUIConfig.uiType == UITypeEnum::ROOT || childUIConfig.uiType == UITypeEnum::HORIZONTAL_CONTAINER || childUIConfig.uiType == UITypeEnum::SCROLL_PANE)

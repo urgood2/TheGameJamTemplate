@@ -89,8 +89,24 @@ local function color(c)
 end
 
 -- Cache a transparent color at module load time (used by dsl.spacer)
--- CRITICAL: Must use Color.new() to create proper userdata, not Lua table
+-- NOTE: We keep a fallback path to "blank" to avoid handler defaults (white fills)
 local TRANSPARENT_COLOR = Color and Color.new and Color.new(0, 0, 0, 0) or nil
+
+local function resolveSpacerColor()
+    if TRANSPARENT_COLOR and type(TRANSPARENT_COLOR) == "userdata" then
+        return TRANSPARENT_COLOR
+    end
+
+    if util and util.getColor then
+        local ok, colorValue = pcall(util.getColor, "blank")
+        if ok and type(colorValue) == "userdata" then
+            TRANSPARENT_COLOR = colorValue
+            return TRANSPARENT_COLOR
+        end
+    end
+
+    return "blank"
+end
 
 ------------------------------------------------------------
 -- 1️⃣ Base container constructors
@@ -769,9 +785,10 @@ function dsl.spacer(w, h)
     return def{
         type = "RECT_SHAPE",
         config = {
-            color    = TRANSPARENT_COLOR, -- Cached at module load, nil triggers skip in ui_definition_helper
+            color = resolveSpacerColor(),
             minWidth = w or 10,
             minHeight = h or w or 10,
+            instanceType = "spacer",
         }
     }
 end

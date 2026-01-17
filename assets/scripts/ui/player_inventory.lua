@@ -647,12 +647,28 @@ local function getCardDataForSort(entity)
 end
 
 local function getSortValue(cardData, field)
+    if not cardData then return field == "cost" and 0 or "" end
+
+    -- Card scripts store the original card definition in .cardData
+    local sourceData = cardData.cardData or cardData
+
     if field == "name" then
-        return tostring((cardData and (cardData.name or cardData.id)) or "")
+        -- Try to get the actual card name from the card definition
+        local nameVal = sourceData.name or cardData.id or ""
+        if type(nameVal) == "function" then
+            local ok, result = pcall(nameVal, sourceData)
+            nameVal = ok and result or ""
+        end
+        return tostring(nameVal or "")
     end
     if field == "cost" then
-        local cost = cardData and (cardData.mana_cost or cardData.manaCost or cardData.cost or cardData.price or 0) or 0
-        return tonumber(cost) or 0
+        -- Cost is usually mana_cost in the card definition
+        local costVal = sourceData.mana_cost or sourceData.manaCost or sourceData.cost or sourceData.price or 0
+        if type(costVal) == "function" then
+            local ok, result = pcall(costVal, sourceData)
+            costVal = ok and result or 0
+        end
+        return tonumber(costVal) or 0
     end
     return ""
 end
@@ -725,22 +741,37 @@ local function applySorting()
     table.sort(itemsWithData, function(a, b)
         local valA = a[sortField]
         local valB = b[sortField]
-        if sortField == "cost" then
-            if valA == valB then
-                return ascending and (a.name < b.name) or (a.name > b.name)
+
+        -- Compare primary field
+        if valA ~= valB then
+            if ascending then
+                return valA < valB
+            else
+                return valA > valB
             end
-            return ascending and (valA < valB) or (valA > valB)
         end
-        if valA == valB then
-            return ascending and (a.cost < b.cost) or (a.cost > b.cost)
+
+        -- Tiebreaker: use secondary field
+        local secA = sortField == "cost" and a.name or a.cost
+        local secB = sortField == "cost" and b.name or b.cost
+        if ascending then
+            return secA < secB
+        else
+            return secA > secB
         end
-        return ascending and (valA < valB) or (valA > valB)
     end)
 
+    -- Temporarily hide cards during rearrangement to prevent render crashes
+    for _, item in ipairs(itemsWithData) do
+        setCardEntityVisible(item.entity, false)
+    end
+
+    -- Remove all items from their current slots
     for _, item in ipairs(itemsWithData) do
         grid.removeItem(activeGrid, item.slotIndex)
     end
 
+    -- Add items back in sorted order
     local capacity = grid.getCapacity(activeGrid)
     local targetSlot = 1
     for _, item in ipairs(itemsWithData) do
@@ -760,6 +791,11 @@ local function applySorting()
             end
             targetSlot = targetSlot + 1
         end
+    end
+
+    -- Restore visibility after rearrangement
+    for _, item in ipairs(itemsWithData) do
+        setCardEntityVisible(item.entity, true)
     end
 end
 

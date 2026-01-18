@@ -468,45 +468,57 @@ auto exposeGlobalsToLua(sol::state &lua) -> void {
 
   // Lightweight constructors for Raylib vector types (accept table {x=,y=} or
   // positional floats). Includes error handling for robustness.
-  lua.set_function("Vector2", [](sol::object a, sol::object b) -> Vector2 {
+  // Helper lambda to extract float from sol::object (handles int/float types)
+  auto getFloat = [](const sol::object& obj, float def = 0.0f) -> float {
+    if (!obj.valid()) return def;
+    if (obj.is<float>()) return obj.as<float>();
+    if (obj.is<int>()) return static_cast<float>(obj.as<int>());
+    if (obj.is<double>()) return static_cast<float>(obj.as<double>());
+    return def;
+  };
+
+  // Vector2, Vector3, Vector4: Use variadic_args for LuaJIT compatibility.
+  // LuaJIT doesn't populate missing stack slots with nil like Lua 5.4 does,
+  // so fixed-parameter sol::object args fail with "stack index N, expected anything".
+  lua.set_function("Vector2", [getFloat](sol::variadic_args va) -> Vector2 {
     try {
-      if (a.is<sol::table>()) {
-        auto t = a.as<sol::table>();
+      if (va.size() >= 1 && va[0].is<sol::table>()) {
+        auto t = va[0].as<sol::table>();
         return Vector2{t.get_or("x", 0.0f), t.get_or("y", 0.0f)};
       }
-      float x = a.is<float>() ? a.as<float>() : (a.is<int>() ? static_cast<float>(a.as<int>()) : 0.0f);
-      float y = b.is<float>() ? b.as<float>() : (b.is<int>() ? static_cast<float>(b.as<int>()) : 0.0f);
+      float x = va.size() > 0 ? getFloat(va[0]) : 0.0f;
+      float y = va.size() > 1 ? getFloat(va[1]) : 0.0f;
       return Vector2{x, y};
     } catch (const std::exception& e) {
       SPDLOG_ERROR("[Vector2 Error]: {}", e.what());
       return Vector2{0.0f, 0.0f};
     }
   });
-  lua.set_function("Vector3", [](sol::object a, sol::object b, sol::object c) -> Vector3 {
+  lua.set_function("Vector3", [getFloat](sol::variadic_args va) -> Vector3 {
     try {
-      if (a.is<sol::table>()) {
-        auto t = a.as<sol::table>();
+      if (va.size() >= 1 && va[0].is<sol::table>()) {
+        auto t = va[0].as<sol::table>();
         return Vector3{t.get_or("x", 0.0f), t.get_or("y", 0.0f), t.get_or("z", 0.0f)};
       }
-      float x = a.is<float>() ? a.as<float>() : (a.is<int>() ? static_cast<float>(a.as<int>()) : 0.0f);
-      float y = b.is<float>() ? b.as<float>() : (b.is<int>() ? static_cast<float>(b.as<int>()) : 0.0f);
-      float z = c.is<float>() ? c.as<float>() : (c.is<int>() ? static_cast<float>(c.as<int>()) : 0.0f);
+      float x = va.size() > 0 ? getFloat(va[0]) : 0.0f;
+      float y = va.size() > 1 ? getFloat(va[1]) : 0.0f;
+      float z = va.size() > 2 ? getFloat(va[2]) : 0.0f;
       return Vector3{x, y, z};
     } catch (const std::exception& e) {
       SPDLOG_ERROR("[Vector3 Error]: {}", e.what());
       return Vector3{0.0f, 0.0f, 0.0f};
     }
   });
-  lua.set_function("Vector4", [](sol::object a, sol::object b, sol::object c, sol::object d) -> Vector4 {
+  lua.set_function("Vector4", [getFloat](sol::variadic_args va) -> Vector4 {
     try {
-      if (a.is<sol::table>()) {
-        auto t = a.as<sol::table>();
+      if (va.size() >= 1 && va[0].is<sol::table>()) {
+        auto t = va[0].as<sol::table>();
         return Vector4{t.get_or("x", 0.0f), t.get_or("y", 0.0f), t.get_or("z", 0.0f), t.get_or("w", 0.0f)};
       }
-      float x = a.is<float>() ? a.as<float>() : (a.is<int>() ? static_cast<float>(a.as<int>()) : 0.0f);
-      float y = b.is<float>() ? b.as<float>() : (b.is<int>() ? static_cast<float>(b.as<int>()) : 0.0f);
-      float z = c.is<float>() ? c.as<float>() : (c.is<int>() ? static_cast<float>(c.as<int>()) : 0.0f);
-      float w = d.is<float>() ? d.as<float>() : (d.is<int>() ? static_cast<float>(d.as<int>()) : 0.0f);
+      float x = va.size() > 0 ? getFloat(va[0]) : 0.0f;
+      float y = va.size() > 1 ? getFloat(va[1]) : 0.0f;
+      float z = va.size() > 2 ? getFloat(va[2]) : 0.0f;
+      float w = va.size() > 3 ? getFloat(va[3]) : 0.0f;
       return Vector4{x, y, z, w};
     } catch (const std::exception& e) {
       SPDLOG_ERROR("[Vector4 Error]: {}", e.what());

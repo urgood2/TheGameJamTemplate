@@ -110,5 +110,29 @@ endif()
 
 gtest_discover_tests(unit_tests)
 
+# ======================================================================
+# Lua Backend Smoke Tests (minimal dependencies - just Sol2/Lua)
+# ======================================================================
+add_executable(lua_backend_tests
+    unit/test_lua_backend.cpp
+)
+
+target_include_directories(lua_backend_tests PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_definitions(lua_backend_tests PRIVATE
+    ASSETS_PATH="${CMAKE_SOURCE_DIR}/assets/"
+)
+
+target_link_libraries(lua_backend_tests PRIVATE
+    gtest_main
+    CommonSettings
+)
+
+gtest_discover_tests(lua_backend_tests)
+# ======================================================================
+
 # Add benchmark subdirectory
 add_subdirectory(benchmark)

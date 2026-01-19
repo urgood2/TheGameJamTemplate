@@ -1272,7 +1272,7 @@ function WandExecutor.findNearestEnemy(position, radius)
     -- Fallback: area query for multiple entities
     if physics and physics.GetObjectsInArea then
         local half = maxDist
-        local candidates = physics.GetObjectsInArea(world, px - half, py - half, half * 2, half * 2) or {}
+        local candidates = physics.GetObjectsInArea(world, px - half, py - half, px + half, py + half) or {}
         local playerEntity = WandExecutor.getPlayerEntity()
         local bestEntity, bestDistSq = nil, nil
 

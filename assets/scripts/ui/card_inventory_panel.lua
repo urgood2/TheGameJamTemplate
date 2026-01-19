@@ -347,7 +347,7 @@ local function createHeader()
     return dsl.strict.hbox {
         config = {
             color = "dark_lavender",
-            padding = { 12, 8 },
+            padding = 12,  -- Changed from {12, 8} - DSL expects single number
             emboss = 2,
         },
         children = {

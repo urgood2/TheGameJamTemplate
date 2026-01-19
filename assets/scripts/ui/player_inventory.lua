@@ -738,7 +738,7 @@ local function createTabs()
     return dsl.strict.hbox {
         config = {
             color = "blackberry",
-            padding = { 4, 2 },
+            padding = 4,  -- Changed from {4, 2} - DSL expects single number
         },
         children = tabChildren,
     }
@@ -919,7 +919,7 @@ local function createFooter()
     return dsl.strict.hbox {
         config = {
             color = "dark_lavender",
-            padding = { 6, 4 },
+            padding = 6,  -- Changed from {6, 4} - DSL expects single number
             minWidth = GRID_WIDTH,
             minHeight = FOOTER_HEIGHT,
         },

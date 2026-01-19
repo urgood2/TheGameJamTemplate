@@ -3,7 +3,7 @@
 **Created**: 2026-01-19
 **Status**: Ready for implementation
 
-> **AI Note**: When implementing, use chunked edits (small oldString/newString pairs) to prevent tool calls from hanging on large file operations.
+
 
 ## Overview
 

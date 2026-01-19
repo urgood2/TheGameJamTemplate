@@ -4,6 +4,7 @@
 
 - **NEVER use `rm -rf`** - blocked by hook. Use `trash folder-name` instead
 - **Use terminal-notifier** for confirmations: `terminal-notifier -title "Claude Code" -message "Your message"`
+- **Chunk tool calls** - Use small edits (short oldString/newString) to prevent hanging on large files
 
 ## Workflow
 

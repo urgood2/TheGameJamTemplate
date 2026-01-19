@@ -1194,6 +1194,12 @@ NavManagerUD = {
 ---@param enabled boolean
     is_entity_enabled = nil,  -- ---@param e entt.entity
 ---@return boolean
+    -- Explicit neighbor navigation overrides (per-element)
+    set_neighbors = nil,  -- ---@param e entt.entity
+---@param neighbors {up?: entt.entity, down?: entt.entity, left?: entt.entity, right?: entt.entity}
+    get_neighbors = nil,  -- ---@param e entt.entity
+---@return {up?: entt.entity, down?: entt.entity, left?: entt.entity, right?: entt.entity}
+    clear_neighbors = nil,  -- ---@param e entt.entity
     navigate = nil,  -- ---@param group string
 ---@param dir 'L'|'R'|'U'|'D'
     select_current = nil,  -- ---@param group string

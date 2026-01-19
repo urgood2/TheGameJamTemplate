@@ -1,3 +1,28 @@
+<!-- KANBAN-SYNC-START -->
+## Synced from Obsidian Kanban
+> Last synced: 2026-01-19 10:02:34
+> Source: `Surviorslike Kanban.md`
+
+## TODO
+
+- [ ] Implement demo plan according to /Users/joshuashin/.claude/plans/final-demo-content-spec.md
+
+## In Progress
+
+## Waiting On
+
+## Abandoned
+
+## Done
+
+<!-- KANBAN-SYNC-END -->
+
+
+
+
+
+
+
 # TODO Prototype - Organized Status Report
 > Last verified: Dec 29, 2025
 
@@ -516,4 +541,3 @@ those that are not unlocked will desplay a default "locked" sprite.
 | Shop System | 5 | 0 | 3 (UI disabled) |
 | Polish | ~18 | 1 | ~25 |
 | Release | 3 | 2 | 0 |
-

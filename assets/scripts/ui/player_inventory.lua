@@ -472,6 +472,11 @@ local function injectGridForTab(tabId)
     if ui and ui.box and ui.box.AddStateTagToUIBox then
         ui.box.AddStateTagToUIBox(registry, state.panelEntity, "default_state")
     end
+    
+    -- After line 473 in injectGridForTab():
+    if ui and ui.box and ui.box.RenewAlignment then
+        ui.box.RenewAlignment(registry, state.panelEntity)
+    end
 
     local cfg = TAB_CONFIG[tabId]
     local gridEntity = cfg and ui.box.GetUIEByID(registry, state.gridContainerEntity, cfg.id) or nil
@@ -544,7 +549,7 @@ local function createHeader()
             id = "inventory_header",
             color = "dark_lavender",
             -- emboss = 2,
-            padding = 3,
+            padding = 8,
             minWidth = headerContentWidth,
             -- minHeight = HEADER_HEIGHT,
         },
@@ -554,6 +559,7 @@ local function createHeader()
                 fontSize = 14,
                 color = "gold",
                 shadow = true,
+                padding = 4
             }),
             dsl.filler(), -- Filler expands to push close button to the right edge
             dsl.strict.button("X", {

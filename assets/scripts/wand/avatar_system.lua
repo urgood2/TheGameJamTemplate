@@ -31,6 +31,82 @@ PROC EFFECTS REGISTRY
 Maps effect names to execution functions. Each receives (player, effect).
 ]]--
 
+--[[
+================================================================================
+BLESSING EFFECTS REGISTRY
+================================================================================
+Maps blessing effect names to execution functions. Each receives (player, effect, config).
+Blessings are activated abilities with cooldowns, not passive procs.
+]]--
+
+local BLESSING_EFFECTS = {
+    --- Fire nova around player
+    --- @param player table Player script table
+    --- @param effect table Blessing effect definition
+    --- @param config table Blessing config (radius, damage, burn_stacks, burn_duration)
+    fire_nova = function(player, effect, config)
+        config = config or {}
+        local radius = config.radius or 150
+        local damage = config.damage or 50
+        local burn_stacks = config.burn_stacks or 3
+        print(string.format("[Blessing] Fire Nova: radius=%d, damage=%d, burn_stacks=%d",
+            radius, damage, burn_stacks))
+        -- TODO: Apply actual damage and burn to enemies in radius
+    end,
+
+    --- Frost barrier that freezes attackers
+    --- @param player table Player script table
+    --- @param effect table Blessing effect definition
+    --- @param config table Blessing config (barrier_pct, freeze_duration)
+    frost_barrier = function(player, effect, config)
+        config = config or {}
+        local barrier_pct = config.barrier_pct or 30
+        local freeze_duration = config.freeze_duration or 2.0
+        print(string.format("[Blessing] Frost Barrier: barrier=%d%%, freeze=%.1fs",
+            barrier_pct, freeze_duration))
+
+        -- Apply barrier
+        local combatActor = player.combatTable
+        if combatActor and combatActor.stats and combatActor.addBarrier then
+            local maxHp = combatActor.stats:get("max_hp") or 100
+            local barrier = math.floor(maxHp * (barrier_pct / 100))
+            combatActor:addBarrier(barrier)
+        end
+        -- TODO: Add freeze effect on being hit during duration
+    end,
+
+    --- Chain lightning storm that strikes enemies
+    --- @param player table Player script table
+    --- @param effect table Blessing effect definition
+    --- @param config table Blessing config (bolts_per_second, damage_per_bolt, chain_count)
+    chain_lightning_storm = function(player, effect, config)
+        config = config or {}
+        local bolts = config.bolts_per_second or 3
+        local damage = config.damage_per_bolt or 25
+        local chains = config.chain_count or 2
+        print(string.format("[Blessing] Lightning Storm: %d bolts/s, %d dmg, %d chains",
+            bolts, damage, chains))
+        -- TODO: Spawn lightning bolts over duration
+    end,
+
+    --- Gravity well that pulls and damages enemies
+    --- @param player table Player script table
+    --- @param effect table Blessing effect definition
+    --- @param config table Blessing config (radius, pull_strength, damage_per_second)
+    gravity_well = function(player, effect, config)
+        config = config or {}
+        local radius = config.radius or 200
+        local pull = config.pull_strength or 100
+        local dps = config.damage_per_second or 15
+        print(string.format("[Blessing] Void Rift: radius=%d, pull=%d, dps=%d",
+            radius, pull, dps))
+        -- TODO: Create gravity well entity with pull/damage
+    end,
+}
+
+-- Expose BLESSING_EFFECTS for test detection
+AvatarSystem.BLESSING_EFFECTS = BLESSING_EFFECTS
+
 local PROC_EFFECTS = {
     --- Heal the player for flat HP
     --- @param player table Player script table
@@ -548,6 +624,122 @@ function AvatarSystem.has_rule(player, rule)
         end
     end
     return false
+end
+
+--[[
+================================================================================
+BLESSING ACTIVATION
+================================================================================
+Activate god blessings with cooldown tracking.
+]]--
+
+--- Get all blessing effects from currently equipped avatar/god
+--- @param player table Player script table
+--- @return table Array of blessing effect definitions
+function AvatarSystem.get_blessings(player)
+    local avatarId = AvatarSystem.get_equipped(player)
+    if not avatarId then return {} end
+
+    local defs = loadDefs()
+    local avatar = defs and defs[avatarId]
+    if not avatar or not avatar.effects then return {} end
+
+    local blessings = {}
+    for _, effect in ipairs(avatar.effects) do
+        if effect.type == "blessing" then
+            blessings[#blessings + 1] = effect
+        end
+    end
+    return blessings
+end
+
+--- Check if a blessing is on cooldown
+--- @param player table Player script table
+--- @param blessingId string Blessing ID to check
+--- @return boolean True if on cooldown
+--- @return number Remaining cooldown time (0 if ready)
+function AvatarSystem.is_blessing_on_cooldown(player, blessingId)
+    if not player then return true, 0 end
+
+    local state = player.avatar_state
+    if not state then return false, 0 end
+
+    local cooldowns = state._blessing_cooldowns or {}
+    local readyAt = cooldowns[blessingId] or 0
+
+    local currentTime = os.time()
+    if currentTime < readyAt then
+        return true, readyAt - currentTime
+    end
+    return false, 0
+end
+
+--- Activate a blessing ability (respects cooldowns)
+--- @param player table Player script table
+--- @param blessingId string Blessing ID to activate (from effect.id)
+--- @return boolean success
+--- @return string|nil error message if failed
+function AvatarSystem.activate_blessing(player, blessingId)
+    if not player or not blessingId then
+        return false, "invalid_args"
+    end
+
+    -- Find the blessing in equipped avatar
+    local blessings = AvatarSystem.get_blessings(player)
+    local blessing = nil
+    for _, b in ipairs(blessings) do
+        if b.id == blessingId then
+            blessing = b
+            break
+        end
+    end
+
+    if not blessing then
+        return false, "blessing_not_found"
+    end
+
+    -- Check cooldown
+    local onCooldown, remaining = AvatarSystem.is_blessing_on_cooldown(player, blessingId)
+    if onCooldown then
+        return false, string.format("on_cooldown:%.1f", remaining)
+    end
+
+    -- Execute the blessing effect
+    local handler = BLESSING_EFFECTS[blessing.effect]
+    if handler then
+        handler(player, blessing, blessing.config)
+    else
+        print(string.format("[AvatarSystem] Unknown blessing effect: %s", tostring(blessing.effect)))
+    end
+
+    -- Set cooldown
+    local state = ensureState(player)
+    state._blessing_cooldowns = state._blessing_cooldowns or {}
+    state._blessing_cooldowns[blessingId] = os.time() + (blessing.cooldown or 30)
+
+    -- Emit signal for UI
+    local ok, signal = pcall(require, "external.hump.signal")
+    if ok and signal then
+        signal.emit("blessing_activated", {
+            player = player,
+            blessing_id = blessingId,
+            cooldown = blessing.cooldown or 30,
+            duration = blessing.duration or 0
+        })
+    end
+
+    print(string.format("[Blessing] Activated '%s' (cooldown: %ds)", blessingId, blessing.cooldown or 30))
+    return true
+end
+
+--- Reset all blessing cooldowns (e.g., on new run)
+--- @param player table Player script table
+function AvatarSystem.reset_blessing_cooldowns(player)
+    if not player then return end
+    local state = player.avatar_state
+    if state then
+        state._blessing_cooldowns = {}
+    end
 end
 
 return AvatarSystem

@@ -107,7 +107,6 @@ local TABS_HEIGHT = 32
 local FOOTER_HEIGHT = 36
 local PANEL_PADDING = 10
 local PANEL_WIDTH = GRID_WIDTH + PANEL_PADDING * 2
-local PANEL_HEIGHT = HEADER_HEIGHT + TABS_HEIGHT + GRID_HEIGHT + FOOTER_HEIGHT + PANEL_PADDING * 2
 local RENDER_LAYER = "ui"
 
 local PANEL_Z = 800
@@ -1074,6 +1073,27 @@ function PlayerInventory.ensureInputHandler()
     setupInputHandler()
 end
 
+local function getPanelHeightFromTransform()
+    if not state.panelEntity or not registry:valid(state.panelEntity) then
+        return nil
+    end
+
+    local t = component_cache.get(state.panelEntity, Transform)
+    if t and t.actualH and t.actualH > 0 then
+        return t.actualH
+    end
+
+    local boxComp = component_cache.get(state.panelEntity, UIBoxComponent)
+    if boxComp and boxComp.uiRoot and registry:valid(boxComp.uiRoot) then
+        local rt = component_cache.get(boxComp.uiRoot, Transform)
+        if rt and rt.actualH and rt.actualH > 0 then
+            return rt.actualH
+        end
+    end
+
+    return nil
+end
+
 local function calculatePositions()
     local screenW = globals.screenWidth()
     local screenH = globals.screenHeight()
@@ -1086,10 +1106,38 @@ local function calculatePositions()
     end
 
     state.panelX = (screenW - PANEL_WIDTH) / 2
-    state.panelY = screenH - PANEL_HEIGHT - 10
+
+    local panelHeight = getPanelHeightFromTransform()
+    if panelHeight then
+        state.panelY = screenH - panelHeight - 10
+    else
+        -- Panel height isn't available until after spawn/layout; use a temporary baseline.
+        state.panelY = screenH - 10
+    end
     state.gridX = state.panelX + PANEL_PADDING
     state.gridY = state.panelY + HEADER_HEIGHT + TABS_HEIGHT + PANEL_PADDING
 
+    return true
+end
+
+local function refreshPanelPositionFromTransform()
+    local panelHeight = getPanelHeightFromTransform()
+    if not panelHeight then
+        return false
+    end
+
+    local screenW = globals.screenWidth()
+    local screenH = globals.screenHeight()
+    if not screenW or not screenH or screenW <= 0 or screenH <= 0 then
+        return false
+    end
+
+    state.panelX = (screenW - PANEL_WIDTH) / 2
+    state.panelY = screenH - panelHeight - 10
+    state.gridX = state.panelX + PANEL_PADDING
+    state.gridY = state.panelY + HEADER_HEIGHT + TABS_HEIGHT + PANEL_PADDING
+
+    setEntityVisible(state.panelEntity, state.isVisible, state.panelX, state.panelY, "panel")
     return true
 end
 
@@ -1140,6 +1188,13 @@ local function initializeInventory()
     if ui and ui.box and ui.box.set_draw_layer then
         ui.box.set_draw_layer(state.panelEntity, "sprites")
         ui.box.set_draw_layer(state.tabMarkerEntity, "sprites")
+    end
+
+    -- Recompute panel position using the actual layout height from the transform.
+    if not refreshPanelPositionFromTransform() then
+        timer.after(0, function()
+            refreshPanelPositionFromTransform()
+        end, "player_inventory_panel_recalc", TIMER_GROUP)
     end
     
     -- CRITICAL: Add state tags to UI boxes so they render
@@ -1201,6 +1256,8 @@ function PlayerInventory.open()
     end
 
     if state.isVisible then return end
+
+    refreshPanelPositionFromTransform()
 
     -- Show the panel
     setEntityVisible(state.panelEntity, true, state.panelX, state.panelY, "panel")

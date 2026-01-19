@@ -317,6 +317,88 @@ Equipment.ring_of_meditation = {
     },
 }
 
+-- Phase 5 additions to reach 12 equipment items
+
+Equipment.stormbringer_staff = {
+    id = "stormbringer_staff",
+    name = "Stormbringer Staff",
+    slot = "main_hand",
+    rarity = "Rare",
+
+    stats = {
+        weapon_min = 30,
+        weapon_max = 60,
+        lightning_damage = 25,
+        cast_speed_pct = 10,
+    },
+
+    requires = { attribute = "spirit", value = 25, mode = "sole" },
+
+    procs = {
+        {
+            trigger = Triggers.COMBAT.ON_CRIT,
+            effect = function(ctx, src, ev)
+                -- Chain lightning on crit
+                getStatusEngine().apply(ctx, ev.target, "electrocute", {
+                    stacks = 3,
+                    source = src,
+                })
+            end,
+        },
+        {
+            trigger = Triggers.COMBAT.ON_KILL,
+            chance = 30,
+            effect = function(ctx, src, ev)
+                -- Chance to restore mana on kill
+                if src.mana and src.max_mana then
+                    src.mana = math.min(src.mana + 10, src.max_mana)
+                end
+            end,
+        },
+    },
+
+    conversions = {
+        { from = "physical", to = "lightning", pct = 75 },
+    },
+}
+
+Equipment.cloak_of_shadows = {
+    id = "cloak_of_shadows",
+    name = "Cloak of Shadows",
+    slot = "chest",
+    rarity = "Epic",
+
+    stats = {
+        armor = 60,
+        dodge_chance_pct = 15,
+        move_speed_pct = 10,
+    },
+
+    requires = { attribute = "cunning", value = 30, mode = "sole" },
+
+    procs = {
+        {
+            trigger = Triggers.DEFENSIVE.ON_DODGE,
+            effect = function(ctx, src, ev)
+                -- Gain invisibility briefly on dodge
+                getStatusEngine().apply(ctx, src, "stealth", {
+                    stacks = 1,
+                    source = src,
+                    duration = 2,
+                })
+            end,
+        },
+        {
+            trigger = Triggers.DEFENSIVE.ON_BEING_HIT,
+            chance = 20,
+            effect = function(ctx, src, ev)
+                -- Chance to phase through attack
+                return { damage_reduction = ev.damage }
+            end,
+        },
+    },
+}
+
 function Equipment.get(id)
     return Equipment[id]
 end

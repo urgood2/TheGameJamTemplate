@@ -239,12 +239,17 @@ void executeEntityPipelineWithCommands(
 
     BatchedLocalCommands* localCmds = registry.try_get<BatchedLocalCommands>(e);
     std::vector<OwnedDrawCommand> allLocalCommands;
-    if (localCmds) {
-        allLocalCommands = localCmds->commands;
-        std::stable_sort(allLocalCommands.begin(), allLocalCommands.end(),
-                         [](const OwnedDrawCommand& a, const OwnedDrawCommand& b) {
-                             return a.cmd.z < b.cmd.z;
-                         });
+    if (localCmds && !localCmds->commands.empty()) {
+        // Move commands instead of copy - avoids allocation + copy overhead
+        allLocalCommands = std::move(localCmds->commands);
+
+        // Only sort if not already in z-order (tracked by isSorted flag)
+        if (!localCmds->isSorted) {
+            std::stable_sort(allLocalCommands.begin(), allLocalCommands.end(),
+                             [](const OwnedDrawCommand& a, const OwnedDrawCommand& b) {
+                                 return a.cmd.z < b.cmd.z;
+                             });
+        }
         // Commands are intended to be frame-scoped; clear after consuming to avoid
         // accumulation and duplicated draws across frames.
         localCmds->clear();

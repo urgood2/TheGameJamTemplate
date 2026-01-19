@@ -605,71 +605,94 @@ namespace ui
         return boxStr;
     }
 
-    void element::InitializeVisualTransform(entt::registry &registry, entt::entity entity)
+    void element::InitializeVisualTransform(entt::registry &registry, entt::entity rootEntity)
     {
-        // Ensure entity is valid
-        if (!registry.valid(entity))
-            return;
+        // Iterative post-order traversal with pre-work
+        // Uses a stack with phase tracking to avoid recursion (stack overflow risk with deep UI)
 
-        // Retrieve UIElement, Config, and Transform components
-        auto *uiElement = registry.try_get<UIElementComponent>(entity);
-        auto *uiConfig = registry.try_get<UIConfig>(entity);
-        auto *transform = registry.try_get<transform::Transform>(entity);
-        auto *uiState = registry.try_get<UIState>(entity);
-        auto *node = registry.try_get<transform::GameObject>(entity);
+        struct StackEntry {
+            entt::entity entity;
+            bool preWorkDone;  // false = need pre-work, true = need post-work
+        };
 
-        if (!uiElement || !uiConfig || !transform || !uiState || !node) return;
+        std::vector<StackEntry> stack;
+        stack.reserve(64);  // Pre-allocate for typical UI depth
+        stack.push_back({rootEntity, false});
 
-        // STEP 1: Align with major parent
-        transform::MoveWithMaster(entity, 0, *transform, registry.get<transform::InheritedProperties>(entity), *node);
-        transform::UpdateParallaxCalculations(&registry, entity);
+        while (!stack.empty()) {
+            auto [entity, preWorkDone] = stack.back();
+            stack.pop_back();
 
-        // STEP 3: Recursively initialize all child elements
-        for (auto childEntry : node->orderedChildren)
-        {
-            auto child = childEntry;
-            InitializeVisualTransform(registry, child);
-        }
+            // Ensure entity is valid
+            if (!registry.valid(entity))
+                continue;
 
-        // STEP 4: Snap visual to actual + zero velocity (prevents spring animation)
-        transform::SnapVisualTransformValues(&registry, entity);
+            // Retrieve UIElement, Config, and Transform components
+            auto *uiElement = registry.try_get<UIElementComponent>(entity);
+            auto *uiConfig = registry.try_get<UIConfig>(entity);
+            auto *transform = registry.try_get<transform::Transform>(entity);
+            auto *uiState = registry.try_get<UIState>(entity);
+            auto *node = registry.try_get<transform::GameObject>(entity);
 
-        // STEP 5: If this is a TEXT UI element, update its text
-        if (uiElement->UIT == UITypeEnum::TEXT)
-        {
-            UpdateText(registry, entity, uiConfig, uiState);
-        }
+            if (!uiElement || !uiConfig || !transform || !uiState || !node)
+                continue;
 
-        // STEP 6: Sync the transform of an associated object (if any)
-        if (uiConfig->object)
-        {
-            auto objectEntity = uiConfig->object.value();
-            if (!registry.valid(objectEntity)) {
-                return;
-            }
+            if (!preWorkDone) {
+                // === PRE-WORK PHASE ===
+                // STEP 1: Align with major parent
+                transform::MoveWithMaster(entity, 0, *transform,
+                    registry.get<transform::InheritedProperties>(entity), *node);
+                transform::UpdateParallaxCalculations(&registry, entity);
 
-            auto *objectTransform = registry.try_get<transform::Transform>(objectEntity);
-            auto *objectRole = registry.try_get<transform::InheritedProperties>(objectEntity);
-            auto *objectNode = registry.try_get<transform::GameObject>(objectEntity);
-            if (!objectTransform || !objectRole || !objectNode) {
-                return;
-            }
+                // Push this entity back for post-work (after children)
+                stack.push_back({entity, true});
 
-            // TODO: so objects have node parents to be the ui element it is associated with?
-            if (!uiConfig->noRole)
-            {
-                transform::SnapTransformValues(&registry, objectEntity, transform->getActualX(), transform->getActualY(), transform->getActualW(), transform->getActualH());
-                transform::MoveWithMaster(objectEntity, 0, *objectTransform, *objectRole, *objectNode);
-                objectRole->flags->prevAlignment = transform::InheritedProperties::Alignment::NONE;
-                transform::AlignToMaster(&registry, objectEntity);
-            }
+                // Push children in reverse order so they're processed in correct order
+                for (auto it = node->orderedChildren.rbegin();
+                     it != node->orderedChildren.rend(); ++it) {
+                    stack.push_back({*it, false});
+                }
+            } else {
+                // === POST-WORK PHASE ===
+                // STEP 4: Snap visual to actual + zero velocity (prevents spring animation)
+                transform::SnapVisualTransformValues(&registry, entity);
 
-            // STEP 7: If the associated object needs to recalculate, trigger its recalculate function
-            if (objectNode && uiConfig->objectRecalculate)
-            {
-                // must be uibox, since recalc only works for uibox
-                auto *objectUIBox = registry.try_get<UIBoxComponent>(objectEntity);
-                if (objectUIBox) box::Recalculate(registry, objectEntity);                
+                // STEP 5: If this is a TEXT UI element, update its text
+                if (uiElement->UIT == UITypeEnum::TEXT) {
+                    UpdateText(registry, entity, uiConfig, uiState);
+                }
+
+                // STEP 6: Sync the transform of an associated object (if any)
+                if (uiConfig->object) {
+                    auto objectEntity = uiConfig->object.value();
+                    if (!registry.valid(objectEntity)) {
+                        continue;
+                    }
+
+                    auto *objectTransform = registry.try_get<transform::Transform>(objectEntity);
+                    auto *objectRole = registry.try_get<transform::InheritedProperties>(objectEntity);
+                    auto *objectNode = registry.try_get<transform::GameObject>(objectEntity);
+                    if (!objectTransform || !objectRole || !objectNode) {
+                        continue;
+                    }
+
+                    // TODO: so objects have node parents to be the ui element it is associated with?
+                    if (!uiConfig->noRole) {
+                        transform::SnapTransformValues(&registry, objectEntity,
+                            transform->getActualX(), transform->getActualY(),
+                            transform->getActualW(), transform->getActualH());
+                        transform::MoveWithMaster(objectEntity, 0, *objectTransform, *objectRole, *objectNode);
+                        objectRole->flags->prevAlignment = transform::InheritedProperties::Alignment::NONE;
+                        transform::AlignToMaster(&registry, objectEntity);
+                    }
+
+                    // STEP 7: If the associated object needs to recalculate, trigger its recalculate function
+                    if (objectNode && uiConfig->objectRecalculate) {
+                        // must be uibox, since recalc only works for uibox
+                        auto *objectUIBox = registry.try_get<UIBoxComponent>(objectEntity);
+                        if (objectUIBox) box::Recalculate(registry, objectEntity);
+                    }
+                }
             }
         }
     }

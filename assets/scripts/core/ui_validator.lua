@@ -978,7 +978,7 @@ function UIValidator.checkFillers(entity, options)
         -- Skip hidden if requested
         if options.skipHidden then
             local bounds = UIValidator.getBounds(ent)
-            if bounds and UIValidator.isHidden(bounds) then
+            if bounds and UIValidator.isEntityHidden(ent, bounds) then
                 return
             end
         end

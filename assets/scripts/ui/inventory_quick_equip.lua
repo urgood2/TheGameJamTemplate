@@ -269,7 +269,17 @@ local function checkRightClick()
     )
     local altClick = altHeld and input.isMousePressed(MouseButton.MOUSE_BUTTON_LEFT)
 
-    if rightClick or altClick then
+    -- Ctrl+Left-click or Cmd+Left-click for Mac support
+    -- (macOS uses Ctrl+Click as right-click alternative, Cmd+Click is also common)
+    local modifierHeld = input and input.isKeyDown and (
+        input.isKeyDown(KeyboardKey.KEY_LEFT_CONTROL) or
+        input.isKeyDown(KeyboardKey.KEY_RIGHT_CONTROL) or
+        input.isKeyDown(KeyboardKey.KEY_LEFT_SUPER) or   -- Cmd key on Mac, Win key on Windows
+        input.isKeyDown(KeyboardKey.KEY_RIGHT_SUPER)
+    )
+    local modifierClick = modifierHeld and input.isMousePressed(MouseButton.MOUSE_BUTTON_LEFT)
+
+    if rightClick or altClick or modifierClick then
         log_debug("[QuickEquip] Right-click detected on card: " .. tostring(hoveredCard))
 
         local success, reason = QuickEquip.equipToWand(hoveredCard)

@@ -140,6 +140,18 @@ endif()
 
 
 option(USE_LUAJIT "Use LuaJIT instead of standard Lua" OFF)
+
+# LuaJIT is NOT supported on Emscripten - force OFF with warning
+if (EMSCRIPTEN)
+    if (USE_LUAJIT)
+        message(WARNING "USE_LUAJIT=ON is not supported for Emscripten builds. Forcing OFF.")
+        set(USE_LUAJIT OFF CACHE BOOL "Use LuaJIT instead of standard Lua" FORCE)
+    endif()
+endif()
+
+# LuaJIT source directory (only used if USE_LUAJIT=ON)
+set(LUAJIT_DIR "${CMAKE_SOURCE_DIR}/src/third_party/LuaJIT-2.1" CACHE PATH "Path to LuaJIT source directory")
+
 option(SKIP_ASSET_SCAN "Skip recursive asset scan at startup (can also set env SKIP_ASSET_SCAN=1)" OFF)
 option(SKIP_UUID_DUMP "Skip writing auto-generated all_uuids.json (can also set env SKIP_UUID_DUMP=1)" OFF)
 option(ENABLE_WEB_HELPER_TARGETS "Expose web helper targets even when the top-level build is native" ON)
@@ -960,72 +972,41 @@ endif()
 
 
 # ======================================================================
-# Sol2 + Lua / LuaJIT toggle goes HERE ↓↓↓
+# Sol2 + Lua / LuaJIT Backend Selection
 # ======================================================================
-# add_git_dependency(
-#     sol2
-#     https://github.com/ThePhD/sol2.git
-#     v3.3.0
-# )
-# message(STATUS "sol2_SOURCE_DIR: ${sol2_SOURCE_DIR}")
 add_subdirectory(src/third_party/sol2)
 set(SOL2_SOURCE_DIR "${CMAKE_SOURCE_DIR}/src/third_party/sol2/include/" CACHE PATH "Path to sol2 source directory")
 
-# if (USE_LUAJIT)
-#     message(STATUS ">> Using LuaJIT as backend for Sol2")
-#     # https://github.com/zhaozg/luajit-cmake
-    
-#     # FetchContent_Declare(
-#     #     luajit
-#     #     GIT_REPOSITORY https://github.com/LuaJIT/LuaJIT.git
-#     #     GIT_TAG v2.1
-#     # )
-#     # FetchContent_MakeAvailable(luajit)
+if (USE_LUAJIT AND NOT EMSCRIPTEN)
+    message(STATUS ">> Using LuaJIT 2.1 as backend for Sol2")
 
-#     # set(LUAJIT_INCLUDE_DIR "${luajit_SOURCE_DIR}/src")
+    # Build LuaJIT via cmake wrapper
+    add_subdirectory("src/third_party/luajit-cmake-master")
 
-#     # add_library(LuaJIT STATIC IMPORTED GLOBAL)
-#     # if (WIN32)
-#     #     set_target_properties(LuaJIT PROPERTIES
-#     #         IMPORTED_LOCATION "${luajit_SOURCE_DIR}/src/lua51.lib"
-#     #         INTERFACE_INCLUDE_DIRECTORIES ${LUAJIT_INCLUDE_DIR}
-#     #     )
-#     # else()
-#     #     set_target_properties(LuaJIT PROPERTIES
-#     #         IMPORTED_LOCATION "${luajit_SOURCE_DIR}/src/libluajit.a"
-#     #         INTERFACE_INCLUDE_DIRECTORIES ${LUAJIT_INCLUDE_DIR}
-#     #     )
-#     # endif()
+    # Generated headers (e.g., luajit.h) are placed in the build directory
+    set(LUAJIT_GENERATED_DIR "${CMAKE_BINARY_DIR}/src/third_party/luajit-cmake-master")
 
-#     # target_include_directories(CommonSettings INTERFACE
-#     #     ${LUAJIT_INCLUDE_DIR}
-#     #     ${sol2_SOURCE_DIR}/include
-#     # )
-#     # set(LUAJIT_DIR "${CMAKE_SOURCE_DIR}/src/third_party/LuaJIT-2.1" CACHE PATH "Path to LuaJIT source directory")
-#     add_subdirectory("src/third_party/luajit-cmake-master")
-#     target_link_libraries(CommonSettings INTERFACE luajit::lib luajit::header)
+    target_link_libraries(CommonSettings INTERFACE
+        luajit::lib
+        luajit::header
+        sol2::sol2
+    )
 
+    target_include_directories(CommonSettings INTERFACE
+        ${LUAJIT_DIR}/src
+        ${LUAJIT_GENERATED_DIR}
+        ${SOL2_SOURCE_DIR}
+    )
 
+    target_compile_definitions(CommonSettings INTERFACE
+        SOL_LUAJIT=1
+        LUAJIT_VERSION="2.1.0-beta3"
+    )
 
-#     target_link_libraries(CommonSettings INTERFACE
-#         # LuaJIT
-#         sol2::sol2
-#     )
-    
-#     # Ensure LuaJIT headers are visible to everything using CommonSettings
-#     target_include_directories(CommonSettings INTERFACE
-#         "${LUAJIT_DIR}/src"
-#     )
-
-
-#     target_compile_definitions(CommonSettings INTERFACE
-#         SOL_LUAJIT=1
-#         LUAJIT_VERSION="2.1.0-beta3"
-#     )
-
-# else()
+else()
     message(STATUS ">> Using standard Lua 5.4.4 as backend for Sol2")
 
+    # Use vendored Lua 5.4.4
     add_git_dependency(
         lua
         "https://github.com/marovira/lua"
@@ -1033,7 +1014,7 @@ set(SOL2_SOURCE_DIR "${CMAKE_SOURCE_DIR}/src/third_party/sol2/include/" CACHE PA
     )
 
     target_include_directories(CommonSettings INTERFACE
-        ${sol2_SOURCE_DIR}/include
+        ${SOL2_SOURCE_DIR}
     )
 
     target_link_libraries(CommonSettings INTERFACE
@@ -1045,7 +1026,7 @@ set(SOL2_SOURCE_DIR "${CMAKE_SOURCE_DIR}/src/third_party/sol2/include/" CACHE PA
         SOL_STD_OPTIONAL
         LUA_VERSION="5.4.4"
     )
-# endif()
+endif()
 # ======================================================================
 
 # Declaring our executable

@@ -2654,3 +2654,4 @@ assets/all_uuids.json*
 .ralph-tui/iterations/iteration-008-US-018.log
 tasks_backup/prd.json
 debug.log
+build-luajit/

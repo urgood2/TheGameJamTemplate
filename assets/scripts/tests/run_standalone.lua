@@ -85,6 +85,12 @@ local STANDALONE_TESTS = {
 
     -- Standalone detection (game-only feature errors)
     "assets/scripts/tests/test_standalone_detection.lua",
+
+    -- UI/Input tests
+    "assets/scripts/tests/test_quick_equip.lua",
+    "assets/scripts/tests/test_inventory_sorting.lua",
+    "assets/scripts/tests/test_card_categorization.lua",
+    "assets/scripts/tests/test_inventory_sprite_bg.lua",
 }
 
 -- Tests that require the game engine (skip in standalone mode)

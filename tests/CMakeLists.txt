@@ -40,6 +40,7 @@ add_executable(unit_tests
     unit/test_layer_sorted_flag.cpp
     unit/test_layer_state_batching.cpp
     unit/test_layer_batching.cpp
+    unit/test_batched_local_commands.cpp
     unit/test_startup_timer.cpp
     unit/test_render_stack_safety.cpp
     unit/test_save_file_io.cpp
@@ -109,6 +110,30 @@ if(TRACY_ENABLE AND NOT EMSCRIPTEN)
 endif()
 
 gtest_discover_tests(unit_tests)
+
+# ======================================================================
+# Lua Backend Smoke Tests (minimal dependencies - just Sol2/Lua)
+# ======================================================================
+add_executable(lua_backend_tests
+    unit/test_lua_backend.cpp
+)
+
+target_include_directories(lua_backend_tests PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_definitions(lua_backend_tests PRIVATE
+    ASSETS_PATH="${CMAKE_SOURCE_DIR}/assets/"
+)
+
+target_link_libraries(lua_backend_tests PRIVATE
+    gtest_main
+    CommonSettings
+)
+
+gtest_discover_tests(lua_backend_tests)
+# ======================================================================
 
 # Add benchmark subdirectory
 add_subdirectory(benchmark)

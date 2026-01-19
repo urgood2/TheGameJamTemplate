@@ -421,20 +421,28 @@ void exposeToLua(sol::state &lua, EngineContext *ctx) {
       "Returns the currently active language code.");
 
   // get
+  // Note: Use variadic_args for LuaJIT compatibility. LuaJIT doesn't populate
+  // missing stack slots with nil like Lua 5.4, causing sol::object params to fail.
   rec.bind_function(
       lua, path, "get",
       // Lua signature: get(key : string, args? : table<string,any>) -> string
-      [](const std::string &key, sol::object maybeArgs) -> std::string {
+      [](sol::variadic_args va) -> std::string {
+        // Must have at least the key
+        if (va.size() < 1 || !va[0].is<std::string>()) {
+          return "[MISSING KEY]";
+        }
+        std::string key = va[0].as<std::string>();
+
         // 1) Fetch the raw template
         std::string raw = localization::getRaw(key);
 
         // 2) No args?  Just return the raw string
-        if (!maybeArgs.is<sol::table>()) {
+        if (va.size() < 2 || !va[1].is<sol::table>()) {
           return raw;
         }
 
         // 3) Otherwise build a dynamic fmt store
-        auto args = maybeArgs.as<sol::table>();
+        auto args = va[1].as<sol::table>();
         fmt::dynamic_format_arg_store<fmt::format_context> store;
 
         // 4) Iterate over name→value in the Lua table

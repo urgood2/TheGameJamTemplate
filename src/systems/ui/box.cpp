@@ -1150,87 +1150,107 @@ namespace ui
         return uiConfig.uiType == UITypeEnum::VERTICAL_CONTAINER || uiConfig.uiType == UITypeEnum::ROOT || uiConfig.uiType == UITypeEnum::SCROLL_PANE;
     }
 
-    auto box::placeUIElementsRecursively(entt::registry &registry, entt::entity uiElement, ui::LocalTransform &runningTransform, ui::UITypeEnum parentType, entt::entity parent) -> void
+    auto box::placeUIElementsRecursively(entt::registry &registry, entt::entity rootElement, ui::LocalTransform &runningTransform, ui::UITypeEnum rootParentType, entt::entity rootParent) -> void
     {
-        auto &uiConfig = registry.get<UIConfig>(uiElement);
-        auto &uiState = registry.get<UIState>(uiElement);
-        auto &nodeTransform = registry.get<transform::Transform>(uiElement);
-        auto &node = registry.get<transform::GameObject>(uiElement);
-        auto &role = registry.get<transform::InheritedProperties>(uiElement);
+        // Iterative post-order traversal to avoid stack overflow with deep UI hierarchies
+        // Uses a stack with phase tracking and transform caching
 
-        // place at the given location, adding padding.
-        role.offset = {runningTransform.x, runningTransform.y};
+        struct StackEntry {
+            entt::entity entity;
+            ui::UITypeEnum parentType;
+            entt::entity parent;
+            ui::LocalTransform transformCache;  // Cached transform before processing children
+            bool preWorkDone;  // false = need pre-work, true = need post-work
+        };
 
-        // am I a ui element (non-container)?
-        if (uiConfig.uiType == UITypeEnum::RECT_SHAPE || uiConfig.uiType == UITypeEnum::TEXT ||
-            uiConfig.uiType == UITypeEnum::OBJECT || uiConfig.uiType == UITypeEnum::INPUT_TEXT ||
-            uiConfig.uiType == UITypeEnum::FILLER)
-        {
-            placeNonContainerUIE(registry, role, runningTransform, uiElement, parentType, uiState, uiConfig);
-            return;
-        }
+        std::vector<StackEntry> stack;
+        stack.reserve(64);  // Pre-allocate for typical UI depth
+        stack.push_back({rootElement, rootParentType, rootParent, runningTransform, false});
 
-        // --------------------------------------------------
-        // am I a container?
+        while (!stack.empty()) {
+            auto& entry = stack.back();
 
-        // runningTransform.x += uiConfig.padding.value_or(globals::getSettings().uiPadding);
-        // runningTransform.y += uiConfig.padding.value_or(globals::getSettings().uiPadding);
+            if (!entry.preWorkDone) {
+                // === PRE-WORK PHASE ===
+                auto& uiConfig = registry.get<UIConfig>(entry.entity);
+                auto& uiState = registry.get<UIState>(entry.entity);
+                auto& node = registry.get<transform::GameObject>(entry.entity);
+                auto& role = registry.get<transform::InheritedProperties>(entry.entity);
 
-        role.offset = {runningTransform.x, runningTransform.y};
-        // SPDLOG_DEBUG("Placing entity {} at ({}, {})", static_cast<int>(uiElement), runningTransform.x, runningTransform.y);
+                // place at the given location, adding padding.
+                role.offset = {runningTransform.x, runningTransform.y};
 
-        // cache transform before adding children
-        auto transformCache = runningTransform;
-        runningTransform.x += uiConfig.effectivePadding();
-        runningTransform.y += uiConfig.effectivePadding();
-        // for each child, do the same thing.
-        for (auto childEntry : node.orderedChildren)
-        {
-            auto child = childEntry;
-            if (!registry.valid(child))
-                continue;
-            // SPDLOG_DEBUG("Processing child entity {}", static_cast<int>(child));
+                // am I a ui element (non-container)?
+                if (uiConfig.uiType == UITypeEnum::RECT_SHAPE || uiConfig.uiType == UITypeEnum::TEXT ||
+                    uiConfig.uiType == UITypeEnum::OBJECT || uiConfig.uiType == UITypeEnum::INPUT_TEXT ||
+                    uiConfig.uiType == UITypeEnum::FILLER)
+                {
+                    placeNonContainerUIE(registry, role, runningTransform, entry.entity, entry.parentType, uiState, uiConfig);
+                    stack.pop_back();
+                    continue;
+                }
 
-            placeUIElementsRecursively(registry, child, runningTransform, uiConfig.uiType.value(), uiElement);
-        }
-        // restore cache
-        runningTransform = transformCache;
-        
-        // debug
-        if (uiConfig.uiType == UITypeEnum::HORIZONTAL_CONTAINER && parentType == UITypeEnum::SCROLL_PANE) 
-        {
-            SPDLOG_DEBUG("Placed horizontal container entity {} at ({}, {}) with content size ({}, {})", static_cast<int>(uiElement), runningTransform.x, runningTransform.y, uiState.contentDimensions->x, uiState.contentDimensions->y);
-        }
+                // --------------------------------------------------
+                // am I a container?
+                role.offset = {runningTransform.x, runningTransform.y};
 
-        // increment by height + emboss if it is a row, or by width if it is a column.
-        if (uiConfig.uiType == UITypeEnum::HORIZONTAL_CONTAINER && parentType != UITypeEnum::HORIZONTAL_CONTAINER)
-        {
-            // runningTransform.y += uiState.contentDimensions->y + uiConfig.emboss.value_or(0.f) + uiConfig.padding.value_or(globals::getSettings().uiPadding);
-            runningTransform.y += uiState.contentDimensions->y;
-            // add emboss if it exists
-            if (uiConfig.emboss)
-            {
-                runningTransform.y += uiConfig.emboss.value() * uiConfig.scale.value() * globals::getGlobalUIScaleFactor();
+                // Cache transform before adding children
+                entry.transformCache = runningTransform;
+                entry.preWorkDone = true;
+
+                runningTransform.x += uiConfig.effectivePadding();
+                runningTransform.y += uiConfig.effectivePadding();
+
+                // Push children in reverse order so they're processed in correct order
+                for (auto it = node.orderedChildren.rbegin(); it != node.orderedChildren.rend(); ++it) {
+                    auto child = *it;
+                    if (!registry.valid(child))
+                        continue;
+                    stack.push_back({child, uiConfig.uiType.value(), entry.entity, runningTransform, false});
+                }
+            } else {
+                // === POST-WORK PHASE ===
+                auto& uiConfig = registry.get<UIConfig>(entry.entity);
+                auto& uiState = registry.get<UIState>(entry.entity);
+
+                // Restore cached transform
+                runningTransform = entry.transformCache;
+
+                // debug
+                if (uiConfig.uiType == UITypeEnum::HORIZONTAL_CONTAINER && entry.parentType == UITypeEnum::SCROLL_PANE)
+                {
+                    SPDLOG_DEBUG("Placed horizontal container entity {} at ({}, {}) with content size ({}, {})",
+                        static_cast<int>(entry.entity), runningTransform.x, runningTransform.y,
+                        uiState.contentDimensions->x, uiState.contentDimensions->y);
+                }
+
+                // increment by height + emboss if it is a row, or by width if it is a column.
+                if (uiConfig.uiType == UITypeEnum::HORIZONTAL_CONTAINER && entry.parentType != UITypeEnum::HORIZONTAL_CONTAINER)
+                {
+                    runningTransform.y += uiState.contentDimensions->y;
+                    // add emboss if it exists
+                    if (uiConfig.emboss)
+                    {
+                        runningTransform.y += uiConfig.emboss.value() * uiConfig.scale.value() * globals::getGlobalUIScaleFactor();
+                    }
+                    runningTransform.y += uiConfig.effectivePadding();
+                }
+                else if (uiConfig.uiType == UITypeEnum::HORIZONTAL_CONTAINER && entry.parentType == UITypeEnum::HORIZONTAL_CONTAINER)
+                {
+                    runningTransform.x += uiState.contentDimensions->x + uiConfig.effectivePadding();
+                }
+                else if (isVertContainer(registry, entry.entity) && !isVertContainer(registry, entry.parent))
+                {
+                    runningTransform.x += uiState.contentDimensions->x + uiConfig.effectivePadding();
+                }
+                else if (isVertContainer(registry, entry.entity) && isVertContainer(registry, entry.parent))
+                {
+                    runningTransform.y += uiState.contentDimensions->y + uiConfig.effectivePadding() +
+                        uiConfig.emboss.value_or(0.f) * uiConfig.scale.value() * globals::getGlobalUIScaleFactor();
+                }
+
+                stack.pop_back();
             }
-
-            runningTransform.y += uiConfig.effectivePadding();
-        }
-        else if (uiConfig.uiType == UITypeEnum::HORIZONTAL_CONTAINER && parentType == UITypeEnum::HORIZONTAL_CONTAINER)
-        {
-            // runningTransform.y += uiState.contentDimensions->y + uiConfig.emboss.value_or(0.f) + uiConfig.padding.value_or(globals::getSettings().uiPadding);
-            runningTransform.x += uiState.contentDimensions->x + uiConfig.effectivePadding();
-        }
-        else if (isVertContainer(registry, uiElement) && !isVertContainer(registry, parent))
-        { // make sure my parent wasn't the same type
-
-            // runningTransform.x += uiState.contentDimensions->x + uiConfig.padding.value_or(globals::getSettings().uiPadding);
-            runningTransform.x += uiState.contentDimensions->x + uiConfig.effectivePadding();
-        }
-        else if (isVertContainer(registry, uiElement) && isVertContainer(registry, parent))
-        {
-
-            // runningTransform.x += uiState.contentDimensions->x + uiConfig.padding.value_or(globals::getSettings().uiPadding);
-            runningTransform.y += uiState.contentDimensions->y + uiConfig.effectivePadding() + uiConfig.emboss.value_or(0.f) * uiConfig.scale.value() * globals::getGlobalUIScaleFactor();
         }
     }
 

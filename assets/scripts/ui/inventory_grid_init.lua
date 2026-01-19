@@ -171,6 +171,39 @@ end
 -- Handle item dropped on slot
 --------------------------------------------------------------------------------
 
+local function canAcceptDrop(gridEntity, slotIndex, droppedEntity)
+    local sourceSlotInThisGrid = grid.findSlotContaining(gridEntity, droppedEntity)
+    if sourceSlotInThisGrid then
+        if grid.isSlotLocked(gridEntity, sourceSlotInThisGrid) then
+            return false
+        end
+
+        local targetItem = grid.getItemAtIndex(gridEntity, slotIndex)
+        local isMerge = false
+        if targetItem then
+            local sourceStackId = InventoryGridInit._getStackId(droppedEntity)
+            local targetStackId = InventoryGridInit._getStackId(targetItem)
+            if sourceStackId and sourceStackId == targetStackId then
+                isMerge = true
+            end
+        end
+
+        if not grid.canSlotAccept(gridEntity, slotIndex, droppedEntity, { allowOccupied = true }) then
+            return false
+        end
+
+        if targetItem and not isMerge then
+            if not grid.canSlotAccept(gridEntity, sourceSlotInThisGrid, targetItem, { allowOccupied = true }) then
+                return false
+            end
+        end
+
+        return true
+    end
+
+    return grid.canSlotAccept(gridEntity, slotIndex, droppedEntity)
+end
+
 function InventoryGridInit.handleItemDrop(gridEntity, slotIndex, droppedEntity)
     log_debug("[DRAG-DEBUG] handleItemDrop: grid=" .. tostring(gridEntity) ..
               " slot=" .. slotIndex .. " dropped=" .. tostring(droppedEntity))
@@ -190,8 +223,8 @@ function InventoryGridInit.handleItemDrop(gridEntity, slotIndex, droppedEntity)
         return false
     end
 
-    if not grid.canSlotAccept(gridEntity, slotIndex, droppedEntity) then
-        log_debug("[DRAG-DEBUG] REJECTED by canSlotAccept")
+    if not canAcceptDrop(gridEntity, slotIndex, droppedEntity) then
+        log_debug("[DRAG-DEBUG] REJECTED by canAcceptDrop")
         return false
     end
 
@@ -500,9 +533,9 @@ function InventoryGridInit._isSlotInvalidForCurrentDrag(gridEntity, slotIndex, s
     end
 
     -- Check if this slot can accept the dragged item
-    local canAccept = grid.canSlotAccept(gridEntity, slotIndex, draggedEntity)
+    local canAccept = canAcceptDrop(gridEntity, slotIndex, draggedEntity)
 
-    -- Show invalid feedback when canSlotAccept returns false
+    -- Show invalid feedback when canAcceptDrop returns false
     return not canAccept
 end
 

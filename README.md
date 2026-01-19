@@ -39,6 +39,13 @@ just test                 # debug tests
 just test-asan            # address sanitizer
 ```
 
+LuaJIT backend (optional, for improved Lua performance):
+```bash
+cmake -B build-luajit -DUSE_LUAJIT=ON && cmake --build build-luajit -j
+./build-luajit/raylib-cpp-cmake-template
+```
+Note: LuaJIT is NOT supported for web builds (Emscripten forces Lua 5.4).
+
 Web build (Emscripten):
 ```bash
 just build-web            # requires emsdk in PATH and copies assets into build-emc

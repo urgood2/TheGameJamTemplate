@@ -24,7 +24,20 @@ struct OwnedDrawCommand {
 
 struct BatchedLocalCommands {
     std::vector<OwnedDrawCommand> commands;
-    void clear() { commands.clear(); }
+    bool isSorted = true;  // Track if commands are already sorted by z-order
+
+    void clear() {
+        commands.clear();
+        isSorted = true;
+    }
+
+    void addCommand(OwnedDrawCommand cmd) {
+        // Track if we're breaking sorted order (new z < last z)
+        if (!commands.empty() && cmd.cmd.z < commands.back().cmd.z) {
+            isSorted = false;
+        }
+        commands.push_back(std::move(cmd));
+    }
 };
 
 /**
@@ -414,7 +427,7 @@ inline void AddLocalCommand(entt::registry& registry, entt::entity e, int z,
     dc.z = z;
     dc.space = space;
     OwnedDrawCommand owned{dc, data, forceTextPass, forceUvPassthrough, forceStickerPass};
-    comp->commands.push_back(std::move(owned));
+    comp->addCommand(std::move(owned));  // Track z-order for isSorted optimization
 }
 
 } // namespace shader_draw_commands

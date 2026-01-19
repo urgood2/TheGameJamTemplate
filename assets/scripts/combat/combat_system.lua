@@ -67,10 +67,11 @@ local ItemSystem = {}
 local PetsAndSets = {}
 
 -- Per-status fan-out signal mapping (Phase 1 Demo Implementation)
--- Maps canonical status IDs to their fan-out signal names.
--- NOTE: Aliases (e.g., scorch->burning) resolve to canonical IDs before lookup,
--- so applying "scorch" will emit "on_apply_burn" since it resolves to "burning".
+-- Maps status IDs (including aliases) to their fan-out signal names.
+-- Both canonical IDs and aliases are included to ensure fan-out signals fire
+-- regardless of which name is used when applying the status.
 local STATUS_FAN_OUT_SIGNALS = {
+    -- Canonical IDs
     burning = "on_apply_burn",
     frozen = "on_apply_freeze",
     doom = "on_apply_doom",
@@ -78,6 +79,9 @@ local STATUS_FAN_OUT_SIGNALS = {
     poison = "on_apply_poison",
     bleed = "on_apply_bleed",
     corrosion = "on_apply_corrosion",
+    -- Aliases (map to same signals as their canonical IDs)
+    scorch = "on_apply_burn",   -- alias for burning
+    freeze = "on_apply_freeze", -- alias for frozen
 }
 
 --- Deep copy a Lua table (recursively copies nested tables).

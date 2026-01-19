@@ -286,7 +286,19 @@ TEST(LuaBackend, BitCompatibilityLayer) {
         local lshift_result = bit.lshift(1, 4)
         local rshift_result = bit.rshift(16, 2)
 
-        return bor_result, band_result, bxor_result, lshift_result, rshift_result
+        -- Explicit LuaJIT-compat behavior checks
+        local tobit_pos = bit.tobit(1.9)
+        local tobit_neg = bit.tobit(-1.9)
+        local tobit_wrap = bit.tobit(0x1FFFFFFFF)
+        local tohex_default = bit.tohex(-1)
+        local tohex_upper = bit.tohex(-1, -8)
+        local tohex_short = bit.tohex(0x1234, 4)
+        local tohex_upper_short = bit.tohex(0x1a2b, -4)
+        local tohex_padded = bit.tohex(0x1234, 8)
+
+        return bor_result, band_result, bxor_result, lshift_result, rshift_result,
+               tobit_pos, tobit_neg, tobit_wrap,
+               tohex_default, tohex_upper, tohex_short, tohex_upper_short, tohex_padded
     )";
 
     auto result = lua.script(testCode);
@@ -298,12 +310,28 @@ TEST(LuaBackend, BitCompatibilityLayer) {
     int bxor_result = result.get<int>(2);
     int lshift_result = result.get<int>(3);
     int rshift_result = result.get<int>(4);
+    int tobit_pos = result.get<int>(5);
+    int tobit_neg = result.get<int>(6);
+    int tobit_wrap = result.get<int>(7);
+    std::string tohex_default = result.get<std::string>(8);
+    std::string tohex_upper = result.get<std::string>(9);
+    std::string tohex_short = result.get<std::string>(10);
+    std::string tohex_upper_short = result.get<std::string>(11);
+    std::string tohex_padded = result.get<std::string>(12);
 
     EXPECT_EQ(bor_result, 0xFF) << "bit.bor(0x0F, 0xF0) should equal 0xFF";
     EXPECT_EQ(band_result, 0x0F) << "bit.band(0xFF, 0x0F) should equal 0x0F";
     EXPECT_EQ(bxor_result, 0xF0) << "bit.bxor(0xFF, 0x0F) should equal 0xF0";
     EXPECT_EQ(lshift_result, 16) << "bit.lshift(1, 4) should equal 16";
     EXPECT_EQ(rshift_result, 4) << "bit.rshift(16, 2) should equal 4";
+    EXPECT_EQ(tobit_pos, 1) << "bit.tobit(1.9) should truncate toward zero";
+    EXPECT_EQ(tobit_neg, -1) << "bit.tobit(-1.9) should truncate toward zero";
+    EXPECT_EQ(tobit_wrap, -1) << "bit.tobit(0x1FFFFFFFF) should wrap to 0xFFFFFFFF";
+    EXPECT_EQ(tohex_default, "ffffffff") << "bit.tohex(-1) should be 8 lowercase hex digits";
+    EXPECT_EQ(tohex_upper, "FFFFFFFF") << "bit.tohex(-1, -8) should be 8 uppercase hex digits";
+    EXPECT_EQ(tohex_short, "1234") << "bit.tohex(0x1234, 4) should be 4 hex digits";
+    EXPECT_EQ(tohex_upper_short, "1A2B") << "bit.tohex(0x1a2b, -4) should be uppercase";
+    EXPECT_EQ(tohex_padded, "00001234") << "bit.tohex(0x1234, 8) should be padded to 8 digits";
 
     std::cout << "Bit compatibility layer tests passed!" << std::endl;
 }

@@ -3045,8 +3045,14 @@ auto exposeToLua(sol::state &lua, EngineContext* /*ctx*/) -> void {
     transform_tbl.set_function("AlignToMaster", &transform::AlignToMaster);
     rec.record_free_function({"transform"}, {"AlignToMaster", "---@param registry registry\n---@param e Entity\n---@param force? boolean\n---@return nil", "Aligns an entity to its master.", true, false});
     
-    transform_tbl.set_function("AssignRole", 
-        [](entt::registry *registry, entt::entity e, InheritedProperties::Type roleType, entt::entity parent, sol::optional<InheritedProperties::Sync> xy, sol::optional<InheritedProperties::Sync> wh, sol::optional<InheritedProperties::Sync> rotation, sol::optional<InheritedProperties::Sync> scale, sol::optional<Vector2> offset) {
+    // LuaJIT compatibility: Use sol::object for parent to handle nil values properly
+    transform_tbl.set_function("AssignRole",
+        [](entt::registry *registry, entt::entity e, InheritedProperties::Type roleType, sol::object parentObj, sol::optional<InheritedProperties::Sync> xy, sol::optional<InheritedProperties::Sync> wh, sol::optional<InheritedProperties::Sync> rotation, sol::optional<InheritedProperties::Sync> scale, sol::optional<Vector2> offset) {
+            // Handle optional parent - nil becomes entt::null
+            entt::entity parent = entt::null;
+            if (parentObj.is<entt::entity>()) {
+                parent = parentObj.as<entt::entity>();
+            }
             std::optional<InheritedProperties::Sync> xySync = xy.value_or(InheritedProperties::Sync::Strong);
             std::optional<InheritedProperties::Sync> whSync = wh.value_or(InheritedProperties::Sync::Strong);
             std::optional<InheritedProperties::Sync> rotationSync = rotation.value_or(InheritedProperties::Sync::Strong);

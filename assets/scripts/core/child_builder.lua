@@ -210,7 +210,9 @@ function ChildBuilder:apply()
             end
         end
         if not found then
-            table.insert(parentGO.orderedChildren, self._entity)
+            -- LuaJIT compatibility: Sol2 vectors are userdata, not tables
+            -- Use index assignment instead of table.insert
+            parentGO.orderedChildren[#parentGO.orderedChildren + 1] = self._entity
         end
     end
     
@@ -355,7 +357,7 @@ function ChildBuilder.detach(entity)
     end
     
     local parent = ip.master
-    if parent and registry:valid(parent) then
+    if parent and parent ~= entt_null and registry:valid(parent) then
         local parentGO = component_cache.get(parent, GameObject)
         if parentGO then
             for name, child in pairs(parentGO.children) do
@@ -377,7 +379,7 @@ function ChildBuilder.detach(entity)
         registry,
         entity,
         InheritedPropertiesType.RoleRoot,
-        nil,
+        entt_null,
         nil,
         nil,
         nil,

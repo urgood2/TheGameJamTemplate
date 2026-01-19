@@ -25,7 +25,14 @@ bit.rshift = load("return function(a, b) return a >> b end")()
 -- tobit normalizes to a signed 32-bit integer (like LuaJIT's bit.tobit)
 bit.tobit = load([[
     return function(a)
-        a = a % 0x100000000  -- Normalize to 0..2^32-1
+        if type(a) ~= "number" then
+            a = tonumber(a) or 0
+        end
+        local ia = math.tointeger(a)
+        if not ia then
+            ia = (a >= 0) and math.floor(a) or math.ceil(a)
+        end
+        a = ia % 0x100000000  -- Normalize to 0..2^32-1
         if a >= 0x80000000 then
             return a - 0x100000000  -- Convert to signed 32-bit
         end
@@ -34,10 +41,21 @@ bit.tobit = load([[
 ]])()
 bit.tohex  = function(a, n)
     n = n or 8
+    local v = bit.band(bit.tobit(a), 0xFFFFFFFF)
+    local width = math.abs(n)
+    if width > 0 then
+        width = math.min(width, 8)
+    end
     if n < 0 then
-        return string.format("%0" .. (-n) .. "X", a)
+        if width == 0 then
+            return string.format("%X", v)
+        end
+        return string.format("%0" .. width .. "X", v)
     else
-        return string.format("%0" .. n .. "x", a)
+        if width == 0 then
+            return string.format("%x", v)
+        end
+        return string.format("%0" .. width .. "x", v)
     end
 end
 bit.arshift = load([[

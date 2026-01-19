@@ -572,7 +572,7 @@ local function injectGridForTab(tabId)
 
     -- Reapply state tags so newly injected elements render
     if ui and ui.box and ui.box.AddStateTagToUIBox then
-        ui.box.AddStateTagToUIBox(registry, state.panelEntity, "default_state")
+        ui.box.AddStateTagToUIBox(state.panelEntity, "default_state")
     end
 
     local cfg = TAB_CONFIG[tabId]
@@ -1331,8 +1331,8 @@ local function initializeInventory()
     -- CRITICAL: Add state tags to UI boxes so they render
     -- This propagates the state tag to all UI elements including the wrapped animated sprite
     if ui and ui.box and ui.box.AddStateTagToUIBox then
-        ui.box.AddStateTagToUIBox(registry, state.tabMarkerEntity, "default_state")
-        ui.box.AddStateTagToUIBox(registry, state.panelEntity, "default_state")
+        ui.box.AddStateTagToUIBox(state.tabMarkerEntity, "default_state")
+        ui.box.AddStateTagToUIBox(state.panelEntity, "default_state")
     end
 
     

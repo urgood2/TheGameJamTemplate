@@ -62,17 +62,22 @@ local function calculatePosition()
 end
 
 local function createMarkerDefinition()
-    -- return dsl.hbox {
-    --     config = {
-    --         padding = 0,
-    --         minWidth = MARKER_WIDTH,
-    --         minHeight = MARKER_HEIGHT,
-    --         backgroundColor = "red",  -- Debug: visible background
-    --     },
-    --     children = {
-    --         dsl.anim(SPRITE_NAME, { w = MARKER_WIDTH, h = MARKER_HEIGHT, shadow = false })
-    --     }
-    -- }
+    return dsl.hbox {
+        config = {
+            padding = 0,
+            minWidth = MARKER_WIDTH,
+            minHeight = MARKER_HEIGHT,
+            buttonCallback = function()
+                local ok, PlayerInventory = pcall(require, "ui.player_inventory")
+                if ok and PlayerInventory and PlayerInventory.toggle then
+                    PlayerInventory.toggle()
+                end
+            end
+        },
+        children = {
+            dsl.anim("inventory-tab-marker.png", { w = MARKER_WIDTH, h = MARKER_HEIGHT, shadow = false })
+        }
+    }
 end
 
 local function createMarker()
@@ -85,20 +90,24 @@ local function createMarker()
     state.markerX = x
     state.markerY = y
 
-    if not entity or not registry:valid(entity) then
+    local markerDef = createMarkerDefinition()
+    local markerEntity = dsl.spawn({ x = x, y = y }, markerDef, RENDER_LAYER, MARKER_Z)
+    state.entity = markerEntity
+
+    if not markerEntity or markerEntity == entt_null or not registry:valid(markerEntity) then
         log_warn("[InventoryTabMarker] Failed to create marker entity")
         return nil
     end
 
     -- Set draw layer to sprites for proper z-ordering (same pattern as player_inventory.lua)
     if ui and ui.box and ui.box.set_draw_layer then
-        ui.box.set_draw_layer(entity, "ui")
+        ui.box.set_draw_layer(markerEntity, "sprites")
         log_debug("[InventoryTabMarker] Set draw layer to sprites")
     end
 
     -- Assign PLANNING_STATE tag so box is only visible during planning phase
     if ui and ui.box and ui.box.AssignStateTagsToUIBox and PLANNING_STATE then
-        ui.box.AssignStateTagsToUIBox(entity, PLANNING_STATE)
+        ui.box.AssignStateTagsToUIBox(markerEntity, PLANNING_STATE)
         log_debug("[InventoryTabMarker] Assigned PLANNING_STATE tag to marker")
     else
         log_warn("[InventoryTabMarker] Could not assign state tag - ui.box.AssignStateTagsToUIBox or PLANNING_STATE not available")
@@ -106,21 +115,21 @@ local function createMarker()
 
     -- CRITICAL: Remove default state tag so state-based visibility works
     if remove_default_state_tag then
-        remove_default_state_tag(entity)
+        remove_default_state_tag(markerEntity)
         log_debug("[InventoryTabMarker] Removed default state tag")
     end
 
     log_debug("[InventoryTabMarker] Created marker at (" .. x .. ", " .. y .. ")")
 
     -- Debug: check entity transform
-    local t = component_cache.get(entity, Transform)
+    local t = component_cache.get(markerEntity, Transform)
     if t then
         log_debug("[InventoryTabMarker] Transform: x=" .. tostring(t.actualX) .. " y=" .. tostring(t.actualY) .. " w=" .. tostring(t.actualW) .. " h=" .. tostring(t.actualH))
     else
         log_warn("[InventoryTabMarker] No Transform component on marker entity!")
     end
 
-    return entity
+    return markerEntity
 end
 
 function InventoryTabMarker.init()

@@ -30,6 +30,32 @@ just test-asan                # With AddressSanitizer
 just build-web                # Web build (requires emsdk)
 ```
 
+### LuaJIT Backend (Optional)
+
+The engine supports an optional LuaJIT 2.1 backend for improved Lua performance. Default is Lua 5.4.4.
+
+```bash
+# Build with LuaJIT (faster Lua execution, JIT compilation)
+cmake -B build-luajit -DUSE_LUAJIT=ON
+cmake --build build-luajit
+
+# Build with Lua 5.4.4 (default, required for web builds)
+cmake -B build -DUSE_LUAJIT=OFF
+cmake --build build
+```
+
+**LuaJIT Limitations:**
+- **Web builds**: LuaJIT does NOT work with Emscripten. Web builds force `USE_LUAJIT=OFF`.
+- **200 local variable limit**: Per function scope (see "Don't: Exceed LuaJIT's 200 local variable limit" below)
+- **Bitwise operations**: Use `bit.bor()`, `bit.band()`, etc. from `bit_compat.lua` - NOT raw Lua 5.3+ operators (`|`, `&`, `~`)
+
+**Testing both backends:**
+```bash
+# Run Lua backend smoke tests
+./build/tests/lua_backend_tests           # Lua 5.4.4
+./build-luajit/tests/lua_backend_tests    # LuaJIT
+```
+
 ## Lua Runtime Debugging
 
 **Auto-run and grep for errors:**

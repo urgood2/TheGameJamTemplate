@@ -576,3 +576,51 @@
 01/12/2026
   - Implemented Phase 1-2 of player inventory: infrastructure with open/close/toggle API, card space converter for screen/world transforms, and inventory-board drag-drop bridge.
   - Built visible inventory panel with header, tabs, footer, and grid area using dsl.inventoryGrid with proper tab switching and cleanup.
+  - Moved inventory to world-space and repositioned tab demo panel.
+
+01/13/2026
+  - Implemented wand loadout panel with 2x4 action grid and trigger slot, E-key toggle, and click-outside-to-close behavior.
+  - Added drag-drop functionality with z-order elevation during drag and snap-back on invalid drops.
+  - Implemented right-click quick equip for inventory cards to wand slots.
+  - Built atomic cross-grid transfer module with rollback safety for moving cards between inventory and loadout.
+  - Added item location registry for tracking card positions across multiple grids.
+  - Implemented grid inventory save/load with slot positions using SaveManager collectors.
+  - Integrated wand grid adapter sync with combat system for proper wand loading before action phase.
+  - Added invalid drag target visual feedback (red flash) when dropping cards on incompatible slots.
+
+01/14/2026
+  - Built comprehensive Lua test infrastructure: describe/it structure, expect() fluent matcher API, standalone test execution for CI.
+  - Implemented schema validation system with typo detection using string similarity for helpful error messages.
+  - Added dsl.strict.* API for opt-in validation of UI components at construction time.
+  - Created showcase gallery viewer with browsable UI examples for primitives, layouts, and patterns.
+  - Migrated UI handler system: extracted handlers for containers, text, objects, and scroll panes.
+  - Fixed inventory z-order bugs preventing cards from rendering above panel backgrounds.
+  - Added comprehensive documentation: LuaDoc API reference, deprecation notices, and 30-day conversation retrospective.
+
+01/15/2026
+  - Implemented UIValidator module with 7 validation rules: containment, window bounds, sibling overlap, z-order hierarchy, global overlap, z-order occlusion, and edge proximity.
+  - Migrated all core UI files to dsl.strict across 4 phases for consistent validation coverage.
+  - Split layer.cpp into focused files for faster compilation and better maintainability.
+  - Fixed critical C++ crash prevention issues and cleaned up code quality.
+  - Resolved signal handlers initialization and fixed remaining bare module references.
+
+01/16/2026
+  - Fixed critical bugs in box.cpp layout system causing incorrect element positioning.
+  - Added global_overlap and z_order_occlusion validation rules with skip option for intentionally layered elements.
+  - Implemented standalone inventory tab marker sprite for visual feedback.
+  - Added close button positioning fixes with edge_proximity validation.
+  - Created AUTO_EXIT_AFTER_TEST for clean test process termination.
+
+01/17/2026
+  - Implemented comprehensive UI filler system with flexbox-like behavior: proportional space distribution, flex weights, and maxFill constraints.
+  - Fixed gallery viewer scroll issues and updated UI showcase demos.
+  - Added UI layout refactor safeguards with proper validation.
+  - Fixed inventory tab marker anchoring for consistent positioning.
+  - Added Q module enhancements and improved timer API with Lua type definitions.
+
+01/19/2026
+  - Trimmed CLAUDE.md by 80% and extracted detailed API documentation to docs/api/ for better organization.
+  - Updated inventory assets and UI with new sprite backgrounds.
+  - Added documentation plans for inventory sprite background and right-click context menu fixes.
+  - Expanded inventory plan with drag-drop sorting and auto-categorize task specifications.
+  - Added tool call chunking rules to prevent AI implementation hanging on large files.

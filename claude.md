@@ -271,3 +271,46 @@ local entity = dsl.spawn({ x = 200, y = 200 }, myUI)
 
 - [Troubleshooting](docs/TROUBLESHOOTING.md)
 - [Content Creation](docs/content-creation/)
+
+---
+
+## Codex CLI with LLM Proxy (Firmware)
+
+Codex CLI can use your local LLM proxy endpoint (firmware) for API calls.
+
+### Configuration
+
+Added to `~/.codex/config.toml`:
+
+```toml
+[model_providers.firmware]
+name = "LLM Proxy (Firmware)"
+base_url = "http://127.0.0.1:8000/v1"
+env_key = "LLM_PROXY_API_KEY"
+wire_api = "chat"
+```
+
+### Usage
+
+```bash
+# One-off with firmware proxy
+codex -c 'model_provider="firmware"' -c 'model="firmware/gpt-4o"'
+
+# Or set as default (add to top of ~/.codex/config.toml):
+model_provider = "firmware"
+model = "firmware/gpt-4o"
+```
+
+### Available Models (via firmware proxy)
+
+- `firmware/gpt-4o`, `firmware/gpt-5`, `firmware/gpt-5-mini`
+- `firmware/claude-sonnet-4-5-20250929`, `firmware/claude-opus-4-5`
+- `firmware/gemini-2.5-pro`, `firmware/gemini-3-pro-preview`
+- `firmware/deepseek-chat`, `firmware/deepseek-reasoner`
+- (see opencode.json for full list)
+
+### Notes
+
+- `wire_api = "chat"` is required (firmware proxy doesn't support `/v1/responses` endpoint)
+- Requires `LLM_PROXY_API_KEY` environment variable
+- For Conductor: ensure env var is available in Conductor's environment

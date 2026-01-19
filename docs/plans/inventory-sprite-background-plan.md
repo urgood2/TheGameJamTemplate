@@ -1,16 +1,20 @@
 # Plan: Inventory Panel Improvements
 
-**Created**: 2026-01-19
-**Status**: Ready for implementation
+**Created**: 2026-01-19  
+**Status**: Updated for current inventory tabs + layout
 
+## Scope Notes (Current Code Reality)
 
+- `player_inventory.lua` now uses 5 tabs: **equipment, wands, triggers, actions, modifiers** (not just actions/triggers/items).
+- `SPRITE_SCALE` already exists and is used for slot sizing. Avoid reusing this name for the panel background.
+- Panel width/height are currently derived from grid constants (`PANEL_WIDTH`, `PANEL_HEIGHT`) and are referenced in `createHeader()` and `calculatePositions()`.
 
 ## Overview
 
 Five tasks for the player inventory panel:
 1. Use a sprite as the panel background (2x scaling, dynamic dimensions)
 2. Fix right-click to equip cards to wand (not working on Mac)
-3. Enable drag-drop between cells in the same tab
+3. Verify drag-drop between cells in the same tab (already implemented)
 4. Hook up and test sort buttons (Name, Cost)
 5. Auto-categorize cards into correct inventory tabs
 
@@ -19,52 +23,61 @@ Five tasks for the player inventory panel:
 ## Task 1: Sprite Background for Inventory Panel
 
 ### Goal
-Replace the color-based panel background with `inventory-back-panel.png`, reading dimensions dynamically and applying 2x scaling. No nine-patch - just stretch the sprite to fill.
+Replace the color-based panel background with `inventory-back-panel.png`, reading dimensions dynamically and applying 2x scaling. No nine-patch slicing—just stretch the sprite.
 
 ### Current Implementation
 - **File**: `assets/scripts/ui/player_inventory.lua`
-- **Panel creation**: `createPanelDefinition()` at lines 686-703
-- **Current background**: `dsl.root` with `color = "blackberry"` and `emboss = 3`
-- **Panel sizing**: Static constants calculated from grid dimensions (~460×432px)
+- **Panel creation**: `createPanelDefinition()`  
+- **Background**: `dsl.strict.root` with `color = "blackberry"` and `emboss = 3`
+- **Sizing**: `PANEL_WIDTH`/`PANEL_HEIGHT` constants based on grid dimensions
 
-### New Implementation
+### New Implementation (Updated)
 
-#### 1. Add sprite constants (near line 87)
+#### 1) Add panel sprite constants (near existing size constants)
 ```lua
-local INVENTORY_SPRITE = "inventory-back-panel.png"
-local SPRITE_SCALE = 2
+local PANEL_SPRITE = "inventory-back-panel.png"
+local PANEL_SPRITE_SCALE = 2
 ```
 
-#### 2. Add helper function to read sprite dimensions dynamically
+#### 2) Add a helper to read sprite dimensions
 ```lua
 local function getSpriteDimensions(spriteName)
-    local nPatchInfo = animation_system.getNinepatchUIBorderInfo(spriteName)
+    local nPatchInfo = select(1, animation_system.getNinepatchUIBorderInfo(spriteName))
     if nPatchInfo and nPatchInfo.source then
         return nPatchInfo.source.width, nPatchInfo.source.height
     end
     log_warn("[PlayerInventory] Could not get dimensions for sprite: " .. tostring(spriteName))
-    return 230, 216  -- fallback
+    return PANEL_WIDTH, PANEL_HEIGHT  -- fallback to current constants
 end
 ```
 
-#### 3. Replace `createPanelDefinition()` 
+#### 3) Compute panel size once (before layout + panel creation)
+Use a helper so both `calculatePositions()` and `createPanelDefinition()` share the same sprite-derived size.
+
 ```lua
+local function ensurePanelDimensions()
+    if state.panelWidth and state.panelHeight then return end
+    local spriteW, spriteH = getSpriteDimensions(PANEL_SPRITE)
+    state.panelWidth = math.floor(spriteW * PANEL_SPRITE_SCALE)
+    state.panelHeight = math.floor(spriteH * PANEL_SPRITE_SCALE)
+end
+
 local function createPanelDefinition()
-    local spriteW, spriteH = getSpriteDimensions(INVENTORY_SPRITE)
-    local panelW = spriteW * SPRITE_SCALE
-    local panelH = spriteH * SPRITE_SCALE
-    
+    ensurePanelDimensions()
+    local panelW = state.panelWidth or PANEL_WIDTH
+    local panelH = state.panelHeight or PANEL_HEIGHT
+
     return dsl.strict.spritePanel {
         id = PANEL_ID,
-        sprite = INVENTORY_SPRITE,
-        borders = { 0, 0, 0, 0 },  -- No nine-patch, full stretch
+        sprite = PANEL_SPRITE,
+        borders = { 0, 0, 0, 0 },
         minWidth = panelW,
         minHeight = panelH,
         maxWidth = panelW,
         maxHeight = panelH,
         padding = PANEL_PADDING,
         children = {
-            createHeader(),
+            createHeader(panelW),
             createTabs(),
             createGridContainer(),
             createFooter(),
@@ -73,19 +86,43 @@ local function createPanelDefinition()
 end
 ```
 
-#### 4. Update position calculations to use dynamic dimensions
-Replace static `PANEL_WIDTH`/`PANEL_HEIGHT` usage in `calculatePositions()` with dynamic values.
+#### 4) Make `createHeader()` accept a width (avoid `PANEL_WIDTH`)
+```lua
+local function createHeader(panelWidth)
+    local headerContentWidth = (panelWidth or PANEL_WIDTH) - 2 * PANEL_PADDING
+    return dsl.hbox {
+        config = {
+            id = "inventory_header",
+            color = "dark_lavender",
+            padding = 8,
+            minWidth = headerContentWidth,
+        },
+        children = { ... }
+    }
+end
+```
 
-### Technical Details
+#### 5) Update `calculatePositions()` to use sprite size
+```lua
+local function calculatePositions()
+    ensurePanelDimensions()
+    local panelW = state.panelWidth or PANEL_WIDTH
+    local panelH = state.panelHeight or PANEL_HEIGHT
+    ...
+    state.panelX = (screenW - panelW) / 2
+    state.panelY = screenH - panelH - 10
+    ...
+end
+```
 
-- `animation_system.getNinepatchUIBorderInfo(spriteName)` returns `NPatchInfo` with `.source.width` and `.source.height`
-- `dsl.spritePanel` with `borders = {0,0,0,0}` stretches the entire sprite (no nine-patch regions)
-- Setting both `minWidth/minHeight` and `maxWidth/maxHeight` to same value forces exact size
+### Notes
+- `animation_system.getNinepatchUIBorderInfo()` returns a frame even for non-ninepatch sprites; setting borders to `{0,0,0,0}` prevents slice margins.
+- If any stretching artifacts appear, switch to `UIBackground` sprite mode (uses `UIStylingType.Sprite`) instead of `spritePanel`.
 
 ### Asset Required
 - **File**: `inventory-back-panel.png`
-- **Location**: Add to graphics folder (will be packed by TexturePacker)
-- **Size**: Base dimensions at 1x (will be scaled 2x in code)
+- **Location**: Graphics folder (packed by TexturePacker)
+- **Size**: Base dimensions at 1x (scaled 2x in code)
 
 ---
 
@@ -96,72 +133,160 @@ Right-click to equip cards to wand doesn't work on Mac.
 
 ### Current Implementation
 - **File**: `assets/scripts/ui/inventory_quick_equip.lua`
-- **Function**: `checkRightClick()` at lines 254-280
-- **Current triggers**: 
-  - `MouseButton.MOUSE_BUTTON_RIGHT` (right-click)
-  - Alt+Left-click (alternative)
+- **Function**: `checkRightClick()`
+- **Triggers**: Right-click + Alt+Left-click
 
-### Analysis
-
-**Potential causes:**
-1. macOS Ctrl+Click is interpreted as right-click at OS level, but Raylib may receive raw Ctrl+Left
-2. Hover detection (`hoveredCard`) may not be set when clicking
-3. Input may be consumed by another system before reaching this code
-
-### Fix: Add Ctrl+Click Support + Debug Logging
-
+### Fix: Add Ctrl+Click Support
 ```lua
-local function checkRightClick()
-    if not hoveredCard then return end
-    if not registry:valid(hoveredCard) then
-        hoveredCard = nil
-        return
-    end
+local ctrlHeld = input and input.isKeyDown and (
+    input.isKeyDown(KeyboardKey.KEY_LEFT_CONTROL) or
+    input.isKeyDown(KeyboardKey.KEY_RIGHT_CONTROL)
+)
+local ctrlClick = ctrlHeld and input.isMousePressed(MouseButton.MOUSE_BUTTON_LEFT)
 
-    -- Right-click (standard)
-    local rightClick = input and input.isMousePressed and 
-                       input.isMousePressed(MouseButton.MOUSE_BUTTON_RIGHT)
-
-    -- Alt+Left-click (existing alternative)
-    local altHeld = input and input.isKeyDown and (
-        input.isKeyDown(KeyboardKey.KEY_LEFT_ALT) or
-        input.isKeyDown(KeyboardKey.KEY_RIGHT_ALT)
-    )
-    local altClick = altHeld and input.isMousePressed(MouseButton.MOUSE_BUTTON_LEFT)
-
-    -- Ctrl+Left-click (Mac-friendly alternative)
-    local ctrlHeld = input and input.isKeyDown and (
-        input.isKeyDown(KeyboardKey.KEY_LEFT_CONTROL) or
-        input.isKeyDown(KeyboardKey.KEY_RIGHT_CONTROL)
-    )
-    local ctrlClick = ctrlHeld and input.isMousePressed(MouseButton.MOUSE_BUTTON_LEFT)
-
-    if rightClick or altClick or ctrlClick then
-        log_debug("[QuickEquip] Quick-equip triggered on card: " .. tostring(hoveredCard))
-        local success, reason = QuickEquip.equipToWand(hoveredCard)
-        if not success then
-            showEquipFeedback(hoveredCard, reason)
-        end
-    end
+if rightClick or altClick or ctrlClick then
+    ...
 end
 ```
 
-### Debug Strategy (if still not working)
+### Debug Strategy (if needed)
+- Gate logs behind a local `DEBUG_QUICK_EQUIP` flag to avoid spam.
+- Log `hoveredCard` + left/right pressed state on click frames only.
 
-Add temporary debug logging to trace the issue:
+---
+
+## Task 3: Verify Drag-Drop (Same Tab)
+
+### Status
+Already implemented in `inventory_grid_init.lua` (`handleItemDrop()` supports same-grid move/swap).
+
+### Verification Checklist
+1. Drag to empty slot → item moves
+2. Drag onto another item → items swap
+3. Verify `InventoryGridInit.makeItemDraggable()` is called (already in `PlayerInventory.addCard`)
+4. If issues, inspect `grid.canSlotAccept()` and any filter rules
+
+---
+
+## Task 4: Hook Up Sort Buttons
+
+### Goal
+Make "Name" and "Cost" sort buttons functional.
+
+### Use Existing State (No new fields)
+Use `state.sortField` and `state.sortAsc` (already declared) rather than adding `sortBy`.
+
+### Sort Logic (Rebuild Grid Safely)
+- Use `grid.getItemList(activeGrid)` to get `{ slot, item }` pairs.
+- Build a sortable list with computed keys.
+- Remove all items, then re-add in sorted order with explicit slot indices.
 
 ```lua
--- At top of checkRightClick(), before the hoveredCard check:
-local debugInput = input and input.isMousePressed
-if debugInput then
-    local leftPressed = debugInput(MouseButton.MOUSE_BUTTON_LEFT)
-    local rightPressed = debugInput(MouseButton.MOUSE_BUTTON_RIGHT)
-    if leftPressed or rightPressed then
-        log_debug("[QuickEquip DEBUG] L=" .. tostring(leftPressed) .. 
-                  " R=" .. tostring(rightPressed) ..
-                  " hovered=" .. tostring(hoveredCard))
-    end
+local function getSortKeys(entity)
+    local script = state.cardRegistry[entity] or (getScriptTableForEntityID and getScriptTableForEntityID(entity))
+    local data = script and (script.cardData or script) or {}
+    local name = (data.name or data.id or data.cardID or ""):lower()
+    local cost = data.mana_cost or data.manaCost or 0
+    return name, cost
 end
+
+local function sortActiveGrid(sortField)
+    local activeGrid = state.activeGrid
+    if not activeGrid then return end
+
+    if state.sortField == sortField then
+        state.sortAsc = not state.sortAsc
+    else
+        state.sortField = sortField
+        state.sortAsc = true
+    end
+
+    local list = grid.getItemList(activeGrid)
+    local items = {}
+    for _, entry in ipairs(list) do
+        local name, cost = getSortKeys(entry.item)
+        table.insert(items, {
+            entity = entry.item,
+            name = name,
+            cost = cost,
+            slot = entry.slot,
+        })
+        grid.removeItem(activeGrid, entry.slot)
+    end
+
+    table.sort(items, function(a, b)
+        if sortField == "name" then
+            if a.name == b.name then return a.slot < b.slot end
+            return state.sortAsc and (a.name < b.name) or (a.name > b.name)
+        else
+            if a.cost == b.cost then return a.slot < b.slot end
+            return state.sortAsc and (a.cost < b.cost) or (a.cost > b.cost)
+        end
+    end)
+
+    for slotIndex, item in ipairs(items) do
+        grid.addItem(activeGrid, item.entity, slotIndex)
+    end
+
+    snapItemsToSlots()
+end
+```
+
+### Button Wiring
+- Update `createFooter()` to call `sortActiveGrid("name")` / `sortActiveGrid("cost")`
+- Optional: add ▲/▼ indicator or color change based on `state.sortField/state.sortAsc`
+
+---
+
+## Task 5: Auto-Categorize Cards into Correct Tabs
+
+### Goal
+Auto-route cards based on metadata when `PlayerInventory.addCard()` is called without an explicit category.
+
+### Current Tabs (from `TAB_CONFIG`)
+`equipment`, `wands`, `triggers`, `actions`, `modifiers`
+
+### Detection Logic (Updated)
+```lua
+local function detectCardCategory(cardEntity, cardData)
+    local script = getScriptTableForEntityID and getScriptTableForEntityID(cardEntity)
+    local data = cardData or (script and script.cardData) or script or {}
+
+    -- Explicit category wins
+    if data.category then
+        local c = data.category
+        if c == "trigger" or c == "triggers" then return "triggers" end
+        if c == "action" or c == "actions" then return "actions" end
+        if c == "modifier" or c == "modifiers" then return "modifiers" end
+        if c == "wand" or c == "wands" then return "wands" end
+        if c == "equipment" then return "equipment" end
+    end
+
+    -- Card data type (common for cards.lua)
+    if data.type == "trigger" then return "triggers" end
+    if data.type == "action" then return "actions" end
+    if data.type == "modifier" then return "modifiers" end
+
+    -- Legacy flags
+    if script and script.isTrigger then return "triggers" end
+
+    -- WandEngine definitions (if present)
+    if data.cardID and WandEngine then
+        if WandEngine.trigger_card_defs and WandEngine.trigger_card_defs[data.cardID] then
+            return "triggers"
+        end
+        if WandEngine.card_defs and WandEngine.card_defs[data.cardID] then
+            return "actions"
+        end
+    end
+
+    return state.activeTab or "equipment"
+end
+```
+
+### Update `PlayerInventory.addCard()`
+```lua
+category = category or detectCardCategory(cardEntity, cardData)
 ```
 
 ---
@@ -170,360 +295,47 @@ end
 
 | File | Changes |
 |------|---------|
-| `assets/scripts/ui/player_inventory.lua` | Add sprite constants, helper function, replace `createPanelDefinition()`, update position calculations |
-| `assets/scripts/ui/inventory_quick_equip.lua` | Add Ctrl+Click support in `checkRightClick()` |
+| `assets/scripts/ui/player_inventory.lua` | Sprite background, dynamic sizing, sort logic, category detection |
+| `assets/scripts/ui/inventory_quick_equip.lua` | Add Ctrl+Click support |
+| `assets/scripts/ui/inventory_grid_init.lua` | Verification only (no expected changes) |
 
 ---
 
-## Test Plan
+## Test Plan (Updated)
 
 | Test | Expected | Verify |
 |------|----------|--------|
-| Panel has sprite background | `inventory-back-panel.png` visible as background | Open inventory (I key) |
-| Panel size = sprite × 2 | If sprite is 200×150, panel is 400×300 | Measure or log dimensions |
-| Content fits in panel | Header, tabs, grid, footer all visible | Visual check |
-| Right-click equips (Windows/Linux) | Card moves to wand | Right-click card |
+| Panel has sprite background | `inventory-back-panel.png` visible | Open inventory (I key) |
+| Panel size = sprite × 2 | Correct dimensions | Measure/log `state.panelWidth` |
+| Content fits in panel | Header, tabs, grid, footer visible | Visual check |
+| Right-click equips (Win/Linux) | Card moves to wand | Right-click card |
 | Ctrl+Click equips (Mac) | Card moves to wand | Ctrl+Left-click card |
-| Alt+Click equips (all) | Card moves to wand | Alt+Left-click card |
-| No empty slots feedback | "No empty wand slots!" popup | Try equip when wand full |
+| Drag card to empty slot | Card moves | Drag and drop |
+| Drag card onto another card | Cards swap | Drag and drop |
+| Click "Name" sort | Cards reorder A→Z (toggle Z→A on second click) | Click button twice |
+| Click "Cost" sort | Cards reorder low→high (toggle high→low) | Click button twice |
+| Add trigger card | Goes to Triggers tab | Add card via code |
+| Add modifier card | Goes to Modifiers tab | Add card via code |
+| Add unknown card | Goes to active tab | Add card via code |
+
+### UI Validation (Required)
+- Run `UIValidator.validate(state.panelEntity, nil, { skipHidden = true })`
+- Fix any `containment` or `window_bounds` errors before shipping
 
 ---
 
 ## Implementation Order
 
-1. **Add Ctrl+Click to `inventory_quick_equip.lua`** - Quick fix, test immediately
-2. **Add sprite asset** - User provides `inventory-back-panel.png`
-3. **Update `player_inventory.lua`** - Implement sprite background
-4. **Test and adjust** - Verify dimensions, content layout
+1. **Task 2**: Add Ctrl+Click support (quick fix)
+2. **Task 3**: Verify drag-drop (no changes expected)
+3. **Task 4**: Implement sorting
+4. **Task 5**: Implement auto-categorization
+5. **Task 1**: Sprite background (requires asset + layout adjustments)
 
 ---
 
 ## Rollback Plan
 
-If sprite background causes issues:
-- Revert `createPanelDefinition()` to use `dsl.root` with color
-- Keep Ctrl+Click fix (no downside)
-
----
-
-## Task 3: Enable Drag-Drop Between Cells in Same Tab
-
-### Goal
-Allow players to drag cards between slots within the same inventory tab to reorganize.
-
-### Current Implementation
-- **File**: `assets/scripts/ui/inventory_grid_init.lua`
-- **Function**: `handleItemDrop()` at lines 174-298
-- **Status**: Already implemented! Same-grid operations (move/swap/merge) work at lines 202-231
-
-### Analysis
-The code already handles same-grid drag-drop:
-```lua
-if sourceSlotInThisGrid then
-    -- Item is already in this grid, move/swap/merge (same-grid operation)
-    if sourceSlotInThisGrid == slotIndex then
-        -- Dropped on same slot, mark as valid but no-op
-        InventoryGridInit.markValidDrop(droppedEntity)
-        return true
-    end
-    -- ... swap or move logic
-end
-```
-
-### Debugging Steps
-1. Test drag-drop between slots in same tab
-2. Check if `dragEnabled` is set on card entities
-3. Verify `grid.canSlotAccept()` isn't rejecting same-grid moves
-4. Check console for `[DRAG-DEBUG]` logs
-
-### Potential Issues
-- Cards may not have `dragEnabled = true` in their GameObject
-- Slot collision may not be detecting drops properly
-- Filter function may be rejecting cards
-
-### Fix (if needed)
-Ensure cards are set up with drag enabled in `player_inventory.lua`:
-```lua
-local go = component_cache.get(cardEntity, GameObject)
-if go then
-    go.state.dragEnabled = true
-    go.state.collisionEnabled = true
-end
-```
-
----
-
-## Task 4: Hook Up Sort Buttons
-
-### Goal
-Make "Name" and "Cost" sort buttons functional in the inventory footer.
-
-### Current Implementation
-- **File**: `assets/scripts/ui/player_inventory.lua`
-- **Function**: `createFooter()` at lines 636-671
-- **Current state**: Buttons exist but only log debug messages
-
-```lua
-dsl.strict.button("Name", {
-    id = "sort_name_btn",
-    fontSize = 10,
-    color = "purple_slate",
-    onClick = function()
-        log_debug("[PlayerInventory] Sort by name clicked")  -- TODO: implement
-    end,
-}),
-```
-
-### Reference Implementation
-From `inventory_grid_demo.lua` lines 706-771:
-```lua
-local function applySorting()
-    if not demoState.sortBy or not activeGrid then return end
-    
-    local items = grid.getAllItems(activeGrid)
-    local itemsWithData = {}
-    
-    for slotIndex, entity in pairs(items) do
-        local script = getScriptTableFromEntityID(entity)
-        if script then
-            table.insert(itemsWithData, {
-                entity = entity,
-                slot = slotIndex,
-                name = script.name or "",
-                element = script.element or "",
-                manaCost = script.manaCost or 0,
-            })
-        end
-    end
-    
-    local sortKey = demoState.sortBy
-    table.sort(itemsWithData, function(a, b)
-        if sortKey == "name" then
-            return a.name < b.name
-        elseif sortKey == "element" then
-            return (a.element or "") < (b.element or "")
-        end
-        return false
-    end)
-    
-    -- Reposition items
-    for newSlot, itemData in ipairs(itemsWithData) do
-        grid.moveItem(activeGrid, itemData.slot, newSlot)
-    end
-end
-```
-
-### New Implementation
-
-Add sorting functions to `player_inventory.lua`:
-
-```lua
-local state = {
-    -- ... existing state
-    sortBy = nil,  -- "name" | "cost" | nil
-}
-
-local function sortActiveGrid(sortKey)
-    local activeGrid = state.activeGrid
-    if not activeGrid then return end
-    
-    state.sortBy = sortKey
-    
-    local items = grid.getAllItems(activeGrid)
-    local itemsWithData = {}
-    
-    for slotIndex, entity in pairs(items) do
-        local script = getScriptTableFromEntityID(entity)
-        if script then
-            table.insert(itemsWithData, {
-                entity = entity,
-                slot = slotIndex,
-                name = script.name or script.cardID or "",
-                manaCost = script.manaCost or 0,
-            })
-        end
-    end
-    
-    table.sort(itemsWithData, function(a, b)
-        if sortKey == "name" then
-            return a.name < b.name
-        elseif sortKey == "cost" then
-            return a.manaCost < b.manaCost
-        end
-        return false
-    end)
-    
-    -- Reposition items to sorted order
-    for newSlot, itemData in ipairs(itemsWithData) do
-        if itemData.slot ~= newSlot then
-            grid.moveItem(activeGrid, itemData.slot, newSlot)
-            -- Update itemData.slot for subsequent moves
-            for _, other in ipairs(itemsWithData) do
-                if other.slot == newSlot then
-                    other.slot = itemData.slot
-                    break
-                end
-            end
-            itemData.slot = newSlot
-        end
-    end
-    
-    -- Snap all items to their new slots
-    snapItemsToSlots()
-    log_debug("[PlayerInventory] Sorted by " .. sortKey)
-end
-```
-
-Update `createFooter()`:
-```lua
-dsl.strict.button("Name", {
-    id = "sort_name_btn",
-    fontSize = 10,
-    color = state.sortBy == "name" and "steel_blue" or "purple_slate",
-    onClick = function()
-        sortActiveGrid("name")
-    end,
-}),
-dsl.strict.button("Cost", {
-    id = "sort_cost_btn",
-    fontSize = 10,
-    color = state.sortBy == "cost" and "steel_blue" or "purple_slate",
-    onClick = function()
-        sortActiveGrid("cost")
-    end,
-}),
-```
-
----
-
-## Task 5: Auto-Categorize Cards into Correct Tabs
-
-### Goal
-When cards are added to inventory, automatically place them in the correct tab based on card type.
-
-### Current Implementation
-- **File**: `assets/scripts/ui/player_inventory.lua`
-- **Function**: `PlayerInventory.addCard()` at lines 1141-1205
-- **Current behavior**: Cards go to specified category or `state.activeTab`
-
-### Card Type Detection
-From `inventory_quick_equip.lua` lines 122-140:
-```lua
-local function isTriggerCard(cardEntity)
-    local script = getScriptTableFromEntityID(cardEntity)
-    if not script then return false end
-
-    if script.cardType == "trigger" then return true end
-    if script.isTrigger then return true end
-    if script.category == "trigger" or script.category == "triggers" then return true end
-
-    if script.cardID and WandEngine and WandEngine.trigger_card_defs then
-        if WandEngine.trigger_card_defs[script.cardID] then
-            return true
-        end
-    end
-    return false
-end
-```
-
-### Tab Configuration
-Current tabs in `player_inventory.lua`:
-```lua
-local TAB_CONFIG = {
-    actions = { label = "Actions", rows = 3, cols = 7 },
-    triggers = { label = "Triggers", rows = 3, cols = 7 },
-    items = { label = "Items", rows = 3, cols = 7 },
-}
-```
-
-### New Implementation
-
-Add category detection helper:
-```lua
-local function detectCardCategory(cardEntity)
-    local script = getScriptTableFromEntityID(cardEntity)
-    if not script then return "items" end  -- default fallback
-    
-    -- Check explicit category first
-    if script.category then
-        if script.category == "trigger" or script.category == "triggers" then
-            return "triggers"
-        elseif script.category == "action" or script.category == "actions" then
-            return "actions"
-        elseif script.category == "item" or script.category == "items" then
-            return "items"
-        end
-    end
-    
-    -- Check cardType
-    if script.cardType == "trigger" then return "triggers" end
-    if script.cardType == "action" then return "actions" end
-    if script.isTrigger then return "triggers" end
-    
-    -- Check WandEngine definitions
-    if script.cardID then
-        if WandEngine and WandEngine.trigger_card_defs and WandEngine.trigger_card_defs[script.cardID] then
-            return "triggers"
-        end
-        if WandEngine and WandEngine.card_defs and WandEngine.card_defs[script.cardID] then
-            return "actions"
-        end
-    end
-    
-    return "items"  -- default for unknown cards
-end
-```
-
-Update `PlayerInventory.addCard()`:
-```lua
-function PlayerInventory.addCard(cardEntity, category, cardData)
-    if not cardEntity or not registry:valid(cardEntity) then
-        log_warn("[PlayerInventory] Cannot add invalid card entity")
-        return false
-    end
-
-    -- Auto-detect category if not specified
-    category = category or detectCardCategory(cardEntity)
-    
-    local cfg = TAB_CONFIG[category]
-    -- ... rest of function
-end
-```
-
----
-
-## Updated Files to Modify
-
-| File | Changes |
-|------|---------|
-| `assets/scripts/ui/player_inventory.lua` | Sprite background, sort functions, category detection |
-| `assets/scripts/ui/inventory_quick_equip.lua` | Add Ctrl+Click support |
-| `assets/scripts/ui/inventory_grid_init.lua` | Debug/verify drag-drop (may not need changes) |
-
----
-
-## Updated Test Plan
-
-| Test | Expected | Verify |
-|------|----------|--------|
-| Panel has sprite background | `inventory-back-panel.png` visible | Open inventory (I key) |
-| Panel size = sprite × 2 | Correct dimensions | Measure or log |
-| Right-click equips (Win/Linux) | Card moves to wand | Right-click card |
-| Ctrl+Click equips (Mac) | Card moves to wand | Ctrl+Left-click |
-| Drag card to empty slot | Card moves | Drag and drop |
-| Drag card onto another card | Cards swap | Drag and drop |
-| Click "Name" sort | Cards reorder A-Z | Click button |
-| Click "Cost" sort | Cards reorder by mana | Click button |
-| Add trigger card | Goes to Triggers tab | Add card via code |
-| Add action card | Goes to Actions tab | Add card via code |
-| Add unknown card | Goes to Items tab | Add card via code |
-
----
-
-## Implementation Order
-
-1. **Task 2**: Add Ctrl+Click to `inventory_quick_equip.lua` (quick fix)
-2. **Task 3**: Test drag-drop, fix if needed
-3. **Task 4**: Implement sort buttons
-4. **Task 5**: Implement auto-categorization
-5. **Task 1**: Add sprite background (requires asset)
+If the sprite panel causes layout issues:
+- Revert `createPanelDefinition()` to `dsl.strict.root` with color/emboss
+- Keep Ctrl+Click and sort fixes (low risk)

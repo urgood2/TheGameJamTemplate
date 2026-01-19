@@ -160,8 +160,8 @@
             "frame": {
                 "h": 1300,
                 "w": 1431,
-                "x": 4,
-                "y": 2004
+                "x": 1230,
+                "y": 1940
             },
             "rotated": false,
             "sourceSize": {
@@ -349,6 +349,28 @@
                 "w": 66,
                 "x": 19,
                 "y": 19
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "back_inventory_panel",
+            "filename": "inventory-back-panel.png",
+            "frame": {
+                "h": 194,
+                "w": 226,
+                "x": 1109,
+                "y": 493
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 2000,
+                "w": 2000
+            },
+            "spriteSourceSize": {
+                "h": 194,
+                "w": 226,
+                "x": 1727,
+                "y": 191
             },
             "trimmed": true
         },
@@ -996,8 +1018,8 @@
             "frame": {
                 "h": 565,
                 "w": 1215,
-                "x": 2391,
-                "y": 1428
+                "x": 4,
+                "y": 1940
             },
             "rotated": false,
             "sourceSize": {
@@ -1040,8 +1062,8 @@
             "frame": {
                 "h": 501,
                 "w": 498,
-                "x": 1914,
-                "y": 913
+                "x": 2437,
+                "y": 904
             },
             "rotated": false,
             "sourceSize": {
@@ -1062,8 +1084,8 @@
             "frame": {
                 "h": 504,
                 "w": 498,
-                "x": 3427,
-                "y": 913
+                "x": 4,
+                "y": 1417
             },
             "rotated": false,
             "sourceSize": {
@@ -1084,8 +1106,8 @@
             "frame": {
                 "h": 502,
                 "w": 500,
-                "x": 2916,
-                "y": 913
+                "x": 3439,
+                "y": 904
             },
             "rotated": false,
             "sourceSize": {
@@ -1128,8 +1150,8 @@
             "frame": {
                 "h": 480,
                 "w": 443,
-                "x": 527,
-                "y": 913
+                "x": 1050,
+                "y": 904
             },
             "rotated": false,
             "sourceSize": {
@@ -1150,8 +1172,8 @@
             "frame": {
                 "h": 480,
                 "w": 441,
-                "x": 981,
-                "y": 913
+                "x": 1504,
+                "y": 904
             },
             "rotated": false,
             "sourceSize": {
@@ -1172,8 +1194,8 @@
             "frame": {
                 "h": 505,
                 "w": 494,
-                "x": 4,
-                "y": 1428
+                "x": 513,
+                "y": 1417
             },
             "rotated": false,
             "sourceSize": {
@@ -1194,8 +1216,8 @@
             "frame": {
                 "h": 488,
                 "w": 470,
-                "x": 1433,
-                "y": 913
+                "x": 1956,
+                "y": 904
             },
             "rotated": false,
             "sourceSize": {
@@ -1216,8 +1238,8 @@
             "frame": {
                 "h": 501,
                 "w": 482,
-                "x": 2423,
-                "y": 913
+                "x": 2946,
+                "y": 904
             },
             "rotated": false,
             "sourceSize": {
@@ -1392,8 +1414,8 @@
             "frame": {
                 "h": 512,
                 "w": 477,
-                "x": 509,
-                "y": 1428
+                "x": 1018,
+                "y": 1417
             },
             "rotated": false,
             "sourceSize": {
@@ -1414,8 +1436,8 @@
             "frame": {
                 "h": 477,
                 "w": 512,
-                "x": 4,
-                "y": 913
+                "x": 527,
+                "y": 904
             },
             "rotated": false,
             "sourceSize": {
@@ -1436,8 +1458,8 @@
             "frame": {
                 "h": 512,
                 "w": 309,
-                "x": 997,
-                "y": 1428
+                "x": 1506,
+                "y": 1417
             },
             "rotated": false,
             "sourceSize": {
@@ -1458,8 +1480,8 @@
             "frame": {
                 "h": 409,
                 "w": 512,
-                "x": 3544,
-                "y": 493
+                "x": 4,
+                "y": 904
             },
             "rotated": false,
             "sourceSize": {
@@ -1480,8 +1502,8 @@
             "frame": {
                 "h": 512,
                 "w": 300,
-                "x": 1317,
-                "y": 1428
+                "x": 1826,
+                "y": 1417
             },
             "rotated": false,
             "sourceSize": {
@@ -1502,7 +1524,7 @@
             "frame": {
                 "h": 300,
                 "w": 512,
-                "x": 1564,
+                "x": 1801,
                 "y": 493
             },
             "rotated": false,
@@ -1524,8 +1546,8 @@
             "frame": {
                 "h": 512,
                 "w": 434,
-                "x": 1628,
-                "y": 1428
+                "x": 2137,
+                "y": 1417
             },
             "rotated": false,
             "sourceSize": {
@@ -1546,7 +1568,7 @@
             "frame": {
                 "h": 400,
                 "w": 512,
-                "x": 2610,
+                "x": 2847,
                 "y": 493
             },
             "rotated": false,
@@ -1568,8 +1590,8 @@
             "frame": {
                 "h": 512,
                 "w": 307,
-                "x": 2073,
-                "y": 1428
+                "x": 2582,
+                "y": 1417
             },
             "rotated": false,
             "sourceSize": {
@@ -1590,7 +1612,7 @@
             "frame": {
                 "h": 307,
                 "w": 512,
-                "x": 2087,
+                "x": 2324,
                 "y": 493
             },
             "rotated": false,
@@ -4626,7 +4648,7 @@
             "frame": {
                 "h": 290,
                 "w": 444,
-                "x": 1109,
+                "x": 1346,
                 "y": 493
             },
             "rotated": false,
@@ -4648,7 +4670,7 @@
             "frame": {
                 "h": 400,
                 "w": 400,
-                "x": 3133,
+                "x": 3370,
                 "y": 493
             },
             "rotated": false,
@@ -6217,7 +6239,7 @@
             "h": 4096,
             "w": 4096
         },
-        "smartupdate": "$TexturePacker:SmartUpdate:ede4c7af1a0ff2bac4f3916a3aa33e05:554f423fbe43e0afcbf2ff22126cacfe:fb621859b6cce529c0bd0d09d2a566ff$",
+        "smartupdate": "$TexturePacker:SmartUpdate:c9a34039a84581a559aa3ebc02a59937:0730dff14782a93336c26258d974d431:fb621859b6cce529c0bd0d09d2a566ff$",
         "version": "1.0"
     }
 }

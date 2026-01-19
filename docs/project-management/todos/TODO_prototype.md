@@ -1,21 +1,33 @@
 <!-- KANBAN-SYNC-START -->
 ## Synced from Obsidian Kanban
-> Last synced: 2026-01-19 10:02:34
+> Last synced: 2026-01-19 11:25:50
 > Source: `Surviorslike Kanban.md`
 
 ## TODO
 
 - [ ] Implement demo plan according to /Users/joshuashin/.claude/plans/final-demo-content-spec.md
+- [ ] Finish ui - inventory, wand ui, skills window, player character stat panel
+- [ ] Finish shop... just get it working already.
+- [ ] Working on a landing page for the demo.
 
 ## In Progress
+
+- [ ] Finish inventory ui. Add background sprite and adjust functionality.
+
+## Done
 
 ## Waiting On
 
 ## Abandoned
 
-## Done
-
 <!-- KANBAN-SYNC-END -->
+
+
+
+
+
+
+
 
 
 

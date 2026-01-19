@@ -107,7 +107,18 @@ local TABS_HEIGHT = 32
 local FOOTER_HEIGHT = 36
 local PANEL_PADDING = 10
 local PANEL_WIDTH = GRID_WIDTH + PANEL_PADDING * 2
+local PANEL_CONTENT_HEIGHT = HEADER_HEIGHT + TABS_HEIGHT + GRID_HEIGHT + FOOTER_HEIGHT + PANEL_PADDING * 2
 local RENDER_LAYER = "ui"
+
+-- Sprite background configuration
+-- TODO: Replace with "inventory-back-panel.png" when asset is created
+local PANEL_SPRITE = "ui-decor-test-1.png"  -- Placeholder sprite
+-- Scale factor: 2x for retina/high-DPI displays. Adjust based on sprite resolution.
+local PANEL_SPRITE_SCALE = 2
+-- Nine-patch borders (left, top, right, bottom) - pixels from edge where stretching begins
+-- Adjust these when changing PANEL_SPRITE to match the new sprite's border regions
+local PANEL_BORDERS = { 8, 8, 8, 8 }
+local USE_SPRITE_BACKGROUND = true  -- Set to false to revert to color-based background
 
 local PANEL_Z = 800
 local GRID_Z = 850
@@ -148,6 +159,98 @@ local function getLocalizedText(key, fallback)
         end
     end
     return fallback or key
+end
+
+--------------------------------------------------------------------------------
+-- Card Category Detection
+--------------------------------------------------------------------------------
+
+--- Detect the appropriate inventory tab for a card based on its metadata.
+-- Priority: explicit category > type field > legacy flags > WandEngine lookup > active tab
+-- @param cardEntity Entity ID (may be nil)
+-- @param cardData Card data table (may be nil)
+-- @return string Tab ID: "triggers", "actions", "modifiers", "wands", or "equipment"
+local function detectCardCategory(cardEntity, cardData)
+    local script = cardEntity and getScriptTableFromEntityID and getScriptTableFromEntityID(cardEntity)
+    local data = cardData or (script and script.cardData) or script or {}
+
+    -- Explicit category wins
+    if data.category then
+        local c = data.category
+        if c == "trigger" or c == "triggers" then return "triggers" end
+        if c == "action" or c == "actions" then return "actions" end
+        if c == "modifier" or c == "modifiers" then return "modifiers" end
+        if c == "wand" or c == "wands" then return "wands" end
+        if c == "equipment" then return "equipment" end
+    end
+
+    -- Card data type (common for cards.lua definitions)
+    if data.type == "trigger" then return "triggers" end
+    if data.type == "action" then return "actions" end
+    if data.type == "modifier" then return "modifiers" end
+    if data.type == "wand" then return "wands" end
+
+    -- Legacy flags
+    if script and script.isTrigger then return "triggers" end
+
+    -- WandEngine definitions (if present)
+    if data.cardID and WandEngine then
+        if WandEngine.trigger_card_defs and WandEngine.trigger_card_defs[data.cardID] then
+            return "triggers"
+        end
+        if WandEngine.card_defs and WandEngine.card_defs[data.cardID] then
+            return "actions"
+        end
+    end
+
+    -- Default to active tab or equipment
+    -- This handles cards without metadata (test placeholders, custom cards, or legacy items)
+    return state.activeTab or "equipment"
+end
+
+--------------------------------------------------------------------------------
+-- Sprite Background Helpers
+--------------------------------------------------------------------------------
+
+--- Get sprite dimensions from animation system (or fallback)
+-- @param spriteName string Sprite file name
+-- @return number, number Width and height
+local function getSpriteDimensions(spriteName)
+    if animation_system and animation_system.getNinepatchUIBorderInfo then
+        local nPatchInfo = select(1, animation_system.getNinepatchUIBorderInfo(spriteName))
+        if nPatchInfo and nPatchInfo.source then
+            return nPatchInfo.source.width, nPatchInfo.source.height, true
+        end
+    end
+    log_warn("[PlayerInventory] Could not get dimensions for sprite: " .. tostring(spriteName))
+    return PANEL_WIDTH, PANEL_CONTENT_HEIGHT, false
+end
+
+--- Ensure panel dimensions are computed (cached in state)
+local function ensurePanelDimensions()
+    if state.panelWidth and state.panelHeight then return end
+
+    local contentW = PANEL_WIDTH
+    local contentH = PANEL_CONTENT_HEIGHT
+
+    if USE_SPRITE_BACKGROUND then
+        local spriteW, spriteH, found = getSpriteDimensions(PANEL_SPRITE)
+        if found then
+            local scaledW = math.floor(spriteW * PANEL_SPRITE_SCALE)
+            local scaledH = math.floor(spriteH * PANEL_SPRITE_SCALE)
+            state.panelWidth = math.max(contentW, scaledW)
+            state.panelHeight = math.max(contentH, scaledH)
+            log_debug("[PlayerInventory] Using sprite dimensions: " .. state.panelWidth .. "x" .. state.panelHeight)
+        else
+            state.panelWidth = contentW
+            state.panelHeight = contentH
+            log_debug("[PlayerInventory] Using content dimensions (sprite missing): " .. state.panelWidth .. "x" .. state.panelHeight)
+        end
+    else
+        state.panelWidth = contentW
+        state.panelHeight = contentH
+        log_debug("[PlayerInventory] Using calculated dimensions: " .. state.panelWidth .. "x" .. state.panelHeight)
+    end
 end
 
 --------------------------------------------------------------------------------
@@ -862,22 +965,46 @@ local function createGridContainer()
 end
 
 local function createPanelDefinition()
-    return dsl.strict.root {
-        config = {
+    ensurePanelDimensions()
+    local panelW = state.panelWidth or PANEL_WIDTH
+    local panelH = state.panelHeight or PANEL_CONTENT_HEIGHT
+
+    if USE_SPRITE_BACKGROUND then
+        -- Use sprite panel for visual polish
+        return dsl.strict.spritePanel {
             id = PANEL_ID,
-            color = "blackberry",
+            sprite = PANEL_SPRITE,
+            borders = PANEL_BORDERS,
+            minWidth = panelW,
+            minHeight = panelH,
+            maxWidth = panelW,
+            maxHeight = panelH,
             padding = PANEL_PADDING,
-            emboss = 3,
-            -- Grid area is a child container; active grid is injected at runtime
-            minHeight = HEADER_HEIGHT + TABS_HEIGHT + FOOTER_HEIGHT + PANEL_PADDING * 2,
-        },
-        children = {
-            createHeader(),
-            createTabs(),
-            createGridContainer(),
-            createFooter(),
-        },
-    }
+            children = {
+                createHeader(),
+                createTabs(),
+                createGridContainer(),
+                createFooter(),
+            },
+        }
+    else
+        -- Fallback to color-based background
+        return dsl.strict.root {
+            config = {
+                id = PANEL_ID,
+                color = "blackberry",
+                padding = PANEL_PADDING,
+                emboss = 3,
+                minHeight = PANEL_CONTENT_HEIGHT,
+            },
+            children = {
+                createHeader(),
+                createTabs(),
+                createGridContainer(),
+                createFooter(),
+            },
+        }
+    end
 end
 
 local function snapItemsToSlots()
@@ -1105,7 +1232,10 @@ local function calculatePositions()
         return false
     end
 
-    state.panelX = (screenW - PANEL_WIDTH) / 2
+    -- Ensure panel dimensions are computed (uses sprite size if USE_SPRITE_BACKGROUND)
+    ensurePanelDimensions()
+    local panelW = state.panelWidth or PANEL_WIDTH
+    state.panelX = (screenW - panelW) / 2
 
     local panelHeight = getPanelHeightFromTransform()
     if panelHeight then
@@ -1132,7 +1262,8 @@ local function refreshPanelPositionFromTransform()
         return false
     end
 
-    state.panelX = (screenW - PANEL_WIDTH) / 2
+    local panelW = state.panelWidth or PANEL_WIDTH
+    state.panelX = (screenW - panelW) / 2
     state.panelY = screenH - panelHeight - 10
     state.gridX = state.panelX + PANEL_PADDING
     state.gridY = state.panelY + HEADER_HEIGHT + TABS_HEIGHT + PANEL_PADDING
@@ -1372,7 +1503,9 @@ function PlayerInventory.destroy()
     
     state.initialized = false
     state.isVisible = false
-    
+    state.panelWidth = nil   -- Clear cached dimensions for reinitialize
+    state.panelHeight = nil
+
     log_debug("[PlayerInventory] Destroyed")
 end
 
@@ -1380,8 +1513,9 @@ function PlayerInventory.addCard(cardEntity, category, cardData)
     if not state.initialized then
         initializeInventory()
     end
-    
-    category = category or state.activeTab
+
+    -- Auto-detect category if not provided
+    category = category or detectCardCategory(cardEntity, cardData)
     local cfg = TAB_CONFIG[category]
     if not cfg then
         log_warn("[PlayerInventory] Unknown category: " .. tostring(category))

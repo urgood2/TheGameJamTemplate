@@ -66,6 +66,20 @@ local Effects, Combat, Items, Leveling, Content, StatusEngine, World = {}, {}, {
 local ItemSystem = {}
 local PetsAndSets = {}
 
+-- Per-status fan-out signal mapping (Phase 1 Demo Implementation)
+-- Maps canonical status IDs to their fan-out signal names.
+-- NOTE: Aliases (e.g., scorch->burning) resolve to canonical IDs before lookup,
+-- so applying "scorch" will emit "on_apply_burn" since it resolves to "burning".
+local STATUS_FAN_OUT_SIGNALS = {
+    burning = "on_apply_burn",
+    frozen = "on_apply_freeze",
+    doom = "on_apply_doom",
+    electrocute = "on_apply_electrocute",
+    poison = "on_apply_poison",
+    bleed = "on_apply_bleed",
+    corrosion = "on_apply_corrosion",
+}
+
 --- Deep copy a Lua table (recursively copies nested tables).
 --  Non-table values are copied by value; functions and metatables are not
 --  specially handled (intended for plain data tables).
@@ -2473,11 +2487,15 @@ Effects.deal_damage = function(p)
         end
       end
 
-      signal.emit("player_damaged", tgt.entity_id, {
+      -- Emit both signal variants for compatibility (Phase 1 Demo Implementation)
+      -- Legacy code uses "player_damaged", wand triggers use "on_player_damaged"
+      local payload = {
         amount = dealt,
         damage_type = primary_type,
         source = src.entity_id
-      })
+      }
+      signal.emit("player_damaged", tgt.entity_id, payload)
+      signal.emit("on_player_damaged", tgt.entity_id, payload)
     end
 
     -- Process defensive mark effects ------------------------------------------
@@ -5062,6 +5080,17 @@ StatusEngine.apply = function(ctx, target, status_id, opts)
     status_id = status_id,
     stacks = bucket.stacks,
   })
+
+  -- Per-status fan-out signals
+  -- Uses module-scope STATUS_FAN_OUT_SIGNALS (defined at top of file)
+  local fan_out_signal = STATUS_FAN_OUT_SIGNALS[status_id]
+  if fan_out_signal then
+    signal.emit(fan_out_signal, target, {
+      source = source,
+      status_id = status_id,
+      stacks = bucket.stacks,
+    })
+  end
 
   return bucket.stacks
 end

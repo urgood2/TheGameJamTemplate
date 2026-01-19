@@ -158,6 +158,140 @@ local WandTemplates = {
             "ACTION_FAST_ACCURATE_PROJECTILE"
         },
     },
+
+    --------------------------------------------------------------------------------
+    -- PHASE 2 DEMO: Findable Wand Templates
+    --------------------------------------------------------------------------------
+
+    -- RAGE FIST: Timer-based aggressive wand
+    -- Automatically fires every few seconds, rewards aggressive play
+    {
+        id = "RAGE_FIST",
+        name = "Rage Fist",
+        type = "trigger",
+        trigger_type = "every_N_seconds",
+        trigger_interval = 2.0,  -- Fires every 2 seconds
+        max_uses = -1,
+        mana_max = 40,
+        mana_recharge_rate = 8,
+        cast_block_size = 1,
+        cast_delay = 100,
+        recharge_time = 400,
+        spread_angle = 5,
+        shuffle = false,
+        total_card_slots = 4,
+        always_cast_cards = {},  -- Player fills with their own cards
+        description = "Automatically fires every 2 seconds. Channel your rage!",
+    },
+
+    -- STORM WALKER: Bump-triggered wand
+    -- Fires when colliding with enemies, rewards melee playstyle
+    {
+        id = "STORM_WALKER",
+        name = "Storm Walker",
+        type = "trigger",
+        trigger_type = "on_bump_enemy",
+        max_uses = -1,
+        mana_max = 35,
+        mana_recharge_rate = 12,
+        cast_block_size = 2,
+        cast_delay = 50,
+        recharge_time = 300,
+        spread_angle = 15,
+        shuffle = false,
+        total_card_slots = 5,
+        always_cast_cards = {
+            "ACTION_CHAIN_LIGHTNING"  -- Lightning theme
+        },
+        description = "Triggers when you bump into enemies. Walk the storm!",
+    },
+
+    -- FROST ANCHOR: Stand-still triggered wand
+    -- Fires when player stands still, rewards defensive/positioning play
+    {
+        id = "FROST_ANCHOR",
+        name = "Frost Anchor",
+        type = "trigger",
+        trigger_type = "on_stand_still",
+        trigger_idle_threshold = 1.5,  -- 1.5 seconds of standing still
+        max_uses = -1,
+        mana_max = 60,
+        mana_recharge_rate = 6,
+        cast_block_size = 3,
+        cast_delay = 200,
+        recharge_time = 800,
+        spread_angle = 20,
+        shuffle = true,
+        total_card_slots = 6,
+        always_cast_cards = {
+            "ACTION_SLOW_ORB"  -- Ice/slow theme
+        },
+        description = "Triggers when you stand still. Plant your feet and unleash ice!",
+    },
+
+    -- SOUL SIPHON: Kill-triggered wand
+    -- Fires when killing enemies, rewards aggressive clearing
+    {
+        id = "SOUL_SIPHON",
+        name = "Soul Siphon",
+        type = "trigger",
+        trigger_type = "enemy_killed",
+        max_uses = -1,
+        mana_max = 50,
+        mana_recharge_rate = 5,
+        cast_block_size = 1,
+        cast_delay = 100,
+        recharge_time = 200,
+        spread_angle = 10,
+        shuffle = false,
+        total_card_slots = 4,
+        always_cast_cards = {},  -- Player fills, rewards builds
+        description = "Triggers when you kill an enemy. Harvest their souls!",
+    },
+
+    -- PAIN ECHO: Distance-traveled triggered wand
+    -- Fires after moving a certain distance, rewards mobile playstyle
+    {
+        id = "PAIN_ECHO",
+        name = "Pain Echo",
+        type = "trigger",
+        trigger_type = "on_distance_traveled",
+        trigger_distance = 150,  -- Fires every 150 pixels traveled
+        max_uses = -1,
+        mana_max = 30,
+        mana_recharge_rate = 10,
+        cast_block_size = 1,
+        cast_delay = 50,
+        recharge_time = 100,
+        spread_angle = 5,
+        shuffle = false,
+        total_card_slots = 3,
+        always_cast_cards = {},  -- Player fills
+        description = "Triggers as you move. Every step echoes with power!",
+    },
+
+    -- EMBER PULSE: Timer + AoE themed wand
+    -- Fires periodically with fire/AoE focus
+    {
+        id = "EMBER_PULSE",
+        name = "Ember Pulse",
+        type = "trigger",
+        trigger_type = "every_N_seconds",
+        trigger_interval = 3.0,  -- Fires every 3 seconds
+        max_uses = -1,
+        mana_max = 70,
+        mana_recharge_rate = 7,
+        cast_block_size = 2,
+        cast_delay = 150,
+        recharge_time = 600,
+        spread_angle = 30,  -- Wide spread for AoE feel
+        shuffle = true,
+        total_card_slots = 6,
+        always_cast_cards = {
+            "ACTION_EXPLOSIVE_FIRE_PROJECTILE"  -- Fire AoE theme
+        },
+        description = "Pulses fire every 3 seconds. Burn everything nearby!",
+    },
 }
 
 --------------------------------------------------------------------------------

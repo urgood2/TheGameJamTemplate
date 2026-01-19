@@ -146,6 +146,36 @@ function WandTriggers.register(wandId, triggerDef, executor, opts)
         registration.eventType = triggerType
         registration.healthThreshold = triggerDef.healthThreshold or 0.3  -- 30%
 
+    -- Phase 2 Demo Implementation: Status-based triggers
+    elseif triggerType == "on_apply_burn" then
+        registration.eventType = triggerType
+
+    elseif triggerType == "on_apply_freeze" then
+        registration.eventType = triggerType
+
+    elseif triggerType == "on_apply_doom" then
+        registration.eventType = triggerType
+
+    elseif triggerType == "on_apply_electrocute" then
+        registration.eventType = triggerType
+
+    elseif triggerType == "on_apply_poison" then
+        registration.eventType = triggerType
+
+    elseif triggerType == "on_apply_bleed" then
+        registration.eventType = triggerType
+
+    elseif triggerType == "on_apply_corrosion" then
+        registration.eventType = triggerType
+
+    -- Phase 2 Demo Implementation: Additional triggers
+    elseif triggerType == "on_player_damaged" then
+        registration.eventType = triggerType
+
+    elseif triggerType == "on_stand_still" then
+        registration.eventType = triggerType
+        registration.idleThreshold = triggerDef.idleThreshold or 2.0  -- 2 seconds default
+
     else
         log_debug("WandTriggers.register: unknown trigger type", triggerType)
     end
@@ -255,12 +285,27 @@ EVENT-BASED TRIGGERS
 --- Subscribes to game events
 function WandTriggers.subscribeToEvents()
     local eventNames = {
+        -- Core gameplay events
         "on_player_attack",
         "on_bump_enemy",
         "on_dash",
         "on_pickup",
         "on_low_health",
-        "enemy_killed"
+        "enemy_killed",
+
+        -- Phase 2 Demo Implementation: Status-based triggers
+        -- These fire when specific status effects are applied
+        "on_apply_burn",
+        "on_apply_freeze",
+        "on_apply_doom",
+        "on_apply_electrocute",
+        "on_apply_poison",
+        "on_apply_bleed",
+        "on_apply_corrosion",
+
+        -- Phase 2 Demo Implementation: Additional triggers
+        "on_player_damaged",  -- When player takes damage
+        "on_stand_still",     -- When player stands still for threshold time
     }
 
     for _, eventName in ipairs(eventNames) do
@@ -496,6 +541,7 @@ end
 --- @return string Display name
 function WandTriggers.getTriggerDisplayName(triggerType)
     local names = {
+        -- Core triggers
         every_N_seconds = "Every N Seconds",
         on_cooldown = "On Cooldown",
         on_player_attack = "On Player Attack",
@@ -504,6 +550,20 @@ function WandTriggers.getTriggerDisplayName(triggerType)
         on_distance_traveled = "On Distance Traveled",
         on_pickup = "On Pickup",
         on_low_health = "On Low Health",
+        enemy_killed = "On Enemy Killed",
+
+        -- Phase 2 Demo: Status-based triggers
+        on_apply_burn = "On Apply Burn",
+        on_apply_freeze = "On Apply Freeze",
+        on_apply_doom = "On Apply Doom",
+        on_apply_electrocute = "On Apply Electrocute",
+        on_apply_poison = "On Apply Poison",
+        on_apply_bleed = "On Apply Bleed",
+        on_apply_corrosion = "On Apply Corrosion",
+
+        -- Phase 2 Demo: Additional triggers
+        on_player_damaged = "On Player Damaged",
+        on_stand_still = "On Stand Still",
     }
 
     return names[triggerType] or triggerType

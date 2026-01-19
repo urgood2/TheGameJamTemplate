@@ -412,6 +412,225 @@ StatusEffects.fortify = {
 }
 
 --------------------------------------------------------------------------------
+-- NEW STATUS EFFECTS (Phase 1 Demo Implementation)
+--------------------------------------------------------------------------------
+
+StatusEffects.arcane_charge = {
+    id = "arcane_charge",
+    buff_type = true,
+    stack_mode = "count",
+    max_stacks = 10,
+    duration = 0,  -- Permanent until consumed
+
+    -- Each stack represents stored arcane energy
+    -- Consumed by abilities that scale with charges (e.g., wand effects, spells)
+    -- Consumption handled by: StatusEngine.remove(ctx, target, "arcane_charge", stacks_to_consume)
+    stat_mods_per_stack = {
+        spell_power = 5,
+    },
+
+    icon = "buff-arcane-charge.png",
+    icon_position = "above",
+    show_stacks = true,
+    shader = "arcane_glow",
+    shader_uniforms = { intensity = 0.3 },
+}
+
+StatusEffects.focused = {
+    id = "focused",
+    buff_type = true,
+    stack_mode = "replace",
+    max_stacks = 1,
+    duration = 5,
+
+    -- Concentration buff - increases accuracy and crit
+    stat_mods = {
+        offensive_ability = 50,
+        crit_chance = 15,
+    },
+
+    icon = "buff-focused.png",
+    icon_position = "above",
+    shader = "focus_outline",
+    shader_uniforms = { intensity = 0.4 },
+}
+
+--------------------------------------------------------------------------------
+-- ELEMENTAL FORM STATUS EFFECTS
+--------------------------------------------------------------------------------
+-- TODO: The `aura` field is defined for these forms but not yet processed by
+-- StatusEngine.tick(). Aura effects (applying statuses, damage, slow to nearby
+-- enemies) will need an aura tick system in gameplay.lua or combat_system.lua
+-- to become functional. For now, only stat_mods and visual effects (shader,
+-- particles) are active.
+
+StatusEffects.fireform = {
+    id = "fireform",
+    buff_type = true,
+    stack_mode = "replace",
+    max_stacks = 1,
+    duration = 15,
+
+    -- Fire form: increased fire damage, burn nearby enemies
+    stat_mods = {
+        fire_modifier_pct = 25,
+        fire_resistance = 50,
+    },
+    aura = {
+        radius = 80,
+        tick_interval = 1.0,
+        apply_status = "burning",
+        apply_stacks = 1,
+    },
+
+    icon = "form-fire.png",
+    icon_position = "above",
+    icon_scale = 0.8,
+    shader = "fire_aura",
+    shader_uniforms = { intensity = 0.7, color = { 1.0, 0.4, 0.1 } },
+
+    particles = function()
+        local Particles = require("core.particles")
+        return Particles.define()
+            :shape("circle")
+            :size(3, 6)
+            :color("orange", "red")
+            :velocity(20, 40)
+            :lifespan(0.3, 0.5)
+            :fade()
+    end,
+    particle_rate = 0.05,
+}
+
+StatusEffects.iceform = {
+    id = "iceform",
+    buff_type = true,
+    stack_mode = "replace",
+    max_stacks = 1,
+    duration = 15,
+
+    -- Ice form: increased cold damage, slow nearby enemies
+    stat_mods = {
+        cold_modifier_pct = 25,
+        cold_resistance = 50,
+        run_speed = -20,  -- Slower movement in ice form
+    },
+    aura = {
+        radius = 100,
+        tick_interval = 0.5,
+        slow = 30,  -- Slow nearby enemies by 30%
+    },
+
+    icon = "form-ice.png",
+    icon_position = "above",
+    icon_scale = 0.8,
+    shader = "ice_aura",
+    shader_uniforms = { intensity = 0.6, color = { 0.3, 0.7, 1.0 } },
+
+    particles = function()
+        local Particles = require("core.particles")
+        return Particles.define()
+            :shape("diamond")
+            :size(2, 4)
+            :color("cyan", "white")
+            :velocity(10, 25)
+            :lifespan(0.4, 0.6)
+            :fade()
+    end,
+    particle_rate = 0.08,
+}
+
+StatusEffects.stormform = {
+    id = "stormform",
+    buff_type = true,
+    stack_mode = "replace",
+    max_stacks = 1,
+    duration = 15,
+
+    -- Storm form: increased lightning damage, chain attacks
+    stat_mods = {
+        lightning_modifier_pct = 25,
+        lightning_resistance = 50,
+        attack_speed = 0.15,
+    },
+    aura = {
+        radius = 120,
+        tick_interval = 2.0,
+        damage = 15,
+        damage_type = "lightning",
+        chain = 2,  -- Chain to 2 targets
+    },
+
+    icon = "form-storm.png",
+    icon_position = "above",
+    icon_scale = 0.8,
+    shader = "electric_aura",
+    shader_uniforms = { intensity = 0.8, color = { 0.8, 0.8, 1.0 } },
+
+    particles = function()
+        local Particles = require("core.particles")
+        return Particles.define()
+            :shape("line")
+            :size(1, 3)
+            :color("white", "cyan")
+            :velocity(40, 80)
+            :lifespan(0.1, 0.2)
+            :fade()
+    end,
+    particle_rate = 0.03,
+}
+
+StatusEffects.voidform = {
+    id = "voidform",
+    buff_type = true,
+    stack_mode = "replace",
+    max_stacks = 1,
+    duration = 15,
+
+    -- Void form: increased aether damage, damage reduction, life drain
+    stat_mods = {
+        aether_modifier_pct = 25,
+        void_resistance = 50,
+        damage_taken_reduction_pct = 15,
+    },
+    aura = {
+        radius = 60,
+        tick_interval = 1.0,
+        damage = 10,
+        damage_type = "aether",
+        lifesteal = 0.5,  -- 50% of damage heals player
+    },
+
+    icon = "form-void.png",
+    icon_position = "above",
+    icon_scale = 0.8,
+    shader = "void_aura",
+    shader_uniforms = { intensity = 0.9, color = { 0.5, 0.1, 0.8 } },
+
+    particles = function()
+        local Particles = require("core.particles")
+        return Particles.define()
+            :shape("circle")
+            :size(2, 5)
+            :color("purple", "black")
+            :velocity(15, 30)
+            :lifespan(0.5, 0.8)
+            :fade()
+    end,
+    particle_rate = 0.06,
+}
+
+--------------------------------------------------------------------------------
+-- STATUS EFFECT ALIASES (for spec compatibility)
+--------------------------------------------------------------------------------
+
+-- Alias scorch to burning (same effect, different name)
+StatusEffects.scorch = StatusEffects.burning
+
+-- Alias freeze to frozen (same effect, different name)
+StatusEffects.freeze = StatusEffects.frozen
+
+--------------------------------------------------------------------------------
 -- HELPER FUNCTIONS
 --------------------------------------------------------------------------------
 

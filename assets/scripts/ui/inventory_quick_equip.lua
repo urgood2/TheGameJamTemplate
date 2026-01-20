@@ -48,6 +48,8 @@ local state = {
     initialized = false,
     playerInventoryModule = nil,  -- Will be lazy-loaded to avoid circular deps
     wandLoadoutModule = nil,      -- Will be lazy-loaded
+    signalHandlers = {},
+    lastHandledFrame = nil,
 }
 
 --------------------------------------------------------------------------------
@@ -233,6 +235,32 @@ end
 
 local hoveredCard = nil
 
+local function getRenderFrame()
+    if main_loop and main_loop.data and main_loop.data.renderFrame then
+        return main_loop.data.renderFrame
+    end
+    if globals and globals.frameCount then
+        return globals.frameCount
+    end
+    return nil
+end
+
+local function handleRightClick(cardEntity)
+    if not cardEntity or not registry:valid(cardEntity) then
+        return
+    end
+
+    local success, reason = QuickEquip.equipToWand(cardEntity)
+    if not success then
+        showEquipFeedback(cardEntity, reason)
+    end
+
+    local frame = getRenderFrame()
+    if frame then
+        state.lastHandledFrame = frame
+    end
+end
+
 local function resolveHoveredCard(inputState)
     if not inputState then return nil, nil end
 
@@ -285,6 +313,11 @@ end
 
 --- Check for right-click on hovered card
 local function checkRightClick()
+    local frame = getRenderFrame()
+    if frame and state.lastHandledFrame == frame then
+        return
+    end
+
     if not hoveredCard then return end
     if not registry:valid(hoveredCard) then
         hoveredCard = nil
@@ -325,11 +358,7 @@ local function checkRightClick()
 
     if rightClick or altClick or ctrlClick or cmdClick then
         log_debug("[QuickEquip] Right-click action on card: " .. tostring(hoveredCard))
-
-        local success, reason = QuickEquip.equipToWand(hoveredCard)
-        if not success then
-            showEquipFeedback(hoveredCard, reason)
-        end
+        handleRightClick(hoveredCard)
     end
 end
 
@@ -351,6 +380,17 @@ end
 function QuickEquip.init()
     if state.initialized then return end
 
+    state.lastHandledFrame = nil
+    state.signalHandlers.gridSlotClicked = function(gridEntity, slotIndex, button)
+        if button ~= "right" then return end
+        if not isPlayerInventoryGrid(gridEntity) then return end
+        local item = grid.getItemAtIndex(gridEntity, slotIndex)
+        if item and registry:valid(item) then
+            handleRightClick(item)
+        end
+    end
+    signal.register("grid_slot_clicked", state.signalHandlers.gridSlotClicked)
+
     -- Setup per-frame update timer
     timer.run_every_render_frame(function()
         QuickEquip.update()
@@ -363,6 +403,11 @@ end
 --- Cleanup
 function QuickEquip.destroy()
     timer.kill_group(TIMER_GROUP)
+    if state.signalHandlers.gridSlotClicked then
+        signal.remove("grid_slot_clicked", state.signalHandlers.gridSlotClicked)
+        state.signalHandlers.gridSlotClicked = nil
+    end
+    state.lastHandledFrame = nil
     state.initialized = false
     state.playerInventoryModule = nil
     state.wandLoadoutModule = nil

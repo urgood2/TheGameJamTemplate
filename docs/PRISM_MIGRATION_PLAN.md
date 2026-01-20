@@ -126,6 +126,7 @@ return {
 - [ ] `GridPositionComponent` added to ECS, no build errors
 - [ ] Unit test: Grid operations don't crash with out-of-bounds access
 - [ ] `GridWorld` reports out-of-bounds as blocked for movement/light
+- [ ] GridWorld occupancy operations are O(1) for get/set/clear
 
 ### Verification Checklist
 ```bash
@@ -1106,6 +1107,8 @@ See `src/systems/scripting/scripting_system.cpp:init_script()` for lifecycle det
 - Async action resolution
 - Damage/HP calculations (stub with placeholder)
 Add these AFTER vertical slice works.
+
+**Guardrail**: If Phase 2 exceeds 4 days, freeze new features and finish vertical slice checks first.
 
 ---
 

@@ -145,6 +145,7 @@ local state = {
     gridX = 0,
     gridY = 0,
     tabItems = {},
+    slotCountEntity = nil,
 }
 
 local function getLocalizedText(key, fallback)
@@ -156,6 +157,52 @@ local function getLocalizedText(key, fallback)
     end
     return fallback or key
 end
+
+local function getCardData(entity)
+    local data = state.cardRegistry[entity]
+    if data then
+        return data.cardData or data
+    end
+    if getScriptTableFromEntityID then
+        local script = getScriptTableFromEntityID(entity)
+        if script then
+            return script.cardData or script
+        end
+    end
+    return nil
+end
+
+local function isCardLocked(entity)
+    return state.lockedCards[entity] == true
+end
+
+local function setSlotCountText(text)
+    if not state.slotCountEntity and state.panelEntity and registry:valid(state.panelEntity) then
+        state.slotCountEntity = ui.box.GetUIEByID(registry, state.panelEntity, "slot_count_text")
+    end
+    if not state.slotCountEntity or not registry:valid(state.slotCountEntity) then return end
+
+    local uiText = component_cache.get(state.slotCountEntity, UITextComponent)
+    if uiText then
+        uiText.text = text
+        return
+    end
+
+    local uiCfg = component_cache.get(state.slotCountEntity, UIConfig)
+    if uiCfg and uiCfg.text ~= nil then
+        uiCfg.text = text
+    end
+end
+
+local function updateSlotCount(gridEntity)
+    local activeGrid = gridEntity or state.activeGrid
+    local used = activeGrid and grid.getUsedSlotCount(activeGrid) or 0
+    local capacity = activeGrid and grid.getCapacity(activeGrid) or 0
+    setSlotCountText(string.format("%d / %d", used, capacity))
+end
+
+local applySorting
+local toggleSort
 
 --------------------------------------------------------------------------------
 -- Debug Helper: Log box and root bounds
@@ -537,15 +584,93 @@ local function switchTab(tabId)
             local isActive = (id == tabId)
             local uiCfg = component_cache.get(btnEntity, UIConfig)
             if uiCfg and _G.util and _G.util.getColor then
-                uiCfg.color = isActive and _G.util.getColor("steel_blue") or _G.util.getColor("gray")
+                uiCfg.color = isActive and _G.util.getColor("green") or _G.util.getColor("gray")
             end
         end
     end
 
     log_debug("[PlayerInventory] Switched tab: " .. oldTab .. " -> " .. tabId)
+
+    updateSlotCount(state.activeGrid)
+    if state.sortField then
+        applySorting()
+    end
 end
 
 local CLOSE_BUTTON_SIZE = 24
+
+--------------------------------------------------------------------------------
+-- Sorting
+--------------------------------------------------------------------------------
+
+applySorting = function()
+    local activeGrid = state.activeGrid
+    if not state.sortField or not activeGrid then return end
+
+    local maxSlots = grid.getCapacity(activeGrid)
+    local items = grid.getItemList(activeGrid)
+    if not items or #items == 0 then return end
+
+    local itemsWithData = {}
+    for _, itemEntry in ipairs(items) do
+        local entity = itemEntry.item
+        if entity and registry:valid(entity) and not isCardLocked(entity) then
+            local cardData = getCardData(entity) or {}
+            table.insert(itemsWithData, {
+                entity = entity,
+                slotIndex = itemEntry.slot,
+                name = cardData.name or "",
+                cost = cardData.manaCost or cardData.cost or cardData.mana_cost or 0,
+            })
+        end
+    end
+
+    if #itemsWithData == 0 then return end
+
+    local sortKey = state.sortField
+    local ascending = state.sortAsc
+    table.sort(itemsWithData, function(a, b)
+        local valA = a[sortKey] or ""
+        local valB = b[sortKey] or ""
+        if ascending then
+            return valA < valB
+        else
+            return valA > valB
+        end
+    end)
+
+    for _, item in ipairs(itemsWithData) do
+        grid.removeItem(activeGrid, item.slotIndex)
+    end
+
+    local targetSlot = 1
+    for _, item in ipairs(itemsWithData) do
+        while targetSlot <= maxSlots do
+            local existingItem = grid.getItemAtIndex(activeGrid, targetSlot)
+            if not existingItem then
+                break
+            end
+            targetSlot = targetSlot + 1
+        end
+        if targetSlot <= maxSlots then
+            grid.addItem(activeGrid, item.entity, targetSlot)
+            targetSlot = targetSlot + 1
+        end
+    end
+
+    log_debug("[PlayerInventory] Sorted by " .. sortKey)
+    updateSlotCount(activeGrid)
+end
+
+toggleSort = function(sortKey)
+    if state.sortField == sortKey then
+        state.sortAsc = not state.sortAsc
+    else
+        state.sortField = sortKey
+        state.sortAsc = true
+    end
+    applySorting()
+end
 
 local function createHeader()
     -- Header width: panel content area = PANEL_WIDTH - 2*PANEL_PADDING
@@ -622,7 +747,8 @@ local function createTabs()
         table.insert(tabChildren, dsl.strict.button(cfg.label, {
             id = "tab_" .. tabId,
             fontSize = 10,
-            color = isActive and "steel_blue" or "gray",
+            padding = 7,
+            color = isActive and "green" or "gray",
             onClick = function()
                 switchTab(tabId)
             end,
@@ -645,11 +771,11 @@ end
 local function createFooter()
     return dsl.strict.hbox {
         config = {
-            color = "dark_lavender",
+            -- color = "dark_lavender",
             padding = { 4 },
             -- minWidth = GRID_WIDTH,
             -- minHeight = FOOTER_HEIGHT,
-            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
+            -- align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
         },
         children = {
             dsl.strict.button("Name", {
@@ -657,9 +783,10 @@ local function createFooter()
                 -- minWidth = 50,
                 -- minHeight = 24,
                 fontSize = 10,
-                color = "purple_slate",
+                padding = 6,
+                color = "green",
                 onClick = function()
-                    log_debug("[PlayerInventory] Sort by name clicked")
+                    toggleSort("name")
                 end,
             }),
             -- dsl.strict.spacer(4),
@@ -667,14 +794,15 @@ local function createFooter()
                 id = "sort_cost_btn",
                 -- minWidth = 50,
                 -- minHeight = 24,
+                padding = 6,
                 fontSize = 10,
-                color = "purple_slate",
+                color = "green",
                 onClick = function()
-                    log_debug("[PlayerInventory] Sort by cost clicked")
+                    toggleSort("cost")
                 end,
             }),
-            -- dsl.spacer(1),
-            dsl.text("0 / 18", { id = "slot_count_text", fontSize = 10, color = "light_gray" }),
+            dsl.spacer(15),
+            dsl.text("0 / 18", { id = "slot_count_text", fontSize = 14, color = "white" }),
         },
     }
 end
@@ -841,24 +969,34 @@ local function setupSignalHandlers()
             if playSoundEffect then
                 playSoundEffect("effects", "button-click")
             end
+            updateSlotCount(gridEntity)
         end
     end)
     
     registerHandler("grid_item_removed", function(gridEntity, slotIndex, itemEntity)
         if isOurGrid(gridEntity) then
             log_debug("[PlayerInventory] Item removed from slot " .. slotIndex)
+            updateSlotCount(gridEntity)
         end
     end)
     
     registerHandler("grid_item_moved", function(gridEntity, fromSlot, toSlot, itemEntity)
         if isOurGrid(gridEntity) then
             log_debug("[PlayerInventory] Item moved from slot " .. fromSlot .. " to " .. toSlot)
+            updateSlotCount(gridEntity)
         end
     end)
     
     registerHandler("grid_items_swapped", function(gridEntity, slot1, slot2, item1, item2)
         if isOurGrid(gridEntity) then
             log_debug("[PlayerInventory] Items swapped between slots " .. slot1 .. " and " .. slot2)
+            updateSlotCount(gridEntity)
+        end
+    end)
+
+    registerHandler("grid_resized", function(gridEntity, newRows, newCols, overflowItems)
+        if isOurGrid(gridEntity) then
+            updateSlotCount(gridEntity)
         end
     end)
 end
@@ -1027,6 +1165,8 @@ local function initializeInventory()
         state.grids[state.activeTab] = state.activeGrid
         restoreGridItems(state.activeTab, state.activeGrid)
     end
+
+    updateSlotCount(state.activeGrid)
     
     setupSignalHandlers()
     setupCardRenderTimer()
@@ -1057,6 +1197,8 @@ function PlayerInventory.open()
             restoreGridItems(state.activeTab, state.activeGrid)
         end
     end
+
+    updateSlotCount(state.activeGrid)
 
     setAllCardsVisible(false)
     if state.activeGrid then

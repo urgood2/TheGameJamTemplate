@@ -619,6 +619,7 @@ end
 ---@field tooltip? table Additional tooltip data
 ---@field disabled? boolean Disable button interaction (default: false)
 ---@field emboss? number 3D emboss depth in pixels (default: 2)
+---@field padding? number Internal padding around button content in pixels
 ---@field minWidth? number Minimum button width in pixels
 ---@field minHeight? number Minimum button height in pixels
 ---@field align? number AlignmentFlag bitmask for label alignment
@@ -670,6 +671,7 @@ function dsl.button(label, opts)
         config = {
             id             = opts.id,
             color          = color(opts.color or "gray"),
+            padding        = opts.padding,  -- Internal padding around button content
             hover          = opts.hover ~= false,
             canCollide     = true,
             buttonCallback = opts.onClick,

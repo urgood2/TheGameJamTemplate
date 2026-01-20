@@ -387,6 +387,10 @@ namespace input::lua_bindings {
         in.set_function("isGamepadEnabled", []() -> bool {
             return resolveInputState().hid.controller_enabled;
         });
+
+        in.set_function("getState", []() -> InputState& {
+            return resolveInputState();
+        });
         
         // TODO: need to expose the enums too
 
@@ -840,6 +844,14 @@ namespace input::lua_bindings {
             "updateCursorFocus",
             "---@return nil",
             "Update cursor focus based on current input state.",
+            /*is_static=*/true,
+            /*is_overload=*/false
+        });
+
+        rec.record_free_function(inputPath, MethodDef{
+            "getState",
+            "---@return InputState",
+            "Return the current input state snapshot.",
             /*is_static=*/true,
             /*is_overload=*/false
         });

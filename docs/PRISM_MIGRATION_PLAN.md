@@ -8,10 +8,15 @@ This plan adapts **PrismRL/prism** (a Lua roguelike engine for LÖVE) systems in
 
 **Baseline Assumptions**:
 - Your template has C++20, Raylib 5.5, EnTT registry, Sol2, Chipmunk2D, and LDtk integration working
-- Scripts attach via `registry:add_script(entity, lua_table)` pattern (as documented in claude.md)
+- Scripts attach via `script:attach_ecs { ... }` (data assigned before attach_ecs) per `claude.md`
 - Existing LOS algorithm (`src/systems/line_of_sight/line_of_sight.cpp`) is functional and reusable
 - You want a vertical slice (playable demo) within 5-7 days, full implementation deferred
 - Turn-based mode coexists with real-time physics (not a full engine overhaul)
+
+**Scope Boundaries**:
+- No UI/UX overhaul, no new renderer, no asset pipeline changes
+- No multiplayer/networking
+- No changes to core realtime combat systems outside the roguelike slice
 
 ---
 
@@ -50,9 +55,10 @@ This plan adapts **PrismRL/prism** (a Lua roguelike engine for LÖVE) systems in
 **Complexity**: M (Medium) | **Duration**: 1-2 days | **Critical Path**: YES
 
 ### Prerequisites
-- CMake project builds successfully with `just build-debug`
+- Project builds successfully with `just build-debug`
 - EnTT registry is created and accessible from Lua via `registry` global
-- Sol2 bindings working (verify: `lua -e "print(registry)"` succeeds in test script)
+- Sol2 bindings working (verify via a simple Lua test script)
+- Decide whether `GridWorld` lives in registry context or a global singleton
 
 ### What to Build
 
@@ -119,6 +125,7 @@ return {
 - [ ] Lua can call `grid.world_to_grid(16, 16, 16)` and get `{x=1, y=1}`
 - [ ] `GridPositionComponent` added to ECS, no build errors
 - [ ] Unit test: Grid operations don't crash with out-of-bounds access
+- [ ] `GridWorld` reports out-of-bounds as blocked for movement/light
 
 ### Verification Checklist
 ```bash
@@ -192,10 +199,11 @@ return {
 - [ ] `tile_defs.lua` loaded by Lua without errors
 - [ ] Tile blocking flags match LDtk IntGrid values (e.g., 1=wall=blocksMove=true)
 - [ ] No memory leaks or out-of-bounds access when loading 10x10 and 100x100 maps
+- [ ] GridWorld dimensions match LDtk level dimensions
 
 ### Verification Checklist
-```bash
-# Load sample LDtk level and check tile properties
+```lua
+-- Load sample LDtk level and check tile properties
 local map = require("roguelike.grid_map_from_ldtk")
 local tiles = map.load_ldtk("level1", "collision")
 assert(tiles:blocksMovement(1, 1) == false)  -- floor
@@ -212,8 +220,8 @@ assert(tiles:blocksMovement(0, 0) == true)   -- wall
 
 ### Prerequisites
 - Phase 0 and 1 complete and verified
-- Confirm `signal.emit()` and `signal.on()` working from lua/external/hump/signal.lua
-- Verify ScriptComponent lifecycle: init/update/destroy hooks working (check claude.md patterns)
+- Confirm `signal.emit()` and `signal.register()` working from `assets/scripts/external/hump/signal.lua`
+- Verify ScriptComponent lifecycle: init/update/destroy hooks working (check `claude.md` patterns)
 - Input system wired (arrow keys, action keys available)
 
 ### Architecture Decision
@@ -221,6 +229,9 @@ assert(tiles:blocksMovement(0, 0) == true)   -- wall
 **Hybrid C++/Lua approach**:
 - **C++ owns**: Scheduling, turn state, determinism
 - **Lua owns**: Action definitions, validation rules, game-specific logic
+
+### Missing Decision (Clarify Early)
+- Will actions be pure Lua tables, or Lua objects with metatables? Choose one and stick to it to avoid inconsistent behavior in Sol2 bindings.
 
 ### What to Build
 
@@ -365,6 +376,7 @@ void TurnSystem::update(entt::registry& reg, sol::state& lua) {
 - Use existing `core/timer.lua` for action animations
 - Use existing `signal` system for turn events
 - Player input routes through existing input system, but queues actions instead of direct movement
+- Reuse existing `LocationComponent` or decide to standardize on `GridPositionComponent` for roguelike entities
 
 ### Prism References
 - `engine/core/action.lua` - Action base class pattern
@@ -395,7 +407,8 @@ void TurnSystem::update(entt::registry& reg, sol::state& lua) {
 - [ ] Turn phases advance: AwaitingInput → Resolving → Animating → AwaitingInput
 - [ ] Multiple actors in registry all participate in turn order
 - [ ] Turn determinism: same seed + input sequence = same outcome (for testing)
-- [ ] Signals emit at correct times (capture with signal.on and count)
+- [ ] Signals emit at correct times (capture with signal.register and count)
+- [ ] No action executes twice in a single turn phase
 
 ### Verification Checklist
 ```bash
@@ -507,6 +520,7 @@ return RenderVisibility
 - [ ] Explored but not visible tiles render at 30% brightness
 - [ ] Never-explored tiles don't render (or render as black)
 - [ ] FOV updates correctly when player moves to adjacent tile
+- [ ] LOS respects wall tiles (no visibility through walls)
 
 ### Verification Checklist
 ```bash
@@ -530,6 +544,7 @@ return RenderVisibility
 - Phase 0 and 1 complete and verified
 - Review `include/fudge_pathfinding/astar_search.h` template - decide: use it or write from scratch
 - Verify ability to call C++ functions from Lua and return std::vector<GridCoord>
+- Define coordinate convention for path output (start excluded or included) and stick to it
 
 ### Key Insight
 You have `include/fudge_pathfinding/` headers. Use these or implement simple A* - grid pathfinding is straightforward.
@@ -1021,6 +1036,7 @@ END: Player defeated or quit
 - Turn order is deterministic (same seed = same turn order)
 - No crashes or undefined behavior
 - Runs at 60fps on desktop
+- No desync between grid position and render transform
 
 **Estimated Time**: 5-7 days of focused development
 
@@ -1031,7 +1047,7 @@ END: Player defeated or quit
 ### Risk 1: Two Coordinate Spaces
 **Problem**: Grid coords vs world/physics coords cause bugs (e.g., physics body moves but grid doesn't sync).
 
-**Solution**: 
+**Solution**:
 - Grid is authoritative for turn-based mode
 - MovementModeComponent { GridTurn | RealtimePhysics } per entity
 - Turn actors: disable Chipmunk physics body, use grid position only
@@ -1041,6 +1057,8 @@ END: Player defeated or quit
 **Decision Point**: Will this game use BOTH turn-based AND real-time entities simultaneously?
 - If YES: Implement MovementModeComponent as described
 - If NO: Assume all gameplay is turn-based, simplify (no dual-mode needed)
+
+**Failure Mode**: If both modes move the same entity in one frame, you will see jitter or double-moves. Enforce a single authoritative source per entity.
 
 ### Risk 2: Lua Script Initialization Order
 **Problem**: Data assigned after `registry:add_script()` is lost (per your CLAUDE.md).
@@ -1060,7 +1078,7 @@ script:attach_ecs { ... }          -- LAST
 See `src/systems/scripting/scripting_system.cpp:init_script()` for lifecycle details.
 
 ### Risk 3: LOS Algorithm Assumptions
-**Problem**: `src/systems/line_of_sight/line_of_sight.cpp` may assume global state or specific component layout.
+**Problem**: `src/systems/line_of_sight/line_of_sight.cpp` assumes globals (`globals::map`, `globals::getWorldWidth/Height`) and specific components, which may not match GridWorld.
 
 **Solution**: Before extending LOS:
 1. Review line_of_sight.cpp to identify all globals/assumptions
@@ -1073,6 +1091,11 @@ See `src/systems/scripting/scripting_system.cpp:init_script()` for lifecycle det
 4. If too tightly coupled, copy algorithm to `roguelike/fov_system.cpp` and adapt
 
 **Decision Point**: Can you refactor LOS to accept callbacks, or does it require full reimplementation?
+
+### Risk 5: Action/Animation Coupling
+**Problem**: If actions directly move transforms and also trigger animations, state can diverge (grid vs render).
+
+**Solution**: Make grid updates authoritative, and emit a signal like "actor_moved" for animation/FX layers to respond.
 
 ### Risk 4: Phase 2 Scope Creep
 **Problem**: Turn system touches scheduler, input, signals, animation - can explode to 2+ weeks.
@@ -1242,6 +1265,7 @@ local path = prism.astar(start, goal,
 - [ ] Bind grid helpers to Lua via Sol2
 - [ ] Unit test: grid operations (out-of-bounds checks, coordinate round-trip)
 - [ ] Build succeeds with no warnings
+- [ ] Lua can access `registry` and create a test entity via `script:attach_ecs { ... }`
 
 ### Phase 1: Map System
 - [ ] Implement LDtk IntGrid → GridWorld loader
@@ -1250,6 +1274,7 @@ local path = prism.astar(start, goal,
 - [ ] Test map loading with sample LDtk level (verify no crashes)
 - [ ] Verify occupancy tracking: same cell = error or replacement
 - [ ] Build + run test: load map, print tile at (5,5)
+- [ ] Decide how GridWorld stores tile flags vs tile type (bitmask vs enum) and document it
 
 ### Phase 2: Turn Core ⭐ CRITICAL
 - [ ] Implement TurnScheduler with energy accumulation + selection
@@ -1262,6 +1287,7 @@ local path = prism.astar(start, goal,
 - [ ] Test: single player can move around without energy resets
 - [ ] Test: turn determinism with seeded scheduler
 - [ ] Emit signals on turn events (use signal.emit)
+- [ ] Decide action execution context data shape (what ctx contains) and document it
 
 ### Phase 3: FOV System
 - [ ] Create VisionComponent and VisibilityMapComponent
@@ -1269,9 +1295,10 @@ local path = prism.astar(start, goal,
 - [ ] Implement FOVSystem::recompute() calling wrapped LOS
 - [ ] Mark tiles visible/explored in VisibilityMapComponent
 - [ ] Create `assets/scripts/roguelike/render_visibility.lua` for tinting
-- [ ] Hook FOV recompute to `signal_on("actor_moved", ...)`
+- [ ] Hook FOV recompute to `signal.register("actor_moved", ...)`
 - [ ] Test: FOV updates when player moves
 - [ ] Test: explored tiles stay visible but dimmed
+- [ ] Test: LOS respects blocking tiles from `GridWorld`
 
 ### Phase 4: Pathfinding
 - [ ] Decide: use `include/fudge_pathfinding/astar_search.h` or implement from scratch
@@ -1279,6 +1306,7 @@ local path = prism.astar(start, goal,
 - [ ] Expose `grid.find_path()` to Lua (returns table of steps)
 - [ ] Test: simple maze solving (no path, optimal path, diagonal handling)
 - [ ] Test: performance on 80x50 grid worst-case
+- [ ] Decide how to handle diagonal corner-cutting (disallow passing between two blocked orthogonals)
 
 ### Phase 5: Actors & Controllers
 - [ ] Create GridMovementComponent (moveCost, canDiagonal, blocksOthers)
@@ -1291,6 +1319,7 @@ local path = prism.astar(start, goal,
 - [ ] Test: player can move, enemies act on their turns
 - [ ] Test: turn order respects speed/energy
 - [ ] Test: enemy chases player when visible
+- [ ] Decide how to select player entity for AI context (tag component vs singleton in registry ctx)
 
 ### Vertical Slice Final Verification
 - [ ] Load tutorial LDtk map
@@ -1375,7 +1404,7 @@ When in doubt, ask these questions:
 [ ] Unit tests pass: just test
 [ ] Manual verification: run executable, test specific feature
 [ ] Document any gotchas in this plan
-[ ] Commit with clear message: "Phase N: <description>"
+[ ] Commit with clear message: "Phase N: <description>" (if you are committing)
 ```
 
 ### Before Claiming Vertical Slice Done

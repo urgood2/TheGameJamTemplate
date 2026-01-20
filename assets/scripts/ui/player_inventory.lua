@@ -107,6 +107,13 @@ local FOOTER_HEIGHT = 36
 local PANEL_PADDING = 10
 local PANEL_WIDTH = GRID_WIDTH + PANEL_PADDING * 2
 local PANEL_HEIGHT = HEADER_HEIGHT + TABS_HEIGHT + GRID_HEIGHT + FOOTER_HEIGHT + PANEL_PADDING * 2
+local PANEL_BASE_W = 224
+local PANEL_BASE_H = 192
+local PANEL_SCALE = 2
+local PANEL_MIN_WIDTH = PANEL_BASE_W * PANEL_SCALE
+local PANEL_MIN_HEIGHT = PANEL_BASE_H * PANEL_SCALE
+local PANEL_RENDER_WIDTH = math.max(PANEL_WIDTH, PANEL_MIN_WIDTH)
+local PANEL_RENDER_HEIGHT = math.max(PANEL_HEIGHT, PANEL_MIN_HEIGHT)
 local RENDER_LAYER = "ui"
 
 local PANEL_Z = 800
@@ -543,7 +550,7 @@ local CLOSE_BUTTON_SIZE = 24
 local function createHeader()
     -- Header width: panel content area = PANEL_WIDTH - 2*PANEL_PADDING
     -- But we need to account for the header's own padding
-    local headerContentWidth = PANEL_WIDTH - 2 * PANEL_PADDING
+    local headerContentWidth = PANEL_RENDER_WIDTH - 2 * PANEL_PADDING
     return dsl.hbox {
         config = {
             id = "inventory_header",
@@ -706,8 +713,8 @@ local function createPanelDefinition()
             -- Grid area is a child container; active grid is injected at runtime
             -- minHeight = HEADER_HEIGHT + TABS_HEIGHT + FOOTER_HEIGHT + PANEL_PADDING * 2,
             
-            minWidth = 224 * 2,
-            minHeight = 192 * 2,
+            minWidth = PANEL_RENDER_WIDTH,
+            minHeight = PANEL_RENDER_HEIGHT,
         },
         children = {
             createHeader(),
@@ -922,8 +929,8 @@ local function calculatePositions()
         return false
     end
 
-    state.panelX = (screenW - PANEL_WIDTH) / 2
-    state.panelY = screenH - PANEL_HEIGHT - 10
+    state.panelX = (screenW - PANEL_RENDER_WIDTH) / 2
+    state.panelY = screenH - PANEL_RENDER_HEIGHT
     state.gridX = state.panelX + PANEL_PADDING
     state.gridY = state.panelY + HEADER_HEIGHT + TABS_HEIGHT + PANEL_PADDING
 

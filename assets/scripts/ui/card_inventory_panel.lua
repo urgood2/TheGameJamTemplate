@@ -196,7 +196,8 @@ local function createGridForTab(tabId, x, y, visible)
         
         onSlotClick = function(gridEntity, slotIndex, button)
             -- Right-click to toggle lock
-            if button == 2 then -- Right mouse button
+            local rightButton = MouseButton and MouseButton.MOUSE_BUTTON_RIGHT or 1
+            if button == rightButton then
                 local item = grid.getItemAt(gridEntity, slotIndex)
                 if item and registry:valid(item) then
                     if not isCardLocked(item) then

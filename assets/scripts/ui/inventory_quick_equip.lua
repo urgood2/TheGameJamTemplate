@@ -32,6 +32,7 @@ local grid = require("core.inventory_grid")
 local transfer = require("core.grid_transfer")
 local component_cache = require("core.component_cache")
 local itemRegistry = require("core.item_location_registry")
+local InventoryGridInit = require("ui.inventory_grid_init")
 
 --------------------------------------------------------------------------------
 -- Constants
@@ -232,15 +233,46 @@ end
 
 local hoveredCard = nil
 
+local function resolveHoveredCard(inputState)
+    if not inputState then return nil, nil end
+
+    local hovered = inputState.cursor_hovering_target
+    if not (hovered and registry:valid(hovered)) then
+        hovered = inputState.current_designated_hover_target
+    end
+    if not (hovered and registry:valid(hovered)) then
+        return nil, nil
+    end
+
+    local location = itemRegistry.getLocation(hovered)
+    if location then
+        return hovered, location
+    end
+
+    if InventoryGridInit and InventoryGridInit.getSlotMetadata then
+        local meta = InventoryGridInit.getSlotMetadata(hovered)
+        if meta and meta.parentGrid and meta.slotIndex then
+            local item = grid.getItemAtIndex(meta.parentGrid, meta.slotIndex)
+            if item and registry:valid(item) then
+                return item, itemRegistry.getLocation(item)
+            end
+        end
+    end
+
+    return nil, nil
+end
+
 --- Update hover tracking for right-click detection
 local function updateHoverTracking()
     -- Get current hovered entity from input system
     local inputState = input and input.getState and input.getState()
-    local currentHovered = inputState and inputState.cursor_hovering_target
+    if not inputState and globals then
+        inputState = globals.inputState
+    end
+    local currentHovered, location = resolveHoveredCard(inputState)
 
     -- Only track if it's a card in player inventory
     if currentHovered and registry:valid(currentHovered) then
-        local location = itemRegistry.getLocation(currentHovered)
         if location and location.grid and isPlayerInventoryGrid(location.grid) then
             hoveredCard = currentHovered
         else

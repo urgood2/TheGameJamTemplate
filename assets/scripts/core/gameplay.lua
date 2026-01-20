@@ -428,6 +428,14 @@ local function isAltHeld()
     return input.isKeyDown(KeyboardKey.KEY_LEFT_ALT) or input.isKeyDown(KeyboardKey.KEY_RIGHT_ALT)
 end
 
+local function isCtrlHeld()
+    return input.isKeyDown(KeyboardKey.KEY_LEFT_CONTROL) or input.isKeyDown(KeyboardKey.KEY_RIGHT_CONTROL)
+end
+
+local function isCmdHeld()
+    return input.isKeyDown(KeyboardKey.KEY_LEFT_SUPER) or input.isKeyDown(KeyboardKey.KEY_RIGHT_SUPER)
+end
+
 local function beginAltPreview(entity)
     if card_ui_state.alt_entity == entity then return end
     if card_ui_state.alt_entity then
@@ -477,11 +485,14 @@ local function updateRightClickTransfer()
         card_ui_state.hovered_card = nil
         return
     end
-    -- Right-click OR Alt+Left-click triggers transfer
+    -- Right-click or modifier+left-click triggers transfer (ctrl/cmd helps mac)
+    local leftClick = input.isMousePressed(MouseButton.MOUSE_BUTTON_LEFT)
     local rightClick = input.isMousePressed(MouseButton.MOUSE_BUTTON_RIGHT)
-    local altClick = isAltHeld() and input.isMousePressed(MouseButton.MOUSE_BUTTON_LEFT)
-    if rightClick or altClick then
-        log_debug("[Transfer] Click detected (right:", rightClick, "altClick:", altClick, ") on card:", card_ui_state.hovered_card)
+    local altClick = isAltHeld() and leftClick
+    local ctrlClick = isCtrlHeld() and leftClick
+    local cmdClick = isCmdHeld() and leftClick
+    if rightClick or altClick or ctrlClick or cmdClick then
+        log_debug("[Transfer] Click detected (right:", rightClick, "altClick:", altClick, "ctrlClick:", ctrlClick, "cmdClick:", cmdClick, ") on card:", card_ui_state.hovered_card)
         local cardScript = getScriptTableFromEntityID(card_ui_state.hovered_card)
         if cardScript then
             log_debug("[Transfer] Card script found, currentBoard:", cardScript.currentBoardEntity)
@@ -2722,8 +2733,8 @@ function createNewCard(id, x, y, gameStateToApply)
     -- end
 
     nodeComp.methods.onClick = function(registry, clickedEntity)
-        cardScript.selected = not cardScript.selected
-        nodeComp.state.isBeingFocused = cardScript.selected
+        -- cardScript.selected = not cardScript.selected
+        -- nodeComp.state.isBeingFocused = cardScript.selected
     end
 
     nodeComp.methods.onRightClick = function(registry, clickedEntity)

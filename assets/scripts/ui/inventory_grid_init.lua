@@ -126,6 +126,17 @@ end
 --------------------------------------------------------------------------------
 
 local _slotMetadata = {}
+local _itemRightClickWrapper = {}
+
+local function emitSlotClick(gridEntity, slotIndex, buttonName, buttonCode)
+    signal.emit("grid_slot_clicked", gridEntity, slotIndex, buttonName, {})
+    if grid.getCallbacks then
+        local callbacks = grid.getCallbacks(gridEntity)
+        if callbacks and callbacks.onSlotClick then
+            callbacks.onSlotClick(gridEntity, slotIndex, buttonCode)
+        end
+    end
+end
 
 function InventoryGridInit.setupSlotInteraction(gridEntity, slotEntity, slotIndex)
     local go = component_cache.get(slotEntity, GameObject)
@@ -136,6 +147,7 @@ function InventoryGridInit.setupSlotInteraction(gridEntity, slotEntity, slotInde
     go.state.collisionEnabled = true
     go.state.hoverEnabled = true
     go.state.triggerOnReleaseEnabled = true
+    go.state.rightClickEnabled = true
     
     if add_state_tag then
         add_state_tag(slotEntity, "default_state")
@@ -154,8 +166,15 @@ function InventoryGridInit.setupSlotInteraction(gridEntity, slotEntity, slotInde
         InventoryGridInit.handleItemDrop(gridEntity, slotIndex, dragged)
     end
     
+    local leftButton = MouseButton and MouseButton.MOUSE_BUTTON_LEFT or 0
+    local rightButton = MouseButton and MouseButton.MOUSE_BUTTON_RIGHT or 1
+
     go.methods.onClick = function(reg, entity)
-        signal.emit("grid_slot_clicked", gridEntity, slotIndex, "left", {})
+        emitSlotClick(gridEntity, slotIndex, "left", leftButton)
+    end
+
+    go.methods.onRightClick = function(reg, entity)
+        emitSlotClick(gridEntity, slotIndex, "right", rightButton)
     end
 end
 
@@ -603,9 +622,28 @@ function InventoryGridInit.makeItemDraggable(itemEntity, gridEntity)
     go.state.dragEnabled = true
     go.state.collisionEnabled = true
     go.state.hoverEnabled = true
+    go.state.rightClickEnabled = true
 
     -- Store initial grid reference
     InventoryGridInit.updateDraggableGridRef(itemEntity, gridEntity)
+
+    local key = tostring(itemEntity)
+    if go.methods.onRightClick ~= _itemRightClickWrapper[key] then
+        local existingOnRightClick = go.methods.onRightClick
+        local rightButton = MouseButton and MouseButton.MOUSE_BUTTON_RIGHT or 1
+        local wrapper = function(reg, entity)
+            local location = itemRegistry.getLocation(entity)
+            if location and location.grid and location.slot then
+                emitSlotClick(location.grid, location.slot, "right", rightButton)
+                return
+            end
+            if existingOnRightClick then
+                existingOnRightClick(reg, entity)
+            end
+        end
+        _itemRightClickWrapper[key] = wrapper
+        go.methods.onRightClick = wrapper
+    end
 
     -- Setup drag start handler
     local existingOnDrag = go.methods.onDrag

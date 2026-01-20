@@ -3,6 +3,7 @@
 #include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 #include "systems/input/input_functions.hpp"
 #include "systems/ui/ui_data.hpp"
+#include "systems/ui/box.hpp"
 #include "core/engine_context.hpp"
 #include "systems/main_loop_enhancement/main_loop.hpp"
 #include "sol/types.hpp"
@@ -68,6 +69,10 @@ void NavManager::pop_layer() {
     if (!layerStack.empty()) {
         std::string newActiveLayer = layerStack.back();
         set_active_layer(newActiveLayer);
+
+        // Clear previous restored focus; repopulate if we have a saved state
+        lastRestoredFocus.entity = entt::null;
+        lastRestoredFocus.group.clear();
 
         // Restore focus for the newly active layer
         for (const auto& state : layerFocusStack) {
@@ -248,7 +253,7 @@ void NavManager::navigate(entt::registry& reg, input::InputState& state, const s
     // Validate current focused target, switch if needed to next available
     //---------------------------------------------------------------------
     if (reg.valid(state.cursor_focused_target) &&
-    !entity_gamestate_management::isEntityActive(state.cursor_focused_target))
+    !entity_gamestate_management::isEntityActive(reg, state.cursor_focused_target))
     {
         // Try to find next available entry
         auto& entries = g.entries;
@@ -256,7 +261,7 @@ void NavManager::navigate(entt::registry& reg, input::InputState& state, const s
         if (it != entries.end()) {
             auto nextIt = std::next(it);
             while (nextIt != entries.end() && 
-                (!reg.valid(*nextIt) || !entity_gamestate_management::isEntityActive(*nextIt)))
+                (!reg.valid(*nextIt) || !entity_gamestate_management::isEntityActive(reg, *nextIt)))
                 ++nextIt;
             if (nextIt != entries.end())
                 state.cursor_focused_target = *nextIt;
@@ -594,7 +599,7 @@ void NavManager::scroll_into_view(entt::registry& reg, entt::entity e) {
     float entityTop = entityTransform->getActualY();
     float entityBottom = entityTop + entityTransform->getActualH();
     float paneTop = paneTransform->getActualY();
-    float paneBottom = paneTop + scroll->viewportSize.y;
+    float oldOffset = scroll->offset;
 
     // Adjust scroll offset to ensure entity is visible
     // Account for current scroll offset in visibility check
@@ -611,8 +616,22 @@ void NavManager::scroll_into_view(entt::registry& reg, entt::entity e) {
         scroll->offset = std::clamp(scroll->offset, scroll->minOffset, scroll->maxOffset);
     }
 
-    // Update show timer so scrollbar is visible
-    scroll->showUntilT = main_loop::getTime() + scroll->showSeconds;
+    if (scroll->offset != oldOffset) {
+        // Update show timer so scrollbar is visible
+        scroll->showUntilT = main_loop::getTime() + scroll->showSeconds;
+
+        // Apply displacement to children (match mouse wheel behavior)
+        ui::box::TraverseUITreeBottomUp(
+            reg, paneRef->pane,
+            [&](entt::entity child) {
+                auto &go = reg.get<transform::GameObject>(child);
+                go.scrollPaneDisplacement = Vector2{0.f, -scroll->offset};
+            },
+            true
+        );
+
+        scroll->prevOffset = scroll->offset;
+    }
 }
 
 void NavManager::scroll_group(entt::registry& reg, const std::string& group, float deltaX, float deltaY) {
@@ -629,6 +648,8 @@ void NavManager::scroll_group(entt::registry& reg, const std::string& group, flo
         auto* scroll = reg.try_get<ui::UIScrollComponent>(paneRef->pane);
         if (!scroll) continue;
 
+        float oldOffset = scroll->offset;
+
         // Apply scroll delta
         if (scroll->vertical) {
             scroll->offset = std::clamp(scroll->offset - deltaY, scroll->minOffset, scroll->maxOffset);
@@ -638,8 +659,22 @@ void NavManager::scroll_group(entt::registry& reg, const std::string& group, flo
             // For now, we only support vertical
         }
 
-        // Update show timer
-        scroll->showUntilT = main_loop::getTime() + scroll->showSeconds;
+        if (scroll->offset != oldOffset) {
+            // Update show timer
+            scroll->showUntilT = main_loop::getTime() + scroll->showSeconds;
+
+            // Apply displacement to children (match mouse wheel behavior)
+            ui::box::TraverseUITreeBottomUp(
+                reg, paneRef->pane,
+                [&](entt::entity child) {
+                    auto &go = reg.get<transform::GameObject>(child);
+                    go.scrollPaneDisplacement = Vector2{0.f, -scroll->offset};
+                },
+                true
+            );
+
+            scroll->prevOffset = scroll->offset;
+        }
         return; // Only scroll the first found pane
     }
 }

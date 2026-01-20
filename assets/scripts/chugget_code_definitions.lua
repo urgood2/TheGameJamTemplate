@@ -1175,7 +1175,7 @@ Entity = {
 NavManagerUD = {
     update = nil,  -- ---@param dt number
     validate = nil,  -- ---@param self NavManagerUD
----@return nil
+---@return string @Empty if valid, error messages otherwise
     debug_print_state = nil,  -- ---@param self NavManagerUD
 ---@return nil
     create_group = nil,  -- ---@param name string
@@ -1194,12 +1194,6 @@ NavManagerUD = {
 ---@param enabled boolean
     is_entity_enabled = nil,  -- ---@param e entt.entity
 ---@return boolean
-    -- Explicit neighbor navigation overrides (per-element)
-    set_neighbors = nil,  -- ---@param e entt.entity
----@param neighbors {up?: entt.entity, down?: entt.entity, left?: entt.entity, right?: entt.entity}
-    get_neighbors = nil,  -- ---@param e entt.entity
----@return {up?: entt.entity, down?: entt.entity, left?: entt.entity, right?: entt.entity}
-    clear_neighbors = nil,  -- ---@param e entt.entity
     navigate = nil,  -- ---@param group string
 ---@param dir 'L'|'R'|'U'|'D'
     select_current = nil,  -- ---@param group string
@@ -8764,15 +8758,60 @@ function controller_nav.select_current(...) end
 function controller_nav.set_entity_enabled(...) end
 
 ---
+--- Get the group name for an entity (O(1) lookup). Returns empty string if not found.
+---
+---@param e entt.entity
+---@return string
+function controller_nav.get_group_for_entity(...) end
+
+---
+--- Set explicit navigation neighbors for an entity (overrides spatial/linear navigation).
+---
+---@param e entt.entity
+---@param neighbors {up?: entt.entity, down?: entt.entity, left?: entt.entity, right?: entt.entity}
+---@return nil
+function controller_nav.set_neighbors(...) end
+
+---
+--- Get explicit navigation neighbors for an entity.
+---
+---@param e entt.entity
+---@return {up?: entt.entity, down?: entt.entity, left?: entt.entity, right?: entt.entity}
+function controller_nav.get_neighbors(...) end
+
+---
+--- Clear explicit navigation neighbors for an entity.
+---
+---@param e entt.entity
+---@return nil
+function controller_nav.clear_neighbors(...) end
+
+---
+--- Scroll the parent scroll pane to ensure the entity is visible.
+---
+---@param e entt.entity
+---@return nil
+function controller_nav.scroll_into_view(...) end
+
+---
+--- Apply scroll delta to the scroll pane containing the group's entities.
+---
+---@param group string
+---@param deltaX number
+---@param deltaY number
+---@return nil
+function controller_nav.scroll_group(...) end
+
+---
 --- Print debug info on groups/layers.
 ---
 ---@return nil
 function controller_nav.debug_print_state(...) end
 
 ---
---- Validate layer/group configuration.
+--- Validate layer/group configuration. Returns empty string if valid.
 ---
----@return nil
+---@return string @Empty if valid, error messages otherwise
 function controller_nav.validate(...) end
 
 ---
@@ -8814,11 +8853,38 @@ function controller_nav.set_group_mode(...) end
 function controller_nav.set_wrap(...) end
 
 ---
+--- Configure input repeat behavior. initialDelay is the delay before first repeat, repeatRate is the time between repeats, acceleration (<1) speeds up repeats over time.
+---
+---@param config {initialDelay?: number, repeatRate?: number, minRepeatRate?: number, acceleration?: number}
+---@return nil
+function controller_nav.set_repeat_config(...) end
+
+---
+--- Get the current input repeat configuration.
+---
+---@return {initialDelay: number, repeatRate: number, minRepeatRate: number, acceleration: number}
+function controller_nav.get_repeat_config(...) end
+
+---
 --- Force cursor focus to a specific entity. Note that this does not affect the navigation state, and may be overridden on next navigation action.
 ---
 ---@param e entt.entity
 ---@return nil
 function controller_nav.focus_entity(...) end
+
+---
+--- Record the current focus entity and group for the active layer. Call this before pushing a new layer (e.g., modal) to enable focus restoration when that layer is popped.
+---
+---@param e entt.entity
+---@param group string
+---@return nil
+function controller_nav.record_focus_for_layer(...) end
+
+---
+--- Get the focus state that was restored after the last pop_layer(). Returns entity and group of what was focused before the modal was opened.
+---
+---@return {entity?: entt.entity, group: string}
+function controller_nav.get_restored_focus(...) end
 
 ---
 --- Update cursor focus based on current input state.

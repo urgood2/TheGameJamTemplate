@@ -35,6 +35,7 @@ if not ok then
     print("[ERROR] Failed to load InventoryGridDemo: " .. tostring(InventoryGridDemo))
     InventoryGridDemo = nil
 end
+local ControllerNavDemo = require("demos.controller_nav_demo")
 -- Represents game loop main module
 main = main or {}
 
@@ -569,7 +570,7 @@ end
 function createTabDemo()
     print("[TRACE] createTabDemo called")
     local dsl = require("ui.ui_syntax_sugar")
-    local panelWidth = 420  -- Increased to fit 6 tabs (Game, Graphics, Audio, Sprites, Inventory, Gallery)
+    local panelWidth = 490  -- Increased to fit 7 tabs (Game, Graphics, Audio, Sprites, Inventory, Gallery, Controller)
     local gallerySafeMargins = {
         left = 24,
         right = panelWidth + 40,
@@ -587,7 +588,7 @@ function createTabDemo()
             dsl.strict.tabs {
                 id = "demo_tabs",
                 activeTab = "game",
-                contentMinWidth = 400,  -- Increased to fit 6 tabs
+                contentMinWidth = 470,  -- Increased to fit 7 tabs
                 contentMinHeight = 120,
                 tabs = {
                     {
@@ -732,6 +733,56 @@ function createTabDemo()
                                             print("[GALLERY] Showcase gallery closed")
                                         end
                                     }),
+                                }
+                            }
+                        end
+                    },
+                    {
+                        id = "controller",
+                        label = "Controller",
+                        content = function()
+                            return dsl.strict.vbox {
+                                config = { padding = 8 },
+                                children = {
+                                    dsl.strict.text("Controller Navigation Demo", { fontSize = 16, color = "white", shadow = true }),
+                                    dsl.strict.spacer(8),
+                                    dsl.strict.text("Comprehensive demo of the", { fontSize = 12, color = "gray_light" }),
+                                    dsl.strict.text("controller navigation system:", { fontSize = 12, color = "gray_light" }),
+                                    dsl.strict.spacer(4),
+                                    dsl.strict.text("- Spatial navigation (grid)", { fontSize = 11, color = "lime" }),
+                                    dsl.strict.text("- Explicit neighbors", { fontSize = 11, color = "lime" }),
+                                    dsl.strict.text("- Group linking", { fontSize = 11, color = "lime" }),
+                                    dsl.strict.text("- Scroll-into-view", { fontSize = 11, color = "lime" }),
+                                    dsl.strict.text("- Input repeat acceleration", { fontSize = 11, color = "lime" }),
+                                    dsl.strict.text("- Modal layers + focus restore", { fontSize = 11, color = "lime" }),
+                                    dsl.strict.text("- Validation system", { fontSize = 11, color = "lime" }),
+                                    dsl.strict.spacer(12),
+                                    dsl.strict.button("Start Demo", {
+                                        fontSize = 14,
+                                        color = "green_jade",
+                                        textColor = "white",
+                                        minWidth = 140,
+                                        onClick = function()
+                                            if playSoundEffect then playSoundEffect("effects", "button-click") end
+                                            ControllerNavDemo.start()
+                                            print("[CONTROLLER NAV] Demo started")
+                                        end
+                                    }),
+                                    dsl.strict.spacer(4),
+                                    dsl.strict.button("Stop Demo", {
+                                        fontSize = 14,
+                                        color = "indian_red",
+                                        textColor = "white",
+                                        minWidth = 140,
+                                        onClick = function()
+                                            if playSoundEffect then playSoundEffect("effects", "button-click") end
+                                            ControllerNavDemo.stop()
+                                            print("[CONTROLLER NAV] Demo stopped")
+                                        end
+                                    }),
+                                    dsl.strict.spacer(8),
+                                    dsl.strict.text("Use WASD/Arrows to navigate", { fontSize = 10, color = "cyan" }),
+                                    dsl.strict.text("Enter/Space to select, Tab to switch groups", { fontSize = 10, color = "cyan" }),
                                 }
                             }
                         end
@@ -887,6 +938,7 @@ function clearMainMenu()
 
     -- RenderGroupsTest.cleanup()
     InventoryGridDemo.cleanup()
+    ControllerNavDemo.stop() -- Clean up controller nav demo if running
 
     if mainMenuEntities.special_item_1 then mainMenuEntities.special_item_1:destroy(); mainMenuEntities.special_item_1 = nil end
     if mainMenuEntities.special_item_2 then mainMenuEntities.special_item_2:destroy(); mainMenuEntities.special_item_2 = nil end

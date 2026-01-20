@@ -165,6 +165,7 @@ end
 
 ---@class TimerForTimeOpts
 ---@field delay number|{[1]: number, [2]: number} Duration to run action
+---@field duration number|{[1]: number, [2]: number} Alternate name for delay
 ---@field action fun(dt: number) Action called each frame with dt
 ---@field after fun()? Callback after duration completes
 ---@field tag string? Timer tag for cancellation
@@ -214,9 +215,10 @@ end
 ---@param opts TimerForTimeOpts
 ---@return string tag The timer tag
 function timer.for_time_opts(opts)
-    assert(opts.delay, "timer.for_time_opts: delay required")
+    local duration = opts.delay or opts.duration
+    assert(duration, "timer.for_time_opts: delay or duration required")
     assert(opts.action, "timer.for_time_opts: action required")
-    return timer.for_time(opts.delay, opts.action, opts.after, opts.tag, opts.group)
+    return timer.for_time(duration, opts.action, opts.after, opts.tag, opts.group)
 end
 
 --- Create a new TimerChain for fluent sequential timing

@@ -95,8 +95,8 @@ local GRID_COLS = 6
 local GRID_PADDING = 6
 local TAB_MARKER_WIDTH = 64
 local TAB_MARKER_HEIGHT = 64
-local TAB_MARKER_OFFSET_X = 8
-local TAB_MARKER_OFFSET_Y = -64
+local TAB_MARKER_OFFSET_X = 10
+local TAB_MARKER_OFFSET_Y = -60
 
 local GRID_WIDTH = GRID_COLS * SLOT_WIDTH + (GRID_COLS - 1) * SLOT_SPACING + GRID_PADDING * 2
 local GRID_HEIGHT = GRID_ROWS * SLOT_HEIGHT + (GRID_ROWS - 1) * SLOT_SPACING + GRID_PADDING * 2
@@ -547,7 +547,7 @@ local function createHeader()
     return dsl.hbox {
         config = {
             id = "inventory_header",
-            color = "dark_lavender",
+            -- color = "dark_lavender",
             -- emboss = 2,
             padding = 8,
             minWidth = headerContentWidth,
@@ -565,7 +565,9 @@ local function createHeader()
             dsl.strict.button("X", {
                 id = "close_btn",
                 fontSize = 12,
-                color = "dark_red",
+                color = "red",
+                minWidth = CLOSE_BUTTON_SIZE,
+                minHeight = CLOSE_BUTTON_SIZE,
                 onClick = function()
                     local PlayerInventory = require("ui.player_inventory")
                     PlayerInventory.close()
@@ -626,7 +628,7 @@ local function createTabs()
 
     return dsl.strict.hbox {
         config = {
-            color = "blackberry",
+            -- color = "blackberry",
             padding = 4,
         },
         children = tabChildren,
@@ -684,14 +686,28 @@ local function createGridContainer()
 end
 
 local function createPanelDefinition()
-    return dsl.strict.root {
+    return dsl.strict.spritePanel {
+        
+        -- sprite = "inventory-back-panel.png",
+        -- borders = { 0, 0, 0, 0 },  -- No nine-patch stretching
+        -- sizing = "stretch",        -- Stretch to fill minWidth/minHeight
+        -- config = {
+        --     id = PANEL_ID,
+        --     padding = PANEL_PADDING,
+        --     minWidth = BASE_W * SCALE,
+        --     minHeight = BASE_H * SCALE,
+        -- },
+        sprite = "inventory-back-panel.png",
+        borders = { 0,0,0,0 },  -- Nine-patch borders (left, top, right, bottom)
+        sizing = "stretch",  
         config = {
             id = PANEL_ID,
-            color = "blackberry",
             padding = PANEL_PADDING,
-            emboss = 3,
             -- Grid area is a child container; active grid is injected at runtime
             -- minHeight = HEADER_HEIGHT + TABS_HEIGHT + FOOTER_HEIGHT + PANEL_PADDING * 2,
+            
+            minWidth = 224 * 2,
+            minHeight = 192 * 2,
         },
         children = {
             createHeader(),

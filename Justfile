@@ -689,3 +689,11 @@ audio-process-dry:
 # Force reprocess all audio files
 audio-process-force:
 	python3 scripts/process_audio.py --force
+
+# =============================================================================
+# AI Coding Assistants
+# =============================================================================
+
+# Run OpenAI Codex CLI
+codex *args:
+	codex {{args}}

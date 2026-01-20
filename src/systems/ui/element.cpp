@@ -239,6 +239,14 @@ namespace ui
             transform->setActualH(transformReference.h);
         }
 
+        if (recalculate)
+        {
+            transform::SnapVisualTransformValues(&registry, entity);
+            auto &snapTransform = registry.get<transform::Transform>(entity);
+            snapTransform.updateCachedValues(true);
+            snapTransform.markDirty();
+        }
+
         auto &node = registry.get<transform::GameObject>(entity);
 
         // Handle button-related properties

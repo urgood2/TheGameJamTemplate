@@ -259,7 +259,7 @@ local function checkRightClick()
         return
     end
 
-    -- Check for right-click
+    -- Check for right-click (Raylib detection)
     local rightClick = input and input.isMousePressed and input.isMousePressed(MouseButton.MOUSE_BUTTON_RIGHT)
 
     -- Also support Alt+Left-click as alternative
@@ -267,20 +267,32 @@ local function checkRightClick()
         input.isKeyDown(KeyboardKey.KEY_LEFT_ALT) or
         input.isKeyDown(KeyboardKey.KEY_RIGHT_ALT)
     )
-    local altClick = altHeld and input.isMousePressed(MouseButton.MOUSE_BUTTON_LEFT)
+    local leftClick = input and input.isMousePressed and input.isMousePressed(MouseButton.MOUSE_BUTTON_LEFT)
+    local altClick = altHeld and leftClick
 
     -- Ctrl+Left-click or Cmd+Left-click for Mac support
     -- (macOS uses Ctrl+Click as right-click alternative, Cmd+Click is also common)
-    local modifierHeld = input and input.isKeyDown and (
+    local ctrlHeld = input and input.isKeyDown and (
         input.isKeyDown(KeyboardKey.KEY_LEFT_CONTROL) or
-        input.isKeyDown(KeyboardKey.KEY_RIGHT_CONTROL) or
-        input.isKeyDown(KeyboardKey.KEY_LEFT_SUPER) or   -- Cmd key on Mac, Win key on Windows
+        input.isKeyDown(KeyboardKey.KEY_RIGHT_CONTROL)
+    )
+    local cmdHeld = input and input.isKeyDown and (
+        input.isKeyDown(KeyboardKey.KEY_LEFT_SUPER) or
         input.isKeyDown(KeyboardKey.KEY_RIGHT_SUPER)
     )
-    local modifierClick = modifierHeld and input.isMousePressed(MouseButton.MOUSE_BUTTON_LEFT)
+    local ctrlClick = ctrlHeld and leftClick
+    local cmdClick = cmdHeld and leftClick
 
-    if rightClick or altClick or modifierClick then
-        log_debug("[QuickEquip] Right-click detected on card: " .. tostring(hoveredCard))
+    -- Debug: log when any modifier is detected with a click
+    if leftClick and (ctrlHeld or cmdHeld or altHeld) then
+        log_debug("[QuickEquip] Modifier+click: ctrl=" .. tostring(ctrlHeld) .. " cmd=" .. tostring(cmdHeld) .. " alt=" .. tostring(altHeld))
+    end
+    if rightClick then
+        log_debug("[QuickEquip] Native right-click detected")
+    end
+
+    if rightClick or altClick or ctrlClick or cmdClick then
+        log_debug("[QuickEquip] Right-click action on card: " .. tostring(hoveredCard))
 
         local success, reason = QuickEquip.equipToWand(hoveredCard)
         if not success then

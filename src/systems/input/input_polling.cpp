@@ -157,8 +157,18 @@ void poll_all_inputs(entt::registry& reg, InputState& state, float dt, EngineCon
     bool mouseLeftDownCurrentFrame = provider.is_mouse_button_down(MOUSE_LEFT_BUTTON);
     bool mouseRightDownCurrentFrame = provider.is_mouse_button_down(MOUSE_RIGHT_BUTTON);
 
-    bool mouseDetectDownFirstFrameLeft = mouseLeftDownCurrentFrame && !s_mouseLeftDownLastFrame;
-    bool mouseDetectDownFirstFrameRight = mouseRightDownCurrentFrame && !s_mouseRightDownLastFrame;
+    // Mac right-click emulation: Ctrl+Left-click or Cmd+Left-click acts as right-click
+    // This is standard Mac behavior that Raylib/GLFW doesn't handle automatically
+    bool ctrlHeld = IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
+    bool cmdHeld = IsKeyDown(KEY_LEFT_SUPER) || IsKeyDown(KEY_RIGHT_SUPER);
+    bool emulatedRightClick = mouseLeftDownCurrentFrame && (ctrlHeld || cmdHeld);
+
+    // If emulating right-click, don't treat as left-click
+    bool effectiveLeftDown = mouseLeftDownCurrentFrame && !emulatedRightClick;
+    bool effectiveRightDown = mouseRightDownCurrentFrame || emulatedRightClick;
+
+    bool mouseDetectDownFirstFrameLeft = effectiveLeftDown && !s_mouseLeftDownLastFrame;
+    bool mouseDetectDownFirstFrameRight = effectiveRightDown && !s_mouseRightDownLastFrame;
 
     if (mouseDetectDownFirstFrameLeft) {
         hid::reconfigure_device_info(reg, state, InputDeviceInputCategory::MOUSE);
@@ -174,15 +184,16 @@ void poll_all_inputs(entt::registry& reg, InputState& state, float dt, EngineCon
         bus.publish(events::MouseClicked{mousePos, MOUSE_RIGHT_BUTTON});
     }
 
-    if (!mouseLeftDownCurrentFrame && s_mouseLeftDownLastFrame) {
-        // Left button release
+    if (!effectiveLeftDown && s_mouseLeftDownLastFrame) {
+        // Left button release (or switched to emulated right-click)
         hid::reconfigure_device_info(reg, state, InputDeviceInputCategory::MOUSE);
         Vector2 mousePos = globals::getScaledMousePositionCached();
         cursor_events::process_left_release(reg, state, mousePos.x, mousePos.y, ctx);
     }
 
-    s_mouseLeftDownLastFrame = mouseLeftDownCurrentFrame;
-    s_mouseRightDownLastFrame = mouseRightDownCurrentFrame;
+    // Track effective states for next frame comparison
+    s_mouseLeftDownLastFrame = effectiveLeftDown;
+    s_mouseRightDownLastFrame = effectiveRightDown;
 
     // ----------------
     // Mouse Movement

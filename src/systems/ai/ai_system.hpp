@@ -41,6 +41,20 @@ namespace ai_system
 
     extern void replan(entt::entity entity);
 
+    /**
+     * Replan for an explicit goal without invoking goal selectors.
+     *
+     * This is used for hierarchical GOAP where subgoals need to be pushed
+     * without triggering the normal goal selection process.
+     *
+     * @param entity The entity to replan for
+     * @param explicit_goal The goal state to plan towards
+     * @param merge_with_current If true, merge explicit_goal with current goal.
+     *                           If false, replace current goal entirely.
+     */
+    extern void replan_to_goal(entt::entity entity, const worldstate_t& explicit_goal,
+                               bool merge_with_current = false);
+
     extern void debugPrintGOAPStruct(GOAPComponent &goapStruct);
 
     void runWorldStateUpdaters(GOAPComponent &goapStruct, entt::entity &entity);

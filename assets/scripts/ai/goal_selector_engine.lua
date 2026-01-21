@@ -108,6 +108,11 @@ function M.select_and_apply(e)
 
   dbg("Best goal=%s (band=%s, pre=%.2f)", best.id, best.band, best.pre)
 
+  -- Phase 1.2: Report goal selection to trace buffer for debugging
+  -- Convert pre-score to integer percentage (0-100)
+  local score = math.floor((best.pre or 0) * 100)
+  ai.report_goal_selection(e, best.id, best.band, score, cand)
+
   -- Apply only if goal changed
   if current ~= best.id then
     if current and is_goal_locked(e, current) then

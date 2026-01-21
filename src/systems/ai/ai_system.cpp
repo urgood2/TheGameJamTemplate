@@ -34,6 +34,7 @@
 
 #include "../../util/common_headers.hpp"
 #include "util/error_handling.hpp"
+#include "goap_utils.hpp"
 
 namespace ai_system
 {
@@ -459,7 +460,12 @@ namespace ai_system
         runBlackboardInitFunction(globals::getRegistry(), entity, identifier);
     }
 
-    void load_actions_from_lua(GOAPComponent &comp, actionplanner_t &planner)
+    /**
+     * Load actions from Lua definition into GOAP planner.
+     *
+     * @return true if loading succeeded, false on failure (atom cap exceeded, exception, etc.)
+     */
+    bool load_actions_from_lua(GOAPComponent &comp, actionplanner_t &planner)
     {
         try {
             sol::table actions = comp.def["actions"];
@@ -482,14 +488,33 @@ namespace ai_system
                     allPostconditionsForEveryAction[name][post_key.as<std::string>()] = post_val.as<bool>();
                 }
             }
+
+            // Phase 0.3: Validate atom count - early return on failure to prevent UB
+            if (!ai::validate_atom_count(planner)) {
+                SPDLOG_ERROR("GOAP atom count ({}) exceeds safe limit ({}). "
+                             "Actions NOT loaded. Reduce the number of unique atoms.",
+                             planner.numatoms, ai::get_safe_atom_cap());
+                return false;  // Don't increment version, signal failure
+            }
+
+            // Phase 0.4: Increment actionset version ONLY on complete success
+            comp.actionset_version++;
+            return true;
         } catch (const sol::error& e) {
             SPDLOG_ERROR("Lua error in load_actions_from_lua: {}", e.what());
+            return false;  // Version not incremented on exception
         } catch (const std::exception& e) {
             SPDLOG_ERROR("Exception in load_actions_from_lua: {}", e.what());
+            return false;  // Version not incremented on exception
         }
     }
 
-    void load_worldstate_from_lua(GOAPComponent &comp,
+    /**
+     * Load worldstate (initial state and goal) from Lua definition.
+     *
+     * @return true if loading succeeded, false on failure (unknown type, atom cap exceeded)
+     */
+    bool load_worldstate_from_lua(GOAPComponent &comp,
                                   const std::string &creature_type,
                                   actionplanner_t &planner,
                                   worldstate_t &initial,
@@ -500,7 +525,7 @@ namespace ai_system
         if (!maybe_def)
         {
             SPDLOG_ERROR("Unknown creature_type '{}'", creature_type);
-            return;
+            return false;  // Don't increment version
         }
         sol::table def = *maybe_def;
 
@@ -520,6 +545,18 @@ namespace ai_system
             auto value = kv.second.as<bool>();
             goap_worldstate_set(&planner, &goal, key.c_str(), value);
         }
+
+        // Phase 0.3: Validate atom count - early return on failure to prevent UB
+        if (!ai::validate_atom_count(planner)) {
+            SPDLOG_ERROR("GOAP atom count ({}) exceeds safe limit ({}) for type '{}'. "
+                         "Worldstate NOT loaded. Reduce the number of unique atoms.",
+                         planner.numatoms, ai::get_safe_atom_cap(), creature_type);
+            return false;  // Don't increment version, signal failure
+        }
+
+        // Phase 0.4: Increment atom schema version ONLY on complete success
+        comp.atom_schema_version++;
+        return true;
     }
 
     void initGOAPComponent(entt::registry& registry, entt::entity entity,
@@ -557,11 +594,22 @@ namespace ai_system
 
         // the rest of your classic setup:
         goap_actionplanner_clear(&goap.ap);
-        load_actions_from_lua(goap, goap.ap);
-        load_worldstate_from_lua(goap, type,
-                                 goap.ap,
-                                 goap.current_state,
-                                 goap.goal);
+
+        // Load actions and worldstate - abort initialization if either fails
+        if (!load_actions_from_lua(goap, goap.ap)) {
+            SPDLOG_ERROR("initGOAPComponent failed for entity {} type '{}': actions load failed",
+                        static_cast<int>(entity), type);
+            goap.dirty = true;  // Mark as needing replan (won't work without valid actions)
+            return;
+        }
+
+        if (!load_worldstate_from_lua(goap, type, goap.ap, goap.current_state, goap.goal)) {
+            SPDLOG_ERROR("initGOAPComponent failed for entity {} type '{}': worldstate load failed",
+                        static_cast<int>(entity), type);
+            goap.dirty = true;  // Mark as needing replan
+            return;
+        }
+
         goap.type = type;
         runBlackboardInitFunction(entity, type); // Initialize the blackboard for this entity type
         select_goal(entity);
@@ -1745,6 +1793,222 @@ namespace ai_system
                                  "---@param dir string\n"
                                  "---@return string[]",
                                  "Returns a list of Lua script filenames (without extensions) from the specified directory."});
+
+        // Phase 1.2: Goal selection breakdown reporting
+        ai.set_function("report_goal_selection",
+            [](entt::entity e, const std::string& goal_name, const std::string& band,
+               sol::optional<int> score, sol::optional<sol::table> candidates) {
+                auto& registry = globals::getRegistry();
+                if (!registry.valid(e) || !registry.any_of<GOAPComponent>(e)) {
+                    SPDLOG_WARN("ai.report_goal_selection called for invalid entity or entity without GOAPComponent");
+                    return;
+                }
+
+                auto& goap = registry.get<GOAPComponent>(e);
+                uint32_t eid = static_cast<uint32_t>(e);
+
+                // Record the goal selection event
+                ai::trace_goal_selected(goap.trace_buffer, eid, goal_name, band,
+                                        score.value_or(0));
+
+                // If candidates table is provided, log extra debug info
+                if (candidates) {
+                    std::string candidate_info;
+                    for (auto& [k, v] : candidates.value()) {
+                        if (v.get_type() == sol::type::table) {
+                            sol::table c = v.as<sol::table>();
+                            std::string cid = c.get_or("id", std::string("?"));
+                            std::string cband = c.get_or("band", std::string("?"));
+                            double cpre = c.get_or("pre", 0.0);
+                            if (!candidate_info.empty()) candidate_info += ", ";
+                            candidate_info += cid + "(" + cband + ":" +
+                                              std::to_string(static_cast<int>(cpre * 100)) + "%)";
+                        }
+                    }
+                    if (!candidate_info.empty()) {
+                        SPDLOG_DEBUG("Goal selection for entity {}: {} candidates: {}",
+                                     eid, goal_name, candidate_info);
+                    }
+                }
+            });
+
+        rec.record_method("ai", {"report_goal_selection",
+                                 "---@param e Entity\n"
+                                 "---@param goal_name string\n"
+                                 "---@param band string\n"
+                                 "---@param score integer?\n"
+                                 "---@param candidates table?\n"
+                                 "---@return nil",
+                                 "Reports a goal selection to the AI trace buffer for debugging."});
+
+        // Phase 1.2: Get trace buffer contents for debugging
+        ai.set_function("get_trace_events",
+            [&](sol::this_state L, entt::entity e, sol::optional<int> count) -> sol::object {
+                auto& registry = globals::getRegistry();
+                if (!registry.valid(e) || !registry.any_of<GOAPComponent>(e)) {
+                    return sol::make_object(L, sol::lua_nil);
+                }
+
+                auto& goap = registry.get<GOAPComponent>(e);
+                size_t n = count.value_or(10);
+                auto events = goap.trace_buffer.get_recent(n);
+
+                sol::table result = sol::state_view(L).create_table();
+                int idx = 1;
+                for (const auto& event : events) {
+                    sol::table entry = sol::state_view(L).create_table();
+                    entry["type"] = ai::trace_event_type_name(event.type);
+                    entry["message"] = event.message;
+                    entry["timestamp"] = event.timestamp;
+                    entry["entity_id"] = event.entity_id;
+
+                    // Include extra_data if present
+                    if (!event.extra_data.empty()) {
+                        sol::table extra = sol::state_view(L).create_table();
+                        for (const auto& [k, v] : event.extra_data) {
+                            extra[k] = v;
+                        }
+                        entry["extra_data"] = extra;
+                    }
+
+                    result[idx++] = entry;
+                }
+                return sol::make_object(L, result);
+            });
+
+        rec.record_method("ai", {"get_trace_events",
+                                 "---@param e Entity\n"
+                                 "---@param count integer?\n"
+                                 "---@return table[]|nil",
+                                 "Returns the most recent trace events for the entity (default 10)."});
+
+        // Phase 1.2: Clear trace buffer
+        ai.set_function("clear_trace",
+            [](entt::entity e) {
+                auto& registry = globals::getRegistry();
+                if (!registry.valid(e) || !registry.any_of<GOAPComponent>(e)) {
+                    return;
+                }
+                auto& goap = registry.get<GOAPComponent>(e);
+                goap.trace_buffer.clear();
+            });
+
+        rec.record_method("ai", {"clear_trace",
+                                 "---@param e Entity\n"
+                                 "---@return nil",
+                                 "Clears the entity's AI trace buffer."});
+
+        // Phase 1.3: List all entities with GOAPComponent for AI inspector
+        ai.set_function("list_goap_entities",
+            [&](sol::this_state L) -> sol::object {
+                sol::state_view lua(L);
+                auto& registry = globals::getRegistry();
+                auto view = registry.view<GOAPComponent>();
+
+                sol::table result = lua.create_table();
+                int idx = 1;
+                for (auto entity : view) {
+                    result[idx++] = entity;
+                }
+                return result;
+            });
+
+        rec.record_method("ai", {"list_goap_entities",
+                                 "---@return Entity[]\n",
+                                 "Returns a list of all entities with GOAPComponent."});
+
+        // Phase 1.3: Get GOAP state summary for AI inspector
+        ai.set_function("get_goap_state",
+            [&](sol::this_state L, entt::entity e) -> sol::object {
+                sol::state_view lua(L);
+                auto& registry = globals::getRegistry();
+                if (!registry.valid(e) || !registry.any_of<GOAPComponent>(e)) {
+                    return sol::make_object(L, sol::lua_nil);
+                }
+
+                auto& goap = registry.get<GOAPComponent>(e);
+                sol::table result = lua.create_table();
+
+                // Basic state info
+                result["type"] = goap.type;
+                result["dirty"] = goap.dirty;
+                result["plan_size"] = goap.planSize;
+                result["current_action_idx"] = goap.current_action;
+                result["retries"] = goap.retries;
+                result["max_retries"] = goap.max_retries;
+
+                // Current plan (array of action names)
+                sol::table plan = lua.create_table();
+                for (int i = 0; i < goap.planSize && i < 64; ++i) {
+                    if (goap.plan[i]) {
+                        plan[i + 1] = goap.plan[i];
+                    }
+                }
+                result["plan"] = plan;
+
+                // Current action being executed
+                if (!goap.actionQueue.empty()) {
+                    result["current_action"] = goap.actionQueue.front().name;
+                    result["action_running"] = goap.actionQueue.front().is_running;
+                } else {
+                    result["current_action"] = sol::make_object(L, sol::lua_nil);
+                    result["action_running"] = false;
+                }
+
+                // Action queue size
+                result["queue_size"] = goap.actionQueue.size();
+
+                // World state atoms
+                sol::table atoms = lua.create_table();
+                for (int i = 0; i < goap.ap.numatoms; ++i) {
+                    if (goap.ap.atm_names[i]) {
+                        sol::table atom = lua.create_table();
+                        atom["name"] = goap.ap.atm_names[i];
+
+                        // Current state value
+                        bool isDontCare = (goap.current_state.dontcare & (1LL << i)) != 0;
+                        if (isDontCare) {
+                            atom["current"] = "dontcare";
+                        } else {
+                            atom["current"] = ((goap.current_state.values & (1LL << i)) != 0);
+                        }
+
+                        // Goal value
+                        bool goalDontCare = (goap.goal.dontcare & (1LL << i)) != 0;
+                        if (goalDontCare) {
+                            atom["goal"] = "dontcare";
+                        } else {
+                            atom["goal"] = ((goap.goal.values & (1LL << i)) != 0);
+                        }
+
+                        atoms[i + 1] = atom;
+                    }
+                }
+                result["atoms"] = atoms;
+                result["num_atoms"] = goap.ap.numatoms;
+
+                // Current goal from blackboard (using std::any storage)
+                if (goap.blackboard.contains("current_goal")) {
+                    try {
+                        result["current_goal"] = goap.blackboard.get<std::string>("current_goal");
+                    } catch (...) {
+                        result["current_goal"] = sol::make_object(L, sol::lua_nil);
+                    }
+                } else {
+                    result["current_goal"] = sol::make_object(L, sol::lua_nil);
+                }
+
+                // Versioning info
+                result["actionset_version"] = goap.actionset_version;
+                result["atom_schema_version"] = goap.atom_schema_version;
+
+                return result;
+            });
+
+        rec.record_method("ai", {"get_goap_state",
+                                 "---@param e Entity\n"
+                                 "---@return table|nil\n",
+                                 "Returns a table with GOAP state info for debugging, or nil if entity has no GOAPComponent."});
     }
 
     // Update the GOAP logic within the game loop
@@ -1764,6 +2028,10 @@ namespace ai_system
         bool plan_is_running_valid = execute_current_action(entity);
         bool is_goap_info_valid = goap_is_goapstruct_valid(goapStruct);
 
+        // Phase 0.1 fix: Snapshot state AFTER action execution but BEFORE updaters
+        // This allows us to distinguish action postcondition changes from updater changes
+        worldstate_t state_after_action = goapStruct.current_state;
+
         runWorldStateUpdaters(goapStruct, entity);
 
         // Check if re-planning is necessary based on action failure or mismatch with expected state / plan is empty
@@ -1775,9 +2043,10 @@ namespace ai_system
         // if plan is running, but the world state has changed since the plan was made, then replan
         else if ((plan_is_running_valid && goapStruct.current_action < goapStruct.planSize))
         {
-            // Compute changed bits since last tick (ignore dontcare bits on both sides)
-            bfield_t relevant = ~(goapStruct.current_state.dontcare | goapStruct.cached_current_state.dontcare);
-            bfield_t changed  = (goapStruct.current_state.values ^ goapStruct.cached_current_state.values) & relevant;
+            // Phase 0.1 fix: Only detect changes from world state updaters, not from action postconditions
+            // This prevents spurious replans when an action legitimately changes watched atoms
+            bfield_t changed = ai::compute_replan_changed_bits(
+                state_after_action, goapStruct.current_state, goapStruct.cached_current_state);
 
             bool should_replan = false;
 
@@ -1991,6 +2260,9 @@ namespace ai_system
 
             fill_action_queue_based_on_plan(entity, goapStruct.plan, goapStruct.planSize);
 
+            // Phase 0.2: Store the state when this plan was created, for drift detection
+            goapStruct.plan_start_state = goapStruct.current_state;
+
             // update cached state
             goapStruct.cached_current_state = goapStruct.current_state;
         }
@@ -1999,6 +2271,57 @@ namespace ai_system
             SPDLOG_ERROR("Call to replan() produced no plan for entity {}.", static_cast<int>(entity));
 
             handle_no_plan(entity); // Call a function to handle this scenario
+        }
+    }
+
+    /**
+     * Phase 0.5: Replan for an explicit goal without invoking goal selectors.
+     */
+    void replan_to_goal(entt::entity entity, const worldstate_t& explicit_goal,
+                        bool merge_with_current)
+    {
+        auto &goapStruct = globals::getRegistry().get<GOAPComponent>(entity);
+
+        // Set the goal - either replace entirely or merge with current
+        if (merge_with_current) {
+            goapStruct.goal = ai::merge_goal_state(goapStruct.goal, explicit_goal);
+        } else {
+            goapStruct.goal = explicit_goal;
+        }
+
+        // Use the existing replan logic
+        goapStruct.planSize = globals::MAX_ACTIONS;
+        goapStruct.planCost = astar_plan(&goapStruct.ap, goapStruct.current_state, goapStruct.goal,
+                                         goapStruct.plan, goapStruct.states, &goapStruct.planSize);
+
+        if (goapStruct.planCost == 0)
+        {
+            SPDLOG_ERROR("replan_to_goal: No plan found for entity {}.", static_cast<int>(entity));
+            char desc[4096];
+            goap_worldstate_description(&goapStruct.ap, &goapStruct.current_state, desc, sizeof(desc));
+            SPDLOG_DEBUG("Current state: {}", desc);
+            goap_worldstate_description(&goapStruct.ap, &goapStruct.goal, desc, sizeof(desc));
+            SPDLOG_DEBUG("Target goal: {}", desc);
+        }
+        else
+        {
+            SPDLOG_INFO("replan_to_goal: PLAN FOUND for entity {} ({} steps)", static_cast<int>(entity), goapStruct.planSize);
+        }
+
+        goapStruct.current_action = 0;
+        goapStruct.retries = 0;
+        checkAndSetGOAPDirty(goapStruct, globals::MAX_ACTIONS);
+
+        if (goapStruct.dirty == false)
+        {
+            fill_action_queue_based_on_plan(entity, goapStruct.plan, goapStruct.planSize);
+            goapStruct.plan_start_state = goapStruct.current_state;
+            goapStruct.cached_current_state = goapStruct.current_state;
+        }
+        else
+        {
+            SPDLOG_ERROR("replan_to_goal: produced no plan for entity {}.", static_cast<int>(entity));
+            handle_no_plan(entity);
         }
     }
 

@@ -82,6 +82,7 @@ struct GOAPComponent
     worldstate_t cached_current_state; // for keeping track of the current state & any changes made to it
     worldstate_t current_state;
     worldstate_t goal;
+    worldstate_t plan_start_state;     // Phase 0.2: State when plan was created, for drift detection
     const char* plan[64];
     worldstate_t states[64];
     std::string type{"NONE"}; // type of the entity, used to determine which blackboard init function to call
@@ -92,13 +93,20 @@ struct GOAPComponent
     int max_retries = 3; // Maximum number of retries before re-planning
     bool dirty = true; // If the plan is dirty/unintialized and needs to be re-planned
 
+    // Phase 0.4: Versioning for safe plan caching
+    uint32_t actionset_version = 0;     // Incremented when actions are modified/reloaded
+    uint32_t atom_schema_version = 0;   // Incremented when atom definitions change
+
+    // Phase 1.1: Debug trace buffer for AI decisions
+    ai::AITraceBuffer trace_buffer;
+
     Blackboard blackboard;
 
     // queue created from a goap plan
     std::queue<Action> actionQueue;
 
     sol::table def; // Lua table to store loaded goap AI data (ai directory under scripts), which can be customized per entity.
-    
+
     sol::coroutine currentUpdateCoroutine;
 };
 

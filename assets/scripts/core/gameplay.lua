@@ -48,6 +48,7 @@ local ui_modules = {
     CombatDebugPanel = require("ui.combat_debug_panel"),
     UIOverlayToggles = require("ui.ui_overlay_toggles"),
     EntityInspector = require("ui.entity_inspector"),
+    AIInspector = require("ui.ai_inspector"),
     WandResourceBar = require("ui.wand_resource_bar_ui"),
     TooltipV2 = require("ui.tooltip_v2"),
 }
@@ -106,6 +107,7 @@ local gameplay_cfg = {
     enable_joker_debug_panel = false,
     enable_cast_debug_panel = false,
     enable_entity_inspector = true,
+    enable_ai_inspector = true,
     enable_content_debug_panel = true,
     enable_tag_synergy_panel = true,
     enable_combat_debug_panel = true,
@@ -8764,6 +8766,9 @@ if gameplay_cfg.debugQuickAccessState.lastMessage then
         if ImGui.Button("Toggle Entity Inspector") then
             ui_modules.EntityInspector.toggle()
         end
+        if ImGui.Button("Toggle AI Inspector") then
+            ui_modules.AIInspector.toggle()
+        end
     end
     ImGui.End() -- Must be called even if Begin() returns false
 
@@ -8787,6 +8792,11 @@ if gameplay_cfg.debugQuickAccessState.lastMessage then
     -- Entity Inspector Panel (inspect entity components at runtime)
     if ui_modules.EntityInspector and ui_modules.EntityInspector.render then
         ui_modules.EntityInspector.render()
+    end
+
+    -- AI Inspector Panel (inspect GOAP AI entities and trace buffer)
+    if ui_modules.AIInspector and ui_modules.AIInspector.render then
+        ui_modules.AIInspector.render()
     end
 end
 

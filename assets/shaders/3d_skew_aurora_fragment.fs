@@ -65,6 +65,13 @@ vec2 rotate(vec2 uv, vec2 pivotPt, float angle)
     return uv;
 }
 
+// 2D rotation matrix helper
+mat2 rotate2d(float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return mat2(c, -s, s, c);
+}
+
 vec2 getSpriteUV(vec2 uv) {
     vec2 pixelUV   = uv * uImageSize;
     vec2 spriteLoc = pixelUV - uGridRect.xy;

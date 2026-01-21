@@ -1,0 +1,553 @@
+[2026-01-20 22:00:51.520] [combined] [warning] This is a warning message.
+[2026-01-20 22:00:51.520] [combined] [error] This is an error message.
+[2026-01-20 22:00:52.931] [combined] [error] [localization.cpp:45] Failed to open font JSON file: localization/fonts.json
+[2026-01-20 22:00:52.931] [combined] [error] [localization.cpp:45] Failed to open font JSON file: localization/fonts.json
+[2026-01-20 22:00:53.372] [combined] [warning] [general] [dsl.strict.text] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/kyoto/assets/scripts/ui/player_inventory.lua:689:
+  WARNING: unknown field 'padding' 
+[2026-01-20 22:00:53.372] [combined] [warning] [general] [dsl.strict.button] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/kyoto/assets/scripts/ui/player_inventory.lua:747:
+  WARNING: unknown field 'padding' 
+[2026-01-20 22:00:53.372] [combined] [warning] [general] [dsl.strict.button] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/kyoto/assets/scripts/ui/player_inventory.lua:747:
+  WARNING: unknown field 'padding' 
+[2026-01-20 22:00:53.372] [combined] [warning] [general] [dsl.strict.button] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/kyoto/assets/scripts/ui/player_inventory.lua:747:
+  WARNING: unknown field 'padding' 
+[2026-01-20 22:00:53.372] [combined] [warning] [general] [dsl.strict.button] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/kyoto/assets/scripts/ui/player_inventory.lua:747:
+  WARNING: unknown field 'padding' 
+[2026-01-20 22:00:53.372] [combined] [warning] [general] [dsl.strict.button] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/kyoto/assets/scripts/ui/player_inventory.lua:747:
+  WARNING: unknown field 'padding' 
+[2026-01-20 22:00:53.373] [combined] [warning] [general] [dsl.strict.button] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/kyoto/assets/scripts/ui/player_inventory.lua:781:
+  WARNING: unknown field 'padding' 
+[2026-01-20 22:00:53.373] [combined] [warning] [general] [dsl.strict.button] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/kyoto/assets/scripts/ui/player_inventory.lua:793:
+  WARNING: unknown field 'padding' 
+[2026-01-20 22:00:53.373] [combined] [warning] [general] [dsl.strict.spritePanel] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/kyoto/assets/scripts/ui/player_inventory.lua:1119:
+  WARNING: unknown field 'config' 
+[2026-01-20 22:00:55.323] [combined] [warning] [box.cpp:1881] GetGroup called with invalid entity
+[2026-01-20 22:01:02.945] [combined] [warning] [box.cpp:1881] GetGroup called with invalid entity
+[2026-01-20 22:01:03.967] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:03.967] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:03.967] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:03.967] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:03.967] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:04.053] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:04.053] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:04.053] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:04.053] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:04.053] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:04.158] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:04.158] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:04.158] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:04.158] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:04.158] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:04.264] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:04.264] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:04.264] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:04.264] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:04.264] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:04.348] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:04.348] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:04.348] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:04.348] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:04.348] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:04.452] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:04.452] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:04.452] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:04.452] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:04.452] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:04.556] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:04.556] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:04.556] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:04.556] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:04.556] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:04.658] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:04.658] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:04.658] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:04.658] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:04.658] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:04.761] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:04.761] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:04.761] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:04.761] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:04.761] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:04.864] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:04.864] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:04.864] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:04.864] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:04.864] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:04.966] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:04.966] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:04.966] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:04.966] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:04.966] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:05.048] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:05.048] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:05.048] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:05.048] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:05.048] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:05.152] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:05.152] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:05.152] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:05.152] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:05.152] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:05.258] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:05.258] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:05.258] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:05.258] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:05.258] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:05.363] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:05.363] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:05.363] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:05.363] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:05.363] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:05.449] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:05.449] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:05.449] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:05.449] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:05.449] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:05.557] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:05.557] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:05.557] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:05.557] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:05.557] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:05.665] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:05.665] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:05.665] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:05.665] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:05.665] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:05.749] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:05.749] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:05.749] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:05.749] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:05.749] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:05.872] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:05.872] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:05.872] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:05.872] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:05.872] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:05.958] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:05.958] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:05.958] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:05.958] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:05.958] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:06.060] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:06.060] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:06.060] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:06.060] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:06.060] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:06.164] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:06.164] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:06.164] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:06.164] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:06.164] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:06.249] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:06.249] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:06.249] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:06.249] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:06.249] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:06.354] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:06.354] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:06.354] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:06.354] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:06.354] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:06.461] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:06.461] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:06.461] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:06.461] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:06.461] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:06.568] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:06.568] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:06.568] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:06.568] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:06.568] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:06.653] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:06.653] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:06.653] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:06.653] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:06.653] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:06.759] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:06.760] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:06.760] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:06.760] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:06.760] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:06.863] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:06.863] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:06.863] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:06.863] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:06.863] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:06.948] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:06.948] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:06.948] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:06.948] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:06.948] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:07.061] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:07.061] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:07.061] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:07.061] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:07.061] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:07.164] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:07.164] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:07.164] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:07.164] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:07.164] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:07.248] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:07.248] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:07.248] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:07.248] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:07.248] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:07.351] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:07.351] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:07.351] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:07.351] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:07.351] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:07.454] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:07.454] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:07.454] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:07.454] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:07.454] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:07.556] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:07.556] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:07.556] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:07.556] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:07.556] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:07.664] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:07.664] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:07.664] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:07.664] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:07.664] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:07.768] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:07.768] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:07.768] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:07.768] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:07.768] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:07.852] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:07.852] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:07.853] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:07.853] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:07.853] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:07.956] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:07.957] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:07.957] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:07.957] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:07.957] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:08.061] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:08.061] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:08.061] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:08.061] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:08.061] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:08.166] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:08.166] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:08.166] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:08.166] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:08.166] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:08.253] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:08.253] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:08.253] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:08.253] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:08.253] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:08.360] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:08.360] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:08.360] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:08.360] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:08.360] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:08.468] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:08.468] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:08.468] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:08.468] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:08.468] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:08.554] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:08.554] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:08.554] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:08.554] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:08.554] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:08.662] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:08.662] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:08.662] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:08.662] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:08.662] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:08.771] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:08.771] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:08.771] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:08.771] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:08.771] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:08.854] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:08.854] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:08.854] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:08.854] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:08.854] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:08.959] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:08.959] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:08.959] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:08.959] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:08.959] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:09.064] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:09.064] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:09.064] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:09.064] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:09.064] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:09.173] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:09.173] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:09.173] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:09.173] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:09.173] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:09.257] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:09.257] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:09.257] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:09.257] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:09.257] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:09.366] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:09.366] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:09.366] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:09.366] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:09.366] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:09.451] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:09.451] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:09.451] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:09.451] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:09.451] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:09.559] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:09.559] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:09.559] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:09.559] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:09.559] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:09.663] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:09.663] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:09.663] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:09.663] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:09.663] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:09.771] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:09.771] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:09.771] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:09.771] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:09.771] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:09.867] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:09.867] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:09.867] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:09.867] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:09.867] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:09.951] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:09.951] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:09.951] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:09.951] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:09.951] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:10.055] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:10.055] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:10.055] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:10.055] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:10.055] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:10.159] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:10.159] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:10.159] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:10.159] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:10.159] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:10.264] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:10.264] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:10.264] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:10.264] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:10.264] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:10.368] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:10.368] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:10.368] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:10.368] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:10.368] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:10.451] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:10.451] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:10.451] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:10.451] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:10.451] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:10.555] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:10.555] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:10.555] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:10.555] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:10.555] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:10.659] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:10.659] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:10.659] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:10.659] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:10.659] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:10.764] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:10.764] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:10.764] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:10.764] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:10.764] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:10.867] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:10.867] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:10.867] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:10.867] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:10.867] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:10.951] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:10.951] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:10.951] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:10.951] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:10.951] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:11.055] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:11.055] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:11.055] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:11.055] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:11.055] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:11.159] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:11.159] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:11.159] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:11.159] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:11.159] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:11.263] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:11.263] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:11.263] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:11.263] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:11.263] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:11.368] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:11.368] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:11.368] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:11.368] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:11.368] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:11.450] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:11.450] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:11.450] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:11.450] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:11.450] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:11.555] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:11.555] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:11.555] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:11.555] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:11.555] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:11.663] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:11.663] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:11.663] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:11.663] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:11.663] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:11.767] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:11.767] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:11.767] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:11.767] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:11.767] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:11.849] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:11.849] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:11.849] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:11.849] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:11.849] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:11.955] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:11.955] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:11.955] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:11.955] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:11.955] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:12.060] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:12.060] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:12.060] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:12.060] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:12.060] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:12.165] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:12.165] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:12.165] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:12.165] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:12.165] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:12.250] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:12.250] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:12.250] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:12.250] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:12.250] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:12.356] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:12.356] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:12.356] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:12.356] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:12.356] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:12.463] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:12.463] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:12.463] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:12.463] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:12.463] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:12.569] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:12.569] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:12.569] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:12.569] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:12.569] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:12.654] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:12.654] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:12.654] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:12.654] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:12.654] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:12.765] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:12.765] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:12.765] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:12.765] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:12.765] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:12.849] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:12.849] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:12.849] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:12.849] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:12.849] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:12.957] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:12.957] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:12.957] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:12.957] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:12.957] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:13.063] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:13.063] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:13.063] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:13.063] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:13.063] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:13.150] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:13.150] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:13.150] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:13.150] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:13.150] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:13.262] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:13.262] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:13.262] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:13.262] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:13.262] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:13.351] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:13.351] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:13.351] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:13.351] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:13.351] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:13.463] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:13.463] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:13.463] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:13.463] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:13.463] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:13.552] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:13.552] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:13.552] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:13.552] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:13.552] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:13.659] [combined] [error] [scripting_functions.cpp:814] Key KEY_UP not found in enum
+[2026-01-20 22:01:13.659] [combined] [error] [scripting_functions.cpp:814] Key KEY_DOWN not found in enum
+[2026-01-20 22:01:13.659] [combined] [error] [scripting_functions.cpp:814] Key KEY_LEFT not found in enum
+[2026-01-20 22:01:13.659] [combined] [error] [scripting_functions.cpp:814] Key KEY_RIGHT not found in enum
+[2026-01-20 22:01:13.659] [combined] [error] [scripting_functions.cpp:814] Key KEY_ENTER not found in enum
+[2026-01-20 22:01:16.263] [combined] [warning] [general] [Gameplay] Content validation found errors - check console output 
+[2026-01-20 22:01:22.048] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-20 22:01:22.048] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-20 22:01:22.048] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-20 22:01:22.048] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-20 22:01:22.048] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-20 22:01:22.048] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-20 22:01:22.048] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-20 22:01:22.048] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-20 22:01:22.048] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-20 22:01:22.048] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-20 22:01:22.048] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-20 22:01:22.048] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-20 22:01:22.048] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-20 22:01:22.048] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-20 22:01:22.048] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-20 22:01:22.048] [combined] [warning] [general] [gameplay] Failed to add card to PlayerInventory 
+[2026-01-20 22:01:22.074] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-20 22:01:22.074] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-20 22:01:22.074] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-20 22:01:22.074] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-20 22:01:22.075] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-20 22:01:22.075] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-20 22:01:22.075] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-20 22:01:22.075] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-20 22:01:22.075] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-20 22:01:22.075] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-20 22:01:22.075] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-20 22:01:22.075] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-20 22:01:22.075] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-20 22:01:22.075] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-20 22:01:22.075] [combined] [warning] [shader_draw_commands.cpp:1344] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-20 22:01:22.173] [combined] [warning] [general] [gameplay] Failed to add card to PlayerInventory 
+[2026-01-20 22:01:22.248] [combined] [warning] [general] [gameplay] Failed to add card to PlayerInventory 
+[2026-01-20 22:01:22.346] [combined] [warning] [general] [gameplay] Failed to add card to PlayerInventory 
+[2026-01-20 22:01:22.472] [combined] [warning] [general] [gameplay] Failed to add card to PlayerInventory 
+[2026-01-20 22:01:22.547] [combined] [warning] [general] [gameplay] Failed to add card to PlayerInventory 
+[2026-01-20 22:01:22.650] [combined] [warning] [general] [gameplay] Failed to add card to PlayerInventory 
+[2026-01-20 22:01:22.750] [combined] [warning] [general] [gameplay] Failed to add card to PlayerInventory 

@@ -26,8 +26,8 @@ const vec2[8] DIRECTIONS = vec2[8](
     vec2(1.0, -1.0)
 );
 
-float gtz(float input) {
-    return max(0.0, sign(input));
+float gtz(float val) {
+    return max(0.0, sign(val));
 }
 
 float check(sampler2D tex, vec2 from, vec2 pixelSize) {

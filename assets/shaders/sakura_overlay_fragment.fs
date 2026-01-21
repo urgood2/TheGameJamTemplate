@@ -14,7 +14,7 @@ uniform float dissolve;
 uniform float time;
 uniform vec4 texture_details;  // can remove?
 uniform vec2  image_details; // can remove?
-uniform bool  shadow;
+uniform float shadow;
 uniform vec4 burn_colour_1;
 uniform vec4 burn_colour_2;
 
@@ -67,8 +67,8 @@ vec2 getSpriteUV(vec2 uv) {
 vec4 dissolve_mask(vec4 tex, vec2 /*texcoord*/, vec2 uv_scaled) {
     if (dissolve < 0.001) {
         return vec4(
-            shadow ? vec3(0.0) : tex.rgb,
-            shadow ? tex.a * 0.3 : tex.a
+            shadow > 0.5 ? vec3(0.0) : tex.rgb,
+            shadow > 0.5 ? tex.a * 0.3 : tex.a
         );
     }
     float adj = (dissolve*dissolve*(3.0 - 2.0*dissolve))*1.02 - 0.01;
@@ -106,9 +106,9 @@ vec4 dissolve_mask(vec4 tex, vec2 /*texcoord*/, vec2 uv_scaled) {
     }
 
     return vec4(
-        shadow ? vec3(0.0) : tex.rgb,
+        shadow > 0.5 ? vec3(0.0) : tex.rgb,
         res > adj
-            ? (shadow ? tex.a * 0.3 : tex.a)
+            ? (shadow > 0.5 ? tex.a * 0.3 : tex.a)
             : 0.0
     );
 }

@@ -570,7 +570,7 @@ end
 function createTabDemo()
     print("[TRACE] createTabDemo called")
     local dsl = require("ui.ui_syntax_sugar")
-    local panelWidth = 420  -- Increased to fit 6 tabs (Game, Graphics, Audio, Sprites, Inventory, Gallery)
+    local panelWidth = 480  -- Increased to fit 7 tabs (Game, Graphics, Audio, Sprites, Inventory, Gallery, Showcase)
     local gallerySafeMargins = {
         left = 24,
         right = panelWidth + 40,
@@ -588,7 +588,7 @@ function createTabDemo()
             dsl.strict.tabs {
                 id = "demo_tabs",
                 activeTab = "game",
-                contentMinWidth = 400,  -- Increased to fit 6 tabs
+                contentMinWidth = 460,  -- Increased to fit 7 tabs
                 contentMinHeight = 120,
                 tabs = {
                     {
@@ -737,6 +737,46 @@ function createTabDemo()
                             }
                         end
                     },
+                    {
+                        id = "showcase",
+                        label = "Showcase",
+                        content = function()
+                            local FeatureShowcase = require("ui.showcase.feature_showcase")
+                            return dsl.strict.vbox {
+                                config = { padding = 8 },
+                                children = {
+                                    dsl.strict.text("Feature Showcase", { fontSize = 16, color = "white", shadow = true }),
+                                    dsl.strict.spacer(8),
+                                    dsl.strict.text("View all Phase 1-6 features", { fontSize = 12, color = "gray_light" }),
+                                    dsl.strict.text("with automated validation.", { fontSize = 12, color = "gray_light" }),
+                                    dsl.strict.spacer(12),
+                                    dsl.strict.button("Open Showcase", {
+                                        fontSize = 14,
+                                        color = "green_jade",
+                                        textColor = "white",
+                                        minWidth = 140,
+                                        onClick = function()
+                                            if playSoundEffect then playSoundEffect("effects", "button-click") end
+                                            FeatureShowcase.show()
+                                            print("[SHOWCASE] Feature showcase opened")
+                                        end
+                                    }),
+                                    dsl.strict.spacer(4),
+                                    dsl.strict.button("Close Showcase", {
+                                        fontSize = 14,
+                                        color = "indian_red",
+                                        textColor = "white",
+                                        minWidth = 140,
+                                        onClick = function()
+                                            if playSoundEffect then playSoundEffect("effects", "button-click") end
+                                            FeatureShowcase.hide()
+                                            print("[SHOWCASE] Feature showcase closed")
+                                        end
+                                    }),
+                                }
+                            }
+                        end
+                    },
                 }
             }
         }
@@ -765,6 +805,38 @@ function createTabDemo()
             end)
             if not ok then
                 print("[GALLERY_TEST] ERROR:", err)
+            end
+        end)
+    end
+
+    -- Auto-open showcase for testing (one-shot, guarded by module-level flag)
+    if os.getenv and os.getenv("AUTO_TEST_SHOWCASE") == "1" and not _G._showcaseTestScheduled then
+        _G._showcaseTestScheduled = true
+        print("[SHOWCASE_TEST] Scheduling showcase auto-open in 0.5s")
+        local timer = require("core.timer")
+        timer.after(0.5, function()
+            print("[SHOWCASE_TEST] Timer fired!")
+            if _G._showcaseTestOpened then
+                print("[SHOWCASE_TEST] Showcase already opened, skipping")
+                return
+            end
+            _G._showcaseTestOpened = true
+            local ok, err = pcall(function()
+                local FeatureShowcase = require("ui.showcase.feature_showcase")
+                print("[SHOWCASE_TEST] Opening showcase")
+                FeatureShowcase.show()
+                print("[SHOWCASE_TEST] Showcase opened successfully")
+                -- Print verification results
+                local results = FeatureShowcase.getVerificationResults()
+                if results and results.categories then
+                    print("[SHOWCASE_TEST] Verification results:")
+                    for catId, catData in pairs(results.categories) do
+                        print(string.format("  %s: %d/%d", catId, catData.pass, catData.total))
+                    end
+                end
+            end)
+            if not ok then
+                print("[SHOWCASE_TEST] ERROR:", err)
             end
         end)
     end

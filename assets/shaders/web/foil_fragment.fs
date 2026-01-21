@@ -56,7 +56,7 @@ vec4 HSL(vec4 c) {
 
 vec4 dissolve_mask(vec4 tex, vec2 texcoord, vec2 uv) {
     if (dissolve < 0.001) {
-        return vec4(shadow ? vec3(0.0) : tex.rgb, shadow ? tex.a * 0.3 : tex.a);
+        return vec4(shadow > 0.5 ? vec3(0.0) : tex.rgb, shadow > 0.5 ? tex.a * 0.3 : tex.a);
     }
 
     float adjusted_dissolve = (dissolve * dissolve * (3.0 - 2.0 * dissolve)) * 1.02 - 0.01;
@@ -91,7 +91,7 @@ vec4 dissolve_mask(vec4 tex, vec2 texcoord, vec2 uv) {
         }
     }
 
-    return vec4(shadow ? vec3(0.0) : tex.rgb, res > adjusted_dissolve ? (shadow ? tex.a * 0.3 : tex.a) : 0.0);
+    return vec4(shadow > 0.5 ? vec3(0.0) : tex.rgb, res > adjusted_dissolve ? (shadow > 0.5 ? tex.a * 0.3 : tex.a) : 0.0);
 }
 
 void main() {

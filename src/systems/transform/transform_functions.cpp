@@ -1462,11 +1462,6 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         ZONE_SCOPED("DrawBoundingBoxAndDebugInfo");
 
         auto &node = registry->get<GameObject>(e);
-
-        if (!node.state.visible) {
-            return;
-        }
-
         node.state.isUnderOverlay = globals::getUnderOverlay(); // LATER: not sure why this is here. move elsewhere?
 
         float currentScreenWidth = globals::VIRTUAL_WIDTH * 1.0f;

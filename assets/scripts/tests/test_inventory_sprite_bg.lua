@@ -23,12 +23,12 @@ t.reset()
 
 -- These should match what's in player_inventory.lua
 local PANEL_SPRITE = "ui-decor-test-1.png"  -- Placeholder until inventory-back-panel.png created
-local PANEL_SPRITE_SCALE = 2
+local PANEL_SPRITE_SCALE = 2.5
 
 -- Content-driven dimensions (mirrors player_inventory.lua)
 local SPRITE_BASE_W = 32
 local SPRITE_BASE_H = 32
-local SPRITE_SCALE = 2
+local SPRITE_SCALE = 2.5
 local SLOT_WIDTH = SPRITE_BASE_W * SPRITE_SCALE
 local SLOT_HEIGHT = SPRITE_BASE_H * SPRITE_SCALE
 local SLOT_SPACING = 4
@@ -102,10 +102,10 @@ t.describe("InventorySpriteBg", function()
 
     t.describe("scaled dimensions", function()
 
-        t.it("calculates 2x scaled dimensions", function()
-            local w, h = calculateScaledDimensions("ui-decor-test-1.png", 2)
-            t.expect(w).to_be(280)  -- 140 * 2
-            t.expect(h).to_be(360)  -- 180 * 2
+        t.it("calculates 2.5x scaled dimensions", function()
+            local w, h = calculateScaledDimensions("ui-decor-test-1.png", 2.5)
+            t.expect(w).to_be(350)  -- 140 * 2.5
+            t.expect(h).to_be(450)  -- 180 * 2.5
         end)
 
         t.it("calculates 1x scaled dimensions", function()
@@ -141,8 +141,8 @@ t.describe("InventorySpriteBg", function()
             t.expect(config.sprite).to_be("ui-decor-test-1.png")
             t.expect(config.borders[1]).to_be(8)
             -- Validate calculated dimensions match expected values (max of content and sprite)
-            t.expect(w).to_be(math.max(CONTENT_WIDTH, 280))  -- 140 * 2
-            t.expect(h).to_be(math.max(CONTENT_HEIGHT, 360)) -- 180 * 2
+            t.expect(w).to_be(math.max(CONTENT_WIDTH, 350))  -- 140 * 2.5
+            t.expect(h).to_be(math.max(CONTENT_HEIGHT, 450)) -- 180 * 2.5
             t.expect(config.minWidth).to_be(w)
             t.expect(config.minHeight).to_be(h)
         end)
@@ -164,8 +164,8 @@ t.describe("InventorySpriteBg", function()
 
             -- First call computes
             ensurePanelDimensions()
-            t.expect(state.panelWidth).to_be(math.max(CONTENT_WIDTH, 280))
-            t.expect(state.panelHeight).to_be(math.max(CONTENT_HEIGHT, 360))
+            t.expect(state.panelWidth).to_be(math.max(CONTENT_WIDTH, 350))
+            t.expect(state.panelHeight).to_be(math.max(CONTENT_HEIGHT, 450))
 
             -- Modify cached values
             state.panelWidth = 999

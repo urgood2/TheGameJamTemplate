@@ -82,6 +82,67 @@ end
 component_cache._frame = -1
 component_cache._data = {}   -- per-component cache tables
 component_cache._hooks = {}  -- optional per-component hooks
+component_cache._debug_mode = false  -- Enable verbose logging for debugging
+
+------------------------------------------------------------
+-- Debug Mode Configuration
+------------------------------------------------------------
+
+--- Enable or disable debug logging for component access failures.
+--- When enabled, logs detailed info when safe_get fails.
+---@param enabled boolean
+function component_cache.set_debug_mode(enabled)
+    component_cache._debug_mode = enabled
+end
+
+--- Check if debug mode is enabled.
+---@return boolean
+function component_cache.is_debug_mode()
+    return component_cache._debug_mode
+end
+
+--- Get component type name for logging (handles string and table types).
+---@param comp any
+---@return string
+local function get_component_name(comp)
+    if type(comp) == "string" then
+        return comp
+    elseif type(comp) == "table" then
+        -- Try common patterns for getting component name
+        if comp.__name then return comp.__name end
+        if comp.name then return comp.name end
+        -- Check if it's a known global
+        for name, global in pairs(_G) do
+            if global == comp and type(name) == "string" and name:sub(1,1):match("[A-Z]") then
+                return name
+            end
+        end
+        return "UnknownComponent"
+    else
+        return tostring(comp)
+    end
+end
+
+--- Get call site info for debug logging.
+---@param level number Stack level (default 3)
+---@return string
+local function get_call_site(level)
+    level = level or 3
+    local info = debug.getinfo(level, "Sl")
+    if info then
+        local source = info.source or "?"
+        -- Clean up source path (remove leading @)
+        if source:sub(1, 1) == "@" then
+            source = source:sub(2)
+        end
+        -- Shorten path if too long
+        if #source > 50 then
+            source = "..." .. source:sub(-47)
+        end
+        return string.format("%s:%d", source, info.currentline or 0)
+    end
+    return "unknown:0"
+end
 
 ------------------------------------------------------------
 -- Internal helpers
@@ -195,14 +256,73 @@ end
 
 --- Safe component access with automatic validation.
 --- Returns nil if entity is invalid, otherwise returns component.
+--- In debug mode, logs detailed info when entity is invalid.
 ---@param eid entt.entity
 ---@param comp any
 ---@return table|nil component, boolean valid
 function component_cache.safe_get(eid, comp)
-    if not component_cache.ensure(eid) then
+    local cache = component_cache
+
+    if not cache.ensure(eid) then
+        -- Log debug info if debug mode enabled
+        if cache._debug_mode and _G.log_debug then
+            local comp_name = get_component_name(comp)
+            local call_site = get_call_site(3)
+            _G.log_debug(string.format(
+                "[component_cache] Entity %s invalid when accessing %s (from %s)",
+                tostring(eid), comp_name, call_site
+            ))
+        end
         return nil, false
     end
-    return component_cache.get(eid, comp), true
+
+    local result = cache.get(eid, comp)
+
+    -- Log if component is missing (entity valid but component nil)
+    if result == nil and cache._debug_mode and _G.log_debug then
+        local comp_name = get_component_name(comp)
+        local call_site = get_call_site(3)
+        _G.log_debug(string.format(
+            "[component_cache] Entity %s missing %s (from %s)",
+            tostring(eid), comp_name, call_site
+        ))
+    end
+
+    return result, true
+end
+
+--- Safe component access with explicit context string for better debug messages.
+--- Use this when you want to provide additional context about where the access is happening.
+---@param eid entt.entity
+---@param comp any
+---@param context string Description of where/why this access is happening
+---@return table|nil component, boolean valid
+function component_cache.safe_get_with_context(eid, comp, context)
+    local cache = component_cache
+    context = context or "unknown context"
+
+    if not cache.ensure(eid) then
+        if cache._debug_mode and _G.log_debug then
+            local comp_name = get_component_name(comp)
+            _G.log_debug(string.format(
+                "[component_cache] Entity %s invalid when accessing %s (%s)",
+                tostring(eid), comp_name, context
+            ))
+        end
+        return nil, false
+    end
+
+    local result = cache.get(eid, comp)
+
+    if result == nil and cache._debug_mode and _G.log_debug then
+        local comp_name = get_component_name(comp)
+        _G.log_debug(string.format(
+            "[component_cache] Entity %s missing %s (%s)",
+            tostring(eid), comp_name, context
+        ))
+    end
+
+    return result, true
 end
 
 --- Invalidate cached value(s).

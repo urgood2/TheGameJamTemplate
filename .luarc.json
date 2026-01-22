@@ -6,7 +6,8 @@
   "Lua.workspace.ignoreDir": [
     ".worktrees",
     "build",
-    "build-*"
+    "build-*",
+    "node_modules"
   ],
   "diagnostics.globals": [
     "registry",
@@ -15,6 +16,18 @@
     "timer",
     "physics",
     "draw",
+    "command_buffer",
+    "layers",
+    "globals",
+    "shader_pipeline",
+    "localization",
+    "animation_system",
+    "layer_order_system",
+    "z_orders",
+    "globalShaderUniforms",
+    "entt_null",
+    "main",
+    "physicsTickCounter",
     "log_debug",
     "log_info",
     "log_warn",

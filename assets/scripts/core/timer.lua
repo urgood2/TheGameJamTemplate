@@ -85,7 +85,13 @@ function timer.run_every_render_frame(action, after, tag, group)
   }
 end
 
-function timer.after(delay, action, tag, group)
+function timer.after(delay_or_opts, action, tag, group)
+  -- DUAL SIGNATURE: detect if first arg is options table
+  if type(delay_or_opts) == "table" and delay_or_opts.delay ~= nil then
+    return timer.after_opts(delay_or_opts)
+  end
+  -- Original positional signature
+  local delay = delay_or_opts
   tag = ensure_valid_tag(tag)
   timer.timers[tag] = {
     type = "after",
@@ -98,7 +104,13 @@ function timer.after(delay, action, tag, group)
   return tag
 end
 
-function timer.cooldown(delay, condition, action, times, after, tag, group)
+function timer.cooldown(delay_or_opts, condition, action, times, after, tag, group)
+  -- DUAL SIGNATURE: detect if first arg is options table
+  if type(delay_or_opts) == "table" and delay_or_opts.delay ~= nil then
+    return timer.cooldown_opts(delay_or_opts)
+  end
+  -- Original positional signature
+  local delay = delay_or_opts
   tag = ensure_valid_tag(tag)
   timer.timers[tag] = {
     type = "cooldown",
@@ -116,7 +128,13 @@ function timer.cooldown(delay, condition, action, times, after, tag, group)
   return tag
 end
 
-function timer.every(delay, action, times, immediate, after, tag, group)
+function timer.every(delay_or_opts, action, times, immediate, after, tag, group)
+  -- DUAL SIGNATURE: detect if first arg is options table
+  if type(delay_or_opts) == "table" and delay_or_opts.delay ~= nil then
+    return timer.every_opts(delay_or_opts)
+  end
+  -- Original positional signature
+  local delay = delay_or_opts
   tag = ensure_valid_tag(tag)
   timer.timers[tag] = {
     type = "every",
@@ -343,7 +361,13 @@ function timer.every_step(start_delay, end_delay, times, action, immediate, step
   if immediate then action() end
 end
 
-function timer.for_time(delay, action, after, tag, group)
+function timer.for_time(delay_or_opts, action, after, tag, group)
+  -- DUAL SIGNATURE: detect if first arg is options table
+  if type(delay_or_opts) == "table" and (delay_or_opts.delay ~= nil or delay_or_opts.duration ~= nil) then
+    return timer.for_time_opts(delay_or_opts)
+  end
+  -- Original positional signature
+  local delay = delay_or_opts
   tag = ensure_valid_tag(tag)
   timer.timers[tag] = {
     type = "for",

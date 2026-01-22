@@ -5588,6 +5588,24 @@ function initPlanningPhase()
         GridInventorySave.setWandLoadoutRef(WandLoadoutUI)
         GridInventorySave.setWandAdapterRef(wandAdapter)
 
+        -- Initialize new WandPanel (Phase 8 integration)
+        log_debug("[gameplay] Attempting to load WandPanel module...")
+        local WandPanel_ok, WandPanel_or_err = pcall(require, "ui.wand_panel")
+        if WandPanel_ok and WandPanel_or_err then
+            log_debug("[gameplay] WandPanel module loaded successfully")
+            local WandPanel = WandPanel_or_err
+            WandPanel.setWandDefs(wandDefsForAdapter)
+            -- Initialize immediately to set up E key handler
+            local init_success = WandPanel.initialize()
+            if init_success then
+                log_debug("[gameplay] WandPanel initialized and ready (E key enabled)")
+            else
+                log_debug("[gameplay] WandPanel setWandDefs succeeded but initialize deferred")
+            end
+        else
+            log_warn("[gameplay] WandPanel module failed to load: " .. tostring(WandPanel_or_err))
+        end
+
         GridInventorySave.setCardRecreator(function(cardId, category)
             if not cardId then return nil end
 

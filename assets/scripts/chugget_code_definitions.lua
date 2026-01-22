@@ -8821,6 +8821,12 @@ function controller_nav.focus_entity(...) end
 function input.updateCursorFocus(...) end
 
 ---
+--- Return the current input state snapshot.
+---
+---@return InputState
+function input.getState(...) end
+
+---
 --- Clear stale scroll pane reference after UI rebuild.
 ---
 ---@return nil

@@ -264,6 +264,26 @@ local function setCardVisible(cardEntity, visible)
     end
 end
 
+local function findAcceptingSlot(gridEntity, itemEntity)
+    if not gridEntity then return nil end
+    local capacity = grid.getCapacity and grid.getCapacity(gridEntity)
+    if not capacity then
+        local dims = grid.getDimensions and { grid.getDimensions(gridEntity) }
+        if dims and dims[1] and dims[2] then
+            capacity = dims[1] * dims[2]
+        end
+    end
+    capacity = capacity or 0
+    for slotIndex = 1, capacity do
+        if not grid.getItemAtIndex(gridEntity, slotIndex) then
+            if not grid.canSlotAccept or grid.canSlotAccept(gridEntity, slotIndex, itemEntity) then
+                return slotIndex
+            end
+        end
+    end
+    return nil
+end
+
 --------------------------------------------------------------------------------
 -- Core Equip Functions
 --------------------------------------------------------------------------------
@@ -296,6 +316,9 @@ function QuickEquip.equipToWand(cardEntity)
     local targetSlot = nil
     if isTrigger then
         targetSlot = 1
+        if grid.canSlotAccept and not grid.canSlotAccept(targetGrid, targetSlot, cardEntity) then
+            return false, "filter_rejected"
+        end
         local existing = grid.getItemAtIndex(targetGrid, targetSlot)
         if existing then
             -- Try to return existing trigger to inventory before equipping
@@ -306,7 +329,7 @@ function QuickEquip.equipToWand(cardEntity)
             end
         end
     else
-        targetSlot = grid.findEmptySlot(targetGrid)
+        targetSlot = findAcceptingSlot(targetGrid, cardEntity)
         if not targetSlot then
             local slotType = "action"
             log_debug("[QuickEquip] No empty " .. slotType .. " slots available")
@@ -364,7 +387,7 @@ function QuickEquip.returnToInventory(cardEntity)
 
     -- Prefer visible active grid if inventory is open and has space
     if inventoryOpen and activeGrid then
-        local activeSlot = grid.findEmptySlot(activeGrid)
+        local activeSlot = findAcceptingSlot(activeGrid, cardEntity)
         if activeSlot then
             local result = transfer.transferItemTo({
                 item = cardEntity,
@@ -398,7 +421,7 @@ function QuickEquip.returnToInventory(cardEntity)
     -- Try category grid if it's currently injected and has space
     local categoryGrid = PlayerInventory.getGridForTab and PlayerInventory.getGridForTab(category)
     if categoryGrid then
-        local categorySlot = grid.findEmptySlot(categoryGrid)
+        local categorySlot = findAcceptingSlot(categoryGrid, cardEntity)
         if categorySlot then
             local result = transfer.transferItemTo({
                 item = cardEntity,

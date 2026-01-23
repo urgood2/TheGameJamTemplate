@@ -128,6 +128,9 @@ local state = {
     panelHeight = 0,
 }
 
+-- Forward declaration for use in slot click callbacks (defined later)
+local returnCardToInventory
+
 --------------------------------------------------------------------------------
 -- INTERNAL HELPERS
 --------------------------------------------------------------------------------
@@ -992,8 +995,6 @@ local function syncAllToAdapter(wandIndex)
     syncTriggerToAdapter(wandIndex)
     syncActionsToAdapter(wandIndex)
 end
-
-local returnCardToInventory
 
 --- Map card entity to inventory tab category
 local function getInventoryCategoryForCard(cardEntity)

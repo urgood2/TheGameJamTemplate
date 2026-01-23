@@ -138,11 +138,11 @@ local function getGridDimensions(wandDef, gridType)
         -- Trigger grid: single slot (current engine supports 1 trigger card per wand)
         return 1, 1
     else
-        -- Action grid: fixed columns, variable rows based on total_card_slots
-        -- Minimum of 1 slot to prevent zero-row grids
+        -- Action grid: single row with all slots
+        -- Minimum of 1 slot to prevent zero-col grids
         local totalSlots = math.max(wandDef.total_card_slots or 8, 1)
-        local cols = ACTION_GRID_COLS
-        local rows = math.ceil(totalSlots / cols)
+        local rows = 1
+        local cols = totalSlots
         return rows, cols
     end
 end
@@ -1415,7 +1415,7 @@ local function createTabMarkerDefinition()
             hover = true,
             padding = 0,
             buttonCallback = function()
-                WandPanel.open()
+                WandPanel.toggle()  -- Toggle open/close like inventory
             end,
         },
         children = {
@@ -1469,7 +1469,7 @@ local function showPanel()
     setEntityVisible(state.panelEntity, true, state.panelX, state.panelY, "WandPanel")
     setGridItemsVisible(state.triggerGridEntity, true)
     setGridItemsVisible(state.actionGridEntity, true)
-    setTabMarkerVisible(false)
+    -- Tab marker stays visible for toggle functionality
 
     -- Reapply state tags for rendering
     if _G.ui and _G.ui.box and _G.ui.box.AddStateTagToUIBox then
@@ -1484,7 +1484,7 @@ local function hidePanel()
     setEntityVisible(state.panelEntity, false, state.panelX, state.panelY, "WandPanel")
     setGridItemsVisible(state.triggerGridEntity, false)
     setGridItemsVisible(state.actionGridEntity, false)
-    setTabMarkerVisible(true)
+    -- Tab marker stays visible for toggle functionality
 end
 
 --- Inject trigger grid into container
@@ -1648,14 +1648,14 @@ function WandPanel.initialize()
         _G.ui.box.set_draw_layer(state.panelEntity, RENDER_LAYER)
     end
 
-    -- Spawn tab marker (reopen tab)
+    -- Spawn tab marker (reopen tab) - must be in front of panel for visibility
     local tabDef = createTabMarkerDefinition()
     if tabDef and dsl.spawn then
         state.tabMarkerEntity = dsl.spawn(
             { x = state.panelX, y = state.panelY },
             tabDef,
             RENDER_LAYER,
-            PANEL_Z - 1
+            PANEL_Z + 10  -- Above panel for visibility and clickability
         )
         if state.tabMarkerEntity and _G.ui and _G.ui.box and _G.ui.box.set_draw_layer then
             _G.ui.box.set_draw_layer(state.tabMarkerEntity, RENDER_LAYER)
@@ -1671,14 +1671,14 @@ function WandPanel.initialize()
         state.closeButtonEntity = _G.ui.box.GetUIEByID(_G.registry, state.panelEntity, "wand_panel_close_btn")
     end
 
-    -- Spawn tabs if multiple wands
+    -- Spawn tabs if multiple wands - must be in front of panel for visibility
     if #state.wandDefs > 1 and dsl and dsl.spawn then
         local tabDef = createWandTabs()
         state.tabContainerEntity = dsl.spawn(
             { x = state.panelX + TAB_OFFSET_X, y = state.panelY + HEADER_HEIGHT },
             tabDef,
             RENDER_LAYER,
-            PANEL_Z - 1
+            PANEL_Z + 10  -- Above panel for visibility and clickability
         )
         if state.tabContainerEntity and _G.ui and _G.ui.box then
             if _G.ui.box.set_draw_layer then

@@ -812,6 +812,55 @@ local function buildStatsText(wandDef)
     return table.concat(lines, "\n")
 end
 
+--- Create header section with title and close button
+--- @param wandDef table Wand definition
+--- @return table DSL definition
+local function createHeader(wandDef)
+    local titleText = wandDef.name or ("Wand " .. state.activeWandIndex)
+
+    local dsl_ok, dsl = pcall(require, "ui.ui_syntax_sugar")
+    local useDsl = dsl_ok and dsl and dsl.strict
+
+    if useDsl then
+        return dsl.strict.hbox {
+            config = {
+                id = "wand_panel_header",
+                padding = 2,
+            },
+            children = {
+                dsl.strict.text(titleText, {
+                    id = "wand_panel_title",
+                    fontSize = 14,
+                    color = "gold",
+                    shadow = true,
+                }),
+                dsl.strict.spacer(1),  -- flex spacer
+                dsl.strict.button("X", {
+                    id = "wand_panel_close_btn",
+                    fontSize = 12,
+                    minWidth = 22,
+                    minHeight = 22,
+                    color = "apricot_cream",
+                    onClick = function()
+                        WandPanel.close()
+                    end,
+                }),
+            },
+        }
+    else
+        -- Test stub
+        return {
+            type = "hbox",
+            config = { id = "wand_panel_header", padding = 4 },
+            children = {
+                { type = "text", id = "wand_panel_title", content = titleText, color = "gold" },
+                { type = "spacer", fill = true },
+                { type = "button", id = "wand_panel_close_btn", label = "X" },
+            },
+        }
+    end
+end
+
 --- Create DSL definition for wand stats box
 --- @param wandDef table Wand definition
 --- @param minHeight number? Optional minimum height for alignment
@@ -1198,55 +1247,6 @@ end
 --------------------------------------------------------------------------------
 -- PANEL DEFINITION
 --------------------------------------------------------------------------------
-
---- Create header section with title and close button
---- @param wandDef table Wand definition
---- @return table DSL definition
-local function createHeader(wandDef)
-    local titleText = wandDef.name or ("Wand " .. state.activeWandIndex)
-
-    local dsl_ok, dsl = pcall(require, "ui.ui_syntax_sugar")
-    local useDsl = dsl_ok and dsl and dsl.strict
-
-    if useDsl then
-        return dsl.strict.hbox {
-            config = {
-                id = "wand_panel_header",
-                padding = 2,
-            },
-            children = {
-                dsl.strict.text(titleText, {
-                    id = "wand_panel_title",
-                    fontSize = 14,
-                    color = "gold",
-                    shadow = true,
-                }),
-                dsl.strict.spacer(1),  -- flex spacer
-                dsl.strict.button("X", {
-                    id = "wand_panel_close_btn",
-                    fontSize = 12,
-                    minWidth = 22,
-                    minHeight = 22,
-                    color = "apricot_cream",
-                    onClick = function()
-                        WandPanel.close()
-                    end,
-                }),
-            },
-        }
-    else
-        -- Test stub
-        return {
-            type = "hbox",
-            config = { id = "wand_panel_header", padding = 4 },
-            children = {
-                { type = "text", id = "wand_panel_title", content = titleText, color = "gold" },
-                { type = "spacer", fill = true },
-                { type = "button", id = "wand_panel_close_btn", label = "X" },
-            },
-        }
-    end
-end
 
 --- Create trigger section with label and grid container
 --- @return table DSL definition

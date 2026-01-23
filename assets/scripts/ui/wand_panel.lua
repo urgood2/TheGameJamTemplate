@@ -107,6 +107,8 @@ local state = {
 
     -- Cleanup tracking
     signalHandlers = {},
+    gameStateHandlerRegistered = false,
+    suspendSync = false,
 
     -- Position cache
     panelX = 0,
@@ -243,6 +245,28 @@ local function setAllCardsVisible(visible)
     end
 end
 
+--- Update the panel header title for the active wand
+local function updateHeaderTitle()
+    if not state.panelEntity then return end
+    if not _G.registry or not _G.registry.valid then return end
+    if not _G.registry:valid(state.panelEntity) then return end
+
+    local wandDef = state.wandDefs[state.activeWandIndex]
+    if not wandDef then return end
+
+    local titleText = wandDef.name or ("Wand " .. state.activeWandIndex)
+
+    if _G.ui and _G.ui.box and _G.ui.box.GetUIEByID then
+        local titleEntity = _G.ui.box.GetUIEByID(_G.registry, state.panelEntity, "wand_panel_title")
+        if titleEntity and _G.component_cache and _G.UITextComponent then
+            local uiText = _G.component_cache.get(titleEntity, _G.UITextComponent)
+            if uiText then
+                uiText.text = titleText
+            end
+        end
+    end
+end
+
 --- Set all items in a grid visible/hidden
 --- @param gridEntity number Grid entity ID
 --- @param visible boolean Whether to show
@@ -258,6 +282,47 @@ local function setGridItemsVisible(gridEntity, visible)
         for _, itemEntity in pairs(items) do
             setCardEntityVisible(itemEntity, visible)
         end
+    end
+end
+
+--- Remove all items from a grid (optionally hide removed items)
+--- @param gridEntity number Grid entity ID
+--- @param hideItems boolean Whether to hide items after removal
+--- @return number count Removed item count
+local function clearGridItems(gridEntity, hideItems)
+    if not gridEntity then return 0 end
+    local grid_ok, grid = pcall(require, "core.inventory_grid")
+    if not grid_ok or not grid then return 0 end
+
+    local items = grid.getAllItems(gridEntity)
+    local count = 0
+    if items then
+        for slotIndex, itemEntity in pairs(items) do
+            local removed = grid.removeItem(gridEntity, slotIndex)
+            if removed then
+                count = count + 1
+                if hideItems then
+                    setCardEntityVisible(removed, false)
+                end
+            end
+        end
+    end
+    return count
+end
+
+--- Center an item on its slot if possible
+--- @param gridEntity number Grid entity ID
+--- @param itemEntity number Item entity ID
+--- @param slotIndex number Slot index
+local function centerItemOnSlot(gridEntity, itemEntity, slotIndex)
+    if not gridEntity or not itemEntity or not slotIndex then return end
+    local grid_ok, grid = pcall(require, "core.inventory_grid")
+    local init_ok, InventoryGridInit = pcall(require, "ui.inventory_grid_init")
+    if not grid_ok or not init_ok or not InventoryGridInit then return end
+
+    local slotEntity = grid.getSlotEntity(gridEntity, slotIndex)
+    if slotEntity and InventoryGridInit.centerItemOnSlot then
+        InventoryGridInit.centerItemOnSlot(itemEntity, slotEntity, false)
     end
 end
 
@@ -501,6 +566,18 @@ local function createActionGridDefinition(wandDef)
         snapVisual = false,
     }
 
+    -- Lock slots beyond total_card_slots (enforce wand capacity)
+    local totalSlots = math.max(wandDef.total_card_slots or (rows * cols), 1)
+    local slotsConfig = {}
+    if totalSlots < (rows * cols) then
+        for slotIndex = totalSlots + 1, rows * cols do
+            slotsConfig[slotIndex] = { locked = true }
+        end
+        gridConfig.filter = function(_, slotIndex)
+            return slotIndex <= totalSlots
+        end
+    end
+
     -- Add alignment flag if available
     if _G.AlignmentFlag then
         local bit_ok, bit = pcall(require, "bit_compat")
@@ -556,6 +633,7 @@ local function createActionGridDefinition(wandDef)
             slotSize = { w = SLOT_WIDTH, h = SLOT_HEIGHT },
             slotSpacing = SLOT_SPACING,
             config = gridConfig,
+            slots = slotsConfig,
             canAcceptItem = canAcceptAction,
             onSlotChange = onActionSlotChange,
             onSlotClick = onActionSlotClick,
@@ -570,6 +648,7 @@ local function createActionGridDefinition(wandDef)
             slotSize = { w = SLOT_WIDTH, h = SLOT_HEIGHT },
             slotSpacing = SLOT_SPACING,
             config = gridConfig,
+            slots = slotsConfig,
             canAcceptItem = canAcceptAction,
             onSlotChange = onActionSlotChange,
             onSlotClick = onActionSlotClick,
@@ -888,22 +967,41 @@ end
 local function setupSignalHandlers()
     -- Grid item changes -> sync to adapter
     registerHandler("grid_item_added", function(gridEntity, slotIndex, itemEntity)
+        if state.suspendSync then return end
         if gridEntity == state.triggerGridEntity then
             syncTriggerToAdapter()
+            local ok, signal = pcall(require, "external.hump.signal")
+            if ok and signal then
+                signal.emit("wand_trigger_changed", itemEntity, nil, state.activeWandIndex)
+            end
         elseif gridEntity == state.actionGridEntity then
             syncActionsToAdapter()
+            local ok, signal = pcall(require, "external.hump.signal")
+            if ok and signal then
+                signal.emit("wand_action_changed", slotIndex, itemEntity, nil, state.activeWandIndex)
+            end
         end
     end)
 
     registerHandler("grid_item_removed", function(gridEntity, slotIndex, itemEntity)
+        if state.suspendSync then return end
         if gridEntity == state.triggerGridEntity then
             syncTriggerToAdapter()
+            local ok, signal = pcall(require, "external.hump.signal")
+            if ok and signal then
+                signal.emit("wand_trigger_changed", nil, itemEntity, state.activeWandIndex)
+            end
         elseif gridEntity == state.actionGridEntity then
             syncActionsToAdapter()
+            local ok, signal = pcall(require, "external.hump.signal")
+            if ok and signal then
+                signal.emit("wand_action_changed", slotIndex, nil, itemEntity, state.activeWandIndex)
+            end
         end
     end)
 
     registerHandler("grid_item_moved", function(gridEntity, fromSlot, toSlot, itemEntity)
+        if state.suspendSync then return end
         if gridEntity == state.actionGridEntity then
             syncActionsToAdapter()
         end
@@ -913,6 +1011,7 @@ local function setupSignalHandlers()
     registerHandler("wand_selected", function(newIndex, oldIndex)
         updateTabHighlighting()
         updateStatsDisplay()
+        updateHeaderTitle()
         -- Grid swapping will be implemented in Phase 9/10
     end)
 
@@ -978,12 +1077,18 @@ local function handleQuickEquip(cardEntity)
             end
             -- Add new trigger card
             local success = grid.addItem(state.triggerGridEntity, cardEntity, 1)
+            if success then
+                centerItemOnSlot(state.triggerGridEntity, cardEntity, 1)
+            end
             return success
         end
     elseif cardType == "action" or cardType == "modifier" then
         if state.actionGridEntity then
             -- Find first empty slot
             local success, slotIndex = grid.addItem(state.actionGridEntity, cardEntity)
+            if success and slotIndex then
+                centerItemOnSlot(state.actionGridEntity, cardEntity, slotIndex)
+            end
             return success
         end
     end
@@ -1057,6 +1162,7 @@ local function createHeader(wandDef)
             },
             children = {
                 dsl.strict.text(titleText, {
+                    id = "wand_panel_title",
                     fontSize = 16,
                     color = "gold",
                     shadow = true,
@@ -1080,7 +1186,7 @@ local function createHeader(wandDef)
             type = "hbox",
             config = { id = "wand_panel_header", padding = 4 },
             children = {
-                { type = "text", content = titleText, color = "gold" },
+                { type = "text", id = "wand_panel_title", content = titleText, color = "gold" },
                 { type = "spacer", fill = true },
                 { type = "button", id = "wand_panel_close_btn", label = "X" },
             },
@@ -1224,7 +1330,8 @@ local function showPanel()
     if not state.panelEntity then return end
 
     setEntityVisible(state.panelEntity, true, state.panelX, state.panelY, "WandPanel")
-    setAllCardsVisible(true)
+    setGridItemsVisible(state.triggerGridEntity, true)
+    setGridItemsVisible(state.actionGridEntity, true)
 
     -- Reapply state tags for rendering
     if _G.ui and _G.ui.box and _G.ui.box.AddStateTagToUIBox then
@@ -1237,7 +1344,8 @@ local function hidePanel()
     if not state.panelEntity then return end
 
     setEntityVisible(state.panelEntity, false, state.panelX, state.panelY, "WandPanel")
-    setAllCardsVisible(false)
+    setGridItemsVisible(state.triggerGridEntity, false)
+    setGridItemsVisible(state.actionGridEntity, false)
 end
 
 --- Inject trigger grid into container
@@ -1415,9 +1523,74 @@ function WandPanel.initialize()
         state.closeButtonEntity = _G.ui.box.GetUIEByID(_G.registry, state.panelEntity, "wand_panel_close_btn")
     end
 
+    -- Spawn tabs if multiple wands
+    if #state.wandDefs > 1 and dsl and dsl.spawn then
+        local tabDef = createWandTabs()
+        state.tabContainerEntity = dsl.spawn(
+            { x = state.panelX + TAB_OFFSET_X, y = state.panelY + HEADER_HEIGHT },
+            tabDef,
+            RENDER_LAYER,
+            PANEL_Z - 1
+        )
+        if state.tabContainerEntity and _G.ui and _G.ui.box then
+            if _G.ui.box.set_draw_layer then
+                _G.ui.box.set_draw_layer(state.tabContainerEntity, RENDER_LAYER)
+            end
+            if _G.ui.box.AddStateTagToUIBox then
+                _G.ui.box.AddStateTagToUIBox(_G.registry, state.tabContainerEntity, "default_state")
+            end
+        end
+        if state.tabContainerEntity and _G.ui and _G.ui.box and _G.ui.box.GetUIEByID then
+            state.tabEntities = {}
+            for i = 1, #state.wandDefs do
+                local tabEntity = _G.ui.box.GetUIEByID(_G.registry, state.tabContainerEntity, "wand_tab_" .. i)
+                if tabEntity then
+                    state.tabEntities[i] = tabEntity
+                end
+            end
+        end
+        positionTabs()
+        updateTabHighlighting()
+    end
+
     -- Inject grids
     state.triggerGridEntity = injectTriggerGrid(wandDef)
     state.actionGridEntity = injectActionGrid(wandDef)
+
+    -- Load existing cards from adapter (if any)
+    local function loadFromAdapter()
+        local adapter_ok, adapter = pcall(require, "ui.wand_grid_adapter")
+        local grid_ok, grid = pcall(require, "core.inventory_grid")
+        if not adapter_ok or not adapter or not grid_ok or not grid then return end
+        local loadout = adapter.getLoadout and adapter.getLoadout(state.activeWandIndex)
+        if not loadout then return end
+
+        state.suspendSync = true
+
+        if state.triggerGridEntity and loadout.trigger and _G.registry and _G.registry.valid and _G.registry:valid(loadout.trigger) then
+            local ok = grid.addItem(state.triggerGridEntity, loadout.trigger, 1)
+            if ok then
+                centerItemOnSlot(state.triggerGridEntity, loadout.trigger, 1)
+                setCardEntityVisible(loadout.trigger, state.isVisible)
+            end
+        end
+
+        if state.actionGridEntity and loadout.actions then
+            for slotIndex, itemEntity in pairs(loadout.actions) do
+                if itemEntity and _G.registry and _G.registry.valid and _G.registry:valid(itemEntity) then
+                    local ok = grid.addItem(state.actionGridEntity, itemEntity, slotIndex)
+                    if ok then
+                        centerItemOnSlot(state.actionGridEntity, itemEntity, slotIndex)
+                        setCardEntityVisible(itemEntity, state.isVisible)
+                    end
+                end
+            end
+        end
+
+        state.suspendSync = false
+    end
+
+    loadFromAdapter()
 
     -- Setup signal handlers
     setupSignalHandlers()
@@ -1514,7 +1687,7 @@ function WandPanel.setWandDefs(wandDefs)
 
     -- Initialize adapter with same definitions
     local ok, wandAdapter = pcall(require, "ui.wand_grid_adapter")
-    if ok and wandAdapter and wandAdapter.init then
+    if ok and wandAdapter and wandAdapter.init and (wandAdapter.getWandCount and wandAdapter.getWandCount() == 0) then
         wandAdapter.init(wandDefs)
     end
 
@@ -1543,6 +1716,65 @@ function WandPanel.selectWand(index)
 
     local oldIndex = state.activeWandIndex
     state.activeWandIndex = index
+
+    -- Swap grids for new wand definition
+    if state.initialized then
+        local wandDef = state.wandDefs[state.activeWandIndex]
+
+        -- Suspend adapter sync during internal swap
+        state.suspendSync = true
+
+        -- Clear old grids (hide removed items so they don't linger on screen)
+        clearGridItems(state.triggerGridEntity, true)
+        clearGridItems(state.actionGridEntity, true)
+
+        -- Cleanup old grid resources
+        if state.triggerGridEntity then
+            cleanupGrid(state.triggerGridEntity, "wand_trigger_grid_" .. oldIndex)
+            state.triggerGridEntity = nil
+        end
+        if state.actionGridEntity then
+            cleanupGrid(state.actionGridEntity, "wand_action_grid_" .. oldIndex)
+            state.actionGridEntity = nil
+        end
+
+        -- Inject new grids for active wand
+        state.triggerGridEntity = injectTriggerGrid(wandDef)
+        state.actionGridEntity = injectActionGrid(wandDef)
+
+        state.suspendSync = false
+
+        -- Load cards from adapter into new grids
+        local adapter_ok, adapter = pcall(require, "ui.wand_grid_adapter")
+        local grid_ok, grid = pcall(require, "core.inventory_grid")
+        if adapter_ok and adapter and grid_ok and grid then
+            local loadout = adapter.getLoadout and adapter.getLoadout(state.activeWandIndex)
+            if loadout then
+                state.suspendSync = true
+                if state.triggerGridEntity and loadout.trigger and _G.registry and _G.registry.valid and _G.registry:valid(loadout.trigger) then
+                    local ok = grid.addItem(state.triggerGridEntity, loadout.trigger, 1)
+                    if ok then
+                        centerItemOnSlot(state.triggerGridEntity, loadout.trigger, 1)
+                        setCardEntityVisible(loadout.trigger, state.isVisible)
+                    end
+                end
+
+                if state.actionGridEntity and loadout.actions then
+                    for slotIndex, itemEntity in pairs(loadout.actions) do
+                        if itemEntity and _G.registry and _G.registry.valid and _G.registry:valid(itemEntity) then
+                            local ok = grid.addItem(state.actionGridEntity, itemEntity, slotIndex)
+                            if ok then
+                                centerItemOnSlot(state.actionGridEntity, itemEntity, slotIndex)
+                                setCardEntityVisible(itemEntity, state.isVisible)
+                            end
+                        end
+                    end
+                end
+                state.suspendSync = false
+            end
+        end
+
+    end
 
     -- Emit signal
     local ok, signal = pcall(require, "external.hump.signal")
@@ -1597,6 +1829,7 @@ function WandPanel.equipToTriggerSlot(cardEntity)
     local success = grid.addItem(state.triggerGridEntity, cardEntity, 1)
     if success then
         state.cardRegistry[cardEntity] = true
+        centerItemOnSlot(state.triggerGridEntity, cardEntity, 1)
         if _G.log_debug then
             _G.log_debug("[WandPanel] Equipped trigger card to slot 1")
         end
@@ -1640,6 +1873,9 @@ function WandPanel.equipToActionSlot(cardEntity)
     local success, slotIndex = grid.addItem(state.actionGridEntity, cardEntity)
     if success then
         state.cardRegistry[cardEntity] = true
+        if slotIndex then
+            centerItemOnSlot(state.actionGridEntity, cardEntity, slotIndex)
+        end
         if _G.log_debug then
             _G.log_debug("[WandPanel] Equipped action card to slot " .. slotIndex)
         end
@@ -1699,6 +1935,76 @@ end
 
 -- Export cleanup for gameplay.lua resetGameToStart()
 WandPanel.cleanupSignalHandlers = cleanupSignalHandlers
+
+--------------------------------------------------------------------------------
+-- PLANNING PHASE AUTO-OPEN HOOK
+--------------------------------------------------------------------------------
+
+-- Setup planning phase entry hook (following PlayerInventory pattern)
+-- Wrapped in pcall since signal module might not be loaded yet
+do
+    local ok, signal = pcall(require, "external.hump.signal")
+    if ok and signal and not state.gameStateHandlerRegistered then
+        state.gameStateHandlerRegistered = true
+
+        local gameStateHandler = function(data)
+            if not data or not data.current then
+                return
+            end
+
+            -- Auto-open on entering planning phase
+            if data.current == "PLANNING" then
+                -- Only open if wand defs have been set
+                if #state.wandDefs > 0 then
+                    if _G.log_debug then
+                        _G.log_debug("[WandPanel] Planning phase entered, auto-opening")
+                    end
+                    WandPanel.open()
+                else
+                    if _G.log_debug then
+                        _G.log_debug("[WandPanel] Planning phase entered but no wand defs set")
+                    end
+                end
+            end
+
+            -- Auto-close when leaving planning phase (entering action, shop, etc.)
+            if data.current ~= "PLANNING" and WandPanel.isOpen() then
+                if _G.log_debug then
+                    _G.log_debug("[WandPanel] Leaving planning phase, auto-closing")
+                end
+                WandPanel.close()
+            end
+        end
+
+        signal.register("game_state_changed", gameStateHandler)
+        table.insert(state.signalHandlers, { event = "game_state_changed", handler = gameStateHandler })
+
+        if _G.log_debug then
+            _G.log_debug("[WandPanel] Registered game_state_changed handler for auto-open")
+        end
+    end
+end
+
+-- Also check on module load in case already in planning phase (hot-reload scenario)
+do
+    local timer_ok, timer_module = pcall(require, "core.timer")
+    if timer_ok and timer_module and timer_module.after_opts then
+        timer_module.after_opts({
+            delay = 0.1,
+            action = function()
+                if _G.is_state_active and _G.PLANNING_STATE and _G.is_state_active(_G.PLANNING_STATE) then
+                    if #state.wandDefs > 0 and not WandPanel.isOpen() then
+                        if _G.log_debug then
+                            _G.log_debug("[WandPanel] Already in planning phase on module load, auto-opening")
+                        end
+                        WandPanel.open()
+                    end
+                end
+            end,
+            tag = "wand_panel_phase_setup"
+        })
+    end
+end
 
 --------------------------------------------------------------------------------
 -- TEST HELPERS (for unit testing internal functions)

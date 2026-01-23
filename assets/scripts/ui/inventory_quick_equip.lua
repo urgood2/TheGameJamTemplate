@@ -48,6 +48,7 @@ local state = {
     initialized = false,
     playerInventoryModule = nil,  -- Will be lazy-loaded to avoid circular deps
     wandLoadoutModule = nil,      -- Will be lazy-loaded
+    wandPanelModule = nil,        -- Optional new WandPanel UI
     signalHandlers = {},
     lastHandledFrame = nil,
 }
@@ -76,6 +77,16 @@ local function getWandLoadout()
     return state.wandLoadoutModule
 end
 
+local function getWandPanel()
+    if not state.wandPanelModule then
+        local ok, mod = pcall(require, "ui.wand_panel")
+        if ok then
+            state.wandPanelModule = mod
+        end
+    end
+    return state.wandPanelModule
+end
+
 --------------------------------------------------------------------------------
 -- Grid Access Helpers
 --------------------------------------------------------------------------------
@@ -102,6 +113,14 @@ end
 
 --- Get wand action grid (first available wand)
 local function getWandActionGrid()
+    local WandPanel = getWandPanel()
+    if WandPanel and WandPanel.getActionGrid then
+        local gridEntity = WandPanel.getActionGrid()
+        if gridEntity then
+            return gridEntity
+        end
+    end
+
     local WandLoadout = getWandLoadout()
     if WandLoadout and WandLoadout.getActionGrid then
         return WandLoadout.getActionGrid()
@@ -111,6 +130,14 @@ end
 
 --- Get wand trigger grid
 local function getWandTriggerGrid()
+    local WandPanel = getWandPanel()
+    if WandPanel and WandPanel.getTriggerGrid then
+        local gridEntity = WandPanel.getTriggerGrid()
+        if gridEntity then
+            return gridEntity
+        end
+    end
+
     local WandLoadout = getWandLoadout()
     if WandLoadout and WandLoadout.getTriggerGrid then
         return WandLoadout.getTriggerGrid()

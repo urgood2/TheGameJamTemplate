@@ -111,20 +111,6 @@ local function isPlayerInventoryGrid(gridEntity)
     return false
 end
 
---- Check if a grid belongs to the wand loadout/panel
-local function isWandGrid(gridEntity)
-    if not gridEntity then return false end
-    local actionGrid = getWandActionGrid()
-    if actionGrid and actionGrid == gridEntity then
-        return true
-    end
-    local triggerGrid = getWandTriggerGrid()
-    if triggerGrid and triggerGrid == gridEntity then
-        return true
-    end
-    return false
-end
-
 --- Get wand action grid (first available wand)
 local function getWandActionGrid()
     local WandPanel = getWandPanel()
@@ -157,6 +143,37 @@ local function getWandTriggerGrid()
         return WandLoadout.getTriggerGrid()
     end
     return nil
+end
+
+local function isWandPanelGrid(gridEntity)
+    if not gridEntity then return false end
+    local WandPanel = getWandPanel()
+    if not WandPanel then return false end
+    if WandPanel.getActionGrid and WandPanel.getActionGrid() == gridEntity then
+        return true
+    end
+    if WandPanel.getTriggerGrid and WandPanel.getTriggerGrid() == gridEntity then
+        return true
+    end
+    return false
+end
+
+local function isWandLoadoutGrid(gridEntity)
+    if not gridEntity then return false end
+    local WandLoadout = getWandLoadout()
+    if not WandLoadout then return false end
+    if WandLoadout.getActionGrid and WandLoadout.getActionGrid() == gridEntity then
+        return true
+    end
+    if WandLoadout.getTriggerGrid and WandLoadout.getTriggerGrid() == gridEntity then
+        return true
+    end
+    return false
+end
+
+--- Check if a grid belongs to the wand loadout/panel
+local function isWandGrid(gridEntity)
+    return isWandPanelGrid(gridEntity) or isWandLoadoutGrid(gridEntity)
 end
 
 --------------------------------------------------------------------------------
@@ -519,10 +536,14 @@ local function updateHoverTracking()
             hoveredCard = currentHovered
             hoveredLocation = location
             hoveredSource = "inventory"
-        elseif isWandGrid(location.grid) then
+        elseif isWandPanelGrid(location.grid) then
             hoveredCard = currentHovered
             hoveredLocation = location
-            hoveredSource = "wand"
+            hoveredSource = "wand_panel"
+        elseif isWandLoadoutGrid(location.grid) then
+            hoveredCard = currentHovered
+            hoveredLocation = location
+            hoveredSource = "wand_loadout"
         else
             hoveredCard = nil
             hoveredLocation = nil
@@ -586,8 +607,21 @@ local function checkRightClick()
         if hoveredSource == "inventory" then
             log_debug("[QuickEquip] Quick equip from inventory: " .. tostring(hoveredCard))
             handleRightClick(hoveredCard)
-        elseif hoveredSource == "wand" then
-            log_debug("[QuickEquip] Quick return from wand: " .. tostring(hoveredCard))
+        elseif hoveredSource == "wand_panel" then
+            -- WandPanel handles native right-click via onSlotClick; only handle modifier+left-click.
+            if altClick or ctrlClick or cmdClick then
+                log_debug("[QuickEquip] Quick return from wand panel: " .. tostring(hoveredCard))
+                local success, reason = QuickEquip.returnToInventory(hoveredCard)
+                if not success then
+                    showReturnFeedback(hoveredCard, reason)
+                end
+                local frame = getRenderFrame()
+                if frame then
+                    state.lastHandledFrame = frame
+                end
+            end
+        elseif hoveredSource == "wand_loadout" then
+            log_debug("[QuickEquip] Quick return from wand loadout: " .. tostring(hoveredCard))
             local success, reason = QuickEquip.returnToInventory(hoveredCard)
             if not success then
                 showReturnFeedback(hoveredCard, reason)
@@ -629,7 +663,7 @@ function QuickEquip.init()
             return
         end
 
-        if isWandGrid(gridEntity) then
+        if isWandLoadoutGrid(gridEntity) then
             local success, reason = QuickEquip.returnToInventory(item)
             if not success then
                 showReturnFeedback(item, reason)

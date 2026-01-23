@@ -385,15 +385,6 @@ local function centerItemOnSlot(gridEntity, itemEntity, slotIndex)
     end
 end
 
---- Ensure wand cards respond to right-click/drag by wiring grid interactions
-local function prepareWandCard(itemEntity, gridEntity)
-    if not itemEntity or not gridEntity then return end
-    local init_ok, InventoryGridInit = pcall(require, "ui.inventory_grid_init")
-    if init_ok and InventoryGridInit and InventoryGridInit.makeItemDraggable then
-        InventoryGridInit.makeItemDraggable(itemEntity, gridEntity)
-    end
-end
-
 --------------------------------------------------------------------------------
 -- TAB SYSTEM
 --------------------------------------------------------------------------------
@@ -1170,14 +1161,12 @@ local function setupSignalHandlers()
     registerHandler("grid_item_added", function(gridEntity, slotIndex, itemEntity)
         if state.suspendSync then return end
         if gridEntity == state.triggerGridEntity then
-            prepareWandCard(itemEntity, gridEntity)
             syncTriggerToAdapter()
             local ok, signal = pcall(require, "external.hump.signal")
             if ok and signal then
                 signal.emit("wand_trigger_changed", itemEntity, nil, state.activeWandIndex)
             end
         elseif gridEntity == state.actionGridEntity then
-            prepareWandCard(itemEntity, gridEntity)
             syncActionsToAdapter()
             local ok, signal = pcall(require, "external.hump.signal")
             if ok and signal then
@@ -1281,7 +1270,6 @@ local function handleQuickEquip(cardEntity)
             -- Add new trigger card
             local success = grid.addItem(state.triggerGridEntity, cardEntity, 1)
             if success then
-                prepareWandCard(cardEntity, state.triggerGridEntity)
                 centerItemOnSlot(state.triggerGridEntity, cardEntity, 1)
             end
             return success
@@ -1291,7 +1279,6 @@ local function handleQuickEquip(cardEntity)
             -- Find first empty slot
             local success, slotIndex = grid.addItem(state.actionGridEntity, cardEntity)
             if success and slotIndex then
-                prepareWandCard(cardEntity, state.actionGridEntity)
                 centerItemOnSlot(state.actionGridEntity, cardEntity, slotIndex)
             end
             return success
@@ -1820,7 +1807,6 @@ function WandPanel.initialize()
         if state.triggerGridEntity and loadout.trigger and _G.registry and _G.registry.valid and _G.registry:valid(loadout.trigger) then
             local ok = grid.addItem(state.triggerGridEntity, loadout.trigger, 1)
             if ok then
-                prepareWandCard(loadout.trigger, state.triggerGridEntity)
                 centerItemOnSlot(state.triggerGridEntity, loadout.trigger, 1)
                 setCardEntityVisible(loadout.trigger, state.isVisible)
             end
@@ -1831,7 +1817,6 @@ function WandPanel.initialize()
                 if itemEntity and _G.registry and _G.registry.valid and _G.registry:valid(itemEntity) then
                     local ok = grid.addItem(state.actionGridEntity, itemEntity, slotIndex)
                     if ok then
-                        prepareWandCard(itemEntity, state.actionGridEntity)
                         centerItemOnSlot(state.actionGridEntity, itemEntity, slotIndex)
                         setCardEntityVisible(itemEntity, state.isVisible)
                     end
@@ -2005,21 +1990,19 @@ function WandPanel.selectWand(index)
             local loadout = adapter.getLoadout and adapter.getLoadout(state.activeWandIndex)
             if loadout then
                 state.suspendSync = true
-            if state.triggerGridEntity and loadout.trigger and _G.registry and _G.registry.valid and _G.registry:valid(loadout.trigger) then
-                local ok = grid.addItem(state.triggerGridEntity, loadout.trigger, 1)
-                if ok then
-                    prepareWandCard(loadout.trigger, state.triggerGridEntity)
-                    centerItemOnSlot(state.triggerGridEntity, loadout.trigger, 1)
-                    setCardEntityVisible(loadout.trigger, state.isVisible)
+                if state.triggerGridEntity and loadout.trigger and _G.registry and _G.registry.valid and _G.registry:valid(loadout.trigger) then
+                    local ok = grid.addItem(state.triggerGridEntity, loadout.trigger, 1)
+                    if ok then
+                        centerItemOnSlot(state.triggerGridEntity, loadout.trigger, 1)
+                        setCardEntityVisible(loadout.trigger, state.isVisible)
+                    end
                 end
-            end
 
                 if state.actionGridEntity and loadout.actions then
                     for slotIndex, itemEntity in pairs(loadout.actions) do
                         if itemEntity and _G.registry and _G.registry.valid and _G.registry:valid(itemEntity) then
                             local ok = grid.addItem(state.actionGridEntity, itemEntity, slotIndex)
                             if ok then
-                                prepareWandCard(itemEntity, state.actionGridEntity)
                                 centerItemOnSlot(state.actionGridEntity, itemEntity, slotIndex)
                                 setCardEntityVisible(itemEntity, state.isVisible)
                             end
@@ -2085,7 +2068,6 @@ function WandPanel.equipToTriggerSlot(cardEntity)
     local success = grid.addItem(state.triggerGridEntity, cardEntity, 1)
     if success then
         state.cardRegistry[cardEntity] = true
-        prepareWandCard(cardEntity, state.triggerGridEntity)
         centerItemOnSlot(state.triggerGridEntity, cardEntity, 1)
         if _G.log_debug then
             _G.log_debug("[WandPanel] Equipped trigger card to slot 1")
@@ -2131,7 +2113,6 @@ function WandPanel.equipToActionSlot(cardEntity)
     if success then
         state.cardRegistry[cardEntity] = true
         if slotIndex then
-            prepareWandCard(cardEntity, state.actionGridEntity)
             centerItemOnSlot(state.actionGridEntity, cardEntity, slotIndex)
         end
         if _G.log_debug then

@@ -1,106 +1,80 @@
-[2026-01-23 22:03:42.752] [combined] [warning] This is a warning message.
-[2026-01-23 22:03:42.752] [combined] [error] This is an error message.
-[2026-01-23 22:03:44.196] [combined] [error] [localization.cpp:45] Failed to open font JSON file: localization/fonts.json
-[2026-01-23 22:03:44.196] [combined] [error] [localization.cpp:45] Failed to open font JSON file: localization/fonts.json
-[2026-01-23 22:03:45.096] [combined] [warning] [general] [dsl.strict.text] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/player_inventory.lua:691:
+[2026-01-23 20:59:15.479] [combined] [warning] This is a warning message.
+[2026-01-23 20:59:15.479] [combined] [error] This is an error message.
+[2026-01-23 20:59:16.759] [combined] [error] [localization.cpp:45] Failed to open font JSON file: localization/fonts.json
+[2026-01-23 20:59:16.759] [combined] [error] [localization.cpp:45] Failed to open font JSON file: localization/fonts.json
+[2026-01-23 20:59:17.326] [combined] [warning] [general] [dsl.strict.text] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/player_inventory.lua:691:
   WARNING: unknown field 'padding' 
-[2026-01-23 22:03:45.098] [combined] [warning] [general] [dsl.strict.button] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/player_inventory.lua:749:
+[2026-01-23 20:59:17.327] [combined] [warning] [general] [dsl.strict.button] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/player_inventory.lua:749:
   WARNING: unknown field 'padding' 
-[2026-01-23 22:03:45.099] [combined] [warning] [general] [dsl.strict.button] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/player_inventory.lua:749:
+[2026-01-23 20:59:17.327] [combined] [warning] [general] [dsl.strict.button] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/player_inventory.lua:749:
   WARNING: unknown field 'padding' 
-[2026-01-23 22:03:45.099] [combined] [warning] [general] [dsl.strict.button] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/player_inventory.lua:749:
+[2026-01-23 20:59:17.327] [combined] [warning] [general] [dsl.strict.button] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/player_inventory.lua:749:
   WARNING: unknown field 'padding' 
-[2026-01-23 22:03:45.100] [combined] [warning] [general] [dsl.strict.button] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/player_inventory.lua:749:
+[2026-01-23 20:59:17.327] [combined] [warning] [general] [dsl.strict.button] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/player_inventory.lua:749:
   WARNING: unknown field 'padding' 
-[2026-01-23 22:03:45.100] [combined] [warning] [general] [dsl.strict.button] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/player_inventory.lua:749:
+[2026-01-23 20:59:17.327] [combined] [warning] [general] [dsl.strict.button] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/player_inventory.lua:749:
   WARNING: unknown field 'padding' 
-[2026-01-23 22:03:45.101] [combined] [warning] [general] [dsl.strict.button] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/player_inventory.lua:783:
+[2026-01-23 20:59:17.327] [combined] [warning] [general] [dsl.strict.button] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/player_inventory.lua:783:
   WARNING: unknown field 'padding' 
-[2026-01-23 22:03:45.101] [combined] [warning] [general] [dsl.strict.button] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/player_inventory.lua:795:
+[2026-01-23 20:59:17.328] [combined] [warning] [general] [dsl.strict.button] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/player_inventory.lua:795:
   WARNING: unknown field 'padding' 
-[2026-01-23 22:03:45.101] [combined] [warning] [general] [dsl.strict.spritePanel] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/player_inventory.lua:1121:
+[2026-01-23 20:59:17.328] [combined] [warning] [general] [dsl.strict.spritePanel] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/player_inventory.lua:1121:
   WARNING: unknown field 'config' 
-[2026-01-23 22:03:47.038] [combined] [warning] [general] [Gameplay] Content validation found errors - check console output 
-[2026-01-23 22:03:47.043] [combined] [warning] [general] [dsl.strict.spritePanel] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/wand_panel.lua:1718:
+[2026-01-23 20:59:45.965] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.965] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.965] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.965] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.965] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.965] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.965] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.965] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.965] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.965] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.965] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.965] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.965] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.965] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.965] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.965] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.965] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.965] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.965] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.965] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.966] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.966] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.966] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.966] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.966] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.966] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.966] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.966] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.966] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.966] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.986] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.986] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.986] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.986] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.986] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.987] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.987] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.987] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.987] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.987] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.987] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.987] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.987] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.987] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 20:59:45.987] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
+[2026-01-23 21:04:34.449] [combined] [warning] [general] [Gameplay] Content validation found errors - check console output 
+[2026-01-23 21:04:34.463] [combined] [warning] [general] [dsl.strict.spritePanel] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/wand_panel.lua:1711:
   WARNING: unknown field 'config' 
-[2026-01-23 22:03:47.044] [combined] [warning] [general] [dsl.strict.button] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/wand_panel.lua:417:
+[2026-01-23 21:04:34.466] [combined] [warning] [general] [dsl.strict.button] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/wand_panel.lua:417:
   WARNING: unknown field 'padding' 
-[2026-01-23 22:03:47.044] [combined] [warning] [general] [dsl.strict.button] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/wand_panel.lua:417:
+[2026-01-23 21:04:34.466] [combined] [warning] [general] [dsl.strict.button] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/wand_panel.lua:417:
   WARNING: unknown field 'padding' 
-[2026-01-23 22:03:47.044] [combined] [warning] [general] [dsl.strict.button] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/wand_panel.lua:417:
+[2026-01-23 21:04:34.466] [combined] [warning] [general] [dsl.strict.button] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/wand_panel.lua:417:
   WARNING: unknown field 'padding' 
-[2026-01-23 22:03:47.045] [combined] [warning] [general] [dsl.strict.inventoryGrid] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/wand_panel.lua:1594:
+[2026-01-23 21:04:34.467] [combined] [warning] [general] [dsl.strict.inventoryGrid] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/wand_panel.lua:1587:
   WARNING: unknown field 'canAcceptItem' 
-[2026-01-23 22:03:47.045] [combined] [warning] [general] [dsl.strict.inventoryGrid] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/wand_panel.lua:1649:
+[2026-01-23 21:04:34.468] [combined] [warning] [general] [dsl.strict.inventoryGrid] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/wand_panel.lua:1642:
   WARNING: unknown field 'canAcceptItem' 
-[2026-01-23 22:04:13.207] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-23 22:04:13.207] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-23 22:04:13.207] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-23 22:04:13.207] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-23 22:04:13.207] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-23 22:04:13.207] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-23 22:04:13.207] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-23 22:04:13.207] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-23 22:04:13.207] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-23 22:04:13.207] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-23 22:04:13.207] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-23 22:04:13.207] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-23 22:04:13.207] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-23 22:04:13.208] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-23 22:04:13.208] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-23 22:04:13.263] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-23 22:04:13.263] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-23 22:04:13.263] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-23 22:04:13.263] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-23 22:04:13.263] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-23 22:04:13.263] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-23 22:04:13.263] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-23 22:04:13.263] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-23 22:04:13.263] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-23 22:04:13.263] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-23 22:04:13.263] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-23 22:04:13.263] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-23 22:04:13.263] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-23 22:04:13.263] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-23 22:04:13.263] [combined] [warning] [shader_draw_commands.cpp:1349] add_local_command: unsupported type 'draw_circle_filled'
-[2026-01-23 22:04:36.535] [combined] [warning] [general] [dsl.strict.inventoryGrid] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/wand_panel.lua:1594:
-  WARNING: unknown field 'canAcceptItem' 
-[2026-01-23 22:04:36.536] [combined] [warning] [general] [dsl.strict.inventoryGrid] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/wand_panel.lua:1649:
-  WARNING: unknown field 'canAcceptItem' 
-[2026-01-23 22:04:45.223] [combined] [warning] [general] [dsl.strict.inventoryGrid] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/wand_panel.lua:1594:
-  WARNING: unknown field 'canAcceptItem' 
-[2026-01-23 22:04:45.224] [combined] [warning] [general] [dsl.strict.inventoryGrid] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/wand_panel.lua:1649:
-  WARNING: unknown field 'canAcceptItem' 
-[2026-01-23 22:04:53.495] [combined] [warning] [general] [dsl.strict.inventoryGrid] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/wand_panel.lua:1594:
-  WARNING: unknown field 'canAcceptItem' 
-[2026-01-23 22:04:53.496] [combined] [warning] [general] [dsl.strict.inventoryGrid] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/wand_panel.lua:1649:
-  WARNING: unknown field 'canAcceptItem' 
-[2026-01-23 22:04:54.532] [combined] [warning] [general] [dsl.strict.inventoryGrid] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/wand_panel.lua:1594:
-  WARNING: unknown field 'canAcceptItem' 
-[2026-01-23 22:04:54.533] [combined] [warning] [general] [dsl.strict.inventoryGrid] Validation failed at /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/rabat/assets/scripts/ui/wand_panel.lua:1649:
-  WARNING: unknown field 'canAcceptItem' 
-[2026-01-23 22:04:56.287] [combined] [warning] [general] [WandGridAdapter] WandEngine.card_defs not available for always-cast cards 
-[2026-01-23 22:04:56.288] [combined] [warning] [general] [WandGridAdapter] WandEngine.card_defs not available for always-cast cards 
-[2026-01-23 22:05:01.233] [combined] [critical] [crash_reporter.cpp:261] Crash report captured: crash_reports/crash_report_20260123_220501.json
-=== Crash Report ===
-ID: 20260123_220501
-Time: 2026-01-23T22:05:01
-Reason: Signal 11
-Build: pre-phase-1-box-refactor-52-g8ee79d257 (Release)
-Platform: macOS
-
---- Stack Trace (top 50) ---
-  0   raylib-cpp-cmake-template           0x0000000105a337b4 _ZN14crash_reporter13CaptureReportERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEEb + 2360
-  1   raylib-cpp-cmake-template           0x0000000105a35b94 _ZN14crash_reporter12_GLOBAL__N_112handle_fatalERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEE + 112
-  2   raylib-cpp-cmake-template           0x0000000105a32c28 _ZN14crash_reporter12_GLOBAL__N_114signal_handlerEi + 84
-  3   libsystem_platform.dylib            0x00000001889d3624 _sigtramp + 56
-  4   raylib-cpp-cmake-template           0x0000000105117b74 _ZN7physics12PhysicsWorld11SetPositionEN4entt6entityEff + 44
-  5   raylib-cpp-cmake-template           0x00000001050a1a20 _ZN3sol15function_detail28upvalue_this_member_functionIN7physics12PhysicsWorldEMS3_FvN4entt6entityEffEE9real_callEP9lua_State + 828
-  6   raylib-cpp-cmake-template           0x00000001047ac970 _ZN3sol6detail10trampolineIRFiP9lua_StateEJEEEiS3_OT_DpOT0_ + 24
-  7   raylib-cpp-cmake-template           0x0000000105a904dc precallC + 188
-  8   raylib-cpp-cmake-template           0x0000000105a906f8 luaD_precall + 340
-  9   raylib-cpp-cmake-template           0x0000000105aa9d68 luaV_execute + 3412
-  10  raylib-cpp-cmake-template           0x0000000105a85828 f_call + 92
-  11  raylib-cpp-cmake-template           0x0000000105a8f668 luaD_rawrunprotected + 84
-  12  raylib-cpp-cmake-template           0x0000000105a85720 lua_pcallk + 352
-  13 

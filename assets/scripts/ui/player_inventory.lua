@@ -1253,6 +1253,14 @@ function PlayerInventory.isOpen()
     return state.isVisible
 end
 
+function PlayerInventory.switchTab(tabId)
+    if not tabId then return end
+    if not state.initialized then
+        initializeInventory()
+    end
+    switchTab(tabId)
+end
+
 function PlayerInventory.destroy()
     if not state.initialized then return end
 

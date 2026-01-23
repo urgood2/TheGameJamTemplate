@@ -562,7 +562,15 @@ local function createTriggerGridDefinition(wandDef)
             if grid_ok and grid then
                 local item = grid.getItemAtIndex(gridEntity, slotIndex)
                 if item then
-                    local returned = returnCardToInventory(item)
+                    local handler = returnCardToInventory
+                    if not handler then
+                        local ok, quick = pcall(require, "ui.inventory_quick_equip")
+                        handler = ok and quick and quick.returnToInventory
+                        if not handler and _G.log_warn then
+                            _G.log_warn("[WandPanel] returnCardToInventory unavailable for trigger slot")
+                        end
+                    end
+                    local returned = handler and handler(item)
                     if returned and _G.log_debug then
                         _G.log_debug("[WandPanel] Trigger card returned to inventory via right-click")
                     end
@@ -669,7 +677,15 @@ local function createActionGridDefinition(wandDef)
             if grid_ok and grid then
                 local item = grid.getItemAtIndex(gridEntity, slotIndex)
                 if item then
-                    local returned = returnCardToInventory(item)
+                    local handler = returnCardToInventory
+                    if not handler then
+                        local ok, quick = pcall(require, "ui.inventory_quick_equip")
+                        handler = ok and quick and quick.returnToInventory
+                        if not handler and _G.log_warn then
+                            _G.log_warn("[WandPanel] returnCardToInventory unavailable for action slot")
+                        end
+                    end
+                    local returned = handler and handler(item)
                     if returned and _G.log_debug then
                         _G.log_debug("[WandPanel] Action card returned to inventory via right-click")
                     end

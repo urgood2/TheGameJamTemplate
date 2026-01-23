@@ -479,6 +479,9 @@ local function updateAltPreview()
     end
 end
 
+-- Forward declaration for transferCardViaRightClick (defined later in file)
+local transferCardViaRightClick
+
 local function updateRightClickTransfer()
     if not card_ui_state.hovered_card then return end
     if not entity_cache.valid(card_ui_state.hovered_card) then
@@ -501,6 +504,23 @@ local function updateRightClickTransfer()
             log_debug("[Transfer] No card script found!")
         end
     end
+end
+
+-- Helper to determine inventory tab category from card type
+-- Maps card type to PlayerInventory tab category
+local function getInventoryCategoryForCard(cardEntity)
+    local script = getScriptTableFromEntityID(cardEntity)
+    if not script then return "equipment" end
+
+    local cardType = script.type or script.category
+    if cardType == "trigger" then
+        return "triggers"
+    elseif cardType == "action" then
+        return "actions"
+    elseif cardType == "modifier" then
+        return "modifiers"
+    end
+    return "equipment"  -- default fallback
 end
 
 local function hideCardTooltip(entity)
@@ -1549,10 +1569,10 @@ local function canBoardAcceptCard(boardEntityID, cardScript)
     return currentCount < maxCapacity
 end
 
--- Transfer card via right-click
+-- Transfer card via right-click (assigns to forward-declared local)
 -- NOTE: Legacy function - inventory_board_id references removed (Phase 5)
 -- Right-click equip now handled by wand_loadout_ui.lua for grid inventory
-local function transferCardViaRightClick(cardEntity, cardScript)
+transferCardViaRightClick = function(cardEntity, cardScript)
     local currentBoard = cardScript.currentBoardEntity
     log_debug("[Transfer] currentBoard:", currentBoard)
     if not currentBoard or not entity_cache.valid(currentBoard) then
@@ -5313,7 +5333,8 @@ function initPlanningPhase()
 
                 if gameplay_cfg.isGridInventoryEnabled() then
                     local PlayerInventory = require("ui.player_inventory")
-                    local success = PlayerInventory.addCard(card)
+                    local category = getInventoryCategoryForCard(card)
+                    local success = PlayerInventory.addCard(card, category)
                     if not success then
                         log_warn("[gameplay] Failed to add card to PlayerInventory")
                     end
@@ -5990,7 +6011,8 @@ local function resetGameToStart()
                 timer.after(inventoryCardDelay, function()
                     if not entity_cache.valid(card) then return end
                     playSoundEffect("effects", "card_deal", 0.7 + math.random() * 0.3)
-                    PlayerInventory.addCard(card)
+                    local category = getInventoryCategoryForCard(card)
+                    PlayerInventory.addCard(card, category)
                 end)
                 inventoryCardDelay = inventoryCardDelay + 0.1
             end
@@ -8297,7 +8319,8 @@ local function spawnCardEntry(entry)
     -- Handle "inventory" special value for grid inventory (Phase 5)
     if target == "inventory" then
         local PlayerInventory = require("ui.player_inventory")
-        PlayerInventory.addCard(eid)
+        local category = getInventoryCategoryForCard(eid)
+        PlayerInventory.addCard(eid, category)
     else
         addCardToBoard(eid, target)
     end
@@ -9188,7 +9211,8 @@ local function addPurchasedCardToInventory(cardInstance)
 
     -- Add to grid inventory instead of legacy board
     local PlayerInventory = require("ui.player_inventory")
-    PlayerInventory.addCard(eid)
+    local category = getInventoryCategoryForCard(eid)
+    PlayerInventory.addCard(eid, category)
     return eid
 end
 

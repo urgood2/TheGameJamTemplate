@@ -35,6 +35,7 @@ local WandPanel = {}
 local TIMER_GROUP = "wand_panel"
 local PANEL_ID = "wand_panel_id"
 local RENDER_LAYER = "sprites"
+local ui_scale = require("ui.ui_scale")
 
 -- Z-ORDER HIERARCHY (MUST match player_inventory.lua)
 local PANEL_Z = 800
@@ -48,36 +49,38 @@ local UI_TOOLTIPS_Z = (z_orders_ok and z_orders_module and z_orders_module.ui_to
 local CARD_Z = UI_TOOLTIPS_Z + 100
 local DRAG_Z = UI_TOOLTIPS_Z + 500  -- Dragged cards above all
 
+local UI = ui_scale.ui
+
 -- Panel positioning
-local TOP_MARGIN = 16
+local TOP_MARGIN = UI(16)
 
 -- Tab marker (panel reopen tab)
-local TAB_MARKER_WIDTH = 64
-local TAB_MARKER_HEIGHT = 64
-local TAB_MARKER_MARGIN = 6
-local DEFAULT_HIDDEN_OFFSET = -800
+local TAB_MARKER_WIDTH = UI(64)
+local TAB_MARKER_HEIGHT = UI(64)
+local TAB_MARKER_MARGIN = UI(6)
+local DEFAULT_HIDDEN_OFFSET = UI(-800)
 
 -- LAYOUT CONSTANTS
 local SPRITE_BASE_W = 32
 local SPRITE_BASE_H = 32
-local SPRITE_SCALE = 2.5
-local SLOT_WIDTH = SPRITE_BASE_W * SPRITE_SCALE   -- 80px
-local SLOT_HEIGHT = SPRITE_BASE_H * SPRITE_SCALE  -- 80px
-local SLOT_SPACING = 4
-local GRID_PADDING = 6
+local SPRITE_SCALE = ui_scale.SPRITE_SCALE
+local SLOT_WIDTH = ui_scale.sprite(SPRITE_BASE_W)   -- 80px
+local SLOT_HEIGHT = ui_scale.sprite(SPRITE_BASE_H)  -- 80px
+local SLOT_SPACING = UI(4)
+local GRID_PADDING = UI(6)
 
 local ACTION_GRID_COLS = 4  -- Fixed column count for action grids
 
-local TAB_WIDTH = 48
-local TAB_HEIGHT = 64
-local TAB_SPACING = 4
-local TAB_OFFSET_X = -TAB_WIDTH - 8  -- Position left of panel with gap
+local TAB_WIDTH = UI(48)
+local TAB_HEIGHT = UI(64)
+local TAB_SPACING = UI(4)
+local TAB_OFFSET_X = -TAB_WIDTH - UI(8)  -- Position left of panel with gap
 
-local HEADER_HEIGHT = 32
-local SECTION_HEADER_HEIGHT = 24
-local PANEL_PADDING = 12
-local COLUMN_SPACING = 12
-local STATS_BOX_WIDTH = 190
+local HEADER_HEIGHT = UI(32)
+local SECTION_HEADER_HEIGHT = UI(24)
+local PANEL_PADDING = UI(12)
+local COLUMN_SPACING = UI(12)
+local STATS_BOX_WIDTH = UI(190)
 
 --------------------------------------------------------------------------------
 -- MODULE STATE (single source of truth)
@@ -410,10 +413,10 @@ local function createWandTabs()
         if useDsl then
             table.insert(tabChildren, dsl.strict.button(tabLabel, {
                 id = "wand_tab_" .. i,
-                fontSize = 14,
+                fontSize = UI(14),
                 minWidth = TAB_WIDTH,
                 minHeight = TAB_HEIGHT,
-                padding = 4,
+                padding = UI(4),
                 color = isActive and "gold" or "gray",
                 onClick = function()
                     WandPanel.selectWand(i)
@@ -443,7 +446,7 @@ local function createWandTabs()
         return dsl.strict.vbox {
             config = {
                 id = "wand_tabs_container",
-                padding = 4,
+                padding = UI(4),
             },
             children = tabChildren,
         }
@@ -451,7 +454,7 @@ local function createWandTabs()
         -- Test stub: minimal vbox structure
         return {
             type = "vbox",
-            config = { id = "wand_tabs_container", padding = 4 },
+            config = { id = "wand_tabs_container", padding = UI(4) },
             children = tabChildren,
         }
     end

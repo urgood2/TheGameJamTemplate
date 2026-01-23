@@ -37,6 +37,7 @@ local itemRegistry = require("core.item_location_registry")
 local shader_pipeline = _G.shader_pipeline
 local QuickEquip = require("ui.inventory_quick_equip")
 local z_orders = require("core.z_orders")
+local ui_scale = require("ui.ui_scale")
 -- CardUIPolicy required to register signal handlers for planning card elevation
 -- This ensures world-space planning cards render above the inventory grid
 local CardUIPolicy = require("ui.card_ui_policy")
@@ -84,34 +85,35 @@ local TAB_CONFIG = {
 
 local TAB_ORDER = { "equipment", "wands", "triggers", "actions", "modifiers" }
 
+local UI = ui_scale.ui
 local SPRITE_BASE_W = 32
 local SPRITE_BASE_H = 32
-local SPRITE_SCALE = 2
-local SLOT_WIDTH = SPRITE_BASE_W * SPRITE_SCALE
-local SLOT_HEIGHT = SPRITE_BASE_H * SPRITE_SCALE
-local SLOT_SPACING = 4
+local SPRITE_SCALE = ui_scale.SPRITE_SCALE
+local SLOT_WIDTH = ui_scale.sprite(SPRITE_BASE_W)
+local SLOT_HEIGHT = ui_scale.sprite(SPRITE_BASE_H)
+local SLOT_SPACING = UI(4)
 local GRID_ROWS = 3
 local GRID_COLS = 6
-local GRID_PADDING = 6
-local TAB_MARKER_WIDTH = 64
-local TAB_MARKER_HEIGHT = 64
-local TAB_MARKER_OFFSET_X = 10
-local TAB_MARKER_OFFSET_Y = -60
+local GRID_PADDING = UI(6)
+local TAB_MARKER_WIDTH = UI(64)
+local TAB_MARKER_HEIGHT = UI(64)
+local TAB_MARKER_OFFSET_X = UI(10)
+local TAB_MARKER_OFFSET_Y = UI(-60)
 
 local GRID_WIDTH = GRID_COLS * SLOT_WIDTH + (GRID_COLS - 1) * SLOT_SPACING + GRID_PADDING * 2
 local GRID_HEIGHT = GRID_ROWS * SLOT_HEIGHT + (GRID_ROWS - 1) * SLOT_SPACING + GRID_PADDING * 2
 
-local HEADER_HEIGHT = 32
-local TABS_HEIGHT = 32
-local FOOTER_HEIGHT = 36
-local PANEL_PADDING = 10
+local HEADER_HEIGHT = UI(32)
+local TABS_HEIGHT = UI(32)
+local FOOTER_HEIGHT = UI(36)
+local PANEL_PADDING = UI(10)
 local PANEL_WIDTH = GRID_WIDTH + PANEL_PADDING * 2
 local PANEL_HEIGHT = HEADER_HEIGHT + TABS_HEIGHT + GRID_HEIGHT + FOOTER_HEIGHT + PANEL_PADDING * 2
 local PANEL_BASE_W = 224
 local PANEL_BASE_H = 192
-local PANEL_SCALE = 2
-local PANEL_MIN_WIDTH = PANEL_BASE_W * PANEL_SCALE
-local PANEL_MIN_HEIGHT = PANEL_BASE_H * PANEL_SCALE
+local PANEL_SCALE = SPRITE_SCALE
+local PANEL_MIN_WIDTH = ui_scale.sprite(PANEL_BASE_W)
+local PANEL_MIN_HEIGHT = ui_scale.sprite(PANEL_BASE_H)
 local PANEL_RENDER_WIDTH = math.max(PANEL_WIDTH, PANEL_MIN_WIDTH)
 local PANEL_RENDER_HEIGHT = math.max(PANEL_HEIGHT, PANEL_MIN_HEIGHT)
 local RENDER_LAYER = "ui"
@@ -122,7 +124,7 @@ local GRID_Z = 850
 -- Must match UI_CARD_Z in inventory_grid_init.lua to prevent z-order reset conflicts.
 local CARD_Z = z_orders.ui_tooltips + 100  -- = 1000, above grid (850), below tooltips
 
-local OFFSCREEN_Y_OFFSET = 600
+local OFFSCREEN_Y_OFFSET = UI(600)
 
 local state = {
     initialized = false,
@@ -597,7 +599,7 @@ local function switchTab(tabId)
     end
 end
 
-local CLOSE_BUTTON_SIZE = 24
+local CLOSE_BUTTON_SIZE = UI(24)
 
 --------------------------------------------------------------------------------
 -- Sorting
@@ -681,22 +683,22 @@ local function createHeader()
             id = "inventory_header",
             -- color = "dark_lavender",
             -- emboss = 2,
-            padding = 8,
+            padding = UI(8),
             minWidth = headerContentWidth,
             -- minHeight = HEADER_HEIGHT,
         },
         children = {
             dsl.strict.text("Inventory", {
                 id = "header_title",
-                fontSize = 14,
+                fontSize = UI(14),
                 color = "gold",
                 shadow = true,
-                padding = 4
+                padding = UI(4)
             }),
             dsl.filler(), -- Filler expands to push close button to the right edge
             dsl.strict.button("X", {
                 id = "close_btn",
-                fontSize = 12,
+                fontSize = UI(12),
                 color = "red",
                 minWidth = CLOSE_BUTTON_SIZE,
                 minHeight = CLOSE_BUTTON_SIZE,
@@ -715,7 +717,7 @@ local function createCloseButton(panelX, panelY, panelWidth)
         id = "close_btn_legacy",
         minWidth = CLOSE_BUTTON_SIZE,
         minHeight = CLOSE_BUTTON_SIZE,
-        fontSize = 12,
+        fontSize = UI(12),
         color = "darkred",
         onClick = function()
             PlayerInventory.close()
@@ -746,8 +748,8 @@ local function createTabs()
 
         table.insert(tabChildren, dsl.strict.button(cfg.label, {
             id = "tab_" .. tabId,
-            fontSize = 10,
-            padding = 7,
+            fontSize = UI(10),
+            padding = UI(7),
             color = isActive and "green" or "gray",
             onClick = function()
                 switchTab(tabId)
@@ -755,14 +757,14 @@ local function createTabs()
         }))
 
         if tabId ~= TAB_ORDER[#TAB_ORDER] then
-            table.insert(tabChildren, dsl.strict.spacer(2))
+            table.insert(tabChildren, dsl.strict.spacer(UI(2)))
         end
     end
 
     return dsl.strict.hbox {
         config = {
             -- color = "blackberry",
-            padding = 4,
+            padding = UI(4),
         },
         children = tabChildren,
     }
@@ -772,7 +774,7 @@ local function createFooter()
     return dsl.strict.hbox {
         config = {
             -- color = "dark_lavender",
-            padding = { 4 },
+            padding = UI(4),
             -- minWidth = GRID_WIDTH,
             -- minHeight = FOOTER_HEIGHT,
             -- align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
@@ -782,8 +784,8 @@ local function createFooter()
                 id = "sort_name_btn",
                 -- minWidth = 50,
                 -- minHeight = 24,
-                fontSize = 10,
-                padding = 6,
+                fontSize = UI(10),
+                padding = UI(6),
                 color = "green",
                 onClick = function()
                     toggleSort("name")
@@ -794,15 +796,15 @@ local function createFooter()
                 id = "sort_cost_btn",
                 -- minWidth = 50,
                 -- minHeight = 24,
-                padding = 6,
-                fontSize = 10,
+                padding = UI(6),
+                fontSize = UI(10),
                 color = "green",
                 onClick = function()
                     toggleSort("cost")
                 end,
             }),
-            dsl.spacer(15),
-            dsl.text("0 / 18", { id = "slot_count_text", fontSize = 14, color = "white" }),
+            dsl.spacer(UI(15)),
+            dsl.text("0 / 18", { id = "slot_count_text", fontSize = UI(14), color = "white" }),
         },
     }
 end

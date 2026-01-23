@@ -49,6 +49,7 @@ local CardUIPolicy = {}
 local z_orders = require("core.z_orders")
 local component_cache = require("core.component_cache")
 local signal = require("external.hump.signal")
+local ui_scale = require("ui.ui_scale")
 
 -- Z-order constants for UI cards
 local UI_CARD_Z = z_orders.ui_tooltips + 100  -- Normal cards in inventory (= 1000, above panel at 800 and grid at 850)
@@ -63,13 +64,13 @@ local ELEVATED_CARD_Z = z_orders.ui_tooltips  -- Elevated planning cards (= 900,
 -- Board cards use screen-percentage sizing (~288×384 at 1920px width).
 -- Inventory slots are fixed 64×64px.
 --------------------------------------------------------------------------------
-local INVENTORY_SLOT_SIZE = 64  -- Matches SLOT_WIDTH/HEIGHT in player_inventory.lua
+local INVENTORY_SLOT_SIZE = ui_scale.sprite(32)  -- Matches SLOT_WIDTH/HEIGHT in player_inventory.lua
 -- Target size for card visual (smaller than slot to allow centering padding)
 -- A 48×64 aspect ratio card fitting in 52×52 target:
 --   scale = min(52/48, 52/64) = min(1.08, 0.81) = 0.81
 --   finalW = 48 * 0.81 = 39, finalH = 64 * 0.81 = 52
 -- This leaves (64-39)/2 = 12.5px horizontal padding and (64-52)/2 = 6px vertical padding
-local INVENTORY_CARD_TARGET_SIZE = 52  -- Card target size (leaves padding for centering)
+local INVENTORY_CARD_TARGET_SIZE = ui_scale.ui(52)  -- Card target size (leaves padding for centering)
 
 -- Get board card dimensions (computed same way as gameplay.lua)
 -- Uses 15% of screen width with 48:64 aspect ratio

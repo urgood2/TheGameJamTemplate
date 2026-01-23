@@ -22,18 +22,20 @@ local signal = require("external.hump.signal")
 local dsl = require("ui.ui_syntax_sugar")
 local z_orders = require("core.z_orders")
 local timer = require("core.timer")
+local ui_scale = require("ui.ui_scale")
 
 -- local SPRITE_NAME = "inventory-tab-marker.png"
-local MARKER_WIDTH = 48
-local MARKER_HEIGHT = 32
+local UI = ui_scale.ui
+local MARKER_WIDTH = UI(48)
+local MARKER_HEIGHT = UI(32)
 local MARKER_Z = z_orders.ui_tooltips + 200  -- Above inventory UI
 local TIMER_GROUP = "inventory_tab_marker"
 local RENDER_LAYER = "ui"
 
 -- Match inventory panel dimensions for positioning (from player_inventory.lua)
 -- PANEL_HEIGHT = HEADER(32) + TABS(32) + GRID(212) + FOOTER(36) + PADDING(20) = 332
-local INVENTORY_PANEL_HEIGHT = 332
-local GAP_ABOVE_PANEL = 8  -- Gap between marker and panel top
+local INVENTORY_PANEL_HEIGHT = UI(332)
+local GAP_ABOVE_PANEL = UI(8)  -- Gap between marker and panel top
 
 local state = {
     entity = nil,

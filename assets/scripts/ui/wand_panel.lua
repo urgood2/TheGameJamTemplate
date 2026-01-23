@@ -48,8 +48,14 @@ local UI_TOOLTIPS_Z = (z_orders_ok and z_orders_module and z_orders_module.ui_to
 local CARD_Z = UI_TOOLTIPS_Z + 100
 local DRAG_Z = UI_TOOLTIPS_Z + 500  -- Dragged cards above all
 
--- OFFSCREEN POSITION (Move UP when hidden since panel is at top)
-local OFFSCREEN_Y_OFFSET = -800
+-- Panel positioning
+local TOP_MARGIN = 16
+
+-- Tab marker (panel reopen tab)
+local TAB_MARKER_WIDTH = 64
+local TAB_MARKER_HEIGHT = 64
+local TAB_MARKER_MARGIN = 6
+local DEFAULT_HIDDEN_OFFSET = -800
 
 -- LAYOUT CONSTANTS
 local SPRITE_BASE_W = 32
@@ -67,10 +73,11 @@ local TAB_HEIGHT = 64
 local TAB_SPACING = 4
 local TAB_OFFSET_X = -TAB_WIDTH - 8  -- Position left of panel with gap
 
-local HEADER_HEIGHT = 40
+local HEADER_HEIGHT = 32
 local SECTION_HEADER_HEIGHT = 24
-local STATS_ROW_HEIGHT = 28
 local PANEL_PADDING = 12
+local COLUMN_SPACING = 12
+local STATS_BOX_WIDTH = 190
 
 --------------------------------------------------------------------------------
 -- MODULE STATE (single source of truth)
@@ -87,6 +94,7 @@ local state = {
     triggerGridContainerEntity = nil,
     actionGridContainerEntity = nil,
     tabContainerEntity = nil,
+    tabMarkerEntity = nil,
     statsRowEntity = nil,
 
     -- Grid management
@@ -152,11 +160,30 @@ local function calculatePanelDimensions(wandDef)
     local triggerGridHeight = triggerRows * SLOT_HEIGHT + (triggerRows - 1) * SLOT_SPACING + GRID_PADDING * 2
     local actionGridHeight = actionRows * SLOT_HEIGHT + (actionRows - 1) * SLOT_SPACING + GRID_PADDING * 2
 
-    local contentWidth = math.max(triggerGridWidth, actionGridWidth)
-    local contentHeight = HEADER_HEIGHT + SECTION_HEADER_HEIGHT + triggerGridHeight +
-                          SECTION_HEADER_HEIGHT + actionGridHeight + STATS_ROW_HEIGHT
+    local triggerSectionHeight = SECTION_HEADER_HEIGHT + triggerGridHeight
+    local actionSectionHeight = SECTION_HEADER_HEIGHT + actionGridHeight
+    local statsBoxHeight = math.max(triggerSectionHeight, actionSectionHeight)
+
+    local contentWidth = triggerGridWidth + actionGridWidth + STATS_BOX_WIDTH + (COLUMN_SPACING * 2)
+    local contentHeight = math.max(triggerSectionHeight, actionSectionHeight, statsBoxHeight)
 
     return contentWidth + PANEL_PADDING * 2, contentHeight + PANEL_PADDING * 2
+end
+
+--- Compute hidden Y offset so the tab marker stays visible at the top edge
+local function getHiddenPanelOffset()
+    if state.panelHeight and state.panelHeight > 0 then
+        local keepVisible = TAB_MARKER_HEIGHT + TAB_MARKER_MARGIN
+        return -math.max(0, state.panelHeight - keepVisible)
+    end
+    return DEFAULT_HIDDEN_OFFSET
+end
+
+--- Get tab marker offsets relative to panel
+local function getTabMarkerOffsets()
+    local offsetX = math.floor((state.panelWidth - TAB_MARKER_WIDTH) / 2)
+    local offsetY = math.max(0, (state.panelHeight - TAB_MARKER_HEIGHT - TAB_MARKER_MARGIN))
+    return offsetX, offsetY
 end
 
 --------------------------------------------------------------------------------
@@ -177,8 +204,8 @@ local function setEntityVisible(entity, visible, onscreenX, onscreenY, dbgLabel)
     if not _G.registry:valid(entity) then return end
 
     local targetX = onscreenX
-    -- For top-of-screen panel: hide by moving UP (negative Y)
-    local targetY = visible and onscreenY or (onscreenY + OFFSCREEN_Y_OFFSET)
+    -- For top-of-screen panel: hide by moving UP while leaving tab visible
+    local targetY = visible and onscreenY or (onscreenY + getHiddenPanelOffset())
 
     -- Update Transform for the main entity
     local component_cache = _G.component_cache
@@ -242,6 +269,32 @@ end
 local function setAllCardsVisible(visible)
     for itemEntity in pairs(state.cardRegistry) do
         setCardEntityVisible(itemEntity, visible)
+    end
+end
+
+--- Toggle tab marker visibility
+local function setTabMarkerVisible(visible)
+    if not state.tabMarkerEntity then return end
+    if not _G.registry or not _G.registry.valid then return end
+    if not _G.registry:valid(state.tabMarkerEntity) then return end
+
+    if _G.ui and _G.ui.box and _G.ui.box.AddStateTagToUIBox and _G.ui.box.ClearStateTagsFromUIBox then
+        if visible then
+            _G.ui.box.AddStateTagToUIBox(_G.registry, state.tabMarkerEntity, "default_state")
+        else
+            _G.ui.box.ClearStateTagsFromUIBox(_G.registry, state.tabMarkerEntity)
+        end
+        return
+    end
+
+    if visible then
+        if _G.add_state_tag then
+            _G.add_state_tag(state.tabMarkerEntity, "default_state")
+        end
+    else
+        if _G.clear_state_tags then
+            _G.clear_state_tags(state.tabMarkerEntity)
+        end
     end
 end
 
@@ -438,7 +491,7 @@ local function positionTabs()
     if ok and ChildBuilder and ChildBuilder.for_entity then
         ChildBuilder.for_entity(state.tabContainerEntity)
             :attachTo(state.panelEntity)
-            :offset(TAB_OFFSET_X, HEADER_HEIGHT)
+            :offset(TAB_OFFSET_X, 0)
             :apply()
     end
 end
@@ -720,91 +773,95 @@ local function formatStatValue(value, suffix)
     return tostring(value)
 end
 
---- Create DSL definition for wand stats row
+--- Build stats text for the wand (multi-line)
 --- @param wandDef table Wand definition
---- @return table DSL hbox definition with stat texts
-local function createWandStatsRow(wandDef)
-    local stats = {}
+--- @return string
+local function buildStatsText(wandDef)
+    local lines = {}
+
+    local function addLine(label, value, suffix)
+        local formatted = formatStatValue(value, suffix)
+        if formatted then
+            table.insert(lines, label .. ": " .. formatted)
+        end
+    end
+
+    addLine("Cast", wandDef.cast_delay, "ms")
+    addLine("Recharge", wandDef.recharge_time, "ms")
+    addLine("Spread", wandDef.spread_angle, "deg")
+    addLine("Block", wandDef.cast_block_size, nil)
+    addLine("Mana", wandDef.mana_max, nil)
+
+    if wandDef.shuffle ~= nil then
+        table.insert(lines, "Shuffle: " .. (wandDef.shuffle and "Yes" or "No"))
+    end
+
+    if wandDef.trigger_type then
+        local triggerLabel = string.upper(string.gsub(wandDef.trigger_type, "_", " "))
+        table.insert(lines, "Trigger: " .. triggerLabel)
+    end
+
+    if wandDef.always_cast_cards and #wandDef.always_cast_cards > 0 then
+        table.insert(lines, "Always Cast: +" .. tostring(#wandDef.always_cast_cards))
+    end
+
+    if #lines == 0 then
+        table.insert(lines, "No stats")
+    end
+
+    return table.concat(lines, "\n")
+end
+
+--- Create DSL definition for wand stats box
+--- @param wandDef table Wand definition
+--- @param minHeight number? Optional minimum height for alignment
+--- @return table DSL root definition with text box
+local function createWandStatsRow(wandDef, minHeight)
+    local statsText = buildStatsText(wandDef)
 
     -- Try to load DSL module
     local dsl_ok, dsl = pcall(require, "ui.ui_syntax_sugar")
     local useDsl = dsl_ok and dsl and dsl.strict
 
-    local function addStat(label, value, color, suffix)
-        local formatted = formatStatValue(value, suffix)
-        if formatted then
-            if useDsl then
-                table.insert(stats, dsl.strict.text(
-                    label .. ": " .. formatted,
-                    { fontSize = 10, color = color or "white", shadow = true }
-                ))
-                table.insert(stats, dsl.strict.spacer(12))
-            else
-                -- Test stub
-                table.insert(stats, {
-                    type = "text",
-                    content = label .. ": " .. formatted,
-                    color = color or "white",
-                })
-                table.insert(stats, { type = "spacer", size = 12 })
-            end
-        end
-    end
-
-    -- Core stats
-    addStat("Cast", wandDef.cast_delay, "cyan", "ms")
-    addStat("Recharge", wandDef.recharge_time, "green", "ms")
-    addStat("Spread", wandDef.spread_angle, "yellow", "deg")
-    addStat("Block", wandDef.cast_block_size, "apricot_cream", nil)
-    addStat("Mana", wandDef.mana_max, "blue", nil)
-
-    -- Shuffle indicator
-    if wandDef.shuffle then
-        if useDsl then
-            table.insert(stats, dsl.strict.text("SHUFFLE", { fontSize = 10, color = "red", shadow = true }))
-            table.insert(stats, dsl.strict.spacer(12))
-        else
-            table.insert(stats, { type = "text", content = "SHUFFLE", color = "red" })
-            table.insert(stats, { type = "spacer", size = 12 })
-        end
-    end
-
-    -- Trigger indicator (runtime comes from equipped trigger card, not wandDef.trigger_type)
-    if wandDef.trigger_type then
-        local triggerLabel = string.upper(string.gsub(wandDef.trigger_type, "_", " "))
-        if useDsl then
-            table.insert(stats, dsl.strict.text(triggerLabel, { fontSize = 10, color = "purple", shadow = true }))
-            table.insert(stats, dsl.strict.spacer(12))
-        else
-            table.insert(stats, { type = "text", content = triggerLabel, color = "purple" })
-            table.insert(stats, { type = "spacer", size = 12 })
-        end
-    end
-
-    -- Always-cast indicator
-    if wandDef.always_cast_cards and #wandDef.always_cast_cards > 0 then
-        local alwaysLabel = "+" .. #wandDef.always_cast_cards .. " Always"
-        if useDsl then
-            table.insert(stats, dsl.strict.text(alwaysLabel, { fontSize = 10, color = "gold", shadow = true }))
-        else
-            table.insert(stats, { type = "text", content = alwaysLabel, color = "gold" })
-        end
-    end
-
     if useDsl then
-        return dsl.strict.hbox {
-            config = {
-                id = "wand_stats_row",
-                padding = 4,
-            },
-            children = stats,
+        local boxConfig = {
+            id = "wand_stats_box",
+            color = "dark_gray_slate",
+            padding = 6,
+            outlineThickness = 1,
+            outlineColor = "apricot_cream",
+            minWidth = STATS_BOX_WIDTH,
+        }
+        if minHeight and minHeight > 0 then
+            boxConfig.minHeight = minHeight
+        end
+
+        return dsl.strict.root {
+            config = boxConfig,
+            children = {
+                dsl.strict.vbox {
+                    config = { padding = 2 },
+                    children = {
+                        createHeader(wandDef),
+                        dsl.strict.spacer(4),
+                        dsl.strict.text(statsText, {
+                            id = "wand_stats_text",
+                            fontSize = 10,
+                            color = "light_gray",
+                            shadow = true,
+                        }),
+                    }
+                }
+            }
         }
     else
-        -- Test stub
         return {
-            type = "hbox",
-            config = { id = "wand_stats_row", padding = 4 },
-            children = stats,
+            type = "root",
+            config = { id = "wand_stats_box", minWidth = STATS_BOX_WIDTH, minHeight = minHeight },
+            children = {
+                createHeader(wandDef),
+                { type = "text", id = "wand_stats_text", content = statsText, color = "light_gray" },
+            },
         }
     end
 end
@@ -814,18 +871,15 @@ local function updateStatsDisplay()
     local wandDef = state.wandDefs[state.activeWandIndex]
     if not wandDef then return end
 
-    -- Recreate stats row with new wand data
-    if state.statsRowEntity then
-        -- Check if registry is available (runtime only)
-        if _G.registry and _G.registry.valid and _G.registry:valid(state.statsRowEntity) then
-            local newStatsRow = createWandStatsRow(wandDef)
+    if not _G.registry or not _G.registry.valid then return end
 
-            if _G.ui and _G.ui.box and _G.ui.box.ReplaceChildren then
-                _G.ui.box.ReplaceChildren(state.statsRowEntity, newStatsRow)
-            end
-
-            if _G.ui and _G.ui.box and _G.ui.box.AddStateTagToUIBox then
-                _G.ui.box.AddStateTagToUIBox(_G.registry, state.panelEntity, "default_state")
+    local statsText = buildStatsText(wandDef)
+    if _G.ui and _G.ui.box and _G.ui.box.GetUIEByID then
+        local textEntity = _G.ui.box.GetUIEByID(_G.registry, state.panelEntity, "wand_stats_text")
+        if textEntity and _G.component_cache and _G.UITextComponent then
+            local uiText = _G.component_cache.get(textEntity, _G.UITextComponent)
+            if uiText then
+                uiText.text = statsText
             end
         end
     end
@@ -1158,22 +1212,22 @@ local function createHeader(wandDef)
         return dsl.strict.hbox {
             config = {
                 id = "wand_panel_header",
-                padding = 4,
+                padding = 2,
             },
             children = {
                 dsl.strict.text(titleText, {
                     id = "wand_panel_title",
-                    fontSize = 16,
+                    fontSize = 14,
                     color = "gold",
                     shadow = true,
                 }),
                 dsl.strict.spacer(1),  -- flex spacer
                 dsl.strict.button("X", {
                     id = "wand_panel_close_btn",
-                    fontSize = 14,
-                    minWidth = 24,
-                    minHeight = 24,
-                    color = "red",
+                    fontSize = 12,
+                    minWidth = 22,
+                    minHeight = 22,
+                    color = "apricot_cream",
                     onClick = function()
                         WandPanel.close()
                     end,
@@ -1279,10 +1333,18 @@ local function createPanelDefinition(wandDef)
     local dsl_ok, dsl = pcall(require, "ui.ui_syntax_sugar")
     local useDsl = dsl_ok and dsl and dsl.strict
 
-    local header = createHeader(wandDef)
+    local triggerRows, triggerCols = getGridDimensions(wandDef, "trigger")
+    local actionRows, actionCols = getGridDimensions(wandDef, "action")
+
+    local triggerGridHeight = triggerRows * SLOT_HEIGHT + (triggerRows - 1) * SLOT_SPACING + GRID_PADDING * 2
+    local actionGridHeight = actionRows * SLOT_HEIGHT + (actionRows - 1) * SLOT_SPACING + GRID_PADDING * 2
+    local triggerSectionHeight = SECTION_HEADER_HEIGHT + triggerGridHeight
+    local actionSectionHeight = SECTION_HEADER_HEIGHT + actionGridHeight
+    local statsMinHeight = math.max(triggerSectionHeight, actionSectionHeight)
+
     local triggerSection = createTriggerSection()
     local actionSection = createActionSection()
-    local statsRow = createWandStatsRow(wandDef)
+    local statsRow = createWandStatsRow(wandDef, statsMinHeight)
 
     if useDsl then
         return dsl.strict.spritePanel {
@@ -1294,13 +1356,19 @@ local function createPanelDefinition(wandDef)
                 padding = PANEL_PADDING,
             },
             children = {
-                header,
-                dsl.strict.spacer(8),
-                triggerSection,
-                dsl.strict.spacer(4),
-                actionSection,
-                dsl.strict.spacer(8),
-                statsRow,
+                dsl.strict.hbox {
+                    config = {
+                        id = "wand_panel_row",
+                        padding = 0,
+                    },
+                    children = {
+                        triggerSection,
+                        dsl.strict.spacer(COLUMN_SPACING),
+                        actionSection,
+                        dsl.strict.spacer(COLUMN_SPACING),
+                        statsRow,
+                    }
+                }
             },
         }
     else
@@ -1309,16 +1377,85 @@ local function createPanelDefinition(wandDef)
             sprite = "inventory-back-panel.png",
             config = { id = PANEL_ID, padding = PANEL_PADDING },
             children = {
-                header,
-                { type = "spacer", size = 8 },
-                triggerSection,
-                { type = "spacer", size = 4 },
-                actionSection,
-                { type = "spacer", size = 8 },
-                statsRow,
+                {
+                    type = "hbox",
+                    config = { id = "wand_panel_row", padding = 0 },
+                    children = {
+                        triggerSection,
+                        { type = "spacer", size = COLUMN_SPACING },
+                        actionSection,
+                        { type = "spacer", size = COLUMN_SPACING },
+                        statsRow,
+                    },
+                }
             },
         }
     end
+end
+
+--- Create the small tab marker used to reopen the panel
+local function createTabMarkerDefinition()
+    local dsl_ok, dsl = pcall(require, "ui.ui_syntax_sugar")
+    local useDsl = dsl_ok and dsl and dsl.strict
+
+    if not useDsl then
+        return {
+            type = "hbox",
+            config = { id = "wand_panel_tab_marker" },
+            children = {
+                { type = "anim", sprite = "inventory-tab-marker.png", w = TAB_MARKER_WIDTH, h = TAB_MARKER_HEIGHT },
+            },
+        }
+    end
+
+    return dsl.strict.hbox {
+        config = {
+            id = "wand_panel_tab_marker",
+            canCollide = true,
+            hover = true,
+            padding = 0,
+            buttonCallback = function()
+                WandPanel.open()
+            end,
+        },
+        children = {
+            dsl.anim("inventory-tab-marker.png", { w = TAB_MARKER_WIDTH, h = TAB_MARKER_HEIGHT })
+        }
+    }
+end
+
+--- Position the tab marker relative to the panel
+local function positionTabMarker()
+    if not state.tabMarkerEntity or not state.panelEntity then return end
+    if not _G.registry or not _G.registry.valid then return end
+    if not _G.registry:valid(state.tabMarkerEntity) then return end
+    if not _G.registry:valid(state.panelEntity) then return end
+
+    local ok, ChildBuilder = pcall(require, "core.child_builder")
+    if ok and ChildBuilder and ChildBuilder.for_entity then
+        local offsetX, offsetY = getTabMarkerOffsets()
+        ChildBuilder.for_entity(state.tabMarkerEntity)
+            :attachTo(state.panelEntity)
+            :offset(offsetX, offsetY)
+            :apply()
+    end
+end
+
+--- Update cached panel dimensions and position (centered at top)
+local function updatePanelPosition(wandDef)
+    local screenW = _G.GetScreenWidth and _G.GetScreenWidth() or 1280
+    local panelW, panelH = calculatePanelDimensions(wandDef)
+
+    state.panelWidth = panelW
+    state.panelHeight = panelH
+    state.panelX = math.max(8, math.floor((screenW - panelW) * 0.5))
+    state.panelY = TOP_MARGIN
+
+    if state.panelEntity then
+        setEntityVisible(state.panelEntity, state.isVisible, state.panelX, state.panelY, "WandPanel")
+    end
+
+    positionTabMarker()
 end
 
 --------------------------------------------------------------------------------
@@ -1332,6 +1469,7 @@ local function showPanel()
     setEntityVisible(state.panelEntity, true, state.panelX, state.panelY, "WandPanel")
     setGridItemsVisible(state.triggerGridEntity, true)
     setGridItemsVisible(state.actionGridEntity, true)
+    setTabMarkerVisible(false)
 
     -- Reapply state tags for rendering
     if _G.ui and _G.ui.box and _G.ui.box.AddStateTagToUIBox then
@@ -1346,6 +1484,7 @@ local function hidePanel()
     setEntityVisible(state.panelEntity, false, state.panelX, state.panelY, "WandPanel")
     setGridItemsVisible(state.triggerGridEntity, false)
     setGridItemsVisible(state.actionGridEntity, false)
+    setTabMarkerVisible(true)
 end
 
 --- Inject trigger grid into container
@@ -1482,23 +1621,16 @@ function WandPanel.initialize()
         return false
     end
 
-    -- Calculate panel position (right side of screen)
-    local screenW = _G.GetScreenWidth and _G.GetScreenWidth() or 1280
-    local screenH = _G.GetScreenHeight and _G.GetScreenHeight() or 720
+    -- Calculate panel position (centered at top)
     local wandDef = state.wandDefs[state.activeWandIndex]
-    local panelW, panelH = calculatePanelDimensions(wandDef)
-
-    state.panelX = screenW - panelW - 20  -- 20px from right edge
-    state.panelY = 100  -- Below top UI
-    state.panelWidth = panelW
-    state.panelHeight = panelH
+    updatePanelPosition(wandDef)
 
     -- Create panel definition
     local panelDef = createPanelDefinition(wandDef)
 
     -- Spawn panel offscreen initially
     state.panelEntity = dsl.spawn(
-        { x = state.panelX, y = state.panelY + OFFSCREEN_Y_OFFSET },
+        { x = state.panelX, y = state.panelY + getHiddenPanelOffset() },
         panelDef,
         RENDER_LAYER,
         PANEL_Z
@@ -1514,6 +1646,22 @@ function WandPanel.initialize()
     -- Set draw layer
     if _G.ui and _G.ui.box and _G.ui.box.set_draw_layer then
         _G.ui.box.set_draw_layer(state.panelEntity, RENDER_LAYER)
+    end
+
+    -- Spawn tab marker (reopen tab)
+    local tabDef = createTabMarkerDefinition()
+    if tabDef and dsl.spawn then
+        state.tabMarkerEntity = dsl.spawn(
+            { x = state.panelX, y = state.panelY },
+            tabDef,
+            RENDER_LAYER,
+            PANEL_Z - 1
+        )
+        if state.tabMarkerEntity and _G.ui and _G.ui.box and _G.ui.box.set_draw_layer then
+            _G.ui.box.set_draw_layer(state.tabMarkerEntity, RENDER_LAYER)
+        end
+        positionTabMarker()
+        setTabMarkerVisible(true)
     end
 
     -- Find container entities
@@ -1721,6 +1869,8 @@ function WandPanel.selectWand(index)
     if state.initialized then
         local wandDef = state.wandDefs[state.activeWandIndex]
 
+        updatePanelPosition(wandDef)
+
         -- Suspend adapter sync during internal swap
         state.suspendSync = true
 
@@ -1924,6 +2074,7 @@ function WandPanel.destroy()
     state.actionGridEntity = nil
     state.panelEntity = nil
     state.tabContainerEntity = nil
+    state.tabMarkerEntity = nil
     state.tabEntities = {}
     state.initialized = false
     state.isVisible = false
@@ -2025,6 +2176,7 @@ WandPanel._test = {
     cleanupGrid = cleanupGrid,
     -- Stats display helpers
     formatStatValue = formatStatValue,
+    buildStatsText = buildStatsText,
     createWandStatsRow = createWandStatsRow,
     updateStatsDisplay = updateStatsDisplay,
     -- WandAdapter sync helpers

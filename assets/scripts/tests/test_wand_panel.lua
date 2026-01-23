@@ -482,7 +482,7 @@ describe("WandPanel Stats Display", function()
         expect(formatStatValue(-1, "ms")).to_be_falsy()
     end)
 
-    it("creates stats row with wand properties", function()
+    it("creates stats box with wand properties", function()
         local WandPanel = require("ui.wand_panel")
 
         local createWandStatsRow = WandPanel._test.createWandStatsRow
@@ -502,47 +502,38 @@ describe("WandPanel Stats Display", function()
             shuffle = true,
         }
 
-        local statsRow = createWandStatsRow(wandDef)
+        local statsBox = createWandStatsRow(wandDef)
 
-        -- Should create an hbox
-        expect(statsRow).to_be_truthy()
-        expect(statsRow.type).to_be("hbox")
+        -- Should create a root container
+        expect(statsBox).to_be_truthy()
+        expect(statsBox.type).to_be("root")
 
-        -- Should have children (stat texts + spacers)
-        expect(statsRow.children).to_be_truthy()
-        expect(#statsRow.children > 0).to_be(true)
+        -- Should have children (header + stats text)
+        expect(statsBox.children).to_be_truthy()
+        expect(#statsBox.children > 0).to_be(true)
     end)
 
     it("includes shuffle indicator when enabled", function()
         local WandPanel = require("ui.wand_panel")
 
-        local createWandStatsRow = WandPanel._test.createWandStatsRow
-        if not createWandStatsRow then
+        local buildStatsText = WandPanel._test.buildStatsText
+        if not buildStatsText then
             print("  (skipped: _test helpers not exposed)")
             return
         end
 
         -- Wand with shuffle = true
         local shuffleWand = { id = "SHUFFLE", shuffle = true }
-        local statsRow = createWandStatsRow(shuffleWand)
+        local statsText = buildStatsText(shuffleWand)
 
-        -- Find SHUFFLE text in children
-        local hasShuffleIndicator = false
-        for _, child in ipairs(statsRow.children or {}) do
-            if child.type == "text" and child.content and child.content:find("SHUFFLE") then
-                hasShuffleIndicator = true
-                break
-            end
-        end
-
-        expect(hasShuffleIndicator).to_be(true)
+        expect(statsText:find("Shuffle: Yes") ~= nil).to_be(true)
     end)
 
     it("includes always_cast indicator when cards present", function()
         local WandPanel = require("ui.wand_panel")
 
-        local createWandStatsRow = WandPanel._test.createWandStatsRow
-        if not createWandStatsRow then
+        local buildStatsText = WandPanel._test.buildStatsText
+        if not buildStatsText then
             print("  (skipped: _test helpers not exposed)")
             return
         end
@@ -551,18 +542,9 @@ describe("WandPanel Stats Display", function()
             id = "ALWAYS_CAST",
             always_cast_cards = { "CARD_1", "CARD_2" },
         }
-        local statsRow = createWandStatsRow(alwaysCastWand)
+        local statsText = buildStatsText(alwaysCastWand)
 
-        -- Find always cast indicator in children
-        local hasAlwaysCastIndicator = false
-        for _, child in ipairs(statsRow.children or {}) do
-            if child.type == "text" and child.content and child.content:find("Always") then
-                hasAlwaysCastIndicator = true
-                break
-            end
-        end
-
-        expect(hasAlwaysCastIndicator).to_be(true)
+        expect(statsText:find("Always Cast") ~= nil).to_be(true)
     end)
 
 end)

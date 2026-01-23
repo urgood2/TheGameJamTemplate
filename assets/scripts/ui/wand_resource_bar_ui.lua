@@ -4,6 +4,7 @@
 
 local cardEval = require("core.card_eval_order_test")
 local z_orders = require("core.z_orders")
+local ui_scale = require("ui.ui_scale")
 
 local M = {}
 
@@ -13,22 +14,22 @@ local M = {}
 
 -- Match C++ util::getCornerSizeForRect: max(max(w,h)/60, 12)
 local function getCornerRadius(w, h)
-    return math.max(math.max(w, h) / 60, 12)
+    return math.max(math.max(w, h) / 60, ui_scale.ui(12))
 end
 
 local function getBarRadius(h)
-    return math.max(h * 0.5, 4)
+    return math.max(h * 0.5, ui_scale.ui(4))
 end
 
 local CONFIG = {
-    barWidth = 220,
-    barHeight = 16,
-    overflowMaxWidth = 110,
-    x = 20,
-    y = 500,
-    textFontSize = 14,
-    padding = 8,
-    gap = 6,
+    barWidth = ui_scale.ui(220),
+    barHeight = ui_scale.ui(16),
+    overflowMaxWidth = ui_scale.ui(110),
+    x = ui_scale.ui(20),
+    y = ui_scale.ui(500),
+    textFontSize = ui_scale.ui(14),
+    padding = ui_scale.ui(8),
+    gap = ui_scale.ui(6),
 }
 
 -- Z-ordering (below cards at z_orders.card=101, below board at z_orders.board=100)
@@ -205,7 +206,7 @@ function M.draw()
     end
     local textWidth = measureText(statsText, CONFIG.textFontSize)
     
-    local barTotalWidth = totalWidth + (overflowWidth > 0 and (overflowWidth + 4) or 0)
+    local barTotalWidth = totalWidth + (overflowWidth > 0 and (overflowWidth + ui_scale.ui(4)) or 0)
     local contentWidth = math.max(barTotalWidth, textWidth)
     local containerWidth = contentWidth + CONFIG.padding * 2
     local containerHeight = totalHeight + CONFIG.textFontSize + CONFIG.gap + CONFIG.padding * 2
@@ -254,7 +255,7 @@ function M.draw()
 
     -- 4. Capacity marker (vertical tick at 100% capacity, aligned with bar bottom)
     local capacityX = barX + totalWidth
-    local tickHeight = 8
+    local tickHeight = ui_scale.ui(8)
     command_buffer.queueDrawRectangle(layers.ui, function(c)
         c.x = capacityX - 1
         c.y = barY + totalHeight - tickHeight

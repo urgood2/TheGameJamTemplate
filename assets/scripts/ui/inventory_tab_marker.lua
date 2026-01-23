@@ -54,7 +54,7 @@ local function calculatePosition()
     end
 
     -- Calculate where the inventory panel top would be
-    local panelY = screenH - INVENTORY_PANEL_HEIGHT - 10
+    local panelY = screenH - INVENTORY_PANEL_HEIGHT - UI(10)
 
     -- Position marker centered horizontally, just above the panel
     local x = (screenW - MARKER_WIDTH) / 2

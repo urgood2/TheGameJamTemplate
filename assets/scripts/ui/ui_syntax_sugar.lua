@@ -80,6 +80,7 @@ local component_cache = require("core.component_cache")
 local def    = ui.definitions.def
 local wrap   = ui.definitions.wrapEntityInsideObjectElement
 local getDyn = ui.definitions.getNewDynamicTextEntry
+local ui_scale = require("ui.ui_scale")
 
 ------------------------------------------------------------
 -- Utility: Color resolver
@@ -369,8 +370,8 @@ function dsl.anim(id, opts)
 
     -- When isAnimation=true, treat `id` as an existing animation id; otherwise treat it as a sprite id.
     local generateNewAnimFromSprite = not opts.isAnimation
-    local width      = opts.w or 40
-    local height     = opts.h or 40
+    local width      = opts.w or ui_scale.ui(40)
+    local height     = opts.h or ui_scale.ui(40)
     local enableShadow = (opts.shadow ~= false)  -- default true unless explicitly false
 
     -- Pass shadow flag explicitly
@@ -788,8 +789,8 @@ function dsl.spacer(w, h)
         type = "RECT_SHAPE",
         config = {
             color = resolveSpacerColor(),
-            minWidth = w or 10,
-            minHeight = h or w or 10,
+            minWidth = w or ui_scale.ui(10),
+            minHeight = h or w or ui_scale.ui(10),
             instanceType = "spacer",
         }
     }
@@ -1687,13 +1688,13 @@ function dsl.inventoryGrid(opts)
     opts = opts or {}
     local rows = opts.rows or 3
     local cols = opts.cols or 3
-    local slotW = opts.slotSize and opts.slotSize.w or 64
-    local slotH = opts.slotSize and opts.slotSize.h or 64
-    local spacing = opts.slotSpacing or 4
+    local slotW = opts.slotSize and opts.slotSize.w or ui_scale.ui(64)
+    local slotH = opts.slotSize and opts.slotSize.h or ui_scale.ui(64)
+    local spacing = opts.slotSpacing or ui_scale.ui(4)
     local gridId = opts.id or ("grid_" .. tostring(math.random(100000, 999999)))
     local gridConfig = opts.config or {}
     local slotsConfig = opts.slots or {}
-    local outerPadding = gridConfig.padding or 4
+    local outerPadding = gridConfig.padding or ui_scale.ui(4)
 
     -- Calculate total grid dimensions for explicit sizing
     local contentW = (cols * slotW) + ((cols - 1) * spacing)

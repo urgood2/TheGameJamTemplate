@@ -56,6 +56,7 @@ local component_cache = require("core.component_cache")
 local z_orders = require("core.z_orders")
 local entity_cache = require("core.entity_cache")
 local Q = require("core.Q")
+local ui_scale = require("ui.ui_scale")
 
 -- Safe require for optional dependencies
 local CardsData = nil
@@ -68,23 +69,23 @@ pcall(function() CardRarityTags = require("data.card_rarity_tags") end)
 --------------------------------------------------------------------------------
 local Style = {
     -- Fixed dimensions (per spec)
-    BOX_WIDTH = 280,            -- Fixed width for all 3 boxes
-    BOX_GAP = 4,                -- Gap between boxes
-    EDGE_GAP = 12,              -- Minimum screen edge margin
+    BOX_WIDTH = ui_scale.ui(280),            -- Fixed width for all 3 boxes
+    BOX_GAP = ui_scale.ui(4),                -- Gap between boxes
+    EDGE_GAP = ui_scale.ui(12),              -- Minimum screen edge margin
     ANCHOR_GAP = 0,             -- Gap between tooltip and anchor entity (0 = flush)
-    OUTLINE_THICKNESS = 2,      -- Outline thickness for all boxes
+    OUTLINE_THICKNESS = ui_scale.ui(2),      -- Outline thickness for all boxes
     
     -- Box padding
-    namePadding = 6,
-    descPadding = 8,
-    infoPadding = 6,
+    namePadding = ui_scale.ui(6),
+    descPadding = ui_scale.ui(8),
+    infoPadding = ui_scale.ui(6),
     
     -- Font sizes (standardized for visual consistency)
-    nameFontSize = 16,          -- Title - larger but not too large
-    descFontSize = 12,          -- Description text
-    statLabelFontSize = 11,     -- Stat labels
-    statValueFontSize = 12,     -- Stat values (same as desc for consistency)
-    tagFontSize = 10,           -- Tag pills (slightly smaller)
+    nameFontSize = ui_scale.ui(16),          -- Title - larger but not too large
+    descFontSize = ui_scale.ui(12),          -- Description text
+    statLabelFontSize = ui_scale.ui(11),     -- Stat labels
+    statValueFontSize = ui_scale.ui(12),     -- Stat values (same as desc for consistency)
+    tagFontSize = ui_scale.ui(10),           -- Tag pills (slightly smaller)
     
     -- Colors (matched from existing tooltipStyle in gameplay.lua)
     bgColor = nil,              -- Will be set from util.getColor or fallback
@@ -159,9 +160,9 @@ local Style = {
     fontName = "tooltip",
     
     -- Minimum box heights when empty
-    minNameHeight = 24,
-    minDescHeight = 20,
-    minInfoHeight = 20,
+    minNameHeight = ui_scale.ui(24),
+    minDescHeight = ui_scale.ui(20),
+    minInfoHeight = ui_scale.ui(20),
 }
 
 -- Initialize colors from util (or use fallback)
@@ -414,10 +415,10 @@ local function buildStatRow(label, value)
 
     return dsl.strict.hbox {
         config = {
-            padding = 2,
+            padding = ui_scale.ui(2),
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
         },
-        children = { labelNode, dsl.strict.spacer(4), valueNode }
+        children = { labelNode, dsl.strict.spacer(ui_scale.ui(4)), valueNode }
     }
 end
 
@@ -426,12 +427,12 @@ local function buildTagPill(tag)
     local tagColor = Style.tagColors[tag] or Style.defaultTagColor
 
     -- Calculate pill height based on font size + padding for proper centering
-    local pillHeight = Style.tagFontSize + 6  -- font size + vertical padding
+    local pillHeight = Style.tagFontSize + ui_scale.ui(6)  -- font size + vertical padding
 
     return dsl.strict.hbox {
         config = {
             color = getColor(tagColor),
-            padding = 3,
+            padding = ui_scale.ui(3),
             minHeight = pillHeight,
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
         },
@@ -467,7 +468,7 @@ local function buildInfoBox(info, opts)
             -- Wrap stats in a vbox
             table.insert(children, dsl.strict.vbox {
                 config = {
-                    padding = 2,
+                    padding = ui_scale.ui(2),
                     align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
                 },
                 children = statRows
@@ -480,13 +481,13 @@ local function buildInfoBox(info, opts)
         local pillNodes = {}
         for _, tag in ipairs(info.tags) do
             table.insert(pillNodes, buildTagPill(tag))
-            table.insert(pillNodes, dsl.strict.spacer(4, 1))  -- Small gap between pills
+            table.insert(pillNodes, dsl.strict.spacer(ui_scale.ui(4), ui_scale.ui(1)))  -- Small gap between pills
         end
             table.remove(pillNodes)
 
         table.insert(children, dsl.strict.hbox {
             config = {
-                padding = 2,
+                padding = ui_scale.ui(2),
                 align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
             },
             children = pillNodes
@@ -513,7 +514,7 @@ local function buildInfoBox(info, opts)
         children = {
             dsl.strict.vbox {
                 config = {
-                    padding = 2,
+                    padding = ui_scale.ui(2),
                     align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
                 },
                 children = children
@@ -656,8 +657,8 @@ end
 
 -- Default anchor size when dimensions are missing or zero
 -- Based on typical card sizes in the UI (see trigger_strip_ui, wand_cooldown_ui)
-local DEFAULT_ANCHOR_W = 80
-local DEFAULT_ANCHOR_H = 112
+local DEFAULT_ANCHOR_W = ui_scale.ui(80)
+local DEFAULT_ANCHOR_H = ui_scale.ui(112)
 
 -- Convert world-space position to screen-space using camera
 -- Returns screenX, screenY

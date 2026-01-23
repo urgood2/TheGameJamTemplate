@@ -36,6 +36,7 @@ local dsl = require("ui.ui_syntax_sugar")
 local timer = require("core.timer")
 local signal = require("external.hump.signal")
 local signal_group = require("core.signal_group")
+local ui_scale = require("ui.ui_scale")
 
 local tooltip_registry = nil
 local PlayerStatsAccessor = nil
@@ -59,13 +60,13 @@ end
 --------------------------------------------------------------------------------
 -- Constants
 --------------------------------------------------------------------------------
-local PANEL_WIDTH = 340
-local PANEL_PADDING = 10
+local PANEL_WIDTH = ui_scale.ui(340)
+local PANEL_PADDING = ui_scale.ui(10)
 local SLIDE_DURATION = 0.3
-local ROW_HEIGHT = 22
-local ROW_FONT_SIZE = 13
-local HEADER_FONT_SIZE = 14
-local SECTION_HEADER_HEIGHT = 26
+local ROW_HEIGHT = ui_scale.ui(22)
+local ROW_FONT_SIZE = ui_scale.ui(13)
+local HEADER_FONT_SIZE = ui_scale.ui(14)
+local SECTION_HEADER_HEIGHT = ui_scale.ui(26)
 
 -- Section icons (emoji fallback if sprites not available)
 local SECTION_ICONS = {
@@ -462,14 +463,14 @@ local function buildHeader(snapshot)
         },
         children = {
             dsl.strict.text(L("stats_panel.title", "Character Stats"), {
-                fontSize = 16,
+                fontSize = ui_scale.ui(16),
                 color = "apricot_cream",
                 shadow = true,
             }),
-            dsl.strict.spacer(10),
+            dsl.strict.spacer(ui_scale.ui(10)),
             dsl.strict.text(string.format("Lv.%d", level), {
                 id = "header_level",
-                fontSize = 14,
+                fontSize = ui_scale.ui(14),
                 color = "gold",
                 shadow = true,
             }),
@@ -485,27 +486,27 @@ local function buildHeader(snapshot)
         end,
         emptyColor = "dark_gray_slate",
         fullColor = "gold",
-        minWidth = PANEL_WIDTH - 40,
-        minHeight = 8,
+        minWidth = PANEL_WIDTH - ui_scale.ui(40),
+        minHeight = ui_scale.ui(8),
     })
 
     local xpText = dsl.strict.text(string.format("%d / %d XP", xp, xpToNext), {
         id = "header_xp_text",
-        fontSize = 10,
+        fontSize = ui_scale.ui(10),
         color = "gray",
     })
 
     return dsl.strict.vbox {
         config = {
             id = "stats_panel_header",
-            padding = 8,
+            padding = ui_scale.ui(8),
             color = getColors().header_bg,
         },
         children = {
             titleRow,
-            dsl.strict.spacer(4),
+            dsl.strict.spacer(ui_scale.ui(4)),
             xpBar,
-            dsl.strict.spacer(2),
+            dsl.strict.spacer(ui_scale.ui(2)),
             xpText,
         }
     }
@@ -521,7 +522,7 @@ local function buildSectionHeader(sectionDef)
     
     return dsl.strict.hbox {
         config = {
-            padding = 6,
+            padding = ui_scale.ui(6),
             color = getColors().section_bg,
             minHeight = SECTION_HEADER_HEIGHT,
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
@@ -564,7 +565,7 @@ local function buildStatRow(statKey, snapshot)
             local deltaColor = delta > 0 and "mint_green" or "fiery_red"
             table.insert(deltaChildren, dsl.strict.text(deltaStr, {
                 id = "stat_delta_" .. statKey,
-                fontSize = ROW_FONT_SIZE - 2,
+                fontSize = ROW_FONT_SIZE - ui_scale.ui(2),
                 color = deltaColor,
             }))
         end
@@ -575,7 +576,7 @@ local function buildStatRow(statKey, snapshot)
     return dsl.strict.hbox {
         config = {
             id = "stat_row_" .. statKey,
-            padding = 4,
+            padding = ui_scale.ui(4),
             minHeight = ROW_HEIGHT,
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
             hover = false,
@@ -591,7 +592,7 @@ local function buildStatRow(statKey, snapshot)
             dsl.strict.hbox {
                 config = {
                     padding = 0,
-                    minWidth = 1,  -- Flex spacer
+                    minWidth = ui_scale.ui(1),  -- Flex spacer
                     align = AlignmentFlag.HORIZONTAL_RIGHT,
                 },
                 children = {}
@@ -608,7 +609,7 @@ local function buildStatRow(statKey, snapshot)
                         fontSize = ROW_FONT_SIZE,
                         color = valueColor,
                     }),
-                    #deltaChildren > 0 and dsl.strict.spacer(4) or nil,
+                    #deltaChildren > 0 and dsl.strict.spacer(ui_scale.ui(4)) or nil,
                     #deltaChildren > 0 and deltaChildren[1] or nil,
                 }
             },
@@ -620,20 +621,20 @@ end
 local function buildElementalGrid(snapshot)
     local perType = snapshot and snapshot.per_type or {}
     
-    local COL_WIDTH = 55
-    local ELEM_COL_WIDTH = 70
+    local COL_WIDTH = ui_scale.ui(55)
+    local ELEM_COL_WIDTH = ui_scale.ui(70)
     
     -- Header row
     local headerRow = dsl.strict.hbox {
         config = {
-            padding = 2,
+            padding = ui_scale.ui(2),
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
         },
         children = {
-            dsl.strict.text("Element", { fontSize = 10, color = "gray", minWidth = ELEM_COL_WIDTH }),
-            dsl.strict.text("Resist", { fontSize = 10, color = "gray", minWidth = COL_WIDTH }),
-            dsl.strict.text("Damage", { fontSize = 10, color = "gray", minWidth = COL_WIDTH }),
-            dsl.strict.text("Duration", { fontSize = 10, color = "gray", minWidth = COL_WIDTH }),
+            dsl.strict.text("Element", { fontSize = ui_scale.ui(10), color = "gray", minWidth = ELEM_COL_WIDTH }),
+            dsl.strict.text("Resist", { fontSize = ui_scale.ui(10), color = "gray", minWidth = COL_WIDTH }),
+            dsl.strict.text("Damage", { fontSize = ui_scale.ui(10), color = "gray", minWidth = COL_WIDTH }),
+            dsl.strict.text("Duration", { fontSize = ui_scale.ui(10), color = "gray", minWidth = COL_WIDTH }),
         }
     }
     
@@ -661,30 +662,30 @@ local function buildElementalGrid(snapshot)
         table.insert(rows, dsl.strict.hbox {
             config = {
                 id = "elem_row_" .. elemType,
-                padding = 2,
+                padding = ui_scale.ui(2),
                 align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
             },
             children = {
                 dsl.strict.text(displayName, {
-                    fontSize = ROW_FONT_SIZE - 1,
+                    fontSize = ROW_FONT_SIZE - ui_scale.ui(1),
                     color = config.color,
                     minWidth = ELEM_COL_WIDTH,
                 }),
                 dsl.strict.text(formatGridValue(data.resist, config.hasResist), {
                     id = "elem_" .. elemType .. "_resist",
-                    fontSize = ROW_FONT_SIZE - 1,
+                    fontSize = ROW_FONT_SIZE - ui_scale.ui(1),
                     color = getGridColor(data.resist, config.hasResist),
                     minWidth = COL_WIDTH,
                 }),
                 dsl.strict.text(formatGridValue(data.damage, true), {
                     id = "elem_" .. elemType .. "_damage",
-                    fontSize = ROW_FONT_SIZE - 1,
+                    fontSize = ROW_FONT_SIZE - ui_scale.ui(1),
                     color = getGridColor(data.damage, true),
                     minWidth = COL_WIDTH,
                 }),
                 dsl.strict.text(formatGridValue(data.duration, config.hasDuration), {
                     id = "elem_" .. elemType .. "_duration",
-                    fontSize = ROW_FONT_SIZE - 1,
+                    fontSize = ROW_FONT_SIZE - ui_scale.ui(1),
                     color = getGridColor(data.duration, config.hasDuration),
                     minWidth = COL_WIDTH,
                 }),
@@ -694,7 +695,7 @@ local function buildElementalGrid(snapshot)
 
     return dsl.strict.vbox {
         config = {
-            padding = 4,
+            padding = ui_scale.ui(4),
         },
         children = rows,
     }
@@ -721,7 +722,7 @@ local function buildSection(sectionDef, snapshot)
 
         if #statRows > 0 then
             table.insert(children, dsl.strict.vbox {
-                config = { padding = 4 },
+                config = { padding = ui_scale.ui(4) },
                 children = statRows,
             })
         end
@@ -740,12 +741,12 @@ end
 local function buildFooter()
     return dsl.strict.hbox {
         config = {
-            padding = 6,
+            padding = ui_scale.ui(6),
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
         },
         children = {
             dsl.strict.text("C: toggle   1-5: tabs   Esc: close", {
-                fontSize = 9,
+                fontSize = ui_scale.ui(9),
                 color = "gray",
             }),
         }
@@ -757,7 +758,7 @@ local function createScrollPane(children, opts)
     opts = opts or {}
     local _, screenH = getScreenSize()
     local height = opts.height or math.floor(screenH * 0.6)
-    local width = PANEL_WIDTH - (PANEL_PADDING * 2) - 8
+    local width = PANEL_WIDTH - (PANEL_PADDING * 2) - ui_scale.ui(8)
     
     return ui.definitions.def {
         type = "SCROLL_PANE",
@@ -767,7 +768,7 @@ local function createScrollPane(children, opts)
             height = height,
             maxWidth = width,
             width = width,
-            padding = 4,
+            padding = ui_scale.ui(4),
             color = getColors().bg,
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
         },
@@ -790,11 +791,11 @@ local function buildSectionContent(sectionDef, snapshot)
     end
 
     if #statRows == 0 then
-        return dsl.strict.text("No stats available", { fontSize = 11, color = "gray" })
+        return dsl.strict.text("No stats available", { fontSize = ui_scale.ui(11), color = "gray" })
     end
 
     return dsl.strict.vbox {
-        config = { padding = 4 },
+        config = { padding = ui_scale.ui(4) },
         children = statRows,
     }
 end
@@ -830,10 +831,10 @@ local function buildPanelDefinition(snapshot)
         buttonColor = "dark_gray_slate",
         activeButtonColor = "gray",
         contentPadding = 0,
-        tabBarPadding = 4,
-        fontSize = 13,
-        buttonPadding = 6,
-        contentMinHeight = scrollHeight + 20,
+        tabBarPadding = ui_scale.ui(4),
+        fontSize = ui_scale.ui(13),
+        buttonPadding = ui_scale.ui(6),
+        contentMinHeight = scrollHeight + ui_scale.ui(20),
     }
 
     return dsl.strict.root {
@@ -841,7 +842,7 @@ local function buildPanelDefinition(snapshot)
             id = "stats_panel_v2_root",
             color = getColors().bg,
             padding = PANEL_PADDING,
-            outlineThickness = 2,
+            outlineThickness = ui_scale.ui(2),
             outlineColor = getColors().outline,
             minWidth = PANEL_WIDTH,
             shadow = true,
@@ -852,9 +853,9 @@ local function buildPanelDefinition(snapshot)
                 config = { padding = 0 },
                 children = {
                     buildHeader(snapshot),
-                    dsl.strict.spacer(4),
+                    dsl.strict.spacer(ui_scale.ui(4)),
                     tabContainer,
-                    dsl.strict.spacer(4),
+                    dsl.strict.spacer(ui_scale.ui(4)),
                     buildFooter(),
                 }
             }

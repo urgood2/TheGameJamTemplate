@@ -61,6 +61,7 @@ local component_cache = require("core.component_cache")
 local timer = require("core.timer")
 local InventoryGridInit = require("ui.inventory_grid_init")
 local shader_pipeline = _G.shader_pipeline
+local ui_scale = require("ui.ui_scale")
 
 --------------------------------------------------------------------------------
 -- Constants
@@ -68,6 +69,7 @@ local shader_pipeline = _G.shader_pipeline
 
 local TIMER_GROUP = "card_inventory_panel"
 local PANEL_ID = "card_inventory_panel"
+local UI = ui_scale.ui
 
 local TAB_CONFIG = {
     equipment = {
@@ -175,8 +177,8 @@ local function createGridForTab(tabId, x, y, visible)
         id = cfg.id,
         rows = cfg.rows,
         cols = cfg.cols,
-        slotSize = { w = 64, h = 90 },
-        slotSpacing = 6,
+        slotSize = { w = UI(64), h = UI(90) },
+        slotSpacing = UI(6),
         
         config = {
             allowDragIn = true,
@@ -184,7 +186,7 @@ local function createGridForTab(tabId, x, y, visible)
             stackable = false,
             slotColor = "purple_slate",
             slotEmboss = 2,
-            padding = 8,
+            padding = UI(8),
             backgroundColor = "blackberry",
         },
         
@@ -348,21 +350,21 @@ local function createHeader()
     return dsl.strict.hbox {
         config = {
             color = "dark_lavender",
-            padding = 12,  -- Changed from {12, 8} - DSL expects single number
+            padding = UI(12),  -- Changed from {12, 8} - DSL expects single number
             emboss = 2,
         },
         children = {
             dsl.strict.text(getLocalizedText("ui.inventory.title", "Card Inventory"), {
-                fontSize = 18,
+                fontSize = UI(18),
                 color = "gold",
                 shadow = true,
             }),
-            dsl.strict.spacer(1), -- flex spacer
+            dsl.strict.spacer(UI(1)), -- flex spacer
             dsl.strict.button("✕", {
                 id = "close_btn",
-                minWidth = 28,
-                minHeight = 28,
-                fontSize = 16,
+                minWidth = UI(28),
+                minHeight = UI(28),
+                fontSize = UI(16),
                 color = "darkred",
                 onClick = function()
                     CardInventoryPanel.close()
@@ -376,29 +378,29 @@ local function createFilterBar()
     return dsl.strict.hbox {
         config = {
             color = "blackberry",
-            padding = 8,
+            padding = UI(8),
         },
         children = {
             -- Search input placeholder (simplified as text for now)
-            dsl.strict.text("🔍", { fontSize = 14, color = "gray" }),
-            dsl.strict.spacer(8),
+            dsl.strict.text("🔍", { fontSize = UI(14), color = "gray" }),
+            dsl.strict.spacer(UI(8)),
             -- Sort buttons
             dsl.strict.button(getLocalizedText("ui.inventory.sort_name", "Name") .. " ↕", {
                 id = "sort_name_btn",
-                minWidth = 60,
-                minHeight = 24,
-                fontSize = 11,
+                minWidth = UI(60),
+                minHeight = UI(24),
+                fontSize = UI(11),
                 color = "purple_slate",
                 onClick = function()
                     toggleSort("name")
                 end,
             }),
-            dsl.strict.spacer(4),
+            dsl.strict.spacer(UI(4)),
             dsl.strict.button(getLocalizedText("ui.inventory.sort_cost", "Cost") .. " ↕", {
                 id = "sort_cost_btn",
-                minWidth = 60,
-                minHeight = 24,
-                fontSize = 11,
+                minWidth = UI(60),
+                minHeight = UI(24),
+                fontSize = UI(11),
                 color = "purple_slate",
                 onClick = function()
                     toggleSort("cost")
@@ -419,9 +421,9 @@ local function createTabs()
         
         table.insert(tabChildren, dsl.strict.button(label, {
             id = "tab_" .. tabId,
-            minWidth = 90,
-            minHeight = 32,
-            fontSize = 11,
+            minWidth = UI(90),
+            minHeight = UI(32),
+            fontSize = UI(11),
             color = isActive and "steel_blue" or "gray",
             onClick = function()
                 switchTab(tabId)
@@ -429,14 +431,14 @@ local function createTabs()
         }))
         
         if tabId ~= TAB_ORDER[#TAB_ORDER] then
-            table.insert(tabChildren, dsl.strict.spacer(2))
+            table.insert(tabChildren, dsl.strict.spacer(UI(2)))
         end
     end
     
     return dsl.strict.hbox {
         config = {
             color = "blackberry",
-            padding = 4,
+            padding = UI(4),
         },
         children = tabChildren,
     }
@@ -446,7 +448,7 @@ local function createFooter()
     return dsl.strict.hbox {
         config = {
             color = "dark_lavender",
-            padding = 8,
+            padding = UI(8),
         },
         children = {
             dsl.strict.dynamicText(function()
@@ -458,12 +460,12 @@ local function createFooter()
                 end
                 return "0 / 15 slots"
             end, 11, nil, { color = "light_gray" }),
-            dsl.strict.spacer(1),
+            dsl.strict.spacer(UI(1)),
             dsl.strict.button(getLocalizedText("ui.inventory.sort_all", "Sort All"), {
                 id = "sort_all_btn",
-                minWidth = 70,
-                minHeight = 24,
-                fontSize = 11,
+                minWidth = UI(70),
+                minHeight = UI(24),
+                fontSize = UI(11),
                 color = "jade_green",
                 onClick = function()
                     if not state.sortField then
@@ -483,7 +485,7 @@ local function createPanelDefinition()
             color = "blackberry",
             padding = 0,
             emboss = 3,
-            minWidth = 420,
+            minWidth = UI(420),
         },
         children = {
             createHeader(),
@@ -492,12 +494,12 @@ local function createPanelDefinition()
             -- Grid content area (placeholder - actual grids are separate entities)
             dsl.strict.vbox {
                 config = {
-                    padding = 8,
-                    minHeight = 300,
+                    padding = UI(8),
+                    minHeight = UI(300),
                     color = "blackberry",
                 },
                 children = {
-                    dsl.strict.text("", { fontSize = 1 }), -- Invisible placeholder
+                    dsl.strict.text("", { fontSize = UI(1) }), -- Invisible placeholder
                 },
             },
             createFooter(),

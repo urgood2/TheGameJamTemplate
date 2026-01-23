@@ -11,6 +11,7 @@ local WandCooldownUI = {}
 -- Dependencies
 local WandExecutor = require("wand.wand_executor")
 local z_orders = require("core.z_orders")
+local ui_scale = require("ui.ui_scale")
 
 -- Lazy-load toggle state to avoid circular dependencies
 local function isVisible()
@@ -22,22 +23,22 @@ local function isVisible()
 end
 
 -- Layout configuration
-local LEFT_MARGIN = 28
-local TOP_MARGIN = 140
-local CARD_WIDTH = 220
-local CARD_HEIGHT = 68
-local CARD_SPACING = 10
-local CARD_RADIUS = 12
+local LEFT_MARGIN = ui_scale.ui(28)
+local TOP_MARGIN = ui_scale.ui(140)
+local CARD_WIDTH = ui_scale.ui(220)
+local CARD_HEIGHT = ui_scale.ui(68)
+local CARD_SPACING = ui_scale.ui(10)
+local CARD_RADIUS = ui_scale.ui(12)
 
-local PIE_RADIUS = 18
-local PIE_THICKNESS = 6
+local PIE_RADIUS = ui_scale.ui(18)
+local PIE_THICKNESS = ui_scale.ui(6)
 
-local LABEL_FONT_SIZE = 20
-local STATUS_FONT_SIZE = 14
+local LABEL_FONT_SIZE = ui_scale.ui(20)
+local STATUS_FONT_SIZE = ui_scale.ui(14)
 
-local MP_BAR_WIDTH = 6
-local MP_BAR_MARGIN = 10
-local MP_BAR_VPAD = 8
+local MP_BAR_WIDTH = ui_scale.ui(6)
+local MP_BAR_MARGIN = ui_scale.ui(10)
+local MP_BAR_VPAD = ui_scale.ui(8)
 
 local Z_BASE = z_orders.ui_tooltips + 7
 local SPACE = layer.DrawCommandSpace.Screen

@@ -3,6 +3,7 @@ local ShopPackUI = {}
 local z_orders = require("core.z_orders")
 local timer = require("core.timer")
 local signal = require("external.hump.signal")
+local ui_scale = require("ui.ui_scale")
 
 local ShopSystem = nil
 local function getShopSystem()
@@ -14,14 +15,14 @@ local function getShopSystem()
 end
 
 local CONFIG = {
-    packButtonW = 140,
-    packButtonH = 180,
-    packSpacing = 20,
-    packTopMargin = 100,
+    packButtonW = ui_scale.ui(140),
+    packButtonH = ui_scale.ui(180),
+    packSpacing = ui_scale.ui(20),
+    packTopMargin = ui_scale.ui(100),
     
-    cardW = 80,
-    cardH = 112,
-    cardSpacing = 100,
+    cardW = ui_scale.ui(80),
+    cardH = ui_scale.ui(112),
+    cardSpacing = ui_scale.ui(100),
     cardRevealDelay = 0.3,
     
     dissolveSpeed = 1.5,
@@ -268,28 +269,28 @@ function ShopPackUI.draw()
     end
     
     if state.errorMessage then
-        local errW = 300
-        local errH = 40
+        local errW = ui_scale.ui(300)
+        local errH = ui_scale.ui(40)
         local errX = (screenW - errW) / 2
-        local errY = screenH - 100
+        local errY = screenH - ui_scale.ui(100)
         
         command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
             c.x = screenW / 2
             c.y = errY + errH / 2
             c.w = errW
             c.h = errH
-            c.rx = 8
-            c.ry = 8
+            c.rx = ui_scale.ui(8)
+            c.ry = ui_scale.ui(8)
             c.color = Col(180, 60, 60, 230)
         end, baseZ + 50, space)
         
         command_buffer.queueDrawText(layers.ui, function(c)
             c.text = state.errorMessage
             c.font = font
-            c.x = errX + 20
-            c.y = errY + 10
+            c.x = errX + ui_scale.ui(20)
+            c.y = errY + ui_scale.ui(10)
             c.color = Col(255, 255, 255, 255)
-            c.fontSize = 18
+            c.fontSize = ui_scale.ui(18)
         end, baseZ + 51, space)
     end
 end
@@ -326,10 +327,10 @@ function ShopPackUI.drawPackButtons(screenW, screenH, space, baseZ, font)
         command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
             c.x = cx
             c.y = cy
-            c.w = CONFIG.packButtonW + 4
-            c.h = CONFIG.packButtonH + 4
-            c.rx = 12
-            c.ry = 12
+            c.w = CONFIG.packButtonW + ui_scale.ui(4)
+            c.h = CONFIG.packButtonH + ui_scale.ui(4)
+            c.rx = ui_scale.ui(12)
+            c.ry = ui_scale.ui(12)
             c.color = borderColor
         end, baseZ, space)
         
@@ -338,8 +339,8 @@ function ShopPackUI.drawPackButtons(screenW, screenH, space, baseZ, font)
             c.y = cy
             c.w = CONFIG.packButtonW
             c.h = CONFIG.packButtonH
-            c.rx = 10
-            c.ry = 10
+            c.rx = ui_scale.ui(10)
+            c.ry = ui_scale.ui(10)
             c.color = bgColor
         end, baseZ + 1, space)
         
@@ -347,19 +348,19 @@ function ShopPackUI.drawPackButtons(screenW, screenH, space, baseZ, font)
         command_buffer.queueDrawText(layers.ui, function(c)
             c.text = displayName
             c.font = font
-            c.x = x + 10
-            c.y = y + CONFIG.packButtonH - 50
+            c.x = x + ui_scale.ui(10)
+            c.y = y + CONFIG.packButtonH - ui_scale.ui(50)
             c.color = Col(255, 255, 255, canAfford and 255 or 150)
-            c.fontSize = 16
+            c.fontSize = ui_scale.ui(16)
         end, baseZ + 2, space)
         
         command_buffer.queueDrawText(layers.ui, function(c)
             c.text = packCost .. "g"
             c.font = font
-            c.x = x + 10
-            c.y = y + CONFIG.packButtonH - 30
+            c.x = x + ui_scale.ui(10)
+            c.y = y + CONFIG.packButtonH - ui_scale.ui(30)
             c.color = canAfford and util.getColor("gold") or Col(150, 150, 150, 200)
-            c.fontSize = 20
+            c.fontSize = ui_scale.ui(20)
         end, baseZ + 2, space)
     end
     
@@ -367,9 +368,9 @@ function ShopPackUI.drawPackButtons(screenW, screenH, space, baseZ, font)
         c.text = "Your Gold: " .. playerGold
         c.font = font
         c.x = startX
-        c.y = y + CONFIG.packButtonH + 20
+        c.y = y + CONFIG.packButtonH + ui_scale.ui(20)
         c.color = util.getColor("gold")
-        c.fontSize = 18
+        c.fontSize = ui_scale.ui(18)
     end, baseZ + 2, space)
 end
 
@@ -427,10 +428,10 @@ function ShopPackUI.drawCards(screenW, screenH, space, baseZ, font)
         command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
             c.x = cx
             c.y = cy
-            c.w = w + 4
-            c.h = h + 4
-            c.rx = 8
-            c.ry = 8
+            c.w = w + ui_scale.ui(4)
+            c.h = h + ui_scale.ui(4)
+            c.rx = ui_scale.ui(8)
+            c.ry = ui_scale.ui(8)
             c.color = borderColor
         end, baseZ + i, space)
         
@@ -439,8 +440,8 @@ function ShopPackUI.drawCards(screenW, screenH, space, baseZ, font)
             c.y = cy
             c.w = w
             c.h = h
-            c.rx = 6
-            c.ry = 6
+            c.rx = ui_scale.ui(6)
+            c.ry = ui_scale.ui(6)
             c.color = bgColor
         end, baseZ + i + 1, space)
         
@@ -453,19 +454,19 @@ function ShopPackUI.drawCards(screenW, screenH, space, baseZ, font)
             command_buffer.queueDrawText(layers.ui, function(c)
                 c.text = cardName
                 c.font = font
-                c.x = x + 5
-                c.y = y + h - 25
+                c.x = x + ui_scale.ui(5)
+                c.y = y + h - ui_scale.ui(25)
                 c.color = Col(255, 255, 255, alpha)
-                c.fontSize = 10
+                c.fontSize = ui_scale.ui(10)
             end, baseZ + i + 2, space)
         else
             command_buffer.queueDrawText(layers.ui, function(c)
                 c.text = "?"
                 c.font = font
-                c.x = cx - 10
-                c.y = cy - 15
+                c.x = cx - ui_scale.ui(10)
+                c.y = cy - ui_scale.ui(15)
                 c.color = Col(150, 150, 150, alpha)
-                c.fontSize = 30
+                c.fontSize = ui_scale.ui(30)
             end, baseZ + i + 2, space)
         end
         
@@ -476,10 +477,10 @@ function ShopPackUI.drawCards(screenW, screenH, space, baseZ, font)
         command_buffer.queueDrawText(layers.ui, function(c)
             c.text = "Click a card to keep it"
             c.font = font
-            c.x = screenW / 2 - 80
-            c.y = y + CONFIG.cardH + 30
+            c.x = screenW / 2 - ui_scale.ui(80)
+            c.y = y + CONFIG.cardH + ui_scale.ui(30)
             c.color = Col(200, 200, 200, 255)
-            c.fontSize = 16
+            c.fontSize = ui_scale.ui(16)
         end, baseZ + 20, space)
     end
 end

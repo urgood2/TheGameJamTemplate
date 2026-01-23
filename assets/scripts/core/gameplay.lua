@@ -512,14 +512,36 @@ local function getInventoryCategoryForCard(cardEntity)
     local script = getScriptTableFromEntityID(cardEntity)
     if not script then return "equipment" end
 
-    local cardType = script.type or script.category
-    if cardType == "trigger" then
+    -- Check explicit type/category fields
+    local cardType = script.type or script.category or script.cardType
+    if cardType == "trigger" or cardType == "triggers" then
         return "triggers"
-    elseif cardType == "action" then
+    elseif cardType == "action" or cardType == "actions" then
         return "actions"
-    elseif cardType == "modifier" then
+    elseif cardType == "modifier" or cardType == "modifiers" then
         return "modifiers"
     end
+
+    -- Check isTrigger flag
+    if script.isTrigger then
+        return "triggers"
+    end
+
+    -- Check against WandEngine definitions as fallback
+    local cardID = script.cardID or script.id or script.card_id
+    if cardID and WandEngine then
+        if WandEngine.trigger_card_defs and WandEngine.trigger_card_defs[cardID] then
+            return "triggers"
+        end
+        if WandEngine.card_defs and WandEngine.card_defs[cardID] then
+            local def = WandEngine.card_defs[cardID]
+            if def.type == "modifier" then
+                return "modifiers"
+            end
+            return "actions"  -- Default for action cards
+        end
+    end
+
     return "equipment"  -- default fallback
 end
 
@@ -8267,12 +8289,20 @@ end
 local function resolveCardSpawnTarget(entry)
     if not entry then return nil end
 
+    -- If target is explicitly "inventory", all card types go to inventory
+    if cardSpawnerState.target == "inventory" then
+        return "inventory"
+    end
+
+    -- Otherwise, route based on card type
     if entry.type == "trigger" then
-        -- Triggers go to wand board only (no trigger inventory in grid system)
+        -- Triggers go to wand trigger board if target is "action" (wand boards)
         local set = board_sets and board_sets[current_board_set_index]
         if set and set.trigger_board_id and entity_cache.valid(set.trigger_board_id) then
             return set.trigger_board_id
         end
+        -- Fallback to inventory if no wand board available
+        return "inventory"
     else
         if cardSpawnerState.target == "action" then
             local set = board_sets and board_sets[current_board_set_index]
@@ -8283,8 +8313,6 @@ local function resolveCardSpawnTarget(entry)
         -- Fallback to grid inventory (Phase 5)
         return "inventory"  -- Special value indicating PlayerInventory
     end
-
-    return nil
 end
 
 local function spawnCardEntry(entry)

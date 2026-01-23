@@ -12,17 +12,19 @@ local HoverRegistry = require("ui.hover_registry")
 local SynergyIcons = require("data.synergy_icons")
 local timer = require("core.timer")
 local Easing = require("util.easing")
+local ui_scale = require("ui.ui_scale")
 
 local DEFAULT_THRESHOLDS = { 3, 5, 7, 9 }
 local GRID_COLS = 3
 local GRID_ROWS = 4
-local CELL_SIZE = 48
-local ICON_SIZE = 32
-local DOT_RADIUS = 3
-local DOT_SPACING = 8
-local BADGE_RADIUS = 10
-local PANEL_PADDING = 12
-local CELL_SPACING = 4
+local UI = ui_scale.ui
+local CELL_SIZE = UI(48)
+local ICON_SIZE = UI(32)
+local DOT_RADIUS = UI(3)
+local DOT_SPACING = UI(8)
+local BADGE_RADIUS = UI(10)
+local PANEL_PADDING = UI(12)
+local CELL_SPACING = UI(4)
 
 local function safeColor(name, fallback)
     local ok, c = pcall(util.getColor, name)
@@ -64,10 +66,10 @@ local tooltipStyle = {
     muted = safeColor("gray", "light_gray"),
     active = safeColor("mint_green", "green"),
     fontName = "tooltip",
-    padding = 10,
-    outlineThickness = 2,
-    fontSize = 14,
-    titleFontSize = 18,
+    padding = UI(10),
+    outlineThickness = UI(2),
+    fontSize = UI(14),
+    titleFontSize = UI(18),
 }
 
 local tag_palette = {
@@ -97,8 +99,8 @@ TagSynergyPanel._tooltips = {}
 TagSynergyPanel._layoutCache = nil
 TagSynergyPanel.isActive = false
 TagSynergyPanel.layout = {
-    marginX = 22,
-    marginTop = 120,
+    marginX = UI(22),
+    marginTop = UI(120),
 }
 
 TagSynergyPanel._slideState = "hidden"
@@ -221,7 +223,7 @@ local function computeGridLayout()
     local buttonBounds = TagSynergyPanel._toggleButtonBounds
     local marginTop = TagSynergyPanel.layout.marginTop
     if buttonBounds then
-        local buttonBottom = (buttonBounds.y or 0) + (buttonBounds.h or 40) + 12
+        local buttonBottom = (buttonBounds.y or 0) + (buttonBounds.h or UI(40)) + UI(12)
         marginTop = math.max(marginTop, buttonBottom)
     end
     
@@ -434,7 +436,7 @@ local function buildTooltipDef(tag, count, thresholds, accent)
             dsl.strict.vbox {
                 config = {
                     color = tooltipStyle.inner,
-                    padding = 8,
+                    padding = UI(8),
                     align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
                 },
                 children = children
@@ -502,9 +504,9 @@ local function positionTooltip(entity, mouse)
     local screenW, screenH = resolveScreenSize()
     local w = t.actualW or 0
     local h = t.actualH or 0
-    local margin = 12
-    local offsetX = 16
-    local offsetY = 16
+    local margin = UI(12)
+    local offsetX = UI(16)
+    local offsetY = UI(16)
     local x = (mouse and mouse.x + offsetX) or (screenW - w - margin)
     local y = (mouse and mouse.y + offsetY) or margin
     
@@ -557,7 +559,7 @@ local function spawnThresholdParticles(x, y, color)
             gravity = 50,
         }
         
-        local size = 3 + math.random() * 2
+        local size = UI(3) + math.random() * UI(2)
         particle.CreateParticle(Vec2(x, y), Vec2(size, size), opts)
     end
 end
@@ -810,7 +812,7 @@ local function drawIcon(cellX, cellY, tag, count, thresholds, scale, glowAlpha, 
     
     local iconSize = ICON_SIZE * scale
     local iconLeft = cx - iconSize / 2
-    local iconTop = cy - iconSize / 2 - 6
+    local iconTop = cy - iconSize / 2 - UI(6)
     
     command_buffer.queueDrawSteppedRoundedRect(layers.ui, function(c)
         c.x = cx
@@ -819,11 +821,11 @@ local function drawIcon(cellX, cellY, tag, count, thresholds, scale, glowAlpha, 
         c.h = iconSize
         c.fillColor = tintColor
         c.borderColor = Col(0, 0, 0, 100)
-        c.borderWidth = 1
+        c.borderWidth = UI(1)
         c.numSteps = 3
     end, baseZ + 1, space)
     
-    local dotsY = cy + ICON_SIZE / 2 - 4
+    local dotsY = cy + ICON_SIZE / 2 - UI(4)
     local dotsTotalWidth = 4 * (DOT_RADIUS * 2) + 3 * (DOT_SPACING - DOT_RADIUS * 2)
     local dotsStartX = cx - dotsTotalWidth / 2
     
@@ -843,8 +845,8 @@ local function drawIcon(cellX, cellY, tag, count, thresholds, scale, glowAlpha, 
     end
     
     if isActive then
-        local badgeX = cellX + CELL_SIZE - BADGE_RADIUS - 2
-        local badgeY = cellY + slideOffset + BADGE_RADIUS + 2
+        local badgeX = cellX + CELL_SIZE - BADGE_RADIUS - UI(2)
+        local badgeY = cellY + slideOffset + BADGE_RADIUS + UI(2)
         
         local pulse = TagSynergyPanel._pulses[tag] or 0
         local badgeScale = 1.0 + pulse * 0.15
@@ -860,18 +862,18 @@ local function drawIcon(cellX, cellY, tag, count, thresholds, scale, glowAlpha, 
         command_buffer.queueDrawCircleFilled(layers.ui, function(c)
             c.x = badgeX
             c.y = badgeY
-            c.radius = badgeR - 1
+            c.radius = badgeR - UI(1)
             c.color = Col(accent.r, accent.g, accent.b, 200)
         end, baseZ + 4, space)
         
         local countStr = tostring(count)
-        local fontSize = count >= 10 and 10 or 12
+        local fontSize = count >= 10 and UI(10) or UI(12)
         local textW = localization.getTextWidthWithCurrentFont(countStr, fontSize, 1)
         command_buffer.queueDrawText(layers.ui, function(c)
             c.text = countStr
             c.font = font
             c.x = badgeX - textW / 2
-            c.y = badgeY - fontSize / 2 - 1
+            c.y = badgeY - fontSize / 2 - UI(1)
             c.color = colors.badgeText
             c.fontSize = fontSize
         end, baseZ + 5, space)
@@ -906,7 +908,7 @@ function TagSynergyPanel.draw()
     else
         easedProgress = 1
     end
-    local slideOffset = (1 - easedProgress) * (cache.panelH + 40)
+    local slideOffset = (1 - easedProgress) * (cache.panelH + UI(40))
     TagSynergyPanel._currentSlideOffset = slideOffset
 
     local space = layer.DrawCommandSpace.Screen
@@ -921,7 +923,7 @@ function TagSynergyPanel.draw()
         c.h = cache.panelH
         c.fillColor = colors.panel
         c.borderColor = colors.outline
-        c.borderWidth = 2
+        c.borderWidth = UI(2)
         c.numSteps = 4
     end, baseZ, space)
 

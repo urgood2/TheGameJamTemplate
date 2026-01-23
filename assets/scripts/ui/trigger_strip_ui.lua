@@ -20,6 +20,7 @@ local timer = require("core.timer")
 local signal = require("external.hump.signal")
 local signal_group = require("core.signal_group")
 local z_orders = require("core.z_orders")
+local ui_scale = require("ui.ui_scale")
 
 -- Lazy-load WandTriggers to avoid circular dependencies
 local WandTriggers
@@ -42,22 +43,22 @@ local function getWandExecutor()
 end
 
 -- Constants
-local CARD_WIDTH = 60           -- 75% of 80
-local CARD_HEIGHT = 84          -- 75% of 112
-local PEEK_X = -30              -- Resting X position (half hidden)
-local WAVE_RADIUS = 80          -- Wave influence radius in pixels
+local CARD_WIDTH = ui_scale.ui(60)           -- 75% of 80
+local CARD_HEIGHT = ui_scale.ui(84)          -- 75% of 112
+local PEEK_X = ui_scale.ui(-30)              -- Resting X position (half hidden)
+local WAVE_RADIUS = ui_scale.ui(80)          -- Wave influence radius in pixels
 local MAX_SCALE_BUMP = 0.25     -- Max scale increase (1.0 -> 1.25)
-local MAX_SLIDE_OUT = 40        -- Max slide-out distance
-local STRIP_HOVER_ZONE = 100    -- Mouse X threshold for interaction
+local MAX_SLIDE_OUT = ui_scale.ui(40)        -- Max slide-out distance
+local STRIP_HOVER_ZONE = ui_scale.ui(100)    -- Mouse X threshold for interaction
 local TOOLTIP_DELAY = 0.3       -- Seconds before tooltip appears
-local VERTICAL_SPACING = 20     -- Gap between cards
+local VERTICAL_SPACING = ui_scale.ui(20)     -- Gap between cards
 local ACTIVATION_SCALE = 1.4    -- Scale on trigger activation
 local FLASH_DURATION = 0.15     -- Flash effect duration
 
-local MP_BAR_WIDTH = 6
+local MP_BAR_WIDTH = ui_scale.ui(6)
 local MP_BAR_HEIGHT_RATIO = 0.75
-local MP_BAR_OFFSET_X = 8
-local MP_BAR_VPAD = 6
+local MP_BAR_OFFSET_X = ui_scale.ui(8)
+local MP_BAR_VPAD = ui_scale.ui(6)
 
 -- State
 local strip_entries = {}        -- Array of {entity, sourceCardEntity, wandId, triggerId, centerY, influence, smoothManaRatio}

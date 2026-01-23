@@ -1,10 +1,11 @@
 local ManualTriggerPromptUI = {}
 
 local z_orders = require("core.z_orders")
+local ui_scale = require("ui.ui_scale")
 local WandTriggers = nil
 
 local CONFIG = {
-    iconSize = 48,
+    iconSize = ui_scale.ui(48),
     pulseSpeed = 4.0,
     pulseMinScale = 0.95,
     pulseMaxScale = 1.05,
@@ -12,7 +13,7 @@ local CONFIG = {
     pulseMaxAlpha = 255,
     flashDuration = 0.15,
     flashScale = 1.3,
-    bottomMargin = 80,
+    bottomMargin = ui_scale.ui(80),
 }
 
 local state = {
@@ -101,13 +102,13 @@ function ManualTriggerPromptUI.draw()
         c.y = cy
         c.w = iconSize
         c.h = iconSize
-        c.rx = 8 * scale
-        c.ry = 8 * scale
+        c.rx = ui_scale.ui(8) * scale
+        c.ry = ui_scale.ui(8) * scale
         c.color = bgColor
     end, baseZ, space)
     
     local textColor = isFlashing and Col(40, 40, 40, 255) or Col(255, 255, 255, math.floor(alpha))
-    local fontSize = 24 * scale
+    local fontSize = ui_scale.ui(24) * scale
     local font = localization and localization.getFont and localization.getFont()
     
     command_buffer.queueDrawText(layers.ui, function(c)

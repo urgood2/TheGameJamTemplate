@@ -1,15 +1,16 @@
 local DemoFooterUI = {}
 
 local z_orders = require("core.z_orders")
+local ui_scale = require("ui.ui_scale")
 
 local CONFIG = {
-    marginRight = 16,
-    marginBottom = 16,
+    marginRight = ui_scale.ui(16),
+    marginBottom = ui_scale.ui(16),
     textOpacity = 170,
-    iconSize = 28,
-    iconGap = 12,
-    iconTextGap = 8,
-    fontSize = 16,
+    iconSize = ui_scale.ui(28),
+    iconGap = ui_scale.ui(12),
+    iconTextGap = ui_scale.ui(8),
+    fontSize = ui_scale.ui(16),
     hoverScale = 1.15,
 }
 
@@ -96,8 +97,8 @@ local function drawDiscordIcon(cx, cy, size, isHovered, z, space)
             c.y = cy
             c.w = s
             c.h = s
-            c.rx = 6
-            c.ry = 6
+            c.rx = ui_scale.ui(6)
+            c.ry = ui_scale.ui(6)
             c.color = color
         end, z, space)
     end
@@ -105,9 +106,9 @@ end
 
 local function drawFeedbackButton(cx, cy, isHovered, z, space)
     local text = "Feedback"
-    local fontSize = 14
-    local paddingX = 10
-    local paddingY = 6
+    local fontSize = ui_scale.ui(14)
+    local paddingX = ui_scale.ui(10)
+    local paddingY = ui_scale.ui(6)
     
     local textWidth = 0
     if localization and localization.getTextWidthWithCurrentFont then
@@ -125,8 +126,8 @@ local function drawFeedbackButton(cx, cy, isHovered, z, space)
         c.y = cy
         c.w = btnW
         c.h = btnH
-        c.rx = 4
-        c.ry = 4
+        c.rx = ui_scale.ui(4)
+        c.ry = ui_scale.ui(4)
         c.color = color
     end, z, space)
     
@@ -144,9 +145,9 @@ end
 
 local function getFeedbackButtonSize()
     local text = "Feedback"
-    local fontSize = 14
-    local paddingX = 10
-    local paddingY = 6
+    local fontSize = ui_scale.ui(14)
+    local paddingX = ui_scale.ui(10)
+    local paddingY = ui_scale.ui(6)
     local textWidth = 0
     if localization and localization.getTextWidthWithCurrentFont then
         textWidth = localization.getTextWidthWithCurrentFont(text, fontSize, 1)

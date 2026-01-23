@@ -12,12 +12,13 @@ local timer = require("core.timer")
 local entity_cache = require("core.entity_cache")
 local component_cache = require("core.component_cache")
 local Easing = require("util.easing")
+local ui_scale = require("ui.ui_scale")
 
 local DEFAULT_TEST_MESSAGE = "Achievement unlocked!"
 local DEFAULT_ICON = {
     animationId = "discord_icon_anim",  -- falls back to sprite if needed
     spriteId = "test_char_woman.png",
-    size = 26
+    size = ui_scale.ui(26)
 }
 
 local DEFAULT_CONFIG = {
@@ -25,24 +26,24 @@ local DEFAULT_CONFIG = {
     enterDuration = 0.38,
     holdDuration = 2.8,
     exitDuration = 0.55,
-    minWidth = 160,
-    maxWidth = 240,
-    height = 72,
-    padding = 12,
-    iconPadding = 8,
-    marginX = 36,
-    marginY = 44,
-    cornerRadius = 14,
-    iconSize = 26,
-    fontSize = 14,
+    minWidth = ui_scale.ui(160),
+    maxWidth = ui_scale.ui(240),
+    height = ui_scale.ui(72),
+    padding = ui_scale.ui(12),
+    iconPadding = ui_scale.ui(8),
+    marginX = ui_scale.ui(36),
+    marginY = ui_scale.ui(44),
+    cornerRadius = ui_scale.ui(14),
+    iconSize = ui_scale.ui(26),
+    fontSize = ui_scale.ui(14),
     baseZ = z_orders.ui_tooltips + 8,
     bgColor = { r = 14, g = 14, b = 24, a = 235 },
     accentColor = util.getColor("gold"),
     textColor = util.getColor("white"),
     shadowColor = Col(4, 8, 14, 140),
-    accentWidth = 5,
+    accentWidth = ui_scale.ui(5),
     borderColor = Col(255, 255, 255, 70),
-    slideDistance = 180
+    slideDistance = ui_scale.ui(180)
 }
 
 MessageQueueUI.pending = {}

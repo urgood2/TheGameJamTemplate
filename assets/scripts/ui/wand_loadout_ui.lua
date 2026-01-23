@@ -57,6 +57,7 @@ local InventoryGridInit = require("ui.inventory_grid_init")
 local z_orders = require("core.z_orders")
 local wandAdapter = require("ui.wand_grid_adapter")
 local popup = require("core.popup")
+local ui_scale = require("ui.ui_scale")
 
 --------------------------------------------------------------------------------
 -- Constants
@@ -66,19 +67,20 @@ local TIMER_GROUP = "wand_loadout_ui"
 local PANEL_ID = "wand_loadout_panel"
 
 -- Grid dimensions
+local UI = ui_scale.ui
 local ACTION_ROWS = 2
 local ACTION_COLS = 4
-local SLOT_WIDTH = 56
-local SLOT_HEIGHT = 78
-local SLOT_SPACING = 4
+local SLOT_WIDTH = UI(56)
+local SLOT_HEIGHT = UI(78)
+local SLOT_SPACING = UI(4)
 
 -- Layout calculations
-local ACTION_GRID_WIDTH = ACTION_COLS * SLOT_WIDTH + (ACTION_COLS - 1) * SLOT_SPACING + 16
-local ACTION_GRID_HEIGHT = ACTION_ROWS * SLOT_HEIGHT + (ACTION_ROWS - 1) * SLOT_SPACING + 16
-local TRIGGER_SLOT_SIZE = 78
-local HEADER_HEIGHT = 36
-local SECTION_SPACING = 12
-local PANEL_PADDING = 12
+local ACTION_GRID_WIDTH = ACTION_COLS * SLOT_WIDTH + (ACTION_COLS - 1) * SLOT_SPACING + UI(16)
+local ACTION_GRID_HEIGHT = ACTION_ROWS * SLOT_HEIGHT + (ACTION_ROWS - 1) * SLOT_SPACING + UI(16)
+local TRIGGER_SLOT_SIZE = UI(78)
+local HEADER_HEIGHT = UI(36)
+local SECTION_SPACING = UI(12)
+local PANEL_PADDING = UI(12)
 
 local PANEL_WIDTH = ACTION_GRID_WIDTH + PANEL_PADDING * 2
 local PANEL_HEIGHT = HEADER_HEIGHT + SECTION_SPACING + TRIGGER_SLOT_SIZE + SECTION_SPACING + ACTION_GRID_HEIGHT + PANEL_PADDING * 2
@@ -158,17 +160,17 @@ local function createHeader()
     local children = {
         dsl.strict.text(getWandTitle(), {
             id = "wand_title_text",
-            fontSize = 16,
+            fontSize = UI(16),
             color = "gold",
             shadow = true,
         }),
-        dsl.strict.spacer(1),
+        dsl.strict.spacer(UI(1)),
     }
 
     if state.wandCount > 1 then
         table.insert(children, 1, dsl.strict.button("<", {
             id = "prev_wand_btn",
-            fontSize = 14,
+            fontSize = UI(14),
             color = "light_gray",
             onClick = function()
                 WandLoadoutUI.selectWand(state.currentWandIndex - 1)
@@ -176,7 +178,7 @@ local function createHeader()
         }))
         table.insert(children, dsl.strict.button(">", {
             id = "next_wand_btn",
-            fontSize = 14,
+            fontSize = UI(14),
             color = "light_gray",
             onClick = function()
                 WandLoadoutUI.selectWand(state.currentWandIndex + 1)
@@ -187,7 +189,7 @@ local function createHeader()
     return dsl.strict.hbox {
         config = {
             color = "dark_lavender",
-            padding = 10,
+            padding = UI(10),
             emboss = 2,
             minWidth = PANEL_WIDTH - PANEL_PADDING * 2,
         },
@@ -212,7 +214,7 @@ local function createTriggerSection()
             allowDragOut = true,
             stackable = false,
             slotSprite = "test-inventory-square-single.png",
-            padding = 4,
+            padding = UI(4),
             backgroundColor = "blackberry",
             slotType = "trigger",
         },
@@ -225,14 +227,14 @@ local function createTriggerSection()
 
     return dsl.strict.vbox {
         config = {
-            padding = 4,
+            padding = UI(4),
         },
         children = {
             dsl.strict.text(getLocalizedText("ui.wand_loadout.trigger", "Trigger"), {
-                fontSize = 12,
+                fontSize = UI(12),
                 color = "light_gray",
             }),
-            dsl.strict.spacer(TRIGGER_SLOT_SIZE + 8, 4),
+            dsl.strict.spacer(TRIGGER_SLOT_SIZE + UI(8), UI(4)),
             triggerGridDef,
         },
     }
@@ -255,7 +257,7 @@ local function createActionSection()
             allowDragOut = true,
             stackable = false,
             slotSprite = "test-inventory-square-single.png",
-            padding = 4,
+            padding = UI(4),
             backgroundColor = "blackberry",
             slotType = "action",
         },
@@ -268,14 +270,14 @@ local function createActionSection()
 
     return dsl.strict.vbox {
         config = {
-            padding = 4,
+            padding = UI(4),
         },
         children = {
             dsl.strict.text(getLocalizedText("ui.wand_loadout.actions", "Actions"), {
-                fontSize = 12,
+                fontSize = UI(12),
                 color = "light_gray",
             }),
-            dsl.strict.spacer(ACTION_GRID_WIDTH, 4),
+            dsl.strict.spacer(ACTION_GRID_WIDTH, UI(4)),
             actionGridDef,
         },
     }
@@ -288,17 +290,17 @@ end
 local function createCloseButton(panelX, panelY, panelWidth)
     local closeButtonDef = dsl.strict.button("X", {
         id = "wand_loadout_close_btn",
-        minWidth = 24,
-        minHeight = 24,
-        fontSize = 14,
+        minWidth = UI(24),
+        minHeight = UI(24),
+        fontSize = UI(14),
         color = "darkred",
         onClick = function()
             WandLoadoutUI.close()
         end,
     })
 
-    local closeX = panelX + panelWidth - 32
-    local closeY = panelY + 6
+    local closeX = panelX + panelWidth - UI(32)
+    local closeY = panelY + UI(6)
 
     local closeEntity = dsl.spawn({ x = closeX, y = closeY }, closeButtonDef, RENDER_LAYER, 200)
     if ui and ui.box and ui.box.set_draw_layer then

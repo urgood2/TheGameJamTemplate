@@ -828,21 +828,21 @@ local function createHeader(wandDef)
         return dsl.strict.hbox {
             config = {
                 id = "wand_panel_header",
-                padding = 2,
+                padding = UI(2),
             },
             children = {
                 dsl.strict.text(titleText, {
                     id = "wand_panel_title",
-                    fontSize = 14,
+                    fontSize = UI(14),
                     color = "gold",
                     shadow = true,
                 }),
-                dsl.strict.spacer(1),  -- flex spacer
+                dsl.strict.spacer(UI(1)),  -- flex spacer
                 dsl.strict.button("X", {
                     id = "wand_panel_close_btn",
-                    fontSize = 12,
-                    minWidth = 22,
-                    minHeight = 22,
+                    fontSize = UI(12),
+                    minWidth = UI(22),
+                    minHeight = UI(22),
                     color = "apricot_cream",
                     onClick = function()
                         WandPanel.close()
@@ -854,7 +854,7 @@ local function createHeader(wandDef)
         -- Test stub
         return {
             type = "hbox",
-            config = { id = "wand_panel_header", padding = 4 },
+            config = { id = "wand_panel_header", padding = UI(4) },
             children = {
                 { type = "text", id = "wand_panel_title", content = titleText, color = "gold" },
                 { type = "spacer", fill = true },
@@ -879,8 +879,8 @@ local function createWandStatsRow(wandDef, minHeight)
         local boxConfig = {
             id = "wand_stats_box",
             color = "dark_gray_slate",
-            padding = 6,
-            outlineThickness = 1,
+            padding = UI(6),
+            outlineThickness = UI(1),
             outlineColor = "apricot_cream",
             minWidth = STATS_BOX_WIDTH,
         }
@@ -892,13 +892,13 @@ local function createWandStatsRow(wandDef, minHeight)
             config = boxConfig,
             children = {
                 dsl.strict.vbox {
-                    config = { padding = 2 },
+                    config = { padding = UI(2) },
                     children = {
                         createHeader(wandDef),
-                        dsl.strict.spacer(4),
+                        dsl.strict.spacer(UI(4)),
                         dsl.strict.text(statsText, {
                             id = "wand_stats_text",
-                            fontSize = 10,
+                            fontSize = UI(10),
                             color = "light_gray",
                             shadow = true,
                         }),
@@ -1261,11 +1261,11 @@ local function createTriggerSection()
         return dsl.strict.vbox {
             config = {
                 id = "trigger_section",
-                padding = 2,
+                padding = UI(2),
             },
             children = {
                 dsl.strict.text("TRIGGER", {
-                    fontSize = 12,
+                    fontSize = UI(12),
                     color = "cyan",
                     shadow = true,
                 }),
@@ -1281,7 +1281,7 @@ local function createTriggerSection()
     else
         return {
             type = "vbox",
-            config = { id = "trigger_section", padding = 2 },
+            config = { id = "trigger_section", padding = UI(2) },
             children = {
                 { type = "text", content = "TRIGGER", color = "cyan" },
                 { type = "vbox", config = { id = "trigger_grid_container" }, children = {} },
@@ -1300,11 +1300,11 @@ local function createActionSection()
         return dsl.strict.vbox {
             config = {
                 id = "action_section",
-                padding = 2,
+                padding = UI(2),
             },
             children = {
                 dsl.strict.text("ACTIONS", {
-                    fontSize = 12,
+                    fontSize = UI(12),
                     color = "apricot_cream",
                     shadow = true,
                 }),
@@ -1320,7 +1320,7 @@ local function createActionSection()
     else
         return {
             type = "vbox",
-            config = { id = "action_section", padding = 2 },
+            config = { id = "action_section", padding = UI(2) },
             children = {
                 { type = "text", content = "ACTIONS", color = "apricot_cream" },
                 { type = "vbox", config = { id = "action_grid_container" }, children = {} },

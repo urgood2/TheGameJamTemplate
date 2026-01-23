@@ -48,6 +48,7 @@ Dependencies: component_cache, animation_system, command_buffer
 local UIDecorations = {}
 
 local component_cache = require("core.component_cache")
+local ui_scale = require("ui.ui_scale")
 
 local _decorRegistry = {}
 
@@ -126,7 +127,7 @@ function UIDecorations.addBadge(entity, config)
         icon = config.icon,
         position = config.position or UIDecorations.Position.TOP_RIGHT,
         offset = config.offset or { x = 0, y = 0 },
-        size = config.size or { w = 16, h = 16 },
+        size = config.size or { w = ui_scale.ui(16), h = ui_scale.ui(16) },
         visible = config.visible,  -- Optional visibility function
         text = config.text,  -- Optional text instead of icon
         textColor = config.textColor or "white",

@@ -5330,6 +5330,36 @@ function initPlanningPhase()
         ::continue::
     end
 
+    -- Also spawn trigger cards to inventory
+    local triggerCatalog = WandEngine.trigger_card_defs
+    if triggerCatalog then
+        print("[gameplay] Spawning trigger cards from trigger_card_defs...")
+        for cardID, cardDef in pairs(triggerCatalog) do
+            -- Only spawn cards with sprites
+            if not cardDef.sprite then
+                goto continue_trigger
+            end
+
+            local card = createNewTriggerSlotCard(cardID, 4000, 4000, PLANNING_STATE)
+            print("[gameplay] Created trigger card:", cardID, "entity:", card)
+
+            -- Mark as trigger type for proper inventory categorization
+            local script = getScriptTableFromEntityID(card)
+            if script then
+                script.type = "trigger"
+                script.category = "trigger"
+            end
+
+            table.insert(cardsToChange, card)
+
+            controller_nav.ud:add_entity("planning-phase", card)
+            controller_nav.validate()
+            controller_nav.focus_entity(card)
+
+            ::continue_trigger::
+        end
+    end
+
 
     -- deal the cards out with dely & sound.
     for _, card in ipairs(cardsToChange) do

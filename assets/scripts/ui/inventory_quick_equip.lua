@@ -237,20 +237,31 @@ local function getInventoryCategoryForCard(cardEntity)
 end
 
 --- Resolve the best inventory grid for a card (based on its category)
-local function getInventoryTargetGrid(cardEntity)
-    local PlayerInventory = getPlayerInventory()
-    if not PlayerInventory then return nil, nil end
+local function isInventoryOpen(PlayerInventory)
+    return PlayerInventory and PlayerInventory.isOpen and PlayerInventory.isOpen()
+end
 
-    local category = getInventoryCategoryForCard(cardEntity)
+local function getActiveInventoryGrid(PlayerInventory)
+    if not PlayerInventory or not PlayerInventory.getActiveTab or not PlayerInventory.getGridForTab then
+        return nil, nil
+    end
+    local activeTab = PlayerInventory.getActiveTab()
+    if not activeTab then return nil, nil end
+    local activeGrid = PlayerInventory.getGridForTab(activeTab)
+    return activeGrid, activeTab
+end
 
-    if PlayerInventory.getGridForTab then
-        local gridEntity = PlayerInventory.getGridForTab(category)
-        if gridEntity then
-            return gridEntity, category
+local function setCardVisible(cardEntity, visible)
+    if not cardEntity or not registry:valid(cardEntity) then return end
+    if visible then
+        if add_state_tag then
+            add_state_tag(cardEntity, "default_state")
+        end
+    else
+        if clear_state_tags then
+            clear_state_tags(cardEntity)
         end
     end
-
-    return nil, category
 end
 
 --------------------------------------------------------------------------------
@@ -342,40 +353,83 @@ function QuickEquip.returnToInventory(cardEntity)
         return false, "invalid_card"
     end
 
-    local targetGrid, category = getInventoryTargetGrid(cardEntity)
-
-    if targetGrid then
-        local result = transfer.transferItemTo({
-            item = cardEntity,
-            toGrid = targetGrid,
-            onSuccess = function(res)
-                log_debug("[QuickEquip] Returned card to inventory slot " .. res.toSlot)
-
-                if InventoryGridInit and InventoryGridInit.centerItemOnSlot then
-                    local slotEntity = grid.getSlotEntity(targetGrid, res.toSlot)
-                    if slotEntity then
-                        InventoryGridInit.centerItemOnSlot(cardEntity, slotEntity)
-                    end
-                end
-
-                if playSoundEffect then
-                    playSoundEffect("effects", "button-click")
-                end
-            end,
-            onFail = function(reason)
-                log_debug("[QuickEquip] Failed to return card: " .. tostring(reason))
-            end,
-        })
-
-        return result.success, result.reason
-    end
-
-    -- Fallback: remove from wand grid and add to inventory storage
     local PlayerInventory = getPlayerInventory()
     if not PlayerInventory or not PlayerInventory.addCard then
         return false, "inventory_unavailable"
     end
 
+    local inventoryOpen = isInventoryOpen(PlayerInventory)
+    local activeGrid, activeTab = getActiveInventoryGrid(PlayerInventory)
+    local category = getInventoryCategoryForCard(cardEntity)
+
+    -- Prefer visible active grid if inventory is open and has space
+    if inventoryOpen and activeGrid then
+        local activeSlot = grid.findEmptySlot(activeGrid)
+        if activeSlot then
+            local result = transfer.transferItemTo({
+                item = cardEntity,
+                toGrid = activeGrid,
+                toSlot = activeSlot,
+                onSuccess = function(res)
+                    log_debug("[QuickEquip] Returned card to active inventory slot " .. res.toSlot)
+
+                    if InventoryGridInit and InventoryGridInit.centerItemOnSlot then
+                        local slotEntity = grid.getSlotEntity(activeGrid, res.toSlot)
+                        if slotEntity then
+                            InventoryGridInit.centerItemOnSlot(cardEntity, slotEntity)
+                        end
+                    end
+
+                    setCardVisible(cardEntity, true)
+
+                    if playSoundEffect then
+                        playSoundEffect("effects", "button-click")
+                    end
+                end,
+                onFail = function(reason)
+                    log_debug("[QuickEquip] Failed to return to active grid: " .. tostring(reason))
+                end,
+            })
+
+            return result.success, result.reason
+        end
+    end
+
+    -- Try category grid if it's currently injected and has space
+    local categoryGrid = PlayerInventory.getGridForTab and PlayerInventory.getGridForTab(category)
+    if categoryGrid then
+        local categorySlot = grid.findEmptySlot(categoryGrid)
+        if categorySlot then
+            local result = transfer.transferItemTo({
+                item = cardEntity,
+                toGrid = categoryGrid,
+                toSlot = categorySlot,
+                onSuccess = function(res)
+                    log_debug("[QuickEquip] Returned card to inventory slot " .. res.toSlot)
+
+                    if InventoryGridInit and InventoryGridInit.centerItemOnSlot then
+                        local slotEntity = grid.getSlotEntity(categoryGrid, res.toSlot)
+                        if slotEntity then
+                            InventoryGridInit.centerItemOnSlot(cardEntity, slotEntity)
+                        end
+                    end
+
+                    setCardVisible(cardEntity, inventoryOpen and activeTab == category)
+
+                    if playSoundEffect then
+                        playSoundEffect("effects", "button-click")
+                    end
+                end,
+                onFail = function(reason)
+                    log_debug("[QuickEquip] Failed to return card: " .. tostring(reason))
+                end,
+            })
+
+            return result.success, result.reason
+        end
+    end
+
+    -- Fallback: remove from wand grid and add to inventory storage
     local location = itemRegistry.getLocation(cardEntity)
     local removed = false
     if location and location.grid and location.slot then
@@ -386,8 +440,13 @@ function QuickEquip.returnToInventory(cardEntity)
         return false, "source_removal_failed"
     end
 
-    local added = PlayerInventory.addCard(cardEntity, category)
+    local targetTab = inventoryOpen and activeTab or category
+    local added = PlayerInventory.addCard(cardEntity, targetTab)
     if added then
+        -- If we added to active tab while open, it should already be visible.
+        if not (inventoryOpen and activeTab == targetTab) then
+            setCardVisible(cardEntity, false)
+        end
         return true, nil
     end
 

@@ -1062,6 +1062,13 @@ local function returnCardToInventory(cardEntity)
     if not _G.registry or not _G.registry.valid then return false end
     if not _G.registry:valid(cardEntity) then return false end
 
+    -- Prefer shared QuickEquip return logic when available
+    local quick_ok, quick = pcall(require, "ui.inventory_quick_equip")
+    if quick_ok and quick and quick.returnToInventory then
+        local success, _ = quick.returnToInventory(cardEntity)
+        return success
+    end
+
     -- Try to get PlayerInventory module
     local inv_ok, PlayerInventory = pcall(require, "ui.player_inventory")
     if not inv_ok or not PlayerInventory then

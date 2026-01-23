@@ -10736,9 +10736,10 @@ function initPlanningUI()
         statsTransform.visualY = statsTransform.actualY
     end
     ui.box.ClearStateTagsFromUIBox(planningUIEntities.player_stats_button_box)
-    ui.box.AddStateTagToUIBox(planningUIEntities.player_stats_button_box, PLANNING_STATE)
-    ui.box.AddStateTagToUIBox(planningUIEntities.player_stats_button_box, ACTION_STATE)
-    ui.box.AddStateTagToUIBox(planningUIEntities.player_stats_button_box, SHOP_STATE)
+    -- HIDDEN: Stats buttons disabled for now
+    -- ui.box.AddStateTagToUIBox(planningUIEntities.player_stats_button_box, PLANNING_STATE)
+    -- ui.box.AddStateTagToUIBox(planningUIEntities.player_stats_button_box, ACTION_STATE)
+    -- ui.box.AddStateTagToUIBox(planningUIEntities.player_stats_button_box, SHOP_STATE)
 
     local statsButtonEntity = ui.box.GetUIEByID(registry, "player_stats_button")
     planningUIEntities.player_stats_button = statsButtonEntity
@@ -10816,7 +10817,8 @@ function initPlanningUI()
         synergyTransform.visualY = synergyTransform.actualY
     end
     ui.box.ClearStateTagsFromUIBox(planningUIEntities.synergy_button_box)
-    ui.box.AddStateTagToUIBox(planningUIEntities.synergy_button_box, PLANNING_STATE)
+    -- HIDDEN: Synergies button disabled for now
+    -- ui.box.AddStateTagToUIBox(planningUIEntities.synergy_button_box, PLANNING_STATE)
 
     -- Give button higher z-order than the synergy panel so it remains clickable
     if layer_order_system and layer_order_system.assignZIndexToEntity then

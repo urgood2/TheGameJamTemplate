@@ -993,6 +993,8 @@ local function syncAllToAdapter(wandIndex)
     syncActionsToAdapter(wandIndex)
 end
 
+local returnCardToInventory
+
 --- Map card entity to inventory tab category
 local function getInventoryCategoryForCard(cardEntity)
     if not _G.getScriptTableFromEntityID then

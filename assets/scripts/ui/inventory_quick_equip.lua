@@ -111,6 +111,20 @@ local function isPlayerInventoryGrid(gridEntity)
     return false
 end
 
+--- Check if a grid belongs to the wand loadout/panel
+local function isWandGrid(gridEntity)
+    if not gridEntity then return false end
+    local actionGrid = getWandActionGrid()
+    if actionGrid and actionGrid == gridEntity then
+        return true
+    end
+    local triggerGrid = getWandTriggerGrid()
+    if triggerGrid and triggerGrid == gridEntity then
+        return true
+    end
+    return false
+end
+
 --- Get wand action grid (first available wand)
 local function getWandActionGrid()
     local WandPanel = getWandPanel()
@@ -169,6 +183,59 @@ local function isTriggerCard(cardEntity)
     return false
 end
 
+--- Map card entity to inventory tab category
+local function getInventoryCategoryForCard(cardEntity)
+    local script = getScriptTableFromEntityID(cardEntity)
+    if not script then return "equipment" end
+
+    local data = script.cardData or script
+    local cardType = data and (data.type or data.category or data.cardType)
+    if cardType == "trigger" or cardType == "triggers" then
+        return "triggers"
+    elseif cardType == "action" or cardType == "actions" then
+        return "actions"
+    elseif cardType == "modifier" or cardType == "modifiers" then
+        return "modifiers"
+    end
+
+    if data and data.isTrigger then
+        return "triggers"
+    end
+
+    local cardID = data and (data.cardID or data.id or data.card_id)
+    if cardID and _G.WandEngine then
+        if _G.WandEngine.trigger_card_defs and _G.WandEngine.trigger_card_defs[cardID] then
+            return "triggers"
+        end
+        if _G.WandEngine.card_defs and _G.WandEngine.card_defs[cardID] then
+            local def = _G.WandEngine.card_defs[cardID]
+            if def and def.type == "modifier" then
+                return "modifiers"
+            end
+            return "actions"
+        end
+    end
+
+    return "equipment"
+end
+
+--- Resolve the best inventory grid for a card (based on its category)
+local function getInventoryTargetGrid(cardEntity)
+    local PlayerInventory = getPlayerInventory()
+    if not PlayerInventory then return nil, nil end
+
+    local category = getInventoryCategoryForCard(cardEntity)
+
+    if PlayerInventory.getGridForTab then
+        local gridEntity = PlayerInventory.getGridForTab(category)
+        if gridEntity then
+            return gridEntity, category
+        end
+    end
+
+    return nil, category
+end
+
 --------------------------------------------------------------------------------
 -- Core Equip Functions
 --------------------------------------------------------------------------------
@@ -198,21 +265,43 @@ function QuickEquip.equipToWand(cardEntity)
     end
 
     -- Check if target grid has empty slots
-    local emptySlot = grid.findEmptySlot(targetGrid)
-    if not emptySlot then
-        local slotType = isTrigger and "trigger" or "action"
-        log_debug("[QuickEquip] No empty " .. slotType .. " slots available")
-        return false, "no_empty_slot"
+    local targetSlot = nil
+    if isTrigger then
+        targetSlot = 1
+        local existing = grid.getItemAtIndex(targetGrid, targetSlot)
+        if existing then
+            -- Try to return existing trigger to inventory before equipping
+            local returned, returnReason = QuickEquip.returnToInventory(existing)
+            if not returned then
+                log_debug("[QuickEquip] Cannot replace trigger - return failed: " .. tostring(returnReason))
+                return false, returnReason or "target_slot_occupied"
+            end
+        end
+    else
+        targetSlot = grid.findEmptySlot(targetGrid)
+        if not targetSlot then
+            local slotType = "action"
+            log_debug("[QuickEquip] No empty " .. slotType .. " slots available")
+            return false, "no_empty_slot"
+        end
     end
 
     -- Use transfer module for atomic transfer
     local result = transfer.transferItemTo({
         item = cardEntity,
         toGrid = targetGrid,
-        toSlot = emptySlot,
+        toSlot = targetSlot,
         onSuccess = function(res)
             log_debug("[QuickEquip] Successfully equipped card to slot " .. res.toSlot)
             signal.emit("quick_equip_success", cardEntity, targetGrid, res.toSlot)
+
+            -- Center on target slot for visual consistency
+            if InventoryGridInit and InventoryGridInit.centerItemOnSlot then
+                local slotEntity = grid.getSlotEntity(targetGrid, res.toSlot)
+                if slotEntity then
+                    InventoryGridInit.centerItemOnSlot(cardEntity, slotEntity)
+                end
+            end
 
             -- Play success sound
             if playSoundEffect then
@@ -226,6 +315,77 @@ function QuickEquip.equipToWand(cardEntity)
     })
 
     return result.success, result.reason
+end
+
+--- Attempt to return a wand card back to inventory
+-- @param cardEntity Entity ID of the card to return
+-- @return boolean success, string|nil reason
+function QuickEquip.returnToInventory(cardEntity)
+    if not cardEntity or not registry:valid(cardEntity) then
+        return false, "invalid_card"
+    end
+
+    local targetGrid, category = getInventoryTargetGrid(cardEntity)
+
+    if targetGrid then
+        local result = transfer.transferItemTo({
+            item = cardEntity,
+            toGrid = targetGrid,
+            onSuccess = function(res)
+                log_debug("[QuickEquip] Returned card to inventory slot " .. res.toSlot)
+
+                if InventoryGridInit and InventoryGridInit.centerItemOnSlot then
+                    local slotEntity = grid.getSlotEntity(targetGrid, res.toSlot)
+                    if slotEntity then
+                        InventoryGridInit.centerItemOnSlot(cardEntity, slotEntity)
+                    end
+                end
+
+                if playSoundEffect then
+                    playSoundEffect("effects", "button-click")
+                end
+            end,
+            onFail = function(reason)
+                log_debug("[QuickEquip] Failed to return card: " .. tostring(reason))
+            end,
+        })
+
+        return result.success, result.reason
+    end
+
+    -- Fallback: remove from wand grid and add to inventory storage
+    local PlayerInventory = getPlayerInventory()
+    if not PlayerInventory or not PlayerInventory.addCard then
+        return false, "inventory_unavailable"
+    end
+
+    local location = itemRegistry.getLocation(cardEntity)
+    local removed = false
+    if location and location.grid and location.slot then
+        removed = grid.removeItem(location.grid, location.slot) ~= nil
+    end
+
+    if not removed then
+        return false, "source_removal_failed"
+    end
+
+    local added = PlayerInventory.addCard(cardEntity, category)
+    if added then
+        return true, nil
+    end
+
+    -- Attempt to restore to original slot if inventory add failed
+    if location and location.grid and location.slot then
+        grid.addItem(location.grid, cardEntity, location.slot)
+        if InventoryGridInit and InventoryGridInit.centerItemOnSlot then
+            local slotEntity = grid.getSlotEntity(location.grid, location.slot)
+            if slotEntity then
+                InventoryGridInit.centerItemOnSlot(cardEntity, slotEntity)
+            end
+        end
+    end
+
+    return false, "inventory_full"
 end
 
 --- Show feedback message when equip fails
@@ -256,11 +416,39 @@ local function showEquipFeedback(cardEntity, reason)
     log_debug("[QuickEquip] Feedback: " .. message)
 end
 
+--- Show feedback message when return fails
+local function showReturnFeedback(cardEntity, reason)
+    local message
+
+    if reason == "no_empty_slot" or reason == "inventory_full" then
+        message = "Inventory is full!"
+    elseif reason == "inventory_unavailable" then
+        message = "Inventory not available"
+    elseif reason == "source_removal_failed" then
+        message = "Couldn't remove card"
+    else
+        message = "Cannot return card"
+    end
+
+    if playSoundEffect then
+        playSoundEffect("effects", "error_buzz", 0.8)
+    end
+
+    local popup = require("core.popup")
+    if popup and popup.above and cardEntity and registry:valid(cardEntity) then
+        popup.above(cardEntity, message, { color = "red" })
+    end
+
+    log_debug("[QuickEquip] Return feedback: " .. message)
+end
+
 --------------------------------------------------------------------------------
 -- Right-Click Detection
 --------------------------------------------------------------------------------
 
 local hoveredCard = nil
+local hoveredLocation = nil
+local hoveredSource = nil
 
 local function getRenderFrame()
     if main_loop and main_loop.data and main_loop.data.renderFrame then
@@ -326,15 +514,24 @@ local function updateHoverTracking()
     end
     local currentHovered, location = resolveHoveredCard(inputState)
 
-    -- Only track if it's a card in player inventory
-    if currentHovered and registry:valid(currentHovered) then
-        if location and location.grid and isPlayerInventoryGrid(location.grid) then
+    if currentHovered and registry:valid(currentHovered) and location and location.grid then
+        if isPlayerInventoryGrid(location.grid) then
             hoveredCard = currentHovered
+            hoveredLocation = location
+            hoveredSource = "inventory"
+        elseif isWandGrid(location.grid) then
+            hoveredCard = currentHovered
+            hoveredLocation = location
+            hoveredSource = "wand"
         else
             hoveredCard = nil
+            hoveredLocation = nil
+            hoveredSource = nil
         end
     else
         hoveredCard = nil
+        hoveredLocation = nil
+        hoveredSource = nil
     end
 end
 
@@ -348,6 +545,8 @@ local function checkRightClick()
     if not hoveredCard then return end
     if not registry:valid(hoveredCard) then
         hoveredCard = nil
+        hoveredLocation = nil
+        hoveredSource = nil
         return
     end
 
@@ -384,8 +583,20 @@ local function checkRightClick()
     end
 
     if rightClick or altClick or ctrlClick or cmdClick then
-        log_debug("[QuickEquip] Right-click action on card: " .. tostring(hoveredCard))
-        handleRightClick(hoveredCard)
+        if hoveredSource == "inventory" then
+            log_debug("[QuickEquip] Quick equip from inventory: " .. tostring(hoveredCard))
+            handleRightClick(hoveredCard)
+        elseif hoveredSource == "wand" then
+            log_debug("[QuickEquip] Quick return from wand: " .. tostring(hoveredCard))
+            local success, reason = QuickEquip.returnToInventory(hoveredCard)
+            if not success then
+                showReturnFeedback(hoveredCard, reason)
+            end
+            local frame = getRenderFrame()
+            if frame then
+                state.lastHandledFrame = frame
+            end
+        end
     end
 end
 
@@ -410,10 +621,23 @@ function QuickEquip.init()
     state.lastHandledFrame = nil
     state.signalHandlers.gridSlotClicked = function(gridEntity, slotIndex, button)
         if button ~= "right" then return end
-        if not isPlayerInventoryGrid(gridEntity) then return end
         local item = grid.getItemAtIndex(gridEntity, slotIndex)
-        if item and registry:valid(item) then
+        if not (item and registry:valid(item)) then return end
+
+        if isPlayerInventoryGrid(gridEntity) then
             handleRightClick(item)
+            return
+        end
+
+        if isWandGrid(gridEntity) then
+            local success, reason = QuickEquip.returnToInventory(item)
+            if not success then
+                showReturnFeedback(item, reason)
+            end
+            local frame = getRenderFrame()
+            if frame then
+                state.lastHandledFrame = frame
+            end
         end
     end
     signal.register("grid_slot_clicked", state.signalHandlers.gridSlotClicked)
@@ -438,7 +662,10 @@ function QuickEquip.destroy()
     state.initialized = false
     state.playerInventoryModule = nil
     state.wandLoadoutModule = nil
+    state.wandPanelModule = nil
     hoveredCard = nil
+    hoveredLocation = nil
+    hoveredSource = nil
     log_debug("[QuickEquip] Destroyed")
 end
 

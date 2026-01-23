@@ -559,12 +559,9 @@ local function createTriggerGridDefinition(wandDef)
             if grid_ok and grid then
                 local item = grid.getItemAtIndex(gridEntity, slotIndex)
                 if item then
-                    local removed = grid.removeItem(gridEntity, slotIndex)
-                    if removed then
-                        -- Return to inventory will be added in Phase 6
-                        if _G.log_debug then
-                            _G.log_debug("[WandPanel] Trigger card removed via right-click")
-                        end
+                    local returned = returnCardToInventory(item)
+                    if returned and _G.log_debug then
+                        _G.log_debug("[WandPanel] Trigger card returned to inventory via right-click")
                     end
                 end
             end
@@ -669,12 +666,9 @@ local function createActionGridDefinition(wandDef)
             if grid_ok and grid then
                 local item = grid.getItemAtIndex(gridEntity, slotIndex)
                 if item then
-                    local removed = grid.removeItem(gridEntity, slotIndex)
-                    if removed then
-                        -- Return to inventory will be added in Phase 6
-                        if _G.log_debug then
-                            _G.log_debug("[WandPanel] Action card removed via right-click")
-                        end
+                    local returned = returnCardToInventory(item)
+                    if returned and _G.log_debug then
+                        _G.log_debug("[WandPanel] Action card returned to inventory via right-click")
                     end
                 end
             end
@@ -999,6 +993,46 @@ local function syncAllToAdapter(wandIndex)
     syncActionsToAdapter(wandIndex)
 end
 
+--- Map card entity to inventory tab category
+local function getInventoryCategoryForCard(cardEntity)
+    if not _G.getScriptTableFromEntityID then
+        return "equipment"
+    end
+
+    local script = _G.getScriptTableFromEntityID(cardEntity)
+    if not script then return "equipment" end
+
+    local data = script.cardData or script
+    local cardType = data and (data.type or data.category or data.cardType)
+    if cardType == "trigger" or cardType == "triggers" then
+        return "triggers"
+    elseif cardType == "action" or cardType == "actions" then
+        return "actions"
+    elseif cardType == "modifier" or cardType == "modifiers" then
+        return "modifiers"
+    end
+
+    if data and data.isTrigger then
+        return "triggers"
+    end
+
+    local cardID = data and (data.cardID or data.id or data.card_id)
+    if cardID and _G.WandEngine then
+        if _G.WandEngine.trigger_card_defs and _G.WandEngine.trigger_card_defs[cardID] then
+            return "triggers"
+        end
+        if _G.WandEngine.card_defs and _G.WandEngine.card_defs[cardID] then
+            local def = _G.WandEngine.card_defs[cardID]
+            if def and def.type == "modifier" then
+                return "modifiers"
+            end
+            return "actions"
+        end
+    end
+
+    return "equipment"
+end
+
 --- Return a card entity to the player inventory
 --- @param cardEntity number Entity ID of the card
 --- @return boolean Success
@@ -1018,37 +1052,63 @@ local function returnCardToInventory(cardEntity)
         return false
     end
 
-    -- Get the card grid from player inventory
-    local cardGrid = PlayerInventory.getActiveGrid and PlayerInventory.getActiveGrid()
-    if not cardGrid then
-        -- Try to get cards tab grid specifically
-        if PlayerInventory.getGridForTab then
-            cardGrid = PlayerInventory.getGridForTab("cards")
-        end
-    end
+    local category = getInventoryCategoryForCard(cardEntity)
+    local targetGrid = PlayerInventory.getGridForTab and PlayerInventory.getGridForTab(category)
 
-    if not cardGrid then
-        if _G.log_warn then
-            _G.log_warn("[WandPanel] Cannot return card - no card grid in inventory")
-        end
-        return false
-    end
-
-    -- Add card to inventory grid
     local grid_ok, grid = pcall(require, "core.inventory_grid")
-    if grid_ok and grid and grid.addItem then
-        local success, slotIndex = grid.addItem(cardGrid, cardEntity)
-        if success then
+    local transfer_ok, transfer = pcall(require, "core.grid_transfer")
+    local registry_ok, itemRegistry = pcall(require, "core.item_location_registry")
+
+    -- If target grid is active, do an atomic transfer
+    if targetGrid and transfer_ok and transfer then
+        local result = transfer.transferItemTo({
+            item = cardEntity,
+            toGrid = targetGrid,
+            onSuccess = function(res)
+                if _G.log_debug then
+                    _G.log_debug("[WandPanel] Returned card to inventory slot " .. res.toSlot)
+                end
+                local slotEntity = grid_ok and grid and grid.getSlotEntity and grid.getSlotEntity(targetGrid, res.toSlot)
+                if slotEntity then
+                    centerItemOnSlot(targetGrid, cardEntity, res.toSlot)
+                end
+            end,
+        })
+        if result.success then
+            return true
+        end
+    end
+
+    -- Fallback: remove from wand grid manually and store in inventory
+    local originalLocation = nil
+    if registry_ok and itemRegistry and itemRegistry.getLocation then
+        originalLocation = itemRegistry.getLocation(cardEntity)
+    end
+
+    if originalLocation and grid_ok and grid and grid.removeItem then
+        grid.removeItem(originalLocation.grid, originalLocation.slot)
+    end
+
+    if PlayerInventory.addCard then
+        local added = PlayerInventory.addCard(cardEntity, category)
+        if added then
             if _G.log_debug then
-                _G.log_debug("[WandPanel] Returned card to inventory slot " .. slotIndex)
+                _G.log_debug("[WandPanel] Returned card to inventory (" .. tostring(category) .. ")")
             end
             return true
-        else
-            if _G.log_warn then
-                _G.log_warn("[WandPanel] Inventory is full - cannot return card")
-            end
-            return false
         end
+    end
+
+    -- Attempt to restore to original slot if add failed
+    if originalLocation and grid_ok and grid and grid.addItem then
+        local restored = grid.addItem(originalLocation.grid, cardEntity, originalLocation.slot)
+        if restored then
+            centerItemOnSlot(originalLocation.grid, cardEntity, originalLocation.slot)
+        end
+    end
+
+    if _G.log_warn then
+        _G.log_warn("[WandPanel] Inventory is full - cannot return card")
     end
 
     return false
@@ -1176,9 +1236,9 @@ local function handleQuickEquip(cardEntity)
             local existing = grid.getItemAtIndex(state.triggerGridEntity, 1)
             if existing then
                 -- Swap: return existing to inventory first
-                local removed = grid.removeItem(state.triggerGridEntity, 1)
-                if removed then
-                    returnCardToInventory(existing)
+                local returned = returnCardToInventory(existing)
+                if not returned then
+                    return false
                 end
             end
             -- Add new trigger card
@@ -1972,9 +2032,9 @@ function WandPanel.equipToTriggerSlot(cardEntity)
     local existing = grid.getItemAtIndex(state.triggerGridEntity, 1)
     if existing then
         -- Swap: return existing to inventory first
-        local removed = grid.removeItem(state.triggerGridEntity, 1)
-        if removed then
-            returnCardToInventory(existing)
+        local returned = returnCardToInventory(existing)
+        if not returned then
+            return false
         end
     end
 

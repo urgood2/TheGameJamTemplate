@@ -6745,6 +6745,31 @@ HIDFlags = {
 
 
 ---
+--- GIF loading and animation system for tutorial images
+---
+---@class gif
+gif = {
+    load = ---@param path string Path to GIF file
+---@param id string Unique identifier for this GIF,  -- Load a GIF file into memory
+    update = ---@param id string GIF identifier,  -- Advance GIF animation by one tick (call each frame)
+    getTexture = ---@param id string GIF identifier
+---@return Texture2D,  -- Get the current frame as a Texture2D for drawing
+    unloadAll = ---@return nil,  -- Unload all loaded GIFs and free memory
+    setFrameDelay = ---@param id string GIF identifier
+---@param delay integer Frames to wait between advances (default: 8),  -- Set playback speed - lower values = faster animation
+    getFrameDelay = ---@param id string GIF identifier
+---@return integer,  -- Get current frame delay setting
+    getFrameCount = ---@param id string GIF identifier
+---@return integer,  -- Get total number of frames in the GIF
+    getCurrentFrameIndex = ---@param id string GIF identifier
+---@return integer,  -- Get the current frame index (0-based)
+    isLoaded = ---@param id string GIF identifier
+---@return boolean,  -- Check if a GIF with the given ID is loaded
+    unload = ---@param id string GIF identifier  -- Unload a specific GIF and free its memory
+}
+
+
+---
 --- Raylib 2D camera structure for controlling viewport rendering.
 ---
 ---@class Camera2D

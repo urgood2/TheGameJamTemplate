@@ -112,7 +112,6 @@ local state = {
     gridEntity = nil,
     skillButtons = {},       -- skillId -> buttonEntity
     headerTextEntity = nil,
-    signalHandlers = {},
     panelX = 0,
     panelY = 0,
     player = nil,            -- Reference to player for skill point queries
@@ -210,6 +209,13 @@ function SkillsPanel.getConfig()
     return CONFIG
 end
 
+--- Get panel dimensions for tab marker positioning
+--- @return number width Panel width in pixels
+--- @return number height Panel height in pixels
+function SkillsPanel.getPanelDimensions()
+    return PANEL_WIDTH, PANEL_HEIGHT
+end
+
 --------------------------------------------------------------------------------
 -- POSITION CALCULATION
 --------------------------------------------------------------------------------
@@ -272,42 +278,10 @@ local function setEntityVisible(entity, visible, onscreenX, onscreenY)
 end
 
 --------------------------------------------------------------------------------
--- SIGNAL HANDLERS
---------------------------------------------------------------------------------
-
-local function setupSignalHandlers()
-    if not signal then return end
-
-    -- Listen for skill learned/unlearned to update button states
-    state.signalHandlers.skill_learned = function(data)
-        SkillsPanel.refreshButtonStates()
-    end
-
-    state.signalHandlers.skill_unlearned = function(data)
-        SkillsPanel.refreshButtonStates()
-    end
-
-    state.signalHandlers.player_level_up = function(data)
-        SkillsPanel.refreshHeader()
-    end
-
-    for event, handler in pairs(state.signalHandlers) do
-        signal.register(event, handler)
-    end
-end
-
-local function cleanupSignalHandlers()
-    if not signal then return end
-
-    for event, handler in pairs(state.signalHandlers) do
-        signal.remove(event, handler)
-    end
-    state.signalHandlers = {}
-end
-
---------------------------------------------------------------------------------
 -- UI BUILDING (Requires game engine)
 --------------------------------------------------------------------------------
+-- NOTE: Signal handling (skill_learned, skill_unlearned, player_level_up)
+-- is consolidated in skills_panel_input.lua to avoid duplicate handlers.
 
 local function buildPanelDef()
     -- This would be the DSL definition for the panel
@@ -336,7 +310,6 @@ local function initializePanel()
     -- Build and spawn the panel (implementation depends on DSL)
     -- TODO: Implement full panel spawning when integrating
 
-    setupSignalHandlers()
     state.initialized = true
 end
 
@@ -420,8 +393,6 @@ end
 --- Destroy the panel and cleanup
 function SkillsPanel.destroy()
     if not state.initialized then return end
-
-    cleanupSignalHandlers()
 
     if timer then
         timer.kill_group(TIMER_GROUP)

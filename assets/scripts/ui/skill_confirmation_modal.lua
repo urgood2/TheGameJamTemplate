@@ -199,7 +199,12 @@ function SkillConfirmationModal.destroy()
     SkillConfirmationModal.hide()
 
     if state.modalEntity and _G.registry and _G.registry.valid and _G.registry:valid(state.modalEntity) then
-        _G.registry:destroy(state.modalEntity)
+        -- Use ui.box.Remove for proper UIBox cleanup (per UI Panel Implementation Guide)
+        if _G.ui and _G.ui.box and _G.ui.box.Remove then
+            _G.ui.box.Remove(_G.registry, state.modalEntity)
+        else
+            _G.registry:destroy(state.modalEntity)
+        end
     end
 
     state.modalEntity = nil

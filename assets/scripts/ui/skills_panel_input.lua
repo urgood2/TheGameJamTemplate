@@ -75,8 +75,7 @@ local function setupKeyboardHandler()
                     SkillsPanel.toggle()
                     -- Update tab marker position
                     if SkillsTabMarker then
-                        local config = SkillsPanel.getConfig()
-                        local panelWidth = config and config.columns * 52 or 200  -- Approximate
+                        local panelWidth = SkillsPanel.getPanelDimensions and SkillsPanel.getPanelDimensions() or 200
                         SkillsTabMarker.updatePosition(SkillsPanel.isOpen(), panelWidth)
                     end
                 end
@@ -134,8 +133,7 @@ local function setupSignalHandlers()
     -- When panel opens, update tab marker
     state.signalHandlers.skills_panel_opened = function()
         if SkillsTabMarker and SkillsPanel then
-            local config = SkillsPanel.getConfig()
-            local panelWidth = config and config.columns * 52 or 200
+            local panelWidth = SkillsPanel.getPanelDimensions and SkillsPanel.getPanelDimensions() or 200
             SkillsTabMarker.updatePosition(true, panelWidth)
         end
     end

@@ -178,7 +178,12 @@ function SkillsTabMarker.destroy()
     if not state.initialized then return end
 
     if state.markerEntity and _G.registry and _G.registry.valid and _G.registry:valid(state.markerEntity) then
-        _G.registry:destroy(state.markerEntity)
+        -- Use ui.box.Remove for proper UIBox cleanup (per UI Panel Implementation Guide)
+        if _G.ui and _G.ui.box and _G.ui.box.Remove then
+            _G.ui.box.Remove(_G.registry, state.markerEntity)
+        else
+            _G.registry:destroy(state.markerEntity)
+        end
     end
 
     state.initialized = false

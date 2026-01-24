@@ -1,0 +1,49 @@
+{
+  "fps": 30,
+  "segments": [
+    {
+      "voice": "../voice/line_01_processed.wav",
+      "media": "../../raw/replay_001.mp4",
+      "mediaStartTime": 0,
+      "duration": 2.5,
+      "subtitle": "So I found a bug in my game..."
+    },
+    {
+      "voice": "../voice/line_02_processed.wav",
+      "media": "../../raw/replay_001.mp4",
+      "mediaStartTime": 1.0,
+      "duration": 2.0,
+      "subtitle": "Look at this glitch."
+    },
+    {
+      "voice": "../voice/line_03_processed.wav",
+      "media": "../../raw/replay_001.mp4",
+      "mediaStartTime": 2.0,
+      "duration": 4.0,
+      "subtitle": "It's supposed to be much smaller, but way overblown, like an elephant!"
+    },
+    {
+      "voice": "../voice/line_04_processed.wav",
+      "media": "../../raw/replay_001.mp4",
+      "mediaStartTime": 0.5,
+      "duration": 3.5,
+      "subtitle": "But honestly? It looks kinda cool."
+    },
+    {
+      "voice": "../voice/line_05_processed.wav",
+      "media": "../../raw/replay_001.mp4",
+      "mediaStartTime": 1.5,
+      "duration": 2.5,
+      "subtitle": "I think I'm keeping it."
+    }
+  ],
+  "style": {
+    "subtitlePosition": "bottom",
+    "showSubtitles": true,
+    "accentColor": "#ff6b6b"
+  },
+  "upload": {
+    "caption": "Found a bug, decided to keep it\n\n#gamedev #indiedev #gamedevelopment #programming #coding",
+    "platforms": ["tiktok", "x"]
+  }
+}

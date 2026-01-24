@@ -2656,3 +2656,5 @@ tasks_backup/prd.json
 debug.log
 build-luajit/
 imgui.ini
+devlog/remotion/node_modules/
+devlog/sfx/node_modules/

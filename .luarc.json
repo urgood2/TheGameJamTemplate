@@ -1,6 +1,12 @@
 {
   "workspace.library": [
-    "assets/scripts/types"
+    "assets/scripts/types",
+    "assets/scripts"
+  ],
+  "Lua.workspace.ignoreDir": [
+    ".worktrees",
+    "build",
+    "build-*"
   ],
   "diagnostics.globals": [
     "registry",

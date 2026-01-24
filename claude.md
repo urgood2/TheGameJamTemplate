@@ -166,6 +166,17 @@ local button = createUIElement(...)
 registry:emplace(button, ScreenSpaceCollisionMarker {})
 ```
 
+### Don't: Implement UI panels without reading the guide
+**For ANY UI panel work (skill trees, equipment windows, inventory, character sheets):**
+→ **READ FIRST**: [UI Panel Implementation Guide](docs/guides/UI_PANEL_IMPLEMENTATION_GUIDE.md)
+
+Critical patterns that WILL break if done wrong:
+- Must move BOTH entity Transform AND `UIBoxComponent.uiRoot` for visibility
+- Must call `ui.box.AddStateTagToUIBox` after spawn AND after `ReplaceChildren`
+- Must call `ui.box.RenewAlignment` after ANY `ReplaceChildren` operation
+- Must clean all 3 registries on grid destroy: `itemRegistry`, `grid`, `dsl.cleanupGrid`
+- NEVER add `ObjectAttachedToUITag` to draggable cards/items
+
 ### Don't: Mix World and Screen DrawCommandSpace carelessly
 ```lua
 -- WRONG: HUD follows camera
@@ -218,6 +229,7 @@ All modules in `assets/scripts/core/` - import with `require("core.<name>")`:
 ## API Documentation Index
 
 ### Rendering & UI
+- **[UI Panel Implementation Guide](docs/guides/UI_PANEL_IMPLEMENTATION_GUIDE.md)** - **START HERE for any UI work** (skill trees, equipment windows, inventory panels). Bulletproof patterns from `player_inventory.lua`
 - [Z-Order and Layer Rendering](docs/api/z-order-rendering.md) - Z-ordering, DrawCommandSpace, dual quadtree collision
 - [UI DSL Reference](docs/api/ui-dsl-reference.md) - Declarative UI construction
 - [UI Validation](docs/api/ui-validation.md) - Layout validation and testing

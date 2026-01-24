@@ -49,6 +49,7 @@
 #include "systems/text/static_ui_text.hpp"
 #include "systems/telemetry/telemetry.hpp"
 #include "systems/render_groups/render_groups.hpp"
+#include "systems/gif/gif_lua_bindings.hpp"
 #include "util/utilities.hpp"
 
 #include "core/ownership.hpp"
@@ -380,6 +381,11 @@ auto initLuaMasterState(sol::state &stateToInit,
   // render groups system for batched shader rendering
   //---------------------------------------------------------
   render_groups::exposeToLua(stateToInit);
+
+  //---------------------------------------------------------
+  // GIF loading and playback for tutorials
+  //---------------------------------------------------------
+  gif_system::exposeToLua(stateToInit);
 
   // ------------------------------------------------------
   // Expose global variables to Lua

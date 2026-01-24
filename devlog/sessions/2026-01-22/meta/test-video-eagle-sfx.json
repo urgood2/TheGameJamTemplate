@@ -1,0 +1,78 @@
+{
+  "fps": 30,
+  "segments": [
+    {
+      "voice": "../voice/line_01_processed.wav",
+      "media": "../../raw/replay_001.mp4",
+      "mediaStartTime": 0,
+      "duration": 2.5,
+      "subtitle": "So I found a bug in my game...",
+      "sfx": "/Volumes/AssetsEagle/Sound and Music.library/images/MIX7487K2MKHW.info/WHSH_Fade in whoosh.wav",
+      "sfxVolume": 0.4,
+      "transition": "fade",
+      "kenBurns": "zoom-in",
+      "textAnimation": "pop"
+    },
+    {
+      "voice": "../voice/line_02_processed.wav",
+      "media": "../../raw/replay_001.mp4",
+      "mediaStartTime": 1.0,
+      "duration": 2.0,
+      "subtitle": "Look at this glitch.",
+      "sfx": "/Volumes/AssetsEagle/Sound and Music.library/images/MIX7487KD530R.info/UIClick_Bubble click.wav",
+      "sfxVolume": 0.5,
+      "sfxOffset": 0.3,
+      "transition": "slide-left",
+      "kenBurns": "pan-right",
+      "textAnimation": "slide-up"
+    },
+    {
+      "voice": "../voice/line_03_processed.wav",
+      "media": "../../raw/replay_001.mp4",
+      "mediaStartTime": 2.0,
+      "duration": 4.0,
+      "subtitle": "It's supposed to be much smaller, but way overblown, like an elephant!",
+      "sfx": "/Volumes/AssetsEagle/Sound and Music.library/images/MIX7487KL2IXC.info/UIGlitch_Error glitch.wav",
+      "sfxVolume": 0.6,
+      "sfxOffset": 0.5,
+      "transition": "zoom-in",
+      "kenBurns": "zoom-out",
+      "textAnimation": "typewriter"
+    },
+    {
+      "voice": "../voice/line_04_processed.wav",
+      "media": "../../raw/replay_001.mp4",
+      "mediaStartTime": 0.5,
+      "duration": 3.5,
+      "subtitle": "But honestly? It looks kinda cool.",
+      "sfx": "/Volumes/AssetsEagle/Sound and Music.library/images/MIX7487KP0ARY.info/UIAlert_Positive twinkle accent.wav",
+      "sfxVolume": 0.5,
+      "sfxOffset": 0.8,
+      "transition": "blur",
+      "kenBurns": "pan-left",
+      "textAnimation": "wave"
+    },
+    {
+      "voice": "../voice/line_05_processed.wav",
+      "media": "../../raw/replay_001.mp4",
+      "mediaStartTime": 1.5,
+      "duration": 2.5,
+      "subtitle": "I think I'm keeping it.",
+      "sfx": "/Volumes/AssetsEagle/Sound and Music.library/images/MIX7487KWQACB.info/UIAlert_Game success.wav",
+      "sfxVolume": 0.5,
+      "sfxOffset": 0.5,
+      "transition": "slide-up",
+      "kenBurns": "zoom-in",
+      "textAnimation": "pop"
+    }
+  ],
+  "style": {
+    "subtitlePosition": "bottom",
+    "showSubtitles": true,
+    "accentColor": "#ff6b6b"
+  },
+  "upload": {
+    "caption": "Found a bug, decided to keep it\n\n#gamedev #indiedev #gamedevelopment #programming #coding",
+    "platforms": ["tiktok", "x"]
+  }
+}

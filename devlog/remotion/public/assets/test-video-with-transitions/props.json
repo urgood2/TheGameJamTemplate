@@ -1,0 +1,81 @@
+{
+  "fps": 30,
+  "segments": [
+    {
+      "voice": "assets/test-video-with-transitions/line_01_processed.wav",
+      "media": "assets/test-video-with-transitions/replay_001.mp4",
+      "mediaStartTime": 0,
+      "duration": 2.5,
+      "subtitle": "So I found a bug in my game...",
+      "sfx": "assets/test-video-with-transitions/WHSH_Fade in whoosh.wav",
+      "sfxVolume": 0.4,
+      "transition": "fade",
+      "kenBurns": "zoom-in",
+      "textAnimation": "pop"
+    },
+    {
+      "voice": "assets/test-video-with-transitions/line_02_processed.wav",
+      "media": "assets/test-video-with-transitions/replay_001.mp4",
+      "mediaStartTime": 1.0,
+      "duration": 2.0,
+      "subtitle": "Look at this glitch.",
+      "sfx": "assets/test-video-with-transitions/UIClick_Bubble click.wav",
+      "sfxVolume": 0.5,
+      "sfxOffset": 0.3,
+      "transition": "slide-left",
+      "kenBurns": "pan-right",
+      "textAnimation": "slide-up"
+    },
+    {
+      "voice": "assets/test-video-with-transitions/line_03_processed.wav",
+      "media": "assets/test-video-with-transitions/replay_001.mp4",
+      "mediaStartTime": 2.0,
+      "duration": 4.0,
+      "subtitle": "It's supposed to be much smaller, but way overblown, like an elephant!",
+      "sfx": "assets/test-video-with-transitions/UIGlitch_Error glitch.wav",
+      "sfxVolume": 0.6,
+      "sfxOffset": 0.5,
+      "transition": "zoom-in",
+      "kenBurns": "zoom-out",
+      "textAnimation": "typewriter"
+    },
+    {
+      "voice": "assets/test-video-with-transitions/line_04_processed.wav",
+      "media": "assets/test-video-with-transitions/replay_001.mp4",
+      "mediaStartTime": 0.5,
+      "duration": 3.5,
+      "subtitle": "But honestly? It looks kinda cool.",
+      "sfx": "assets/test-video-with-transitions/UIAlert_Positive twinkle accent.wav",
+      "sfxVolume": 0.5,
+      "sfxOffset": 0.8,
+      "transition": "blur",
+      "kenBurns": "pan-left",
+      "textAnimation": "wave"
+    },
+    {
+      "voice": "assets/test-video-with-transitions/line_05_processed.wav",
+      "media": "assets/test-video-with-transitions/replay_001.mp4",
+      "mediaStartTime": 1.5,
+      "duration": 2.5,
+      "subtitle": "I think I'm keeping it.",
+      "sfx": "assets/test-video-with-transitions/UIClick_Button positive notification.wav",
+      "sfxVolume": 0.5,
+      "sfxOffset": 0.5,
+      "transition": "slide-up",
+      "kenBurns": "zoom-in",
+      "textAnimation": "pop"
+    }
+  ],
+  "style": {
+    "subtitlePosition": "bottom",
+    "showSubtitles": true,
+    "accentColor": "#ff6b6b"
+  },
+  "upload": {
+    "caption": "Found a bug, decided to keep it\n\n#gamedev #indiedev #gamedevelopment #programming #coding",
+    "platforms": [
+      "tiktok",
+      "x"
+    ]
+  }
+}

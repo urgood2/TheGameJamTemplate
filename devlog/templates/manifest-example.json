@@ -1,0 +1,50 @@
+{
+  "fps": 30,
+  "segments": [
+    {
+      "voice": "../voice/line_01_processed.wav",
+      "media": "../../raw/Replay_2024-01-15_14-32-01.mp4",
+      "mediaStartTime": 5.0,
+      "duration": 4.0,
+      "subtitle": "So I found a bug in my game..."
+    },
+    {
+      "voice": "../voice/line_02_processed.wav",
+      "media": "../../raw/Replay_2024-01-15_14-32-01.mp4",
+      "mediaStartTime": 12.0,
+      "duration": 5.0,
+      "subtitle": "Enemies were stacking like this."
+    },
+    {
+      "voice": null,
+      "media": "../../raw/Replay_2024-01-15_14-32-01.mp4",
+      "mediaStartTime": 20.0,
+      "duration": 3.0,
+      "subtitle": null
+    },
+    {
+      "voice": "../voice/line_03_processed.wav",
+      "media": "../../raw/Replay_2024-01-15_14-32-01.mp4",
+      "mediaStartTime": 25.0,
+      "duration": 4.0,
+      "subtitle": "But honestly? It looks kinda cool."
+    },
+    {
+      "voice": "../voice/line_04_processed.wav",
+      "media": "../../raw/Replay_2024-01-15_14-32-01.mp4",
+      "mediaStartTime": 30.0,
+      "duration": 3.0,
+      "subtitle": "I think I'm keeping it."
+    }
+  ],
+  "style": {
+    "subtitlePosition": "bottom",
+    "showSubtitles": true,
+    "accentColor": "#6366f1",
+    "fontFamily": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+  },
+  "upload": {
+    "caption": "Found a bug, decided to keep it\n\n#gamedev #indiedev #gamedevelopment #programming #coding",
+    "platforms": ["tiktok", "x"]
+  }
+}

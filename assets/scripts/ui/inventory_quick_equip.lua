@@ -581,6 +581,18 @@ local function handleRightClick(cardEntity)
     end
 end
 
+local function isModifierHeld()
+    if not input or not input.isKeyDown then
+        return false
+    end
+    return input.isKeyDown(KeyboardKey.KEY_LEFT_ALT) or
+        input.isKeyDown(KeyboardKey.KEY_RIGHT_ALT) or
+        input.isKeyDown(KeyboardKey.KEY_LEFT_CONTROL) or
+        input.isKeyDown(KeyboardKey.KEY_RIGHT_CONTROL) or
+        input.isKeyDown(KeyboardKey.KEY_LEFT_SUPER) or
+        input.isKeyDown(KeyboardKey.KEY_RIGHT_SUPER)
+end
+
 local function resolveHoveredCard(inputState)
     if not inputState then return nil, nil end
 
@@ -682,6 +694,8 @@ local function checkRightClick()
     )
     local ctrlClick = ctrlHeld and leftClick
     local cmdClick = cmdHeld and leftClick
+    local modifierHeld = altHeld or ctrlHeld or cmdHeld
+    local modifierRightClick = modifierHeld and rightClick
 
     -- Debug: log when any modifier is detected with a click
     if leftClick and (ctrlHeld or cmdHeld or altHeld) then
@@ -696,8 +710,8 @@ local function checkRightClick()
             log_debug("[QuickEquip] Quick equip from inventory: " .. tostring(hoveredCard))
             handleRightClick(hoveredCard)
         elseif hoveredSource == "wand_panel" then
-            -- WandPanel handles native right-click via onSlotClick; only handle modifier+left-click.
-            if altClick or ctrlClick or cmdClick then
+            -- WandPanel handles native right-click via onSlotClick; only handle modifier clicks here.
+            if altClick or ctrlClick or cmdClick or modifierRightClick then
                 log_debug("[QuickEquip] Quick return from wand panel: " .. tostring(hoveredCard))
                 local success, reason = QuickEquip.returnToInventory(hoveredCard)
                 if not success then
@@ -742,23 +756,51 @@ function QuickEquip.init()
 
     state.lastHandledFrame = nil
     state.signalHandlers.gridSlotClicked = function(gridEntity, slotIndex, button)
-        if button ~= "right" then return end
+        local frame = getRenderFrame()
+        if frame and state.lastHandledFrame == frame then
+            return
+        end
         local item = grid.getItemAtIndex(gridEntity, slotIndex)
         if not (item and registry:valid(item)) then return end
 
-        if isPlayerInventoryGrid(gridEntity) then
-            handleRightClick(item)
+        if button == "right" then
+            if isPlayerInventoryGrid(gridEntity) then
+                handleRightClick(item)
+                return
+            end
+
+            if isWandLoadoutGrid(gridEntity) then
+                local success, reason = QuickEquip.returnToInventory(item)
+                if not success then
+                    showReturnFeedback(item, reason)
+                end
+                if frame then
+                    state.lastHandledFrame = frame
+                end
+                return
+            end
+
+            if isWandPanelGrid(gridEntity) and isModifierHeld() then
+                local success, reason = QuickEquip.returnToInventory(item)
+                if not success then
+                    showReturnFeedback(item, reason)
+                end
+                if frame then
+                    state.lastHandledFrame = frame
+                end
+            end
             return
         end
 
-        if isWandLoadoutGrid(gridEntity) then
-            local success, reason = QuickEquip.returnToInventory(item)
-            if not success then
-                showReturnFeedback(item, reason)
-            end
-            local frame = getRenderFrame()
-            if frame then
-                state.lastHandledFrame = frame
+        if button == "left" and isModifierHeld() then
+            if isWandPanelGrid(gridEntity) or isWandLoadoutGrid(gridEntity) then
+                local success, reason = QuickEquip.returnToInventory(item)
+                if not success then
+                    showReturnFeedback(item, reason)
+                end
+                if frame then
+                    state.lastHandledFrame = frame
+                end
             end
         end
     end

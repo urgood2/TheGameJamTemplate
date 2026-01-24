@@ -30,6 +30,7 @@ local CONFIG = {
     textFontSize = ui_scale.ui(14),
     padding = ui_scale.ui(8),
     gap = ui_scale.ui(6),
+    panelGap = ui_scale.ui(8),
 }
 
 -- Z-ordering (below cards at z_orders.card=101, below board at z_orders.board=100)
@@ -168,9 +169,19 @@ function M.draw()
     if not state.visible then return end
     if not is_state_active or not is_state_active(PLANNING_STATE) then return end
 
+    local anchorX = CONFIG.x
+    local anchorY = CONFIG.y
+    local panel_ok, WandPanel = pcall(require, "ui.wand_panel")
+    if panel_ok and WandPanel and WandPanel.getPanelBounds then
+        local bounds = WandPanel.getPanelBounds()
+        if bounds and bounds.height and bounds.y then
+            anchorY = math.floor(bounds.y + bounds.height + CONFIG.panelGap)
+        end
+    end
+
     -- Calculate layout values
-    local barX = CONFIG.x + CONFIG.padding
-    local barY = CONFIG.y + CONFIG.padding
+    local barX = anchorX + CONFIG.padding
+    local barY = anchorY + CONFIG.padding
     local totalWidth = CONFIG.barWidth
     local totalHeight = CONFIG.barHeight
 
@@ -210,8 +221,8 @@ function M.draw()
     local contentWidth = math.max(barTotalWidth, textWidth)
     local containerWidth = contentWidth + CONFIG.padding * 2
     local containerHeight = totalHeight + CONFIG.textFontSize + CONFIG.gap + CONFIG.padding * 2
-    local containerCenterX = CONFIG.x + containerWidth / 2
-    local containerCenterY = CONFIG.y + containerHeight / 2
+    local containerCenterX = anchorX + containerWidth / 2
+    local containerCenterY = anchorY + containerHeight / 2
 
     local containerRadius = getCornerRadius(containerWidth, containerHeight)
     command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)

@@ -85,6 +85,8 @@ local SECTION_HEADER_HEIGHT = UI(24)
 local PANEL_PADDING = UI(12)
 local COLUMN_SPACING = UI(12)
 local STATS_BOX_WIDTH = UI(190)
+local STATS_ICON_SIZE = UI(48)
+local STATS_ICON_SPRITE = "wand_test.png"
 
 --------------------------------------------------------------------------------
 -- MODULE STATE (single source of truth)
@@ -346,6 +348,177 @@ local function updateHeaderTitle()
             if uiText then
                 uiText.text = titleText
             end
+        end
+    end
+end
+
+local function fetchTooltipEntity(cache, key)
+    if type(cache) ~= "table" then return nil end
+    local entry = cache[key]
+    if not entry then return nil end
+    return entry.eid or entry
+end
+
+local function positionTooltipRightOfEntity(tooltipEntity, targetEntity, opts)
+    if not tooltipEntity or not targetEntity then return end
+    if not _G.registry or not _G.registry.valid then return end
+    if not _G.registry:valid(tooltipEntity) or not _G.registry:valid(targetEntity) then return end
+
+    if _G.ui and _G.ui.box and _G.ui.box.RenewAlignment then
+        _G.ui.box.RenewAlignment(_G.registry, tooltipEntity)
+    end
+
+    local component_cache = _G.component_cache
+    if not component_cache or not component_cache.get then return end
+
+    local tooltipTransform = component_cache.get(tooltipEntity, _G.Transform)
+    local targetTransform = component_cache.get(targetEntity, _G.Transform)
+    if not tooltipTransform or not targetTransform then return end
+
+    local gap = (opts and opts.gap) or UI(8)
+    local screenW = (_G.globals and _G.globals.screenWidth and _G.globals.screenWidth())
+        or (_G.GetScreenWidth and _G.GetScreenWidth()) or 0
+    local screenH = (_G.globals and _G.globals.screenHeight and _G.globals.screenHeight())
+        or (_G.GetScreenHeight and _G.GetScreenHeight()) or 0
+
+    local tooltipW = tooltipTransform.actualW or 0
+    local tooltipH = tooltipTransform.actualH or 0
+    local anchorX = targetTransform.actualX or 0
+    local anchorY = targetTransform.actualY or 0
+    local anchorW = targetTransform.actualW or 0
+    local anchorH = targetTransform.actualH or 0
+
+    local function overlapsAnchor(testX, testY)
+        local tooltipRight = testX + tooltipW
+        local tooltipBottom = testY + tooltipH
+        local anchorRight = anchorX + anchorW
+        local anchorBottom = anchorY + anchorH
+        return testX < anchorRight and tooltipRight > anchorX and
+               testY < anchorBottom and tooltipBottom > anchorY
+    end
+
+    local x = anchorX + anchorW + gap
+    local y = anchorY + anchorH * 0.5 - tooltipH * 0.5
+
+    if y < gap then y = gap end
+    if y + tooltipH > screenH - gap then y = math.max(gap, screenH - tooltipH - gap) end
+
+    local fitsRight = (x + tooltipW <= screenW - gap) and not overlapsAnchor(x, y)
+
+    if not fitsRight then
+        local leftX = anchorX - tooltipW - gap
+        local fitsLeft = (leftX >= gap) and not overlapsAnchor(leftX, y)
+
+        if fitsLeft then
+            x = leftX
+        else
+            local aboveX = anchorX + anchorW * 0.5 - tooltipW * 0.5
+            local aboveY = anchorY - tooltipH - gap
+            if aboveX < gap then aboveX = gap end
+            if aboveX + tooltipW > screenW - gap then aboveX = math.max(gap, screenW - tooltipW - gap) end
+
+            local fitsAbove = (aboveY >= gap) and not overlapsAnchor(aboveX, aboveY)
+
+            if fitsAbove then
+                x = aboveX
+                y = aboveY
+            else
+                local belowY = anchorY + anchorH + gap
+                local fitsBelow = (belowY + tooltipH <= screenH - gap) and not overlapsAnchor(aboveX, belowY)
+
+                if fitsBelow then
+                    x = aboveX
+                    y = belowY
+                elseif x + tooltipW > screenW - gap then
+                    x = math.max(gap, screenW - tooltipW - gap)
+                end
+            end
+        end
+    end
+
+    x = math.max(gap, math.min(x, screenW - tooltipW - gap))
+    y = math.max(gap, math.min(y, screenH - tooltipH - gap))
+
+    tooltipTransform.actualX = x
+    tooltipTransform.actualY = y
+    tooltipTransform.visualX = x
+    tooltipTransform.visualY = y
+end
+
+local function showWandTooltipForActive(anchorEntity)
+    if not anchorEntity then return end
+    if not _G.is_state_active or not _G.PLANNING_STATE or not _G.is_state_active(_G.PLANNING_STATE) then
+        return
+    end
+
+    local wandDef = state.wandDefs[state.activeWandIndex]
+    if not wandDef or not wandDef.id then return end
+
+    local cache = _G.wand_tooltip_cache
+    if type(cache) ~= "table" then
+        cache = {}
+        _G.wand_tooltip_cache = cache
+    end
+
+    local tooltipEntity = fetchTooltipEntity(cache, wandDef.id)
+    if not tooltipEntity and _G.makeWandTooltip then
+        tooltipEntity = _G.makeWandTooltip(wandDef)
+        if tooltipEntity then
+            cache[wandDef.id] = { eid = tooltipEntity }
+            if _G.layer_order_system and _G.z_orders then
+                _G.layer_order_system.assignZIndexToEntity(
+                    tooltipEntity,
+                    (_G.z_orders.ui_tooltips or 1000)
+                )
+            end
+            if _G.clear_state_tags then
+                _G.clear_state_tags(tooltipEntity)
+            end
+        end
+    end
+
+    if not tooltipEntity then return end
+
+    for id, entry in pairs(cache) do
+        local eid = entry and (entry.eid or entry) or nil
+        if eid and _G.registry and _G.registry.valid and _G.registry:valid(eid) then
+            if id == wandDef.id then
+                positionTooltipRightOfEntity(eid, anchorEntity, { gap = UI(10) })
+                if _G.add_state_tag then
+                    _G.add_state_tag(eid, _G.WAND_TOOLTIP_STATE or "WAND_TOOLTIP_STATE")
+                end
+            elseif _G.clear_state_tags then
+                _G.clear_state_tags(eid)
+            end
+        end
+    end
+
+    if _G.activate_state and _G.WAND_TOOLTIP_STATE then
+        _G.activate_state(_G.WAND_TOOLTIP_STATE)
+    end
+end
+
+local function setupStatsIconHover()
+    if not state.statsRowEntity then return end
+    if not _G.registry or not _G.registry.valid then return end
+    if not _G.registry:valid(state.statsRowEntity) then return end
+
+    local component_cache = _G.component_cache
+    if not component_cache or not _G.GameObject then return end
+
+    local go = component_cache.get(state.statsRowEntity, _G.GameObject)
+    if not go then return end
+
+    go.state.hoverEnabled = true
+    go.state.collisionEnabled = true
+    go.state.clickEnabled = true
+
+    go.methods.onHover = function()
+        showWandTooltipForActive(state.statsRowEntity)
+    end
+    go.methods.onStopHover = function()
+        if _G.deactivate_state and _G.WAND_TOOLTIP_STATE then
+            _G.deactivate_state(_G.WAND_TOOLTIP_STATE)
         end
     end
 end
@@ -1085,50 +1258,51 @@ end
 --- @param minHeight number? Optional minimum height for alignment
 --- @return table DSL root definition with text box
 local function createWandStatsRow(wandDef, minHeight)
-    local statsText = buildStatsText(wandDef)
-
-    -- Try to load DSL module
     local dsl_ok, dsl = pcall(require, "ui.ui_syntax_sugar")
     local useDsl = dsl_ok and dsl and dsl.strict
 
+    local alignFlags = nil
+    if _G.AlignmentFlag then
+        local bit_ok, bit = pcall(require, "bit_compat")
+        if bit_ok and bit and bit.bor then
+            alignFlags = bit.bor(_G.AlignmentFlag.HORIZONTAL_CENTER, _G.AlignmentFlag.VERTICAL_CENTER)
+        end
+    end
+
     if useDsl then
         local boxConfig = {
-            id = "wand_stats_box",
-            color = "dark_gray_slate",
-            padding = UI(6),
-            outlineThickness = UI(1),
-            outlineColor = "apricot_cream",
+            id = "wand_stats_icon",
             minWidth = STATS_BOX_WIDTH,
+            padding = 0,
+            hover = true,
+            canCollide = true,
         }
+        if alignFlags then
+            boxConfig.align = alignFlags
+        end
         if minHeight and minHeight > 0 then
             boxConfig.minHeight = minHeight
         end
 
-        return dsl.strict.root {
+        return dsl.strict.vbox {
             config = boxConfig,
             children = {
-                dsl.strict.vbox {
-                    config = { padding = UI(2) },
-                    children = {
-                        createHeader(wandDef),
-                        dsl.strict.spacer(UI(4)),
-                        dsl.strict.text(statsText, {
-                            id = "wand_stats_text",
-                            fontSize = UI(10),
-                            color = "light_gray",
-                            shadow = true,
-                        }),
-                    }
-                }
+                dsl.anim(STATS_ICON_SPRITE, { w = STATS_ICON_SIZE, h = STATS_ICON_SIZE, shadow = false })
             }
         }
     else
         return {
-            type = "root",
-            config = { id = "wand_stats_box", minWidth = STATS_BOX_WIDTH, minHeight = minHeight },
+            type = "vbox",
+            config = {
+                id = "wand_stats_icon",
+                minWidth = STATS_BOX_WIDTH,
+                minHeight = minHeight,
+                padding = 0,
+                hover = true,
+                canCollide = true,
+            },
             children = {
-                createHeader(wandDef),
-                { type = "text", id = "wand_stats_text", content = statsText, color = "light_gray" },
+                { type = "anim", sprite = STATS_ICON_SPRITE, w = STATS_ICON_SIZE, h = STATS_ICON_SIZE }
             },
         }
     end
@@ -1141,9 +1315,10 @@ local function updateStatsDisplay()
 
     if not _G.registry or not _G.registry.valid then return end
 
-    local statsText = buildStatsText(wandDef)
     if _G.ui and _G.ui.box and _G.ui.box.GetUIEByID then
         local textEntity = _G.ui.box.GetUIEByID(_G.registry, state.panelEntity, "wand_stats_text")
+        if not textEntity then return end
+        local statsText = buildStatsText(wandDef)
         if textEntity and _G.component_cache and _G.UITextComponent then
             local uiText = _G.component_cache.get(textEntity, _G.UITextComponent)
             if uiText then
@@ -1984,7 +2159,9 @@ function WandPanel.initialize()
         state.triggerGridContainerEntity = _G.ui.box.GetUIEByID(_G.registry, state.panelEntity, "trigger_grid_container")
         state.actionGridContainerEntity = _G.ui.box.GetUIEByID(_G.registry, state.panelEntity, "action_grid_container")
         state.closeButtonEntity = _G.ui.box.GetUIEByID(_G.registry, state.panelEntity, "wand_panel_close_btn")
+        state.statsRowEntity = _G.ui.box.GetUIEByID(_G.registry, state.panelEntity, "wand_stats_icon")
     end
+    setupStatsIconHover()
 
     -- Spawn tabs if multiple wands - spawn at panel position, ChildBuilder handles offset
     if #state.wandDefs > 1 and dsl and dsl.spawn then
@@ -2134,6 +2311,41 @@ end
 --- @return boolean
 function WandPanel.isOpen()
     return state.isVisible
+end
+
+--- Get the current panel bounds for UI alignment.
+--- @return table { x, y, width, height, visible }
+function WandPanel.getPanelBounds()
+    local panelW, panelH = getPanelDimensions()
+    local panelX = state.panelX or 0
+    local panelY = state.panelY or 0
+
+    if state.panelEntity and _G.registry and _G.registry.valid and _G.registry:valid(state.panelEntity) then
+        local component_cache = _G.component_cache
+        if component_cache and component_cache.get then
+            local t = component_cache.get(state.panelEntity, _G.Transform)
+            if t then
+                if t.actualX then panelX = t.actualX end
+                if t.actualY then panelY = t.actualY end
+            end
+
+            local boxComp = component_cache.get(state.panelEntity, _G.UIBoxComponent)
+            if boxComp and boxComp.uiRoot and _G.registry:valid(boxComp.uiRoot) then
+                local rt = component_cache.get(boxComp.uiRoot, _G.Transform)
+                if rt then
+                    if rt.actualX then panelX = rt.actualX end
+                    if rt.actualY then panelY = rt.actualY end
+                end
+            end
+        end
+    end
+    return {
+        x = panelX,
+        y = panelY,
+        width = panelW or 0,
+        height = panelH or 0,
+        visible = state.isVisible,
+    }
 end
 
 --- Set wand definitions for the panel
@@ -2388,7 +2600,11 @@ function WandPanel.destroy()
     state.actionCards = {}
     state.triggerGridEntity = nil
     state.actionGridEntity = nil
+    state.triggerGridContainerEntity = nil
+    state.actionGridContainerEntity = nil
     state.panelEntity = nil
+    state.closeButtonEntity = nil
+    state.statsRowEntity = nil
     state.tabContainerEntity = nil
     state.tabMarkerEntity = nil
     state.tabEntities = {}

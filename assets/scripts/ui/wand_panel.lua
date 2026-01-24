@@ -76,6 +76,8 @@ local TAB_HEIGHT = UI(64)
 local TAB_SPACING = UI(4)
 local TAB_CONTAINER_PADDING = UI(4)
 local TAB_GAP = UI(8)
+local TAB_FONT_SIZE = UI(14)
+local TAB_BUTTON_PADDING = UI(4)
 
 local HEADER_HEIGHT = UI(32)
 local SECTION_HEADER_HEIGHT = UI(24)
@@ -190,10 +192,9 @@ end
 
 --- Get tab marker offsets relative to panel
 local function getTabMarkerOffsets()
-    local panelW, panelH = getPanelDimensions()
-    local offsetX = 0
-    local offsetY = math.floor((panelH * 0.5) - TAB_MARKER_MARGIN - (TAB_MARKER_HEIGHT * 0.5))
-    return offsetX, panelH 
+    local offsetX = math.floor((state.panelWidth - TAB_MARKER_WIDTH) / 2)
+    local offsetY = math.max(0, (state.panelHeight - TAB_MARKER_HEIGHT - TAB_MARKER_MARGIN))
+    return offsetX, offsetY
 end
 
 --------------------------------------------------------------------------------
@@ -415,10 +416,67 @@ local function getTabLabel(wandDef, index)
     return tostring(index)
 end
 
+--- Compute tab layout metrics to keep tabs within panel height
+--- @return table Metrics with width, height, spacing, padding, fontSize, buttonPadding
+local function getTabLayoutMetrics()
+    local count = #state.wandDefs
+    local metrics = {
+        width = TAB_WIDTH,
+        height = TAB_HEIGHT,
+        spacing = TAB_SPACING,
+        padding = TAB_CONTAINER_PADDING,
+        fontSize = TAB_FONT_SIZE,
+        buttonPadding = TAB_BUTTON_PADDING,
+    }
+
+    if count <= 0 then
+        return metrics
+    end
+
+    local _, panelH = getPanelDimensions()
+    if not panelH or panelH <= 0 then
+        return metrics
+    end
+
+    local baseHeight = (count * TAB_HEIGHT) + (math.max(0, count - 1) * TAB_SPACING) + (TAB_CONTAINER_PADDING * 2)
+    if baseHeight <= panelH then
+        return metrics
+    end
+
+    local scale = panelH / baseHeight
+    local function scaleValue(value, minValue)
+        local scaled = math.floor(value * scale)
+        if minValue and scaled < minValue then
+            scaled = minValue
+        end
+        return scaled
+    end
+
+    metrics.height = scaleValue(TAB_HEIGHT, 1)
+    metrics.spacing = scaleValue(TAB_SPACING, 0)
+    metrics.padding = scaleValue(TAB_CONTAINER_PADDING, 0)
+    metrics.fontSize = scaleValue(TAB_FONT_SIZE, 1)
+    metrics.buttonPadding = scaleValue(TAB_BUTTON_PADDING, 0)
+
+    local totalHeight = (count * metrics.height) + (math.max(0, count - 1) * metrics.spacing) + (metrics.padding * 2)
+    if totalHeight > panelH then
+        local overflow = totalHeight - panelH
+        local shrink = math.ceil(overflow / count)
+        metrics.height = math.max(1, metrics.height - shrink)
+        local maxFontSize = math.max(1, metrics.height - (metrics.buttonPadding * 2))
+        if metrics.fontSize > maxFontSize then
+            metrics.fontSize = maxFontSize
+        end
+    end
+
+    return metrics
+end
+
 --- Create DSL definition for wand tabs (left-side folder tabs)
 --- @return table DSL vbox definition with tab buttons
 local function createWandTabs()
     local tabChildren = {}
+    local metrics = getTabLayoutMetrics()
 
     -- Try to load DSL module (may not be available in test environment)
     local dsl_ok, dsl = pcall(require, "ui.ui_syntax_sugar")
@@ -431,10 +489,10 @@ local function createWandTabs()
         if useDsl then
             table.insert(tabChildren, dsl.strict.button(tabLabel, {
                 id = "wand_tab_" .. i,
-                fontSize = UI(14),
-                minWidth = TAB_WIDTH,
-                minHeight = TAB_HEIGHT,
-                padding = UI(4),
+                fontSize = metrics.fontSize,
+                minWidth = metrics.width,
+                minHeight = metrics.height,
+                padding = metrics.buttonPadding,
                 color = isActive and "gold" or "gray",
                 onClick = function()
                     WandPanel.selectWand(i)
@@ -453,9 +511,9 @@ local function createWandTabs()
         -- Add spacing between tabs
         if i < #state.wandDefs then
             if useDsl then
-                table.insert(tabChildren, dsl.strict.spacer(TAB_SPACING))
+                table.insert(tabChildren, dsl.strict.spacer(metrics.spacing))
             else
-                table.insert(tabChildren, { type = "spacer", size = TAB_SPACING })
+                table.insert(tabChildren, { type = "spacer", size = metrics.spacing })
             end
         end
     end
@@ -464,7 +522,7 @@ local function createWandTabs()
         return dsl.strict.vbox {
             config = {
                 id = "wand_tabs_container",
-                padding = TAB_CONTAINER_PADDING,
+                padding = metrics.padding,
             },
             children = tabChildren,
         }
@@ -472,7 +530,7 @@ local function createWandTabs()
         -- Test stub: minimal vbox structure
         return {
             type = "vbox",
-            config = { id = "wand_tabs_container", padding = TAB_CONTAINER_PADDING },
+            config = { id = "wand_tabs_container", padding = metrics.padding },
             children = tabChildren,
         }
     end
@@ -500,7 +558,8 @@ local function updateTabHighlighting()
 end
 
 local function getTabContainerWidth()
-    local width = TAB_WIDTH + (TAB_CONTAINER_PADDING * 2)
+    local metrics = getTabLayoutMetrics()
+    local width = metrics.width + (metrics.padding * 2)
     if not state.tabContainerEntity then
         return width
     end
@@ -534,7 +593,8 @@ end
 
 local function getTabContainerHeight()
     local count = #state.wandDefs
-    local height = (count * TAB_HEIGHT) + (math.max(0, count - 1) * TAB_SPACING) + (TAB_CONTAINER_PADDING * 2)
+    local metrics = getTabLayoutMetrics()
+    local height = (count * metrics.height) + (math.max(0, count - 1) * metrics.spacing) + (metrics.padding * 2)
     if not state.tabContainerEntity then
         return height
     end
@@ -598,11 +658,14 @@ getPanelDimensions = function()
 end
 
 local function getTabOffsets()
-    local panelW, panelH = getPanelDimensions()
+    local _, panelH = getPanelDimensions()
     local tabWidth = getTabContainerWidth()
     local tabHeight = getTabContainerHeight()
-    local offsetX = -math.floor((panelW * 0.5) - (tabWidth) - TAB_GAP)
-    local offsetY = math.floor((-panelH * 0.5) + HEADER_HEIGHT + (tabHeight * 0.5))
+    local offsetX = -math.floor(tabWidth + TAB_GAP)
+    local offsetY = 0
+    if panelH and panelH > 0 and tabHeight > panelH then
+        offsetY = math.max(0, math.floor(panelH - tabHeight))
+    end
     return offsetX, offsetY
 end
 
@@ -1652,18 +1715,13 @@ local function positionTabMarker()
     if not _G.registry:valid(state.tabMarkerEntity) then return end
     if not _G.registry:valid(state.panelEntity) then return end
 
-    local offsetX, offsetY = getTabMarkerOffsets()
     local ok, ChildBuilder = pcall(require, "core.child_builder")
     if ok and ChildBuilder and ChildBuilder.for_entity then
-        if not state.tabMarkerAttached then
-            ChildBuilder.for_entity(state.tabMarkerEntity)
-                :attachTo(state.panelEntity)
-                :offset(offsetX, offsetY)
-                :apply()
-            state.tabMarkerAttached = true
-        elseif ChildBuilder.setOffset then
-            ChildBuilder.setOffset(state.tabMarkerEntity, offsetX, offsetY)
-        end
+        local offsetX, offsetY = getTabMarkerOffsets()
+        ChildBuilder.for_entity(state.tabMarkerEntity)
+            :attachTo(state.panelEntity)
+            :offset(offsetX, offsetY)
+            :apply()
     end
 end
 

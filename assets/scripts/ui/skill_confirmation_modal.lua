@@ -55,6 +55,18 @@ local CONFIG = {
     background_sprite = "modal-background",
     confirm_button_sprite = "button-confirm",
     cancel_button_sprite = "button-cancel",
+    button_width = UI(80),
+    button_height = UI(30),
+    padding = UI(16),
+}
+
+local MODAL_Z = 900  -- Above panel and tab marker
+
+local ELEMENT_COLORS = {
+    fire = { 255, 100, 50 },
+    ice = { 100, 200, 255 },
+    lightning = { 255, 255, 100 },
+    void = { 150, 50, 200 },
 }
 
 --------------------------------------------------------------------------------
@@ -115,6 +127,166 @@ function SkillConfirmationModal.getModalData()
 end
 
 --------------------------------------------------------------------------------
+-- MODAL ENTITY CREATION
+--------------------------------------------------------------------------------
+
+--- Build the modal DSL definition
+local function buildModalDef()
+    if not dsl or not state.modalData then return nil end
+
+    local data = state.modalData
+    local elementColor = ELEMENT_COLORS[data.skillElement] or { 255, 255, 255 }
+    local canAffordColor = data.canAfford and "green" or "red"
+
+    return dsl.strict.spritePanel {
+        sprite = CONFIG.background_sprite .. ".png",
+        borders = { 8, 8, 8, 8 },
+        sizing = "stretch",
+        config = {
+            id = "skill_modal",
+            padding = CONFIG.padding,
+            minWidth = CONFIG.width,
+            minHeight = CONFIG.height,
+            align = "center",
+        },
+        children = {
+            -- Skill name
+            dsl.strict.text(data.skillName or "Unknown Skill", {
+                id = "modal_skill_name",
+                fontSize = UI(18),
+                color = elementColor,
+                align = "center",
+            }),
+
+            dsl.strict.spacer(UI(8)),
+
+            -- Skill description
+            dsl.strict.text(data.skillDescription or "", {
+                id = "modal_skill_desc",
+                fontSize = UI(11),
+                color = "white",
+                align = "center",
+                maxWidth = CONFIG.width - CONFIG.padding * 2,
+            }),
+
+            dsl.strict.spacer(UI(12)),
+
+            -- Cost info
+            dsl.strict.hbox {
+                config = { align = "center", padding = 0 },
+                children = {
+                    dsl.strict.text("Cost: ", {
+                        fontSize = UI(12),
+                        color = "gray",
+                    }),
+                    dsl.strict.text(tostring(data.skillCost or 0), {
+                        fontSize = UI(12),
+                        color = canAffordColor,
+                    }),
+                    dsl.strict.text(" / Points: ", {
+                        fontSize = UI(12),
+                        color = "gray",
+                    }),
+                    dsl.strict.text(tostring(data.remainingPoints or 0), {
+                        fontSize = UI(12),
+                        color = "yellow",
+                    }),
+                },
+            },
+
+            dsl.strict.spacer(UI(16)),
+
+            -- Buttons row
+            dsl.strict.hbox {
+                config = {
+                    id = "modal_buttons",
+                    padding = 0,
+                    align = "center",
+                },
+                children = {
+                    -- Confirm button
+                    dsl.strict.button("Learn", {
+                        id = "modal_confirm_btn",
+                        fontSize = UI(12),
+                        color = data.canAfford and "green" or "gray",
+                        minWidth = CONFIG.button_width,
+                        minHeight = CONFIG.button_height,
+                        onClick = function()
+                            SkillConfirmationModal.confirm()
+                        end,
+                    }),
+
+                    dsl.strict.spacer(UI(16)),
+
+                    -- Cancel button
+                    dsl.strict.button("Cancel", {
+                        id = "modal_cancel_btn",
+                        fontSize = UI(12),
+                        color = "red",
+                        minWidth = CONFIG.button_width,
+                        minHeight = CONFIG.button_height,
+                        onClick = function()
+                            SkillConfirmationModal.cancel()
+                        end,
+                    }),
+                },
+            },
+        },
+    }
+end
+
+--- Create and spawn the modal entity
+local function createModalEntity()
+    if not dsl or not _G.registry then return nil end
+
+    local modalDef = buildModalDef()
+    if not modalDef then return nil end
+
+    -- Calculate centered position
+    local screenWidth = GetScreenWidth and GetScreenWidth() or 1920
+    local screenHeight = GetScreenHeight and GetScreenHeight() or 1080
+    local x = (screenWidth - CONFIG.width) / 2
+    local y = (screenHeight - CONFIG.height) / 2
+
+    -- Spawn the modal
+    local modalEntity = dsl.spawn(
+        { x = x, y = y },
+        modalDef,
+        "ui",
+        MODAL_Z
+    )
+
+    if not modalEntity then
+        print("[SkillConfirmationModal] Failed to spawn modal entity")
+        return nil
+    end
+
+    -- Set draw layer
+    if _G.ui and _G.ui.box and _G.ui.box.set_draw_layer then
+        _G.ui.box.set_draw_layer(modalEntity, "sprites")
+    end
+
+    -- Add state tags for rendering
+    if _G.ui and _G.ui.box and _G.ui.box.AddStateTagToUIBox then
+        _G.ui.box.AddStateTagToUIBox(_G.registry, modalEntity, "default_state")
+    end
+
+    return modalEntity
+end
+
+--- Destroy the modal entity if it exists
+local function destroyModalEntity()
+    if state.modalEntity and _G.registry and _G.registry.valid and _G.registry:valid(state.modalEntity) then
+        if _G.ui and _G.ui.box and _G.ui.box.Remove then
+            _G.ui.box.Remove(_G.registry, state.modalEntity)
+        else
+            _G.registry:destroy(state.modalEntity)
+        end
+    end
+    state.modalEntity = nil
+end
+
+--------------------------------------------------------------------------------
 -- SHOW/HIDE
 --------------------------------------------------------------------------------
 
@@ -124,22 +296,31 @@ end
 function SkillConfirmationModal.show(player, skillId)
     if not skillId then return end
 
+    -- Hide any existing modal first
+    if state.visible then
+        destroyModalEntity()
+    end
+
     state.player = player
     state.skillId = skillId
     state.modalData = generateModalData(player, skillId)
     state.visible = true
 
-    -- TODO: Create/show actual modal entity when integrating UI
+    -- Create the modal entity if we have DSL
+    if dsl and _G.registry then
+        state.modalEntity = createModalEntity()
+    end
 end
 
 --- Hide the modal
 function SkillConfirmationModal.hide()
+    -- Destroy the modal entity
+    destroyModalEntity()
+
     state.visible = false
     state.player = nil
     state.skillId = nil
     state.modalData = nil
-
-    -- TODO: Hide/destroy actual modal entity
 
     if signal then
         signal.emit("skill_modal_closed")
@@ -196,18 +377,8 @@ end
 
 --- Destroy the modal and cleanup
 function SkillConfirmationModal.destroy()
+    -- hide() already handles destroying the modal entity
     SkillConfirmationModal.hide()
-
-    if state.modalEntity and _G.registry and _G.registry.valid and _G.registry:valid(state.modalEntity) then
-        -- Use ui.box.Remove for proper UIBox cleanup (per UI Panel Implementation Guide)
-        if _G.ui and _G.ui.box and _G.ui.box.Remove then
-            _G.ui.box.Remove(_G.registry, state.modalEntity)
-        else
-            _G.registry:destroy(state.modalEntity)
-        end
-    end
-
-    state.modalEntity = nil
 end
 
 --- Reset module state (for testing)

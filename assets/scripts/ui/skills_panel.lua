@@ -283,13 +283,224 @@ end
 -- NOTE: Signal handling (skill_learned, skill_unlearned, player_level_up)
 -- is consolidated in skills_panel_input.lua to avoid duplicate handlers.
 
+local ELEMENT_COLORS = {
+    fire = { 255, 100, 50 },
+    ice = { 100, 200, 255 },
+    lightning = { 255, 255, 100 },
+    void = { 150, 50, 200 },
+}
+
+local COLUMN_HEADER_HEIGHT = UI(24)
+
+--- Create the header row with title and skill points
+local function createHeader()
+    if not dsl then return nil end
+
+    return dsl.strict.hbox {
+        config = {
+            id = "skills_header",
+            padding = UI(4),
+            minHeight = HEADER_HEIGHT,
+            align = "center",
+        },
+        children = {
+            dsl.strict.text("Skills", {
+                id = "skills_title",
+                fontSize = UI(16),
+                color = "white",
+            }),
+            dsl.strict.spacer(UI(20)),
+            dsl.strict.text("Points: 0/0", {
+                id = "skills_points_display",
+                fontSize = UI(12),
+                color = "yellow",
+            }),
+        },
+    }
+end
+
+--- Create the element column headers (Fire, Ice, Lightning, Void)
+local function createColumnHeaders()
+    if not dsl then return nil end
+
+    local headers = {}
+    for _, element in ipairs(CONFIG.element_order) do
+        local color = ELEMENT_COLORS[element] or { 255, 255, 255 }
+        local isLocked = LOCKED_ELEMENTS[element]
+
+        table.insert(headers, dsl.strict.box {
+            config = {
+                id = "header_" .. element,
+                minWidth = SLOT_SIZE,
+                minHeight = COLUMN_HEADER_HEIGHT,
+                align = "center",
+                valign = "center",
+            },
+            children = {
+                dsl.strict.text(element:sub(1,1):upper() .. element:sub(2), {
+                    fontSize = UI(10),
+                    color = isLocked and "gray" or color,
+                }),
+            },
+        })
+
+        -- Add spacing between columns (except after last)
+        if element ~= CONFIG.element_order[#CONFIG.element_order] then
+            table.insert(headers, dsl.strict.spacer(SLOT_SPACING))
+        end
+    end
+
+    return dsl.strict.hbox {
+        config = {
+            id = "column_headers",
+            padding = 0,
+            align = "center",
+        },
+        children = headers,
+    }
+end
+
+--- Create a single skill button
+--- @param skillId string Skill ID
+--- @param skillDef table Skill definition from skills.lua
+--- @param element string Element name
+--- @param isLocked boolean Whether element is locked for demo
+local function createSkillButton(skillId, skillDef, element, isLocked)
+    if not dsl then return nil end
+
+    local buttonState = state.player and SkillsPanel.getSkillButtonState(state.player, skillId) or "locked"
+    local isLearned = buttonState == "learned"
+    local isAvailable = buttonState == "available"
+    local isInsufficient = buttonState == "insufficient"
+
+    -- Determine sprite based on state
+    local sprite = isLocked and CONFIG.locked_sprite or (skillDef.icon or "skill-default")
+
+    -- Determine color/tint based on state
+    local tint = nil
+    if isLocked then
+        tint = { 100, 100, 100, 200 }
+    elseif isInsufficient then
+        tint = { 150, 150, 150, 200 }
+    end
+
+    local children = {
+        dsl.strict.anim(sprite .. ".png", {
+            w = SLOT_SIZE - UI(4),
+            h = SLOT_SIZE - UI(4),
+            tint = tint,
+        }),
+    }
+
+    -- Add checkmark overlay if learned
+    if isLearned then
+        table.insert(children, dsl.strict.anim(CONFIG.learned_overlay .. ".png", {
+            w = UI(16),
+            h = UI(16),
+        }))
+    end
+
+    return dsl.strict.hbox {
+        config = {
+            id = "skill_btn_" .. skillId,
+            minWidth = SLOT_SIZE,
+            minHeight = SLOT_SIZE,
+            canCollide = not isLocked and not isLearned,
+            hover = not isLocked and not isLearned,
+            padding = UI(2),
+            align = "center",
+            valign = "center",
+            buttonCallback = (not isLocked and not isLearned) and function()
+                -- Trigger skill button clicked
+                local ok, SkillsPanelInput = pcall(require, "ui.skills_panel_input")
+                if ok and SkillsPanelInput and SkillsPanelInput.onSkillButtonClicked then
+                    SkillsPanelInput.onSkillButtonClicked(skillId)
+                end
+            end or nil,
+        },
+        children = children,
+    }
+end
+
+--- Create the skill grid (4 columns × 8 rows)
+local function createSkillGrid()
+    if not dsl then return nil end
+
+    local gridData = SkillsPanel.getGridData()
+    if not gridData then return nil end
+
+    local rows = {}
+
+    for row = 1, CONFIG.rows do
+        local rowChildren = {}
+
+        for _, element in ipairs(CONFIG.element_order) do
+            local isLocked = LOCKED_ELEMENTS[element]
+            local skills = gridData[element]
+            local skillEntry = skills and skills[row]
+
+            if skillEntry then
+                table.insert(rowChildren, createSkillButton(
+                    skillEntry.id,
+                    skillEntry.def,
+                    element,
+                    isLocked
+                ))
+            else
+                -- Empty slot
+                table.insert(rowChildren, dsl.strict.spacer(SLOT_SIZE))
+            end
+
+            -- Add spacing between columns (except after last)
+            if element ~= CONFIG.element_order[#CONFIG.element_order] then
+                table.insert(rowChildren, dsl.strict.spacer(SLOT_SPACING))
+            end
+        end
+
+        table.insert(rows, dsl.strict.hbox {
+            config = {
+                id = "skill_row_" .. row,
+                padding = 0,
+            },
+            children = rowChildren,
+        })
+
+        -- Add spacing between rows (except after last)
+        if row ~= CONFIG.rows then
+            table.insert(rows, dsl.strict.spacer(SLOT_SPACING))
+        end
+    end
+
+    return dsl.strict.vbox {
+        config = {
+            id = "skill_grid",
+            padding = GRID_PADDING,
+        },
+        children = rows,
+    }
+end
+
+--- Build the complete panel definition
 local function buildPanelDef()
-    -- This would be the DSL definition for the panel
-    -- For now, return a placeholder that will be fleshed out when integrating
-    return {
-        id = "skills_panel",
-        type = "box",
-        -- ... DSL definition would go here
+    if not dsl then return nil end
+
+    return dsl.strict.spritePanel {
+        sprite = CONFIG.panel_background .. ".png",
+        borders = { 8, 8, 8, 8 },  -- Nine-patch borders
+        sizing = "stretch",
+        config = {
+            id = "skills_panel",
+            padding = PANEL_PADDING,
+            minWidth = PANEL_WIDTH,
+            minHeight = PANEL_HEIGHT,
+        },
+        children = {
+            createHeader(),
+            dsl.strict.spacer(UI(4)),
+            createColumnHeaders(),
+            dsl.strict.spacer(UI(4)),
+            createSkillGrid(),
+        },
     }
 end
 
@@ -307,8 +518,46 @@ local function initializePanel()
         return
     end
 
-    -- Build and spawn the panel (implementation depends on DSL)
-    -- TODO: Implement full panel spawning when integrating
+    -- Build and spawn the panel
+    local panelDef = buildPanelDef()
+    if not panelDef then
+        print("[SkillsPanel] Failed to build panel definition")
+        state.initialized = true
+        return
+    end
+
+    -- Spawn panel offscreen (will be moved on open)
+    local offscreenY = GetScreenHeight and GetScreenHeight() or 1080
+    state.panelEntity = dsl.spawn(
+        { x = state.panelX, y = offscreenY },
+        panelDef,
+        RENDER_LAYER,
+        PANEL_Z
+    )
+
+    if not state.panelEntity then
+        print("[SkillsPanel] Failed to spawn panel entity")
+        state.initialized = true
+        return
+    end
+
+    -- Set draw layer
+    if ui and ui.box and ui.box.set_draw_layer then
+        ui.box.set_draw_layer(state.panelEntity, "sprites")
+    end
+
+    -- Add state tags for rendering
+    if ui and ui.box and ui.box.AddStateTagToUIBox then
+        ui.box.AddStateTagToUIBox(_G.registry, state.panelEntity, "default_state")
+    end
+
+    -- Store reference to header text for updates
+    if ui and ui.box and ui.box.GetUIEByID then
+        state.headerTextEntity = ui.box.GetUIEByID(_G.registry, state.panelEntity, "skills_points_display")
+    end
+
+    -- Update the header text
+    SkillsPanel.refreshHeader()
 
     state.initialized = true
 end
@@ -380,14 +629,46 @@ end
 
 --- Refresh skill button visual states
 function SkillsPanel.refreshButtonStates()
-    -- TODO: Implement when UI is built
-    -- Iterate state.skillButtons and update visuals based on getSkillButtonState()
+    if not state.initialized or not state.panelEntity then return end
+    if not _G.registry or not _G.registry.valid or not _G.registry:valid(state.panelEntity) then return end
+
+    -- For a full refresh, rebuild the grid
+    -- This is simpler than tracking individual button entities
+    if ui and ui.box and ui.box.GetUIEByID then
+        local gridEntity = ui.box.GetUIEByID(_G.registry, state.panelEntity, "skill_grid")
+        if gridEntity and ui.box.ReplaceChildren then
+            local newGrid = createSkillGrid()
+            if newGrid then
+                ui.box.ReplaceChildren(gridEntity, newGrid)
+
+                -- Reapply state tags
+                if ui.box.AddStateTagToUIBox then
+                    ui.box.AddStateTagToUIBox(_G.registry, state.panelEntity, "default_state")
+                end
+
+                -- Force layout recalculation
+                if ui.box.RenewAlignment then
+                    ui.box.RenewAlignment(_G.registry, state.panelEntity)
+                end
+            end
+        end
+    end
 end
 
 --- Refresh header text (skill points display)
 function SkillsPanel.refreshHeader()
-    -- TODO: Implement when UI is built
-    -- Update state.headerTextEntity with getSkillPointsDisplay()
+    if not state.player then return end
+
+    local displayText = SkillsPanel.getSkillPointsDisplay(state.player)
+
+    -- Update the header text entity if we have UI access
+    if state.headerTextEntity and _G.registry and _G.registry.valid and _G.registry:valid(state.headerTextEntity) then
+        -- Try to update the text component
+        local textComp = component_cache.get(state.headerTextEntity, Text)
+        if textComp then
+            textComp.text = displayText
+        end
+    end
 end
 
 --- Destroy the panel and cleanup

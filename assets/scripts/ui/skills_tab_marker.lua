@@ -144,15 +144,67 @@ end
 -- INITIALIZATION
 --------------------------------------------------------------------------------
 
+local MARKER_Z = 850  -- Above panel but below modals
+
 local function createMarkerEntity()
     if not dsl or not _G.registry then
         -- Running in test mode
         return nil
     end
 
-    -- TODO: Create actual DSL entity with click handler
-    -- For now, return nil (will be implemented in integration phase)
-    return nil
+    -- Create tab marker definition
+    local markerDef = dsl.strict.hbox {
+        config = {
+            id = "skills_tab_marker",
+            canCollide = true,
+            hover = true,
+            padding = 0,
+            minWidth = CONFIG.width,
+            minHeight = CONFIG.height,
+            buttonCallback = function()
+                -- Toggle the skills panel
+                local ok, SkillsPanel = pcall(require, "ui.skills_panel")
+                if ok and SkillsPanel and SkillsPanel.toggle then
+                    SkillsPanel.toggle()
+                end
+            end,
+        },
+        children = {
+            dsl.strict.anim(CONFIG.sprite .. ".png", {
+                w = CONFIG.width,
+                h = CONFIG.height,
+                shadow = false,
+            }),
+        },
+    }
+
+    -- Get initial position
+    local x, y = SkillsTabMarker.getClosedPosition()
+
+    -- Spawn the marker
+    local markerEntity = dsl.spawn(
+        { x = x, y = y },
+        markerDef,
+        "ui",
+        MARKER_Z
+    )
+
+    if not markerEntity then
+        print("[SkillsTabMarker] Failed to spawn marker entity")
+        return nil
+    end
+
+    -- Set draw layer
+    if _G.ui and _G.ui.box and _G.ui.box.set_draw_layer then
+        _G.ui.box.set_draw_layer(markerEntity, "sprites")
+    end
+
+    -- Add state tags for rendering
+    if _G.ui and _G.ui.box and _G.ui.box.AddStateTagToUIBox then
+        _G.ui.box.AddStateTagToUIBox(_G.registry, markerEntity, "default_state")
+    end
+
+    return markerEntity
 end
 
 --- Initialize the tab marker

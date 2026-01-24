@@ -76,6 +76,7 @@ local TAB_HEIGHT = UI(64)
 local TAB_SPACING = UI(4)
 local TAB_CONTAINER_PADDING = UI(4)
 local TAB_GAP = UI(8)
+local TAB_OVERLAP = UI(20)
 local TAB_FONT_SIZE = UI(14)
 local TAB_BUTTON_PADDING = UI(4)
 
@@ -668,7 +669,7 @@ local function getTabOffsets()
     local _, panelH = getPanelDimensions()
     local tabWidth = getTabContainerWidth()
     local tabHeight = getTabContainerHeight()
-    local offsetX = -math.floor(tabWidth + TAB_GAP)
+    local offsetX = -math.floor(tabWidth + TAB_GAP - TAB_OVERLAP)
     local offsetY = 0
     if panelH and panelH > 0 and tabHeight > panelH then
         offsetY = math.max(0, math.floor(panelH - tabHeight))
@@ -1960,14 +1961,14 @@ function WandPanel.initialize()
         _G.ui.box.set_draw_layer(state.panelEntity, RENDER_LAYER)
     end
 
-    -- Spawn tab marker (reopen tab) - must be in front of panel for visibility
+    -- Spawn tab marker (reopen tab) under the panel for a tucked look
     local tabDef = createTabMarkerDefinition()
     if tabDef and dsl.spawn then
         state.tabMarkerEntity = dsl.spawn(
             { x = state.panelX, y = state.panelY },
             tabDef,
             RENDER_LAYER,
-            PANEL_Z + 10  -- Above panel for visibility and clickability
+            PANEL_Z - 1
         )
         if state.tabMarkerEntity and _G.ui and _G.ui.box and _G.ui.box.set_draw_layer then
             _G.ui.box.set_draw_layer(state.tabMarkerEntity, RENDER_LAYER)
@@ -1990,7 +1991,7 @@ function WandPanel.initialize()
             { x = state.panelX, y = state.panelY },
             tabDef,
             RENDER_LAYER,
-            PANEL_Z + 10
+            PANEL_Z - 1
         )
         if state.tabContainerEntity and _G.ui and _G.ui.box then
             if _G.ui.box.set_draw_layer then

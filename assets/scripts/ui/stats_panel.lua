@@ -1318,9 +1318,13 @@ function StatsPanel._createPanel()
     log_debug("[StatsPanel] _createPanel called")
     local state = StatsPanel._state
 
-    -- Destroy existing
+    -- Destroy existing (use ui.box.Remove for proper child cleanup)
     if state.panelEntity and entity_cache and entity_cache.valid(state.panelEntity) then
-        registry:destroy(state.panelEntity)
+        if ui and ui.box and ui.box.Remove then
+            ui.box.Remove(registry, state.panelEntity)
+        else
+            registry:destroy(state.panelEntity)
+        end
     end
     
     local snapshot = state.snapshot
@@ -1389,12 +1393,18 @@ end
 
 function StatsPanel._destroyPanel()
     local state = StatsPanel._state
-    
+
     StatsPanel._stopHPWarningPulse()
     timer.kill_group("stat_anim")
-    
+
+    -- IMPORTANT: Use ui.box.Remove instead of registry:destroy!
+    -- Direct destroy leaves orphaned child entities (SCROLL_PANE, containers, etc.)
     if state.panelEntity and entity_cache and entity_cache.valid(state.panelEntity) then
-        registry:destroy(state.panelEntity)
+        if ui and ui.box and ui.box.Remove then
+            ui.box.Remove(registry, state.panelEntity)
+        else
+            registry:destroy(state.panelEntity)
+        end
     end
     state.panelEntity = nil
     state.tabContentEntity = nil

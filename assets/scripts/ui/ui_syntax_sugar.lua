@@ -1697,6 +1697,33 @@ function dsl.inventoryGrid(opts)
     local gridConfig = opts.config or {}
     local slotsConfig = opts.slots or {}
     local outerPadding = gridConfig.padding or ui_scale.ui(4)
+    local spriteScale = ui_scale.SPRITE_SCALE
+
+    local function scaleSlotDecorations(decorations, scaleFactor)
+        if not decorations or type(decorations) ~= "table" then
+            return decorations
+        end
+        local scaled = {}
+        for _, decor in ipairs(decorations) do
+            if decor then
+                local copy = {}
+                for key, value in pairs(decor) do
+                    copy[key] = value
+                end
+                local sx, sy = 1, 1
+                local rawScale = decor.scale
+                if type(rawScale) == "number" then
+                    sx, sy = rawScale, rawScale
+                elseif type(rawScale) == "table" then
+                    sx = rawScale.x or rawScale[1] or 1
+                    sy = rawScale.y or rawScale[2] or sx
+                end
+                copy.scale = { sx * scaleFactor, sy * scaleFactor }
+                table.insert(scaled, copy)
+            end
+        end
+        return scaled
+    end
 
     -- Calculate total grid dimensions for explicit sizing
     local contentW = (cols * slotW) + ((cols - 1) * spacing)
@@ -1755,7 +1782,11 @@ function dsl.inventoryGrid(opts)
             
             local slotDecorations = slotConfig.decorations or gridConfig.slotDecorations
             if slotDecorations and type(slotDecorations) == "table" and next(slotDecorations) then
-                slotNodeConfig._decorations = slotDecorations
+                if slotSprite then
+                    slotNodeConfig._decorations = scaleSlotDecorations(slotDecorations, spriteScale)
+                else
+                    slotNodeConfig._decorations = slotDecorations
+                end
             end
             
             local slotNode = def{

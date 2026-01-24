@@ -5,23 +5,34 @@ child_builder.lua - Fluent Child Entity Attachment API
 Simplifies attaching child entities to parents with transform inheritance.
 Wraps the existing transform.AssignRole() C++ binding.
 
+UIBox Support:
+    When attaching entities that have UIBoxComponent (DSL-spawned UI elements),
+    ChildBuilder automatically syncs the uiRoot transform and calls RenewAlignment.
+    This ensures that children inside a UI container move correctly with the parent.
+
 Usage:
     local ChildBuilder = require("core.child_builder")
-    
+
     -- Attach weapon to player
     ChildBuilder.for_entity(weapon)
         :attachTo(player)
         :offset(20, 0)
         :rotateWith()
         :apply()
-    
+
+    -- Attach UI tab container to panel (auto-syncs UIBox children)
+    ChildBuilder.for_entity(tabContainer)
+        :attachTo(panel)
+        :offset(-100, 50)
+        :apply()
+
     -- Animate child offset (weapon swing)
     ChildBuilder.animateOffset(weapon, {
         to = { x = -20, y = 30 },
         duration = 0.2,
         ease = "outQuad"
     })
-    
+
     -- Orbit animation (circular swing)
     ChildBuilder.orbit(weapon, {
         radius = 30,
@@ -35,9 +46,11 @@ Dependencies:
     - InheritedPropertiesType, InheritedPropertiesSync (enums)
     - core.tween (for animations)
     - core.component_cache
+    - UIBoxComponent, ui.box.RenewAlignment (for UI elements)
 
 See also:
     - docs/project-management/design/anchor-pattern-adoption.md
+    - docs/guides/UI_PANEL_IMPLEMENTATION_GUIDE.md
 ]]
 
 if _G.__CHILD_BUILDER__ then return _G.__CHILD_BUILDER__ end
@@ -54,6 +67,45 @@ local function get_tween()
         _tween = require("core.tween")
     end
     return _tween
+end
+
+--------------------------------------------------------------------------------
+-- UIBox Synchronization Helper
+--------------------------------------------------------------------------------
+
+--- Sync UIBoxComponent.uiRoot transform and trigger layout recalculation.
+--- Called automatically by apply() and setOffset() when entity has UIBoxComponent.
+--- @param entity number The entity to sync
+local function syncUIBoxLayout(entity)
+    if not registry or not registry.valid then return end
+    if not registry:valid(entity) then return end
+
+    local boxComp = component_cache.get(entity, UIBoxComponent)
+    if not boxComp or not boxComp.uiRoot then return end
+    if not registry:valid(boxComp.uiRoot) then return end
+
+    -- Get the computed world position from the main entity
+    local t = component_cache.get(entity, Transform)
+    if not t then return end
+
+    -- Sync uiRoot Transform to match entity Transform
+    local rt = component_cache.get(boxComp.uiRoot, Transform)
+    if rt then
+        rt.actualX = t.actualX
+        rt.actualY = t.actualY
+    end
+
+    -- Sync uiRoot InheritedProperties offset
+    local rootIP = component_cache.get(boxComp.uiRoot, InheritedProperties)
+    if rootIP and rootIP.offset then
+        rootIP.offset.x = t.actualX
+        rootIP.offset.y = t.actualY
+    end
+
+    -- Force layout recalculation so children reposition
+    if ui and ui.box and ui.box.RenewAlignment then
+        ui.box.RenewAlignment(registry, entity)
+    end
 end
 
 --------------------------------------------------------------------------------
@@ -201,7 +253,7 @@ function ChildBuilder:apply()
     if parentGO then
         local childKey = self._name or tostring(self._entity)
         parentGO.children[childKey] = self._entity
-        
+
         local found = false
         for _, child in ipairs(parentGO.orderedChildren) do
             if child == self._entity then
@@ -215,8 +267,50 @@ function ChildBuilder:apply()
             parentGO.orderedChildren[#parentGO.orderedChildren + 1] = self._entity
         end
     end
-    
+
+    -- Auto-sync UIBox layout if entity has UIBoxComponent
+    syncUIBoxLayout(self._entity)
+
     return self._entity
+end
+
+--------------------------------------------------------------------------------
+-- UIBox Synchronization Helper
+--------------------------------------------------------------------------------
+
+--- Sync UIBoxComponent.uiRoot transform and trigger layout recalculation.
+--- Called automatically by apply() and setOffset() when entity has UIBoxComponent.
+--- @param entity number The entity to sync
+local function syncUIBoxLayout(entity)
+    if not registry or not registry.valid then return end
+    if not registry:valid(entity) then return end
+
+    local boxComp = component_cache.get(entity, UIBoxComponent)
+    if not boxComp or not boxComp.uiRoot then return end
+    if not registry:valid(boxComp.uiRoot) then return end
+
+    -- Get the computed world position from the main entity
+    local t = component_cache.get(entity, Transform)
+    if not t then return end
+
+    -- Sync uiRoot Transform to match entity Transform
+    local rt = component_cache.get(boxComp.uiRoot, Transform)
+    if rt then
+        rt.actualX = t.actualX
+        rt.actualY = t.actualY
+    end
+
+    -- Sync uiRoot InheritedProperties offset
+    local rootIP = component_cache.get(boxComp.uiRoot, InheritedProperties)
+    if rootIP and rootIP.offset then
+        rootIP.offset.x = t.actualX
+        rootIP.offset.y = t.actualY
+    end
+
+    -- Force layout recalculation so children reposition
+    if ui and ui.box and ui.box.RenewAlignment then
+        ui.box.RenewAlignment(registry, entity)
+    end
 end
 
 --------------------------------------------------------------------------------
@@ -253,6 +347,8 @@ function ChildBuilder.animateOffset(entity, opts)
             currentIP.offset.x = from.x + (to.x - from.x) * t
             currentIP.offset.y = from.y + (to.y - from.y) * t
         end
+        -- Keep UIBox children in sync during animation
+        syncUIBoxLayout(entity)
     end)
         :ease(ease)
         :onComplete(function()
@@ -294,6 +390,8 @@ function ChildBuilder.orbit(entity, opts)
             currentIP.offset.x = baseOffset.x + math.cos(angle) * radius
             currentIP.offset.y = baseOffset.y + math.sin(angle) * radius
         end
+        -- Keep UIBox children in sync during animation
+        syncUIBoxLayout(entity)
     end)
         :ease(ease)
         :onComplete(function()
@@ -304,6 +402,7 @@ function ChildBuilder.orbit(entity, opts)
 end
 
 --- Set a child entity's offset immediately (no animation).
+--- Automatically syncs UIBoxComponent.uiRoot and calls RenewAlignment if applicable.
 --- @param entity number The child entity
 --- @param x number X offset
 --- @param y number Y offset
@@ -314,14 +413,17 @@ function ChildBuilder.setOffset(entity, x, y)
         print("[ChildBuilder] Warning: entity has no InheritedProperties")
         return entity
     end
-    
+
     if not ip.offset then
         ip.offset = Vector2 { x = 0, y = 0 }
     end
-    
+
     ip.offset.x = x
     ip.offset.y = y
-    
+
+    -- Auto-sync UIBox layout if entity has UIBoxComponent
+    syncUIBoxLayout(entity)
+
     return entity
 end
 

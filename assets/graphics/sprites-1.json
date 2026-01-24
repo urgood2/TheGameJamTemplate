@@ -45,28 +45,6 @@
             "trimmed": true
         },
         {
-            "auto_generated_uuid": "background_flat",
-            "filename": "background flat.png",
-            "frame": {
-                "h": 2000,
-                "w": 2000,
-                "x": 1446,
-                "y": 1940
-            },
-            "rotated": false,
-            "sourceSize": {
-                "h": 2000,
-                "w": 2000
-            },
-            "spriteSourceSize": {
-                "h": 2000,
-                "w": 2000,
-                "x": 0,
-                "y": 0
-            },
-            "trimmed": false
-        },
-        {
             "auto_generated_uuid": "blood_overlay_ui",
             "filename": "blood-overlay-ui.png",
             "frame": {
@@ -182,7 +160,7 @@
             "frame": {
                 "h": 1300,
                 "w": 1431,
-                "x": 4,
+                "x": 1230,
                 "y": 1940
             },
             "rotated": false,
@@ -1031,6 +1009,28 @@
                 "w": 50,
                 "x": 7,
                 "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "1_layer",
+            "filename": "Layer 1.png",
+            "frame": {
+                "h": 714,
+                "w": 1215,
+                "x": 4,
+                "y": 1940
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 2000,
+                "w": 2000
+            },
+            "spriteSourceSize": {
+                "h": 714,
+                "w": 1215,
+                "x": 514,
+                "y": 76
             },
             "trimmed": true
         },
@@ -6240,7 +6240,7 @@
             "h": 4096,
             "w": 4096
         },
-        "smartupdate": "$TexturePacker:SmartUpdate:e96d959d3c79627422da2955673229cb:59c1a8d812e4ec78fe567e71c99f4aa5:2bbe3b05147ba790fd87830b7012f958$",
+        "smartupdate": "$TexturePacker:SmartUpdate:3e0473fafbdf2faefc88ffdf49ec2b83:80992c5063067413e142a76915fc9700:2bbe3b05147ba790fd87830b7012f958$",
         "version": "1.0"
     }
 }

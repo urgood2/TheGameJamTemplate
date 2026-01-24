@@ -10,6 +10,8 @@
 #include <thread>
 
 #include "systems/scripting/binding_recorder.hpp"
+#include "systems/lockstep/deterministic_rng.hpp"
+#include "systems/lockstep/lockstep_config.hpp"
 
 #include <raylib.h>
 
@@ -25,26 +27,42 @@ namespace random_utils {
 
     /** Sets the seed for deterministic random number generation. */
     inline void set_seed(unsigned int seed) {
-        RandomEngine::seed(seed);
+        if (lockstep::useDeterministicRng()) {
+            lockstep::g_deterministicRng.seed(seed);
+        } else {
+            RandomEngine::seed(seed);
+        }
     }
 
     /** Generates a random boolean based on a given probability percentage (0-100). */
     inline bool random_bool(double chance) {
+        if (lockstep::useDeterministicRng()) {
+            return lockstep::g_deterministicRng.randomBool(chance);
+        }
         return RandomEngine::get(1, 1000) < 10 * chance;
     }
 
     /** Returns a random floating-point number between `min` and `max` (inclusive). */
     inline double random_float(double min = 0.0, double max = 1.0) {
+        if (lockstep::useDeterministicRng()) {
+            return lockstep::g_deterministicRng.uniformDouble(min, max);
+        }
         return RandomEngine::get(min, max);
     }
 
     /** Returns a random integer between `min` and `max` (inclusive). */
     inline int random_int(int min = 0, int max = 1) {
+        if (lockstep::useDeterministicRng()) {
+            return lockstep::g_deterministicRng.uniformInt(min, max);
+        }
         return RandomEngine::get(min, max);
     }
 
     /** Returns a normally distributed random number around a mean with given standard deviation. */
     inline double random_normal(double mean, double stddev) {
+        if (lockstep::useDeterministicRng()) {
+            return lockstep::g_deterministicRng.normal(mean, stddev);
+        }
         return RandomEngine::get<std::normal_distribution<>>(mean, stddev);
     }
 
@@ -53,7 +71,7 @@ namespace random_utils {
     inline T random_element(const std::vector<T>& container) {
         if (container.empty()) throw std::runtime_error("random_element: Empty container");
         int max_index = static_cast<int>(container.size()) - 1;
-        int idx       = RandomEngine::get(0, max_index);
+        int idx       = random_int(0, max_index);
         // now idx is an int in [0..max_index], safe to use
         return container[static_cast<size_t>(idx)];
     }
@@ -64,7 +82,7 @@ namespace random_utils {
         if (container.empty()) throw std::runtime_error("random_element_remove: Empty container");
         // cast container.size()-1 to int so both args to get() are int
         int max_index = static_cast<int>(container.size()) - 1;
-        int idx       = RandomEngine::get(0, max_index);
+        int idx       = random_int(0, max_index);
         size_t index  = static_cast<size_t>(idx);
         T value = container[index];
         container.erase(container.begin() + index);

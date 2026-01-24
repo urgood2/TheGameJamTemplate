@@ -1,8 +1,8 @@
 {
     "frames": [
         {
-            "auto_generated_uuid": "1_layer",
-            "filename": "Layer 1.png",
+            "auto_generated_uuid": "background_flat",
+            "filename": "background flat.png",
             "frame": {
                 "h": 2000,
                 "w": 2000,
@@ -36,7 +36,7 @@
             "h": 2048,
             "w": 2048
         },
-        "smartupdate": "$TexturePacker:SmartUpdate:e96d959d3c79627422da2955673229cb:59c1a8d812e4ec78fe567e71c99f4aa5:2bbe3b05147ba790fd87830b7012f958$",
+        "smartupdate": "$TexturePacker:SmartUpdate:3e0473fafbdf2faefc88ffdf49ec2b83:80992c5063067413e142a76915fc9700:2bbe3b05147ba790fd87830b7012f958$",
         "version": "1.0"
     }
 }

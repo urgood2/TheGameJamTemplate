@@ -310,9 +310,18 @@ def load_animations_json() -> dict:
 
 
 def save_animations_json(data: dict) -> None:
-    with open(ANIMATIONS_JSON, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
-        f.write("\n")
+    tmp_path = ANIMATIONS_JSON.with_suffix(".json.tmp")
+    try:
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+            f.write("\n")
+            f.flush()
+            os.fsync(f.fileno())
+        tmp_path.rename(ANIMATIONS_JSON)
+    except Exception:
+        if tmp_path.exists():
+            tmp_path.unlink()
+        raise
 
 
 def get_auto_exported_base_names(aseprite_files: List[Path]) -> Set[str]:

@@ -177,6 +177,17 @@ Critical patterns that WILL break if done wrong:
 - Must clean all 3 registries on grid destroy: `itemRegistry`, `grid`, `dsl.cleanupGrid`
 - NEVER add `ObjectAttachedToUITag` to draggable cards/items
 
+### Don't: Use ChildBuilder on UIBox without RenewAlignment
+```lua
+-- WRONG: Children inside UIBox won't move with container
+ChildBuilder.for_entity(uiContainer):attachTo(panel):offset(x, y):apply()
+
+-- RIGHT: ChildBuilder now auto-handles UIBox (syncs uiRoot + calls RenewAlignment)
+-- If manual, always call RenewAlignment after setOffset:
+ChildBuilder.setOffset(uiContainer, x, y)
+ui.box.RenewAlignment(registry, uiContainer)  -- Forces child layout update
+```
+
 ### Don't: Mix World and Screen DrawCommandSpace carelessly
 ```lua
 -- WRONG: HUD follows camera

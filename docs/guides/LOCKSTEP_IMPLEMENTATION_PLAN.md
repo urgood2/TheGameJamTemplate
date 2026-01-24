@@ -12,6 +12,19 @@ This document outlines a phased approach to adding lockstep networking support t
 
 ---
 
+## Determinism Contract (New)
+
+Define the deterministic envelope before coding. Suggested tiers:
+- Tier A: Same build + same machine/arch (fastest to achieve)
+- Tier B: Same OS/arch across machines (requires deterministic RNG distribution + time handling)
+- Tier C: Cross-OS/arch (requires strict FP settings or fixed-point)
+
+This plan targets Tier B by default; tighten or relax as needed.
+
+Authoritative state is simulation-only (ECS/physics/AI/combat, timers, RNG, IDs). Rendering, audio, profiling, and editor/debug UI may use real time but must not feed back into simulation.
+
+---
+
 ## Current Architecture Summary
 
 ### Engine Stack
@@ -33,12 +46,16 @@ Frame tracking: mainLoop.frame (logic ticks), mainLoop.renderFrame
 
 | Source | Location | Severity | Phase to Fix |
 |--------|----------|----------|--------------|
-| Global RNG not frame-seeded | `random.hpp` | **Critical** | Phase 1 |
-| Lua `math.random()` usage | ~71 script files | **Critical** | Phase 1 |
-| Timer system uses real time | `timer.hpp` | **High** | Phase 1 |
-| Physics float precision | Chipmunk2D | Medium | Phase 1 |
-| Unordered container iteration | EnTT views | Medium | Phase 1 |
-| Input from Raylib directly | `input_polling.hpp` | **High** | Phase 2 |
+| RNG uses std::uniform_* distribution (non-portable) | `random.hpp` / effolkronium | **Critical** | Phase 1 |
+| Lua `math.random()` + `math.randomseed(os.time())` | `assets/scripts/*` | **Critical** | Phase 1 |
+| `rand()` / `std::rand()` usage | `screen_shake.hpp`, `physics/steering.cpp` | **High** | Phase 1 |
+| Real-time clocks (`GetTime`, `GetFrameTime`, `os.clock`, `os.time`) in gameplay | Lua + `scripting_functions.cpp` | **High** | Phase 1 |
+| Timer system iterates `std::unordered_map` | `timer.hpp` | **High** | Phase 1 |
+| Lua table iteration order (`pairs`) | scripts (various) | Medium | Phase 1 |
+| Unordered container iteration outside EnTT views | timers, signals, caches | Medium | Phase 1 |
+| Physics FP variance + compiler FP flags | Chipmunk2D + build flags | Medium | Phase 0 |
+| Input polling bypasses provider | `input_polling.cpp` | Medium | Phase 2 |
+| Input values not quantized | `input_polling.hpp` | Medium | Phase 2 |
 | No input serialization | N/A | **High** | Phase 2 |
 
 ---
@@ -49,6 +66,25 @@ Frame tracking: mainLoop.frame (logic ticks), mainLoop.renderFrame
 
 **Estimated Complexity:** Low-Medium  
 **Duration:** 1-2 days
+
+### 0.0 Define Determinism Contract & Build Settings (New)
+
+Decide and document:
+- Target determinism tier (same machine vs cross-platform).
+- Authoritative state list (what is hashed/serialized).
+- Fixed tick rate and time scale rules.
+
+Lock build settings:
+- Disable fast-math / unsafe math optimizations.
+- Disable FP contraction (FMA) where possible.
+- Set rounding mode to FE_TONEAREST at startup.
+
+Record a build/config hash in lockstep headers/replays to detect mismatches.
+
+**Implementation Notes:**
+- Clang/GCC: `-fno-fast-math -ffp-contract=off -fno-unsafe-math-optimizations`
+- MSVC: `/fp:precise` or `/fp:strict`
+- Tier C may require fixed-point or a deterministic math library.
 
 ### 0.1 Create Lockstep Configuration System
 
@@ -61,12 +97,16 @@ Frame tracking: mainLoop.frame (logic ticks), mainLoop.renderFrame
 namespace lockstep {
 
 struct LockstepConfig {
-    bool enabled = false;                    // Master toggle
-    bool deterministic_rng = false;          // Seed RNG per frame
+    bool enabled = false;                    // Master toggle (set at startup)
+    bool deterministic_rng = false;          // Use deterministic RNG
     bool deterministic_timers = false;       // Use tick-based timing
+    bool deterministic_time = false;         // Override GetTime/GetFrameTime/os.clock
+    bool deterministic_ids = false;          // Deterministic tag/ID generation
     bool input_recording = false;            // Record inputs for replay
     bool checksum_validation = false;        // Generate state checksums
+    bool rollback_enabled = false;           // Enable state snapshots/rollback
     uint32_t base_seed = 0;                  // Session seed
+    uint32_t tick_rate = 60;                 // Fixed ticks per second
     uint32_t checksum_interval = 60;         // Ticks between checksums
 };
 
@@ -82,7 +122,39 @@ bool isLockstepEnabled();
 - `src/core/globals.hpp` — Add `lockstep::LockstepConfig` reference
 - `src/main.cpp` — Initialize lockstep config at startup
 
-### 0.2 Create State Checksum System
+### 0.2 Deterministic Time + ID Helpers (New)
+
+**New File:** `src/systems/lockstep/deterministic_time.hpp`
+
+```cpp
+#pragma once
+#include <cstdint>
+
+namespace lockstep {
+uint64_t getTick();
+double getSimTimeSeconds();   // tick / tick_rate
+double getFrameDtSeconds();   // fixed dt
+} // namespace lockstep
+```
+
+**New File:** `src/systems/lockstep/deterministic_ids.hpp`
+
+```cpp
+#pragma once
+#include <cstdint>
+
+namespace lockstep {
+uint64_t nextId();
+void resetIds(uint64_t seed);
+} // namespace lockstep
+```
+
+**Implementation Notes:**
+- Route Lua `GetTime`/`GetFrameTime` to deterministic time when lockstep is enabled.
+- Expose `GetRealTime()` (or `lockstep.get_real_time()`) for UI/debug paths.
+- Replace `os.time`/`os.clock` tag generation with `nextId()` in lockstep.
+
+### 0.3 Create State Checksum System
 
 **New File:** `src/systems/lockstep/state_checksum.hpp`
 
@@ -118,8 +190,10 @@ bool checksumsMatch(const ChecksumResult& a, const ChecksumResult& b);
 - Hash physics bodies by iterating in deterministic order (sorted by entity ID)
 - Use XXHash or CRC32 for speed
 - Only hash simulation-relevant state (not rendering)
+- Include RNG, timer counters, and deterministic ID state in the checksum
+- Quantize floats (or hash bitwise with NaN normalization) to avoid false mismatches
 
-### 0.3 Create Determinism Audit Tool
+### 0.4 Create Determinism Audit Tool
 
 **New File:** `src/systems/lockstep/determinism_audit.hpp`
 
@@ -133,7 +207,9 @@ namespace lockstep {
 struct AuditReport {
     std::vector<std::string> rng_calls;           // Where RNG was called
     std::vector<std::string> time_accesses;       // Real-time accesses
+    std::vector<std::string> rand_calls;          // std::rand()/rand() usage
     std::vector<std::string> unordered_iterations; // Potential issues
+    std::vector<std::string> lua_table_iterations; // pairs() over tables in sim
 };
 
 // Run audit for N frames, report non-deterministic calls
@@ -142,7 +218,11 @@ AuditReport runDeterminismAudit(int frames);
 } // namespace lockstep
 ```
 
-### 0.4 Lua Audit Bindings
+**Implementation Notes:**
+- Combine runtime hooks with static scans for `os.time`, `os.clock`, `rand()`, and `pairs()` usage.
+- Allow auditing to be enabled without affecting release builds.
+
+### 0.5 Lua Audit Bindings
 
 **Modify:** `src/systems/scripting/scripting_functions.cpp`
 
@@ -153,18 +233,22 @@ if (lockstep::g_lockstepConfig.checksum_validation) {
     lockstep::logRngCall(__FILE__, __LINE__);
 }
 ```
+Also hook `math.randomseed`, `os.clock`, and `os.time` to log or warn when used in lockstep mode.
 
 ### Success Criteria (Phase 0)
-- [ ] `LockstepConfig` can be enabled/disabled at runtime
+- [ ] Determinism tier + authoritative state list are documented
+- [ ] `LockstepConfig` is set at startup (mid-run toggling is unsupported)
 - [ ] State checksums are computed each frame when enabled
 - [ ] Audit tool identifies non-deterministic code paths
+- [ ] Deterministic time/ID helpers are available in lockstep mode
 - [ ] No gameplay changes when lockstep is disabled
 
 ### Testing Strategy
 1. Run game normally → verify checksums are NOT computed (no overhead)
 2. Enable lockstep → verify checksums ARE computed
 3. Run same seed twice → checksums should match (if already deterministic)
-4. Run audit → identify remaining non-determinism sources
+4. Run audit → identify remaining non-determinism sources (rng/time/rand/pairs)
+5. Verify build/config hash is recorded in logs or replay headers
 
 ---
 
@@ -187,24 +271,23 @@ namespace lockstep {
 
 class DeterministicRNG {
 public:
-    // Initialize with session seed
-    void init(uint32_t baseSeed);
-    
-    // Call at start of each tick to derive per-frame seed
-    void advanceFrame(uint64_t frame);
-    
-    // Getters (replace effolkronium calls in lockstep mode)
-    int randomInt(int min, int max);
-    float randomFloat(float min, float max);
+    // Initialize once per session
+    void seed(uint64_t baseSeed);
+
+    // Core generator (PCG/xoshiro recommended)
+    uint32_t nextU32();
+
+    // Custom distributions (avoid std::uniform_* differences)
+    uint32_t uniform(uint32_t min, uint32_t max);
+    float uniformFloat01();
     bool randomBool(float chance);
-    
+
     // Get current internal state for checksumming
     uint64_t getStateHash() const;
 
 private:
-    uint32_t baseSeed_ = 0;
-    uint64_t currentSeed_ = 0;
-    // Use PCG or xoshiro256** for quality + reproducibility
+    uint64_t state_ = 0;
+    uint64_t inc_ = 0;
 };
 
 extern DeterministicRNG g_deterministicRng;
@@ -219,7 +302,7 @@ namespace random_utils {
 
 inline void set_seed(unsigned int seed) {
     if (lockstep::isLockstepEnabled()) {
-        lockstep::g_deterministicRng.init(seed);
+        lockstep::g_deterministicRng.seed(seed);
     } else {
         RandomEngine::seed(seed);
     }
@@ -227,7 +310,7 @@ inline void set_seed(unsigned int seed) {
 
 inline int random_int(int min, int max) {
     if (lockstep::isLockstepEnabled()) {
-        return lockstep::g_deterministicRng.randomInt(min, max);
+        return static_cast<int>(lockstep::g_deterministicRng.uniform(min, max));
     }
     return RandomEngine::get(min, max);
 }
@@ -236,12 +319,17 @@ inline int random_int(int min, int max) {
 }
 ```
 
-**Modify:** `src/main.cpp` — Seed RNG per frame
+**Implementation Notes:**
+- Avoid `std::uniform_*` distributions in lockstep mode (libstdc++/libc++ differences).
+- Consider named RNG streams (combat/loot/ai/ui) to reduce call-order coupling.
+- Route `random_uid` and any `rand()` usage through the deterministic RNG/ID system.
+
+**Modify:** `src/main.cpp` — Seed RNG once per session
 
 ```cpp
-// In RunGameLoop(), inside fixed update:
+// In initLockstep():
 if (lockstep::isLockstepEnabled()) {
-    lockstep::g_deterministicRng.advanceFrame(mainLoop.frame);
+    lockstep::g_deterministicRng.seed(g_lockstepConfig.base_seed);
 }
 ```
 
@@ -257,15 +345,18 @@ void exposeLockstepRng(sol::state& lua) {
     if (lockstep::isLockstepEnabled()) {
         lua["math"]["random"] = [](sol::variadic_args va) -> double {
             if (va.size() == 0) {
-                return lockstep::g_deterministicRng.randomFloat(0.0f, 1.0f);
+                return lockstep::g_deterministicRng.uniformFloat01();
             } else if (va.size() == 1) {
                 int max = va[0].as<int>();
-                return lockstep::g_deterministicRng.randomInt(1, max);
+                return lockstep::g_deterministicRng.uniform(1, max);
             } else {
                 int min = va[0].as<int>();
                 int max = va[1].as<int>();
-                return lockstep::g_deterministicRng.randomInt(min, max);
+                return lockstep::g_deterministicRng.uniform(min, max);
             }
+        };
+        lua["math"]["randomseed"] = [](int) {
+            // No-op or log in lockstep to prevent mid-run reseeding
         };
     }
 }
@@ -276,7 +367,15 @@ void exposeLockstepRng(sol::state& lua) {
 2. `assets/scripts/core/*.lua` — Core game logic
 3. `assets/scripts/ai/*.lua` — AI decisions
 
-### 1.3 Deterministic Timer System
+### 1.3 Deterministic Time Sources (New)
+
+**Modify:** `src/systems/scripting/scripting_functions.cpp`, `src/main.cpp`
+
+- When lockstep is enabled, `GetTime` returns `lockstep::getSimTimeSeconds()` and `GetFrameTime` returns `lockstep::getFrameDtSeconds()` (fixed dt).
+- Override Lua `os.clock`/`os.time` to return deterministic sim time or warn in lockstep.
+- Provide `GetRealTime()` (or `lockstep.get_real_time()`) for UI/debug paths that must use wall time.
+
+### 1.4 Deterministic Timer System
 
 **Modify:** `src/systems/timer/timer.hpp`
 
@@ -313,7 +412,12 @@ if (lockstep::isLockstepEnabled()) {
 }
 ```
 
-### 1.4 Deterministic Physics
+**Implementation Notes:**
+- `TimerSystem::timers` currently iterates `std::unordered_map`; switch to a stable update order (insertion-order vector or sorted keys).
+- Route random delay resolution to the deterministic RNG.
+- Reset timer UID counters on lockstep init; avoid tags derived from `os.time`/`os.clock`.
+
+### 1.5 Deterministic Physics
 
 **Modify:** `src/systems/physics/physics_world.cpp`
 
@@ -329,7 +433,11 @@ void PhysicsWorld::Update(float deltaTime) {
 }
 ```
 
-### 1.5 Deterministic Entity Iteration
+**Implementation Notes:**
+- Replace `rand()` usage in physics and screen shake paths with deterministic RNG (or move to render-only).
+- Keep body/constraint insertion and removal order deterministic.
+
+### 1.6 Deterministic Entity Iteration
 
 **Modify:** `src/core/game.cpp` and other systems
 
@@ -359,17 +467,33 @@ auto sortedView(entt::registry& reg) {
 }
 ```
 
+**Implementation Notes:**
+- Prefer `registry.sort<Component>(...)` + `view.use<Component>()` for stable ordering without per-frame sorts.
+- Avoid iterating Lua tables with `pairs` in simulation code; use arrays or sort keys.
+
+### 1.7 Deterministic IDs and Tags (New)
+
+**Modify:** Lua scripts that build tags/IDs from `os.time`, `os.clock`, or `math.random`
+
+- Provide `lockstep.next_id()` in Lua for stable tag/ID generation.
+- Replace time-based tags in simulation-critical systems (timers, signal groups, tweens, combat state).
+- Example files: `assets/scripts/core/timer_chain.lua`, `assets/scripts/core/signal_group.lua`, `assets/scripts/core/tween.lua`
+
 ### Success Criteria (Phase 1)
 - [ ] Same seed + same inputs = identical frame checksums
-- [ ] Lua `math.random()` uses deterministic RNG in lockstep mode
-- [ ] Timer system works in tick-based mode
+- [ ] Lua `math.random()` uses deterministic RNG; `math.randomseed` is blocked/logged
+- [ ] `GetTime`/`GetFrameTime`/`os.clock` return deterministic sim time in lockstep
+- [ ] Timer system works in tick-based mode with stable update order
+- [ ] No `rand()` usage in simulation paths
+- [ ] Time-based IDs/tags replaced with deterministic IDs in simulation
 - [ ] Physics produces identical results across runs
 - [ ] Entity iteration order is deterministic
 
 ### Testing Strategy
 1. **Replay Test:** Record inputs, play back twice, compare checksums
 2. **Cross-Platform Test:** Same seed on different machines → same checksums
-3. **Lua Audit:** Run game with RNG logging, verify all calls go through deterministic system
+3. **Lua Audit:** Run game with RNG/time logging, verify all calls go through deterministic system
+4. **Static Scan:** Flag `os.time`, `os.clock`, `math.randomseed`, `rand()`, `pairs()` in sim-critical paths
 
 ---
 
@@ -398,22 +522,29 @@ struct InputSnapshot {
     uint64_t frame = 0;
     uint8_t playerId = 0;
     
-    // Keyboard (compact bitset for common keys)
-    std::bitset<128> keysDown;
-    std::bitset<128> keysPressed;
-    std::bitset<128> keysReleased;
+    // Keyboard (match input_polling key range)
+    static constexpr size_t kKeyCount = KEY_KP_EQUAL + 1;
+    std::bitset<kKeyCount> keysDown;
+    std::bitset<kKeyCount> keysPressed;   // optional, can be derived
+    std::bitset<kKeyCount> keysReleased;
     
-    // Mouse
-    Vector2 mousePosition = {0, 0};
-    Vector2 mouseDelta = {0, 0};
-    float mouseWheelDelta = 0.0f;
-    uint8_t mouseButtons = 0;  // Bitfield: LMB=1, RMB=2, MMB=4
+    // Mouse (quantized to avoid float drift)
+    int16_t mouseX = 0;
+    int16_t mouseY = 0;
+    int16_t mouseDeltaX = 0;
+    int16_t mouseDeltaY = 0;
+    int16_t mouseWheel = 0;   // scaled (e.g. wheel * 120)
+    uint8_t mouseButtonsDown = 0;     // Bitfield: LMB=1, RMB=2, MMB=4
+    uint8_t mouseButtonsPressed = 0;  // Optional edge data
     
-    // Gamepad (simplified)
+    // Gamepad (quantized to int16)
     uint16_t gamepadButtons = 0;
-    float leftStickX = 0.0f, leftStickY = 0.0f;
-    float rightStickX = 0.0f, rightStickY = 0.0f;
-    float leftTrigger = 0.0f, rightTrigger = 0.0f;
+    int16_t leftStickX = 0, leftStickY = 0;
+    int16_t rightStickX = 0, rightStickY = 0;
+    int16_t leftTrigger = 0, rightTrigger = 0;
+
+    // Text input (optional)
+    uint16_t charPressed = 0;  // 0 if none
     
     // Serialization
     std::vector<uint8_t> serialize() const;
@@ -432,11 +563,20 @@ struct FrameInputs {
 } // namespace lockstep
 ```
 
+**Implementation Notes:**
+- Quantize analog inputs to fixed-point (e.g., scale [-1,1] to int16).
+- Ensure `input_polling.cpp` stops calling Raylib directly (use provider for ctrl/cmd and mouse position).
+- Store previous snapshot in the provider to derive pressed/released edges deterministically.
+- Optionally define a compact key map if you do not want to store all `KEY_KP_EQUAL` keys.
+- Treat text input as UI-only or record it explicitly (keyboard layouts vary across machines).
+- Decide on raw vs scaled mouse coordinates and keep it consistent for capture/playback.
+- Serialize in a fixed endianness and version the input schema.
+
 ### 2.2 Input Provider Abstraction
 
 **Modify:** `src/systems/input/input_polling.hpp`
 
-The existing `IInputProvider` interface is a good foundation. Extend it:
+The existing `IInputProvider` interface is sufficient. Implement a lockstep-aware provider:
 
 ```cpp
 namespace input::polling {
@@ -444,16 +584,22 @@ namespace input::polling {
 // NEW: Lockstep-aware input provider
 class LockstepInputProvider : public IInputProvider {
 public:
-    // Set the snapshot to read from (for replay/network)
-    void setSnapshot(const lockstep::InputSnapshot& snapshot);
+    // Update current/previous snapshots (for replay/network)
+    void advanceFrame(const lockstep::InputSnapshot& snapshot);
     
     // Override all methods to read from snapshot
     bool is_key_down(int key) const override;
-    bool is_key_pressed(int key) const override;
+    bool is_key_released(int key) const override;
+    int get_char_pressed() const override;
+    bool is_mouse_button_down(int button) const override;
+    bool is_mouse_button_pressed(int button) const override;
+    Vector2 get_mouse_delta() const override;
+    float get_mouse_wheel_move() const override;
     // ... etc
     
 private:
     lockstep::InputSnapshot currentSnapshot_;
+    lockstep::InputSnapshot previousSnapshot_;
 };
 
 // Capture current Raylib state into a snapshot
@@ -469,8 +615,7 @@ lockstep::InputSnapshot captureCurrentInput(uint64_t frame, uint8_t playerId);
 ```cpp
 #pragma once
 #include "input_snapshot.hpp"
-#include <deque>
-#include <unordered_map>
+#include <map>
 
 namespace lockstep {
 
@@ -496,13 +641,17 @@ public:
     void pruneOldFrames(uint64_t olderThan);
 
 private:
-    std::deque<FrameInputs> buffer_;
+    std::map<uint64_t, FrameInputs> buffer_;
     int inputDelay_ = 3;  // Default 3 frame delay (~50ms at 60fps)
     int playerCount_ = 1;
 };
 
 } // namespace lockstep
 ```
+
+**Implementation Notes:**
+- Keep the buffer ordered by frame (map or ring buffer with sorted indices).
+- Quantize inputs before buffering to avoid cross-platform drift.
 
 ### 2.4 Integrate with Main Loop
 
@@ -526,20 +675,24 @@ if (lockstep::isLockstepEnabled()) {
     }
     
     // Apply inputs via LockstepInputProvider
-    g_lockstepInputProvider.setSnapshot(frameInputs->players[0]);
+    g_lockstepInputProvider.advanceFrame(frameInputs->players[0]);
 }
 ```
+
+Also set the input provider to `LockstepInputProvider` when lockstep is enabled.
 
 ### Success Criteria (Phase 2)
 - [ ] `InputSnapshot` can serialize/deserialize round-trip
 - [ ] Game plays identically using `LockstepInputProvider` vs direct Raylib
 - [ ] Input delay works correctly (3-frame default)
 - [ ] Input checksums match between capture and replay
+- [ ] No direct Raylib input calls in lockstep path
 
 ### Testing Strategy
 1. Capture inputs for 60 seconds of gameplay
 2. Replay using `LockstepInputProvider`
 3. Verify frame checksums match
+4. Verify quantized inputs replay identically across machines
 
 ---
 
@@ -565,11 +718,15 @@ namespace lockstep {
 
 struct ReplayHeader {
     char magic[4] = {'R', 'P', 'L', 'Y'};
-    uint32_t version = 1;
+    uint32_t version = 2;
     uint32_t baseSeed = 0;
+    uint32_t tickRate = 60;
     uint64_t frameCount = 0;
     uint8_t playerCount = 1;
-    uint32_t configHash = 0;  // For validation
+    uint32_t configHash = 0;        // LockstepConfig hash
+    uint32_t buildHash = 0;         // Build/compiler hash
+    uint64_t contentHash = 0;       // Scripts/assets hash
+    uint32_t inputSchemaVersion = 1;
 };
 
 struct ReplayFrame {
@@ -640,6 +797,10 @@ private:
 } // namespace lockstep
 ```
 
+**Implementation Notes:**
+- Validate header hashes before playback.
+- Stream frames from disk to avoid loading large replays into memory.
+
 ### 3.3 Lua Bindings
 
 **Modify:** `src/systems/scripting/scripting_functions.cpp`
@@ -665,12 +826,14 @@ end
 - [ ] Playback produces identical checksums
 - [ ] Desync detection identifies divergence frame
 - [ ] Replay files are portable (same result on different machines)
+- [ ] Replay header validates build/config/content hash before playback
 
 ### Testing Strategy
 1. Record gameplay session A
 2. Play back on same machine → verify match
 3. Transfer replay file to different machine → verify match
 4. Intentionally corrupt one RNG call → verify desync detection
+5. Change build/config hash → verify replay rejects or warns
 
 ---
 
@@ -743,6 +906,10 @@ private:
 } // namespace lockstep
 ```
 
+**Implementation Notes:**
+- Start with wait-for-input lockstep; enable rollback only when needed for latency.
+- State snapshots must include RNG/timer/ID counters and any global sim clocks.
+
 ### 4.2 State Serialization
 
 **New File:** `src/systems/lockstep/state_serialization.hpp`
@@ -771,6 +938,10 @@ void deserializeGameState(
 } // namespace lockstep
 ```
 
+**Implementation Notes:**
+- Include RNG, timer, and deterministic ID state in snapshots.
+- Use stable component ordering and versioned schemas for serialization.
+
 ### 4.3 Local Multiplayer Test Mode
 
 **New File:** `src/systems/lockstep/local_multiplayer.hpp`
@@ -796,6 +967,7 @@ public:
 - [ ] Two simulated players stay in sync locally
 - [ ] Intentional desync is detected within 1 frame
 - [ ] Rollback restores state correctly (if implemented)
+- [ ] RNG/timer/ID state restored on rollback (if enabled)
 
 ### Testing Strategy
 1. Run 2-player local test with simulated 100ms latency
@@ -818,6 +990,12 @@ public:
 ┌─────────────────────────────────────────┐
 │           Message Types                  │
 ├─────────────────────────────────────────┤
+│ HELLO_MESSAGE                            │
+│   - buildHash: u32                       │
+│   - contentHash: u64                     │
+│   - configHash: u32                      │
+│   - tickRate: u32                        │
+├─────────────────────────────────────────┤
 │ INPUT_MESSAGE                            │
 │   - frame: u64                          │
 │   - playerId: u8                        │
@@ -835,6 +1013,8 @@ public:
 │   - fullState: bytes                    │
 └─────────────────────────────────────────┘
 ```
+
+Handshake must reject mismatched build/config/content hashes to prevent silent desyncs.
 
 ### 5.2 Recommended Libraries
 
@@ -857,6 +1037,10 @@ public:
 src/systems/lockstep/
 ├── lockstep_config.hpp          # Phase 0
 ├── lockstep_config.cpp
+├── deterministic_time.hpp       # Phase 0
+├── deterministic_time.cpp
+├── deterministic_ids.hpp        # Phase 0
+├── deterministic_ids.cpp
 ├── state_checksum.hpp           # Phase 0
 ├── state_checksum.cpp
 ├── determinism_audit.hpp        # Phase 0
@@ -889,8 +1073,9 @@ src/systems/lockstep/
 | `src/systems/timer/timer.cpp` | 1 | Implement tick-based update |
 | `src/systems/physics/physics_world.cpp` | 1 | Ensure fixed dt in lockstep |
 | `src/systems/input/input_polling.hpp` | 2 | Add LockstepInputProvider |
-| `src/systems/input/input_polling.cpp` | 2 | Implement snapshot capture |
-| `src/systems/scripting/scripting_functions.cpp` | 1, 3 | Lua bindings for RNG, replay |
+| `src/systems/input/input_polling.cpp` | 2 | Implement snapshot capture + remove direct Raylib calls |
+| `src/systems/scripting/scripting_functions.cpp` | 1, 3 | Lua bindings for RNG, time, replay |
+| `assets/scripts/*` | 1 | Replace time-based IDs/tags in sim-critical scripts |
 
 ---
 
@@ -900,9 +1085,11 @@ src/systems/lockstep/
 |------|------------|--------|------------|
 | Hidden non-determinism sources | High | High | Extensive audit in Phase 0 |
 | Lua `math.random()` not all captured | Medium | High | Global override + audit |
-| Physics floating-point variance | Low | High | Use fixed timestep always |
+| STL RNG distribution differences | Medium | High | Custom RNG + custom distributions |
+| Physics floating-point variance | Medium | High | Fixed timestep + strict FP flags |
 | Performance overhead from checksums | Medium | Medium | Only compute every N frames |
 | State serialization too slow | Medium | Medium | Optimize critical path, delta compression |
+| Input quantization changes feel | Medium | Medium | Tune scaling, clamp, and deadzones |
 
 ---
 
@@ -920,10 +1107,12 @@ src/systems/lockstep/
 
 ## Questions Before Implementation
 
-1. **Input delay tolerance:** Is 3 frames (~50ms) acceptable for local play feel?
-2. **Rollback support:** Do you need GGPO-style rollback, or is simple wait-for-input lockstep sufficient?
-3. **Replay file size:** ~50KB/minute expected. Acceptable?
-4. **Priority scripts:** Should combat scripts be audited first, or core gameplay?
+1. **Determinism tier:** Same machine, same OS/arch, or cross-platform?
+2. **Input delay tolerance:** Is 3 frames (~50ms) acceptable for local play feel?
+3. **Rollback support:** Do you need GGPO-style rollback, or is wait-for-input sufficient?
+4. **Replay file size:** ~50KB/minute expected. Acceptable?
+5. **Text input:** Should text entry be lockstep-replayed or treated as UI-only?
+6. **Priority scripts:** Should combat scripts be audited first, or core gameplay?
 
 ---
 
@@ -940,13 +1129,17 @@ For each simulation tick:
 ```
 
 ### Determinism Checklist
-- [ ] RNG seeded per-frame with frame number
-- [ ] All timers use tick-based counting
+- [ ] RNG seeded once per session with custom distributions
+- [ ] All timers use tick-based counting with stable update order
 - [ ] Physics uses fixed timestep
 - [ ] Entity iteration sorted by ID
-- [ ] No `std::unordered_*` in simulation logic
-- [ ] Lua `math.random()` overridden
-- [ ] No real-time access during simulation
+- [ ] No `std::unordered_*` iteration in simulation logic
+- [ ] Lua `math.random()` overridden; `math.randomseed` blocked
+- [ ] `GetTime`/`GetFrameTime`/`os.clock` deterministic in simulation
+- [ ] No `rand()` usage in simulation paths
+- [ ] No `pairs()` over unordered Lua tables in simulation
+- [ ] Inputs are quantized + serialized
+- [ ] Real-time access only in render/debug paths
 
 ### Desync Debugging
 When checksums diverge:
@@ -954,3 +1147,4 @@ When checksums diverge:
 2. Compare component-by-component checksums
 3. Log RNG call sequences on both sides
 4. Check for missing input or timing drift
+5. Dump input snapshots and RNG/timer state around the divergence

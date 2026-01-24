@@ -74,7 +74,8 @@ local ACTION_GRID_COLS = 4  -- Fixed column count for action grids
 local TAB_WIDTH = UI(48)
 local TAB_HEIGHT = UI(64)
 local TAB_SPACING = UI(4)
-local TAB_OFFSET_X = -TAB_WIDTH - UI(8)  -- Position left of panel with gap
+local TAB_CONTAINER_PADDING = UI(4)
+local TAB_GAP = UI(8)
 
 local HEADER_HEIGHT = UI(32)
 local SECTION_HEADER_HEIGHT = UI(24)
@@ -110,6 +111,8 @@ local state = {
 
     -- Tab management
     tabEntities = {},
+    tabsAttached = false,
+    tabMarkerAttached = false,
 
     -- Item tracking
     cardRegistry = {},         -- [entity] = cardData
@@ -130,6 +133,7 @@ local state = {
 
 -- Forward declaration for use in slot click callbacks (defined later)
 local returnCardToInventory
+local getPanelDimensions
 
 --------------------------------------------------------------------------------
 -- INTERNAL HELPERS
@@ -176,25 +180,72 @@ local function calculatePanelDimensions(wandDef)
     return contentWidth + PANEL_PADDING * 2, contentHeight + PANEL_PADDING * 2
 end
 
---- Compute hidden Y offset so the tab marker stays visible at the top edge
+--- Compute hidden Y offset so the panel is fully offscreen
 local function getHiddenPanelOffset()
     if state.panelHeight and state.panelHeight > 0 then
-        local keepVisible = TAB_MARKER_HEIGHT + TAB_MARKER_MARGIN
-        return -math.max(0, state.panelHeight - keepVisible)
+        return -(state.panelHeight + (state.panelY or 0))
     end
     return DEFAULT_HIDDEN_OFFSET
 end
 
 --- Get tab marker offsets relative to panel
 local function getTabMarkerOffsets()
-    local offsetX = math.floor((state.panelWidth - TAB_MARKER_WIDTH) / 2)
-    local offsetY = math.max(0, (state.panelHeight - TAB_MARKER_HEIGHT - TAB_MARKER_MARGIN))
-    return offsetX, offsetY
+    local panelW, panelH = getPanelDimensions()
+    local offsetX = 0
+    local offsetY = math.floor((panelH * 0.5) - TAB_MARKER_MARGIN - (TAB_MARKER_HEIGHT * 0.5))
+    return offsetX, panelH 
 end
 
 --------------------------------------------------------------------------------
 -- VISIBILITY CONTROL
 --------------------------------------------------------------------------------
+
+--- Update entity position and UI root offsets
+--- @param entity number Entity ID
+--- @param targetX number
+--- @param targetY number
+local function setEntityPosition(entity, targetX, targetY)
+    if not entity then return end
+    if not _G.registry or not _G.registry.valid then return end
+    if not _G.registry:valid(entity) then return end
+
+    local component_cache = _G.component_cache
+    if not component_cache or not component_cache.get then return end
+
+    -- Update Transform for the main entity
+    local t = component_cache.get(entity, _G.Transform)
+    if t then
+        t.actualX = targetX
+        t.actualY = targetY
+    end
+
+    -- Update InheritedProperties offset (used by layout system)
+    local role = component_cache.get(entity, _G.InheritedProperties)
+    if role and role.offset then
+        role.offset.x = targetX
+        role.offset.y = targetY
+    end
+
+    -- CRITICAL: For UIBox entities, also update the uiRoot
+    local boxComp = component_cache.get(entity, _G.UIBoxComponent)
+    if boxComp and boxComp.uiRoot and _G.registry:valid(boxComp.uiRoot) then
+        local rt = component_cache.get(boxComp.uiRoot, _G.Transform)
+        if rt then
+            rt.actualX = targetX
+            rt.actualY = targetY
+        end
+        local rootRole = component_cache.get(boxComp.uiRoot, _G.InheritedProperties)
+        if rootRole and rootRole.offset then
+            rootRole.offset.x = targetX
+            rootRole.offset.y = targetY
+        end
+
+        -- Force layout recalculation
+        if _G.ui and _G.ui.box and _G.ui.box.RenewAlignment then
+            _G.ui.box.RenewAlignment(_G.registry, entity)
+        end
+    end
+end
 
 --- Set entity visibility by moving it on/off screen
 --- @param entity number Entity ID
@@ -210,45 +261,9 @@ local function setEntityVisible(entity, visible, onscreenX, onscreenY, dbgLabel)
     if not _G.registry:valid(entity) then return end
 
     local targetX = onscreenX
-    -- For top-of-screen panel: hide by moving UP while leaving tab visible
+    -- For top-of-screen panel: hide by moving fully offscreen
     local targetY = visible and onscreenY or (onscreenY + getHiddenPanelOffset())
-
-    -- Update Transform for the main entity
-    local component_cache = _G.component_cache
-    if component_cache and component_cache.get then
-        local t = component_cache.get(entity, _G.Transform)
-        if t then
-            t.actualX = targetX
-            t.actualY = targetY
-        end
-
-        -- Update InheritedProperties offset (used by layout system)
-        local role = component_cache.get(entity, _G.InheritedProperties)
-        if role and role.offset then
-            role.offset.x = targetX
-            role.offset.y = targetY
-        end
-
-        -- CRITICAL: For UIBox entities, also update the uiRoot
-        local boxComp = component_cache.get(entity, _G.UIBoxComponent)
-        if boxComp and boxComp.uiRoot and _G.registry:valid(boxComp.uiRoot) then
-            local rt = component_cache.get(boxComp.uiRoot, _G.Transform)
-            if rt then
-                rt.actualX = targetX
-                rt.actualY = targetY
-            end
-            local rootRole = component_cache.get(boxComp.uiRoot, _G.InheritedProperties)
-            if rootRole and rootRole.offset then
-                rootRole.offset.x = targetX
-                rootRole.offset.y = targetY
-            end
-
-            -- Force layout recalculation
-            if _G.ui and _G.ui.box and _G.ui.box.RenewAlignment then
-                _G.ui.box.RenewAlignment(_G.registry, entity)
-            end
-        end
-    end
+    setEntityPosition(entity, targetX, targetY)
 end
 
 --- Set card entity visibility using state tags
@@ -449,7 +464,7 @@ local function createWandTabs()
         return dsl.strict.vbox {
             config = {
                 id = "wand_tabs_container",
-                padding = UI(4),
+                padding = TAB_CONTAINER_PADDING,
             },
             children = tabChildren,
         }
@@ -457,7 +472,7 @@ local function createWandTabs()
         -- Test stub: minimal vbox structure
         return {
             type = "vbox",
-            config = { id = "wand_tabs_container", padding = UI(4) },
+            config = { id = "wand_tabs_container", padding = TAB_CONTAINER_PADDING },
             children = tabChildren,
         }
     end
@@ -484,21 +499,138 @@ local function updateTabHighlighting()
     end
 end
 
+local function getTabContainerWidth()
+    local width = TAB_WIDTH + (TAB_CONTAINER_PADDING * 2)
+    if not state.tabContainerEntity then
+        return width
+    end
+    if not _G.registry or not _G.registry.valid then
+        return width
+    end
+    if not _G.registry:valid(state.tabContainerEntity) then
+        return width
+    end
+
+    local component_cache = _G.component_cache
+    if not component_cache or not component_cache.get then
+        return width
+    end
+
+    local t = component_cache.get(state.tabContainerEntity, _G.Transform)
+    if t and t.actualW and t.actualW > 0 then
+        width = t.actualW
+    end
+
+    local boxComp = component_cache.get(state.tabContainerEntity, _G.UIBoxComponent)
+    if boxComp and boxComp.uiRoot and _G.registry:valid(boxComp.uiRoot) then
+        local rt = component_cache.get(boxComp.uiRoot, _G.Transform)
+        if rt and rt.actualW and rt.actualW > 0 then
+            width = rt.actualW
+        end
+    end
+
+    return width
+end
+
+local function getTabContainerHeight()
+    local count = #state.wandDefs
+    local height = (count * TAB_HEIGHT) + (math.max(0, count - 1) * TAB_SPACING) + (TAB_CONTAINER_PADDING * 2)
+    if not state.tabContainerEntity then
+        return height
+    end
+    if not _G.registry or not _G.registry.valid then
+        return height
+    end
+    if not _G.registry:valid(state.tabContainerEntity) then
+        return height
+    end
+
+    local component_cache = _G.component_cache
+    if not component_cache or not component_cache.get then
+        return height
+    end
+
+    local t = component_cache.get(state.tabContainerEntity, _G.Transform)
+    if t and t.actualH and t.actualH > 0 then
+        height = t.actualH
+    end
+
+    local boxComp = component_cache.get(state.tabContainerEntity, _G.UIBoxComponent)
+    if boxComp and boxComp.uiRoot and _G.registry:valid(boxComp.uiRoot) then
+        local rt = component_cache.get(boxComp.uiRoot, _G.Transform)
+        if rt and rt.actualH and rt.actualH > 0 then
+            height = rt.actualH
+        end
+    end
+
+    return height
+end
+
+getPanelDimensions = function()
+    local panelW = state.panelWidth
+    local panelH = state.panelHeight
+    if state.panelEntity and _G.registry and _G.registry.valid and _G.registry:valid(state.panelEntity) then
+        local component_cache = _G.component_cache
+        if component_cache and component_cache.get then
+            local t = component_cache.get(state.panelEntity, _G.Transform)
+            if t then
+                if t.actualW and t.actualW > 0 then panelW = t.actualW end
+                if t.actualH and t.actualH > 0 then panelH = t.actualH end
+            end
+
+            local boxComp = component_cache.get(state.panelEntity, _G.UIBoxComponent)
+            if boxComp and boxComp.uiRoot and _G.registry:valid(boxComp.uiRoot) then
+                local rt = component_cache.get(boxComp.uiRoot, _G.Transform)
+                if rt then
+                    if rt.actualW and rt.actualW > 0 then panelW = rt.actualW end
+                    if rt.actualH and rt.actualH > 0 then panelH = rt.actualH end
+                end
+            end
+        end
+    end
+    if (not panelW or panelW <= 0) or (not panelH or panelH <= 0) then
+        local wandDef = state.wandDefs[state.activeWandIndex]
+        if wandDef then
+            panelW, panelH = calculatePanelDimensions(wandDef)
+        end
+    end
+    return panelW or 0, panelH or 0
+end
+
+local function getTabOffsets()
+    local panelW, panelH = getPanelDimensions()
+    local tabWidth = getTabContainerWidth()
+    local tabHeight = getTabContainerHeight()
+    local offsetX = -math.floor((panelW * 0.5) - (tabWidth) - TAB_GAP)
+    local offsetY = math.floor((-panelH * 0.5) + HEADER_HEIGHT + (tabHeight * 0.5))
+    return offsetX, offsetY
+end
+
 --- Position tabs relative to panel using ChildBuilder
 local function positionTabs()
     if not state.tabContainerEntity or not state.panelEntity then return end
 
-    -- Check if registry is available (runtime only)
     if not _G.registry or not _G.registry.valid then return end
     if not _G.registry:valid(state.tabContainerEntity) then return end
     if not _G.registry:valid(state.panelEntity) then return end
 
     local ok, ChildBuilder = pcall(require, "core.child_builder")
     if ok and ChildBuilder and ChildBuilder.for_entity then
-        ChildBuilder.for_entity(state.tabContainerEntity)
-            :attachTo(state.panelEntity)
-            :offset(TAB_OFFSET_X, 0)
-            :apply()
+        local offsetX, offsetY = getTabOffsets()
+        if not state.tabsAttached then
+            ChildBuilder.for_entity(state.tabContainerEntity)
+                :attachTo(state.panelEntity)
+                :offset(offsetX, offsetY)
+                :apply()
+            state.tabsAttached = true
+        elseif ChildBuilder.setOffset then
+            ChildBuilder.setOffset(state.tabContainerEntity, offsetX, offsetY)
+        end
+        
+        -- Force layout recalculation so buttons reposition
+        if _G.ui and _G.ui.box and _G.ui.box.RenewAlignment then
+            _G.ui.box.RenewAlignment(_G.registry, state.tabContainerEntity)
+        end
     end
 end
 
@@ -1492,7 +1624,7 @@ local function createTabMarkerDefinition()
             type = "hbox",
             config = { id = "wand_panel_tab_marker" },
             children = {
-                { type = "anim", sprite = "inventory-tab-marker.png", w = TAB_MARKER_WIDTH, h = TAB_MARKER_HEIGHT },
+                { type = "anim", sprite = "wand-tab-marker.png", w = TAB_MARKER_WIDTH, h = TAB_MARKER_HEIGHT },
             },
         }
     end
@@ -1508,7 +1640,7 @@ local function createTabMarkerDefinition()
             end,
         },
         children = {
-            dsl.anim("inventory-tab-marker.png", { w = TAB_MARKER_WIDTH, h = TAB_MARKER_HEIGHT })
+            dsl.anim("wand-tab-marker.png", { w = TAB_MARKER_WIDTH, h = TAB_MARKER_HEIGHT })
         }
     }
 end
@@ -1520,13 +1652,18 @@ local function positionTabMarker()
     if not _G.registry:valid(state.tabMarkerEntity) then return end
     if not _G.registry:valid(state.panelEntity) then return end
 
+    local offsetX, offsetY = getTabMarkerOffsets()
     local ok, ChildBuilder = pcall(require, "core.child_builder")
     if ok and ChildBuilder and ChildBuilder.for_entity then
-        local offsetX, offsetY = getTabMarkerOffsets()
-        ChildBuilder.for_entity(state.tabMarkerEntity)
-            :attachTo(state.panelEntity)
-            :offset(offsetX, offsetY)
-            :apply()
+        if not state.tabMarkerAttached then
+            ChildBuilder.for_entity(state.tabMarkerEntity)
+                :attachTo(state.panelEntity)
+                :offset(offsetX, offsetY)
+                :apply()
+            state.tabMarkerAttached = true
+        elseif ChildBuilder.setOffset then
+            ChildBuilder.setOffset(state.tabMarkerEntity, offsetX, offsetY)
+        end
     end
 end
 
@@ -1534,6 +1671,26 @@ end
 local function updatePanelPosition(wandDef)
     local screenW = _G.GetScreenWidth and _G.GetScreenWidth() or 1280
     local panelW, panelH = calculatePanelDimensions(wandDef)
+
+    if state.panelEntity and _G.registry and _G.registry.valid and _G.registry:valid(state.panelEntity) then
+        local component_cache = _G.component_cache
+        if component_cache and component_cache.get then
+            local t = component_cache.get(state.panelEntity, _G.Transform)
+            if t then
+                if t.actualW and t.actualW > 0 then panelW = t.actualW end
+                if t.actualH and t.actualH > 0 then panelH = t.actualH end
+            end
+
+            local boxComp = component_cache.get(state.panelEntity, _G.UIBoxComponent)
+            if boxComp and boxComp.uiRoot and _G.registry:valid(boxComp.uiRoot) then
+                local rt = component_cache.get(boxComp.uiRoot, _G.Transform)
+                if rt then
+                    if rt.actualW and rt.actualW > 0 then panelW = rt.actualW end
+                    if rt.actualH and rt.actualH > 0 then panelH = rt.actualH end
+                end
+            end
+        end
+    end
 
     state.panelWidth = panelW
     state.panelHeight = panelH
@@ -1545,6 +1702,7 @@ local function updatePanelPosition(wandDef)
     end
 
     positionTabMarker()
+    positionTabs()
 end
 
 --------------------------------------------------------------------------------
@@ -1760,14 +1918,14 @@ function WandPanel.initialize()
         state.closeButtonEntity = _G.ui.box.GetUIEByID(_G.registry, state.panelEntity, "wand_panel_close_btn")
     end
 
-    -- Spawn tabs if multiple wands - must be in front of panel for visibility
+    -- Spawn tabs if multiple wands - spawn at panel position, ChildBuilder handles offset
     if #state.wandDefs > 1 and dsl and dsl.spawn then
         local tabDef = createWandTabs()
         state.tabContainerEntity = dsl.spawn(
-            { x = state.panelX + TAB_OFFSET_X, y = state.panelY + HEADER_HEIGHT },
+            { x = state.panelX, y = state.panelY },
             tabDef,
             RENDER_LAYER,
-            PANEL_Z + 10  -- Above panel for visibility and clickability
+            PANEL_Z + 10
         )
         if state.tabContainerEntity and _G.ui and _G.ui.box then
             if _G.ui.box.set_draw_layer then
@@ -2165,6 +2323,8 @@ function WandPanel.destroy()
     state.tabContainerEntity = nil
     state.tabMarkerEntity = nil
     state.tabEntities = {}
+    state.tabsAttached = false
+    state.tabMarkerAttached = false
     state.initialized = false
     state.isVisible = false
 

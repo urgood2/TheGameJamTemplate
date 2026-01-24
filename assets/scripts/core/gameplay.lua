@@ -306,6 +306,47 @@ local function ensureMessageQueueHooks()
         end
     end)
 
+    handlers:on("wand_trigger_changed", function()
+        if reevaluateDeckTags then
+            reevaluateDeckTags()
+        end
+        if updateWandResourceBar then
+            updateWandResourceBar()
+        end
+    end)
+
+    handlers:on("wand_action_changed", function()
+        if reevaluateDeckTags then
+            reevaluateDeckTags()
+        end
+        if updateWandResourceBar then
+            updateWandResourceBar()
+        end
+    end)
+
+    handlers:on("wand_selected", function(newIndex)
+        if type(newIndex) ~= "number" then return end
+
+        if board_sets and #board_sets > 0 then
+            local clamped = math.max(1, math.min(#board_sets, newIndex))
+            if clamped ~= current_board_set_index then
+                current_board_set_index = clamped
+                for index, boardSet in ipairs(board_sets) do
+                    toggleBoardSetVisibility(boardSet, index == current_board_set_index)
+                end
+            end
+        else
+            current_board_set_index = newIndex
+        end
+
+        if reevaluateDeckTags then
+            reevaluateDeckTags()
+        end
+        if updateWandResourceBar then
+            updateWandResourceBar()
+        end
+    end)
+
     handlers:on("trigger_activated", function(wandId, triggerType)
         if ui_modules.TriggerStripUI and ui_modules.TriggerStripUI.onTriggerActivated then
             ui_modules.TriggerStripUI.onTriggerActivated(wandId, triggerType)
@@ -3574,6 +3615,63 @@ function setUpLogicTimers()
             -- bail if not in action state
             if not is_state_active(PLANNING_STATE) then return end
 
+            if gameplay_cfg.isGridInventoryEnabled()
+                and wandAdapter
+                and wandAdapter.getWandCount
+                and wandAdapter.getLoadout
+                and wandAdapter.getWandDef
+                and wandAdapter.collectCardPool then
+                local wandCount = wandAdapter.getWandCount()
+                if wandCount and wandCount > 0 then
+                    local hasTrigger = false
+                    for wandIndex = 1, wandCount do
+                        local loadout = wandAdapter.getLoadout(wandIndex)
+                        if loadout and loadout.trigger and entity_cache.valid(loadout.trigger) then
+                            hasTrigger = true
+                            break
+                        end
+                    end
+
+                    if hasTrigger and timer.get_delay("trigger_simul_timer") == nil then
+                        timer.every(
+                            1.0, -- timing may need to change if there are many cards.
+                            function()
+                                if not is_state_active(PLANNING_STATE) then return end
+
+                                local wandIndex = current_board_set_index
+                                local wandDef = wandAdapter.getWandDef(wandIndex)
+                                if not wandDef then
+                                    ui_modules.CastExecutionGraphUI.clear()
+                                    return
+                                end
+
+                                local cardPool = wandAdapter.collectCardPool(wandIndex)
+                                if not cardPool or #cardPool == 0 then
+                                    ui_modules.CastExecutionGraphUI.clear()
+                                    return
+                                end
+
+                                local simulatedResult = WandEngine.simulate_wand(wandDef, cardPool)
+
+                                if simulatedResult and simulatedResult.blocks then
+                                    ui_modules.CastExecutionGraphUI.render(simulatedResult.blocks,
+                                        { wandId = wandDef.id, title = localization.get("ui.execution_preview_title") })
+                                else
+                                    ui_modules.CastExecutionGraphUI.clear()
+                                    return
+                                end
+                            end,
+                            0,
+                            false,
+                            nil,
+                            "trigger_simul_timer"
+                        )
+                    end
+
+                    return
+                end
+            end
+
             for triggerBoardID, actionBoardID in pairs(trigger_board_id_to_action_board_id) do
                 if ensure_entity(triggerBoardID) then
                     local triggerBoard = boards[triggerBoardID]
@@ -3615,21 +3713,13 @@ function setUpLogicTimers()
                                         
                                         
                                         -- run the simulation, then take the return value to pulse the cards that would be fired.
-
-                                        local deck = {}
-                                        for _, cardEid in ipairs(actionBoard.cards) do
-                                            local cardScript = getScriptTableFromEntityID(cardEid)
-                                            if cardScript then
-                                                table.insert(deck, cardScript)
-                                            end
+                                        local cardPool = collectCardPoolForBoardSet(currentSet, true)
+                                        if not cardPool or #cardPool == 0 then
+                                            ui_modules.CastExecutionGraphUI.clear()
+                                            return
                                         end
 
-                                        -- print deck
-                                        for i, card in ipairs(deck) do
-                                            log_debug(" - deck card", i, ":", card.cardID)
-                                        end
-
-                                        local simulatedResult = WandEngine.simulate_wand(currentSet.wandDef, deck)
+                                        local simulatedResult = WandEngine.simulate_wand(currentSet.wandDef, cardPool)
 
                                         if simulatedResult and simulatedResult.blocks then
                                             ui_modules.CastExecutionGraphUI.render(simulatedResult.blocks,
@@ -4903,6 +4993,7 @@ function initPlanningPhase()
     CastFeedUI.init()
     ui_modules.SubcastDebugUI.init()
     ui_modules.MessageQueueUI.init()
+    ensureMessageQueueHooks()
     ui_modules.CurrencyDisplay.init({ amount = globals.currency or 0 })
     ui_modules.TagSynergyPanel.init({
         breakpoints = TagEvaluator.get_breakpoints(),
@@ -7299,7 +7390,7 @@ local function makeVirtualCardFromTemplate(template)
     return card
 end
 
-local function collectCardPoolForBoardSet(boardSet)
+local function collectCardPoolForBoardSet(boardSet, silent)
     if not boardSet then return nil end
     local actionBoard = boards[boardSet.action_board_id]
     if not actionBoard or not actionBoard.cards or #actionBoard.cards == 0 then return nil end
@@ -7310,10 +7401,12 @@ local function collectCardPoolForBoardSet(boardSet)
     local function pushCard(cardScript)
         if not cardScript then return end
         local stackLen = cardScript.cardStack and #cardScript.cardStack or 0
-        print(string.format("[MANABAR] card=%s stack=%s len=%d", 
-            cardScript.card_id or "?", 
-            cardScript.cardStack and "exists" or "nil", 
-            stackLen))
+        if not silent then
+            print(string.format("[MANABAR] card=%s stack=%s len=%d",
+                cardScript.card_id or "?",
+                cardScript.cardStack and "exists" or "nil",
+                stackLen))
+        end
         if cardScript.cardStack and #cardScript.cardStack > 0 then
             for _, modEid in ipairs(cardScript.cardStack) do
                 modStats.total = modStats.total + 1
@@ -7327,8 +7420,10 @@ local function collectCardPoolForBoardSet(boardSet)
                     end
                 else
                     modStats.invalid = modStats.invalid + 1
-                    print(string.format("[MANABAR] INVALID mod entity: %s (on card %s)", 
-                        tostring(modEid), cardScript.card_id or "?"))
+                    if not silent then
+                        print(string.format("[MANABAR] INVALID mod entity: %s (on card %s)",
+                            tostring(modEid), cardScript.card_id or "?"))
+                    end
                 end
             end
         end
@@ -7359,7 +7454,7 @@ local function collectCardPoolForBoardSet(boardSet)
         end
     end
 
-    if modStats.total > 0 then
+    if modStats.total > 0 and not silent then
         print(string.format("[MANABAR] modCards: total=%d valid=%d invalid=%d noScript=%d",
             modStats.total, modStats.valid, modStats.invalid, modStats.noScript))
     end
@@ -7459,6 +7554,21 @@ if gameplay_cfg.auto_action_env and timer and timer.after then
 end
 
 updateWandResourceBar = function()
+    if gameplay_cfg.isGridInventoryEnabled()
+        and wandAdapter
+        and wandAdapter.getWandCount
+        and wandAdapter.getWandDef
+        and wandAdapter.collectCardPool then
+        local wandCount = wandAdapter.getWandCount()
+        if wandCount and wandCount > 0 then
+            local wandIndex = current_board_set_index
+            local wandDef = wandAdapter.getWandDef(wandIndex)
+            local cardPool = wandAdapter.collectCardPool(wandIndex)
+            wandResourceBar.update(wandDef, cardPool)
+            return
+        end
+    end
+
     if not board_sets or #board_sets == 0 then 
         print("[MANABAR] No board_sets")
         return 
@@ -7484,6 +7594,24 @@ local tagEvaluationFallbackPlayer = { active_tag_bonuses = {}, active_procs = {}
 
 local function buildDeckSnapshotFromBoards()
     local cards = {}
+
+    if gameplay_cfg.isGridInventoryEnabled()
+        and wandAdapter
+        and wandAdapter.getWandCount
+        and wandAdapter.collectCardPool then
+        local wandCount = wandAdapter.getWandCount()
+        if wandCount and wandCount > 0 then
+            for wandIndex = 1, wandCount do
+                local pool = wandAdapter.collectCardPool(wandIndex)
+                if pool then
+                    for _, card in ipairs(pool) do
+                        cards[#cards + 1] = card
+                    end
+                end
+            end
+            return { cards = cards }
+        end
+    end
 
     if board_sets then
         for _, boardSet in ipairs(board_sets) do
@@ -7518,7 +7646,12 @@ local function getTagEvaluationTargets()
 end
 
 reevaluateDeckTags = function()
-    if not board_sets or #board_sets == 0 then
+    if gameplay_cfg.isGridInventoryEnabled()
+        and wandAdapter
+        and wandAdapter.getWandCount
+        and (wandAdapter.getWandCount() or 0) > 0 then
+        -- Use adapter-backed deck snapshot in grid inventory mode.
+    elseif not board_sets or #board_sets == 0 then
         return
     end
 
@@ -7540,6 +7673,7 @@ reevaluateDeckTags = function()
         playerScript.active_tag_bonuses = playerTarget.active_tag_bonuses
     end
 end
+_G.reevaluateDeckTags = reevaluateDeckTags
 
 local DEFAULT_TRIGGER_INTERVAL = 1.0
 

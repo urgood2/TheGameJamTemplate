@@ -101,7 +101,9 @@ end
 
 function initMainMenu()
     log_debug("[initMainMenu] Starting main menu initialization...")
-    
+
+    local MainMenuButtons = require("ui.main_menu_buttons")
+
     -- create a timer to increment the phase
     timer.run(
         function()
@@ -111,399 +113,115 @@ function initMainMenu()
         MAIN_MENU_PHASE_TIMER_TAG,
         MAIN_MENU_TIMER_GROUP
     )
-    
-    
+
+
     globals.currentGameState = GAMESTATE.MAIN_MENU -- Set the game state to MAIN_MENU
     record_telemetry_once("scene_main_menu", "scene_enter", { scene = "main_menu" })
     setCategoryVolume("effects", 0.5)
     playMusic("main-menu", true)
     setTrackVolume("main-menu", 0.3)
 
-    -- RenderGroupsTest.init() -- disabled
-
     local screenW = globals.screenWidth()
     local screenH = globals.screenHeight()
-    local centerY = screenH / 2 - 100
-    
-    -- TEST: Using same shader for all 3 items to isolate shader vs position issue
-    -- Uncomment one of these options to test:
-    -- OPTION A: All prismatic (currently working shader)
-    local testShader = "3d_skew_prismatic"
-    -- OPTION B: All holo (currently not working)
-    -- local testShader = "3d_skew_holo"
 
-    log_debug("[SpecialItem Test] Using shader: " .. testShader .. " for all items")
+    -- REMOVED: Special items (per spec - Phase 1)
+    -- REMOVED: Input text field (per spec - Phase 1)
 
-    mainMenuEntities.special_item_1 = SpecialItem.new("frame0012.png")
-        :at(screenW / 2 - 150, centerY)
-        :size(64, 64)
-        :shader(testShader)
-        :particles("bubble", { colors = { "cyan", "magenta", "yellow" } })
-        :outline("gold", 2)
-        :build()
-
-    mainMenuEntities.special_item_2 = SpecialItem.new("frame0012.png")
-        :at(screenW / 2, centerY)
-        :size(64, 64)
-        :shader(testShader)
-        :particles("sparkle", { colors = { "white", "gold" } })
-        :outline("cyan", 2)
-        :build()
-
-    mainMenuEntities.special_item_3 = SpecialItem.new("frame0012.png")
-        :at(screenW / 2 + 150, centerY)
-        :size(64, 64)
-        :shader(testShader)
-        :particles("magical", { colors = { "purple", "blue", "pink" } })
-        :outline("purple", 2)
-        :build()
-
-    -- DEBUG: Verify SpecialItem components
-    local function debugSpecialItem(name, item)
-        if not item then
-            log_warn("[SpecialItem Debug] " .. name .. " is nil!")
-            return
-        end
-        local eid = item:handle()
-        if not entity_cache.valid(eid) then
-            log_warn("[SpecialItem Debug] " .. name .. " has invalid entity handle!")
-            return
-        end
-        local transform = component_cache.get(eid, Transform)
-        local hasShaderPipeline = registry:has(eid, shader_pipeline.ShaderPipelineComponent)
-        local hasAnimQueue = registry:has(eid, AnimationQueueComponent)
-        local hasGameObject = registry:has(eid, GameObject)
-
-        -- Check shader pipeline details
-        local shaderInfo = "none"
-        if hasShaderPipeline then
-            local comp = component_cache.get(eid, shader_pipeline.ShaderPipelineComponent)
-            if comp and comp.getPassCount then
-                shaderInfo = tostring(comp:getPassCount()) .. " passes"
-            else
-                shaderInfo = "present"
+    -- NEW: Minimalist main menu buttons using MainMenuButtons module
+    MainMenuButtons.setButtons({
+        {
+            label = localization.get("ui.start_game_button"),
+            onClick = function()
+                record_telemetry("start_game_clicked", { scene = "main_menu" })
+                startGameButtonCallback()
             end
-        end
-
-        -- Check draw layer
-        local layerInfo = "unknown"
-        if hasGameObject then
-            local go = component_cache.get(eid, GameObject)
-            if go and go.layer then
-                layerInfo = tostring(go.layer)
+        },
+        {
+            label = localization.get("ui.start_game_feedback"),  -- "Discord" text
+            onClick = function()
+                record_telemetry("discord_button_clicked", { scene = "main_menu" })
+                OpenURL("https://discord.gg/rp6yXxKu5z")
             end
-        end
+        },
+        {
+            label = localization.get("ui.start_game_follow"),  -- "Bluesky" text
+            onClick = function()
+                record_telemetry("follow_button_clicked", { scene = "main_menu", platform = "bluesky" })
+                OpenURL("https://bsky.app/profile/chugget.itch.io")
+            end
+        },
+        {
+            label = localization.get("ui.switch_language"),  -- "Language" text
+            onClick = function()
+                -- Switch the language
+                if (localization.getCurrentLanguage() == "en_us") then
+                    record_telemetry("language_changed", { from = "en_us", to = "ko_kr", session_id = telemetry_session_id() })
+                    localization.setCurrentLanguage("ko_kr")
+                else
+                    record_telemetry("language_changed", { from = "ko_kr", to = "en_us", session_id = telemetry_session_id() })
+                    localization.setCurrentLanguage("en_us")
+                end
+            end
+        },
+    })
+    MainMenuButtons.init()
 
-        log_debug(string.format("[SpecialItem Debug] %s: entity=%s, pos=(%.0f,%.0f), size=(%.0f,%.0f), shader=%s, animQueue=%s, layer=%s, particles=%s",
-            name,
-            tostring(eid),
-            transform and transform.actualX or -1,
-            transform and transform.actualY or -1,
-            transform and transform.actualW or -1,
-            transform and transform.actualH or -1,
-            shaderInfo,
-            hasAnimQueue and "YES" or "NO",
-            layerInfo,
-            item.particleStream and "YES" or "NO"
-        ))
-    end
+    -- Store reference for cleanup and for keyboard handling in main.update()
+    mainMenuEntities.mainMenuButtons = MainMenuButtons
 
-    debugSpecialItem("special_item_1", mainMenuEntities.special_item_1)
-    debugSpecialItem("special_item_2", mainMenuEntities.special_item_2)
-    debugSpecialItem("special_item_3", mainMenuEntities.special_item_3)
-    log_debug("[SpecialItem Debug] Active count: " .. SpecialItem.getActiveCount())
-
-    -- Additional debug: Check entity version and renderer state
-    local function checkEntityRenderState(name, item)
-        if not item then return end
-        local eid = item:handle()
-        if not entity_cache.valid(eid) then return end
-
-        -- Check if entity has a visible sprite frame
-        local animQueue = component_cache.get(eid, AnimationQueueComponent)
-        if animQueue then
-            local defaultAnim = animQueue.defaultAnimation
-            local animListEmpty = (not defaultAnim or not defaultAnim.animationList or #defaultAnim.animationList == 0)
-            log_debug(string.format("[SpecialItem Debug] %s animList empty: %s", name, tostring(animListEmpty)))
-        else
-            log_debug(string.format("[SpecialItem Debug] %s has NO AnimationQueueComponent!", name))
-        end
-
-        -- Check draw layer in GameObject
-        local go = component_cache.get(eid, GameObject)
-        if go then
-            log_debug(string.format("[SpecialItem Debug] %s drawLayer: %s, visible: %s, zIndex: %s",
-                name,
-                tostring(go.layer or "nil"),
-                tostring(go.visible),
-                tostring(go.zIndex or "nil")
-            ))
-        end
-    end
-
-    checkEntityRenderState("special_item_1", mainMenuEntities.special_item_1)
-    checkEntityRenderState("special_item_2", mainMenuEntities.special_item_2)
-    checkEntityRenderState("special_item_3", mainMenuEntities.special_item_3)
-
-    -- create start game button
-    
-    
-    -- create main logo
-    -- globals.ui.logo = animation_system.createAnimatedObjectWithTransform(
-    --     "b3832.png", -- animation ID
-    --     true             -- use animation, not sprite identifier, if false
-    -- )
-    -- animation_system.resizeAnimationObjectsInEntityToFit(
-    --     globals.ui.logo,
-    --     64 * 3,   -- width
-    --     64 * 3    -- height
-    -- )
-    -- -- center
-    -- local logoTransform = component_cache.get(globals.ui.logo, Transform)
-    -- logoTransform.actualX = globals.screenWidth() / 2 - logoTransform.actualW / 2
-    -- logoTransform.actualY = globals.screenHeight() / 2 - logoTransform.actualH / 2 - 400 -- move it up a bit
-    
-    -- timer.every(
-    --     0.1, -- every 0.5 seconds
-    --     function()
-    --         -- make the text move up and down (bob)
-    --         local transformComp = component_cache.get(globals.ui.logo, Transform)
-    --         local bobHeight = 10 -- height of the bob
-    --         local time = os.clock() -- get the current time
-    --         local bobOffset = math.sin(time * 2) * bobHeight -- calculate the offset
-    --         transformComp.actualY = globals.screenHeight() / 2 - transformComp.actualH / 2 - 200 + bobOffset -- apply the offset to the Y position
-            
-    --     end,
-    --     0, -- infinite repetitions
-    --     true, -- start immediately
-    --     nil, -- no "after" callback
-    --     "logo_text_pulse",
-    --     MAIN_MENU_TIMER_GROUP
-    -- )
-    
-    
-    local startButtonText = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("ui.start_game_button") end,  -- initial text
-        30.0,                                 -- font size
-        "color=fuchsia"                       -- animation spec
+    -- Create main logo (centered horizontally, above menu buttons)
+    globals.ui.logo = animation_system.createAnimatedObjectWithTransform(
+        "b3832.png", -- animation ID
+        true             -- use animation, not sprite identifier, if false
     )
-    local startButtonTemplate = UIElementTemplateNodeBuilder.create()
-        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-        :addConfig(
-            UIConfigBuilder.create()
-                :addColor(util.getColor("muted_plum"))  -- Resurrect 64 palette
-                :addEmboss(2.0)
-                :addMinWidth(500) -- minimum width of the button
-                :addShadow(true)
-                :addHover(true) -- needed for button effect
-                :addButtonCallback(function ()
-                    playSoundEffect("effects", "button-click") -- play button click sound
-                    startGameButtonCallback() -- callback for the start game button
-                end)
-                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
-                :addInitFunc(function(registry, entity)
-                    -- something init-related here
-                end)
-                :build()
-        )
-        :addChild(startButtonText)
-        :build()
-        
-    --
-    local feedbackText = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("ui.start_game_feedback") end,  -- initial text
-        30,                                 -- font size
-        "color=apricot_cream"                       -- animation spec
-    )
-    
-    local discordIcon = animation_system.createAnimatedObjectWithTransform(
-        "discord_icon_anim", -- animation ID
-        false             -- use animation, not sprite id
-    )    
     animation_system.resizeAnimationObjectsInEntityToFit(
-        discordIcon,
-        32,   -- width
-        32    -- height
+        globals.ui.logo,
+        64 * 3,   -- width
+        64 * 3    -- height
     )
-    local discordIconTemplate = ui.definitions.wrapEntityInsideObjectElement(discordIcon)
-    
-    local discordRow = UIElementTemplateNodeBuilder.create()
-        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-        :addConfig(
-            UIConfigBuilder.create()
-                :addColor(util.getColor("purple_slate"))  -- Resurrect 64 palette
-                :addEmboss(2.0)
-                :addMinWidth(500) -- minimum width of the button
-                :addButtonCallback(function ()
-                    playSoundEffect("effects", "button-click") -- play button click sound
-                    -- Open the Discord link
-                    record_telemetry("discord_button_clicked", { scene = "main_menu" })
-                    OpenURL("https://discord.gg/rp6yXxKu5z")
-                end)
-                :addShadow(true)
-                :addMinWidth(500) -- minimum width of the button
-                :addHover(true) -- needed for button effect
-                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
-                :build()
-        )
-        :addChild(discordIconTemplate)
-        :addChild(feedbackText)
-        :build()
-        
-    -- bluesky row
-    local blueskyIcon = animation_system.createAnimatedObjectWithTransform(
-        "bluesky_icon_anim", -- animation ID
-        false             -- use animation, not sprite id
-    )
-    local blueskyIconTemplate = ui.definitions.wrapEntityInsideObjectElement(blueskyIcon)
-    animation_system.resizeAnimationObjectsInEntityToFit(
-        blueskyIcon,
-        32,   -- width
-        32    -- height
-    )
-    
-    local blueskyText = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("ui.start_game_follow") end,  -- initial text
-        30,                                 -- font size
-        "color=pastel_pink"                       -- animation spec
-    )
-    
-    local blueskyRow = UIElementTemplateNodeBuilder.create()
-        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-        :addConfig(
-            UIConfigBuilder.create()
-                :addColor(util.getColor("purple_slate"))  -- Resurrect 64 palette
-                :addEmboss(2.0)
-                :addButtonCallback(function ()
-                    playSoundEffect("effects", "button-click") -- play button click sound
-                    -- Open the Bluesky link
-                    record_telemetry("follow_button_clicked", { scene = "main_menu", platform = "bluesky" })
-                    OpenURL("https://bsky.app/profile/chugget.itch.io")
-                end)
-                :addShadow(true)
-                :addHover(true) -- needed for button effect
-                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
-                :build()
-        )
-        :addChild(blueskyText)
-        :addChild(blueskyIconTemplate)
-        :build()
-        
-    local inputTextElement = UIElementTemplateNodeBuilder.create()
-        :addType(UITypeEnum.INPUT_TEXT)
-        :addConfig(
-            UIConfigBuilder.create()
-                :addColor(util.getColor("dark_lavender"))  -- Resurrect 64 palette
-                :addEmboss(2.0)
-                :addShadow(true)
-                :addMinHeight(50) -- minimum height of the input text
-                :addMinWidth(300) -- minimum width of the input text
-                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
-                :build()
-        )
-    :build()
+    -- Position: centered horizontally, positioned above menu area
+    local logoTransform = component_cache.get(globals.ui.logo, Transform)
+    local logoBaseY = screenH * 0.20  -- Position in upper portion of screen
+    logoTransform.actualX = screenW / 2 - logoTransform.actualW / 2
+    logoTransform.actualY = logoBaseY
 
-    local inputTextRow = UIElementTemplateNodeBuilder.create()
-        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-        :addConfig(
-            UIConfigBuilder.create()
-                :addColor(util.getColor("dark_lavender"))  -- Resurrect 64 palette
-                :addEmboss(2.0)
-                :build()
-        )
-    :addChild(inputTextElement)
-    :build()
-    
-    -- create animation entity for discord
-        
-    local startMenuRoot = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.SCROLL_PANE)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("blackberry"))  -- Resurrect 64 palette
-            :addShadow(true)
-            :addHeight(200)
-            :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(startButtonTemplate)
-    :addChild(discordRow)
-    :addChild(blueskyRow)
-    :addChild(inputTextRow)
-    :build()
-    
-    
-    -- new uibox for the main menu
-    mainMenuEntities.main_menu_uibox = ui.box.Initialize({x = 350, y = globals.screenHeight()}, startMenuRoot)
-    ui.box.set_draw_layer(mainMenuEntities.main_menu_uibox, "ui")
-    
-    -- center the ui box X-axi
-    local mainMenuTransform = component_cache.get(mainMenuEntities.main_menu_uibox, Transform)
-    mainMenuTransform.actualX = globals.screenWidth() / 2 - mainMenuTransform.actualW / 2
-    mainMenuTransform.actualY = globals.screenHeight() / 2 
-    
-    -- button text
-    local languageText = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("ui.switch_language") end,  -- initial text
-        15.0,                                 -- font size
-        "pulse=0.9,1.1"                       -- animation spec
-    )
-    local languageButtonTemplate = UIElementTemplateNodeBuilder.create()
-        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-        :addConfig(
-            UIConfigBuilder.create()
-                :addColor(util.getColor("green_jade"))  -- Resurrect 64 palette
-                :addEmboss(2.0)
-                :addShadow(true)
-                :addHover(true) -- needed for button effect
-                :addButtonCallback(function ()
-                    playSoundEffect("effects", "button-click") -- play button click sound
-            -- Switch the language
-            if (localization.getCurrentLanguage() == "en_us") then
-                record_telemetry("language_changed", { from = "en_us", to = "ko_kr", session_id = telemetry_session_id() })
-                localization.setCurrentLanguage("ko_kr")
-            else
-                record_telemetry("language_changed", { from = "ko_kr", to = "en_us", session_id = telemetry_session_id() })
-                localization.setCurrentLanguage("en_us")
+    -- Logo bob animation (subtle float effect per spec)
+    local LOGO_BOB_HEIGHT = 8   -- pixels
+    local LOGO_BOB_SPEED = 2    -- oscillations per second
+
+    timer.every(
+        0.05, -- 20fps update for smooth animation
+        function()
+            if not globals.ui.logo or not entity_cache.valid(globals.ui.logo) then
+                timer.cancel("logo_text_pulse")  -- Stop timer when entity is invalid
+                return
             end
-        end)
-                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
-                :build()
-        )
-        :addChild(languageText)
-        :build()
+            local transformComp = component_cache.get(globals.ui.logo, Transform)
+            if not transformComp then
+                timer.cancel("logo_text_pulse")  -- Stop timer when component missing
+                return
+            end
+            -- Use menu elapsed time for animation to pause with the game
+            local time = globals.main_menu_elapsed_time or 0
+            local bobOffset = math.sin(time * LOGO_BOB_SPEED) * LOGO_BOB_HEIGHT
+            transformComp.actualY = logoBaseY + bobOffset
+        end,
+        0, -- infinite repetitions
+        true, -- start immediately
+        nil, -- no "after" callback
+        "logo_text_pulse",
+        MAIN_MENU_TIMER_GROUP
+    )
 
-    -- new root
-    local languageButtonRoot = UIElementTemplateNodeBuilder.create()
-        :addType(UITypeEnum.ROOT)
-        :addConfig(
-            UIConfigBuilder.create()
-                :addColor(util.getColor("deep_teal"))  -- Resurrect 64 palette
-                :addShadow(true)
-                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
-                :addInitFunc(function(registry, entity)
-                    -- something init-related here
-                end)
-                :build()
-        )
-        :addChild(languageButtonTemplate)
-        :build()
-    -- new uibox for the language button
-    mainMenuEntities.language_button_uibox = ui.box.Initialize({x = 350, y = globals.screenHeight()}, languageButtonRoot)
-    ui.box.set_draw_layer(mainMenuEntities.language_button_uibox, "ui")
-    
-    -- put in the bottom right corner
-    local languageButtonTransform = component_cache.get(mainMenuEntities.language_button_uibox, Transform)
-    languageButtonTransform.actualX = globals.screenWidth() - languageButtonTransform.actualW - 20
-    languageButtonTransform.actualY = globals.screenHeight() - languageButtonTransform.actualH - 20
-
+    -- REMOVED: Old colored button panels (replaced by MainMenuButtons above)
+    -- Corner buttons (icon-only with scale hover, per spec)
     PatchNotesModal.init()
-    createPatchNotesButton()
+    createPatchNotesButton()       -- bottom-left
+    createLanguageCornerButton()   -- bottom-right
     createTabDemo()
     createInventoryTestButton()
+
+    log_debug("[initMainMenu] Main menu initialized with minimalist UI")
 end
 
 function createInventoryTestButton()
@@ -844,28 +562,47 @@ end
 
 function createPatchNotesButton()
     local dsl = require("ui.ui_syntax_sugar")
-    
+    local ui_scale = require("ui.ui_scale")
+
     local hasUnread = PatchNotesModal.hasUnread()
-    
-    -- Use dsl.strict.button which properly handles click via buttonCallback
+    local iconSize = ui_scale.ui(32)
+    local HOVER_SCALE = 1.15  -- Per spec: simple scale up
+
+    -- Icon-only button with scale hover effect
     local buttonDef = dsl.strict.root {
         config = {
-            color = util.getColor("gray"),
-            padding = 8,
-            emboss = 2,
+            color = "transparent",  -- No background per spec
+            padding = ui_scale.ui(8),
+            hover = true,
+            buttonCallback = function()
+                if playSoundEffect then
+                    playSoundEffect("effects", "button-click")
+                end
+                PatchNotesModal.open()
+            end,
+            initFunc = function(reg, entity)
+                -- Set up hover handlers for scale effect
+                local go = component_cache.get(entity, GameObject)
+                if go and go.methods then
+                    go.methods.onHover = function()
+                        local transform = component_cache.get(entity, Transform)
+                        if transform then
+                            transform.scale = HOVER_SCALE
+                        end
+                    end
+                    go.methods.onStopHover = function()
+                        local transform = component_cache.get(entity, Transform)
+                        if transform then
+                            transform.scale = 1.0
+                        end
+                    end
+                end
+            end,
         },
         children = {
-            dsl.strict.button("Notes", {
-                fontSize = 14,
-                color = "transparent", -- Use transparent so root color shows through
-                textColor = "white",
-                shadow = true,
-                onClick = function()
-                    if playSoundEffect then
-                        playSoundEffect("effects", "button-click")
-                    end
-                    PatchNotesModal.open()
-                end
+            dsl.strict.text("📋", {  -- Icon placeholder for patch notes
+                fontSize = iconSize,
+                color = "white",
             })
         }
     }
@@ -877,8 +614,70 @@ function createPatchNotesButton()
         100
     )
     ui.box.set_draw_layer(mainMenuEntities.patch_notes_button, "ui")
-    
+
     mainMenuEntities._patchNotesHasUnread = hasUnread
+end
+
+function createLanguageCornerButton()
+    local dsl = require("ui.ui_syntax_sugar")
+    local ui_scale = require("ui.ui_scale")
+
+    local iconSize = ui_scale.ui(32)
+    local HOVER_SCALE = 1.15  -- Per spec: simple scale up
+
+    -- Icon-only button with scale hover effect (bottom-right corner)
+    local buttonDef = dsl.strict.root {
+        config = {
+            color = "transparent",  -- No background per spec
+            padding = ui_scale.ui(8),
+            hover = true,
+            buttonCallback = function()
+                if playSoundEffect then
+                    playSoundEffect("effects", "button-click")
+                end
+                -- Toggle language
+                if localization.getCurrentLanguage() == "en_us" then
+                    record_telemetry("language_changed", { from = "en_us", to = "ko_kr", session_id = telemetry_session_id() })
+                    localization.setCurrentLanguage("ko_kr")
+                else
+                    record_telemetry("language_changed", { from = "ko_kr", to = "en_us", session_id = telemetry_session_id() })
+                    localization.setCurrentLanguage("en_us")
+                end
+            end,
+            initFunc = function(reg, entity)
+                -- Set up hover handlers for scale effect
+                local go = component_cache.get(entity, GameObject)
+                if go and go.methods then
+                    go.methods.onHover = function()
+                        local transform = component_cache.get(entity, Transform)
+                        if transform then
+                            transform.scale = HOVER_SCALE
+                        end
+                    end
+                    go.methods.onStopHover = function()
+                        local transform = component_cache.get(entity, Transform)
+                        if transform then
+                            transform.scale = 1.0
+                        end
+                    end
+                end
+            end,
+        },
+        children = {
+            dsl.strict.text("🌐", {  -- Icon placeholder for language
+                fontSize = iconSize,
+                color = "white",
+            })
+        }
+    }
+
+    mainMenuEntities.language_button_uibox = dsl.spawn(
+        { x = globals.screenWidth() - 60, y = globals.screenHeight() - 60 },
+        buttonDef,
+        "ui",
+        100
+    )
+    ui.box.set_draw_layer(mainMenuEntities.language_button_uibox, "ui")
 end
 
 function drawPatchNotesBadge()
@@ -961,9 +760,11 @@ function clearMainMenu()
     -- RenderGroupsTest.cleanup()
     InventoryGridDemo.cleanup()
 
-    if mainMenuEntities.special_item_1 then mainMenuEntities.special_item_1:destroy(); mainMenuEntities.special_item_1 = nil end
-    if mainMenuEntities.special_item_2 then mainMenuEntities.special_item_2:destroy(); mainMenuEntities.special_item_2 = nil end
-    if mainMenuEntities.special_item_3 then mainMenuEntities.special_item_3:destroy(); mainMenuEntities.special_item_3 = nil end
+    -- Clean up the new MainMenuButtons module
+    if mainMenuEntities.mainMenuButtons then
+        mainMenuEntities.mainMenuButtons.destroy()
+        mainMenuEntities.mainMenuButtons = nil
+    end
 
     for _, entity in pairs(mainMenuEntities) do
         if type(entity) == "number" and registry:valid(entity) and registry:has(entity, Transform) then
@@ -1344,6 +1145,17 @@ function main.update(dt)
         PatchNotesModal.update(dt)
         PatchNotesModal.draw()
         drawPatchNotesBadge()
+
+        -- Keyboard navigation for main menu buttons
+        if mainMenuEntities.mainMenuButtons and IsKeyPressed then
+            if IsKeyPressed(KEY_UP) or IsKeyPressed(KEY_W) then
+                mainMenuEntities.mainMenuButtons.handleKeyDown("UP")
+            elseif IsKeyPressed(KEY_DOWN) or IsKeyPressed(KEY_S) then
+                mainMenuEntities.mainMenuButtons.handleKeyDown("DOWN")
+            elseif IsKeyPressed(KEY_ENTER) or IsKeyPressed(KEY_SPACE) then
+                mainMenuEntities.mainMenuButtons.handleKeyDown("ENTER")
+            end
+        end
     end
 
     if isPaused then

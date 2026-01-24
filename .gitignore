@@ -2655,3 +2655,4 @@ assets/all_uuids.json*
 tasks_backup/prd.json
 debug.log
 build-luajit/
+imgui.ini

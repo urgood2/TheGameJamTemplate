@@ -247,15 +247,29 @@ end
 function UIDecorations.updatePositions(entity)
     local decor = getDecorations(entity)
     if not decor then return end
-    
+
     local transform = component_cache.get(entity, Transform)
     if not transform then return end
-    
+
     local elementW = transform.actualW or transform.w or 0
     local elementH = transform.actualH or transform.h or 0
-    local elementX = transform.actualX or transform.visualX or 0
-    local elementY = transform.actualY or transform.visualY or 0
-    
+
+    -- Compute absolute screen position using parent + offset
+    -- Use visualX/Y (animated position) to sync with spring animation, fallback to actualX/Y
+    local elementX, elementY
+    local role = _G.InheritedProperties and component_cache.get(entity, _G.InheritedProperties)
+    if role and role.master and role.offset then
+        local masterTransform = component_cache.get(role.master, Transform)
+        if masterTransform then
+            elementX = (masterTransform.visualX or masterTransform.actualX or 0) + (role.offset.x or 0)
+            elementY = (masterTransform.visualY or masterTransform.actualY or 0) + (role.offset.y or 0)
+        end
+    end
+    if not elementX then
+        elementX = transform.visualX or transform.actualX or 0
+        elementY = transform.visualY or transform.actualY or 0
+    end
+
     -- Update badge positions
     for _, badge in ipairs(decor.badges) do
         if badge.entity and registry:valid(badge.entity) then
@@ -310,14 +324,29 @@ end
 function UIDecorations.draw(entity, baseZ)
     local decor = getDecorations(entity)
     if not decor then return end
-    
+
     local transform = component_cache.get(entity, Transform)
     if not transform then return end
-    
+
     local elementW = transform.actualW or transform.w or 0
     local elementH = transform.actualH or transform.h or 0
-    local elementX = transform.actualX or transform.visualX or 0
-    local elementY = transform.actualY or transform.visualY or 0
+
+    -- Compute absolute screen position using parent + offset
+    -- Use visualX/Y (animated position) to sync with spring animation, fallback to actualX/Y
+    local elementX, elementY
+    local role = _G.InheritedProperties and component_cache.get(entity, _G.InheritedProperties)
+    if role and role.master and role.offset then
+        local masterTransform = component_cache.get(role.master, Transform)
+        if masterTransform then
+            elementX = (masterTransform.visualX or masterTransform.actualX or 0) + (role.offset.x or 0)
+            elementY = (masterTransform.visualY or masterTransform.actualY or 0) + (role.offset.y or 0)
+        end
+    end
+    -- Fallback to entity's own position if no parent relationship
+    if not elementX then
+        elementX = transform.visualX or transform.actualX or 0
+        elementY = transform.visualY or transform.actualY or 0
+    end
     
     baseZ = baseZ or 0
     
@@ -432,10 +461,14 @@ function UIDecorations.draw(entity, baseZ)
     
     for _, overlay in ipairs(decor.customOverlays) do
         local visible = true
-        if overlay.visible then
-            visible = overlay.visible(entity)
+        if overlay.visible ~= nil then
+            if type(overlay.visible) == "function" then
+                visible = overlay.visible(entity)
+            else
+                visible = overlay.visible
+            end
         end
-        
+
         if visible and overlay.onDraw then
             overlay.onDraw(entity, elementX, elementY, elementW, elementH, baseZ + overlay.z)
         end

@@ -87,6 +87,7 @@ local COLUMN_SPACING = UI(12)
 local STATS_BOX_WIDTH = UI(190)
 local STATS_ICON_SIZE = UI(48)
 local STATS_ICON_SPRITE = "wand_test.png"
+local TRIGGER_BACKDROP_SPRITE = "trigger-grid-backdrop.png"
 
 --------------------------------------------------------------------------------
 -- MODULE STATE (single source of truth)
@@ -904,6 +905,16 @@ local function createTriggerGridDefinition(wandDef)
         snapVisual = false,
     }
 
+    local slotsConfig = {
+        [1] = {
+            decorations = {
+                -- zOffset = 0 renders BELOW slotSprite (decoration base is shifted down)
+                -- zOffset = 1 renders ABOVE slotSprite
+                { sprite = TRIGGER_BACKDROP_SPRITE, position = "center", zOffset = 0 },
+            },
+        },
+    }
+
     -- Add alignment flag if available
     if _G.AlignmentFlag then
         local bit_ok, bit = pcall(require, "bit_compat")
@@ -963,6 +974,7 @@ local function createTriggerGridDefinition(wandDef)
             slotSize = { w = SLOT_WIDTH, h = SLOT_HEIGHT },
             slotSpacing = SLOT_SPACING,
             config = gridConfig,
+            slots = slotsConfig,
             canAcceptItem = canAcceptTrigger,
             onSlotChange = onTriggerSlotChange,
             onSlotClick = onTriggerSlotClick,
@@ -977,6 +989,7 @@ local function createTriggerGridDefinition(wandDef)
             slotSize = { w = SLOT_WIDTH, h = SLOT_HEIGHT },
             slotSpacing = SLOT_SPACING,
             config = gridConfig,
+            slots = slotsConfig,
             canAcceptItem = canAcceptTrigger,
             onSlotChange = onTriggerSlotChange,
             onSlotClick = onTriggerSlotClick,
@@ -1116,6 +1129,10 @@ local function cleanupGrid(gridEntity, gridId)
     -- STEP 1: Unregister from drag feedback system
     if init_ok and InventoryGridInit and InventoryGridInit.unregisterGridForDragFeedback then
         InventoryGridInit.unregisterGridForDragFeedback(gridEntity)
+    end
+
+    if init_ok and InventoryGridInit and InventoryGridInit.unregisterSlotDecorations then
+        InventoryGridInit.unregisterSlotDecorations(gridEntity)
     end
 
     -- STEP 2: Clean up slot metadata
@@ -2587,7 +2604,6 @@ function WandPanel.destroy()
 
     -- Cleanup signals
     cleanupSignalHandlers()
-
     -- Kill all timers in group
     local ok, timer = pcall(require, "core.timer")
     if ok and timer and timer.kill_group then

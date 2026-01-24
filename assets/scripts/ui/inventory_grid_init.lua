@@ -21,6 +21,7 @@ local z_orders = require("core.z_orders")
 local transfer = require("core.grid_transfer")
 local itemRegistry = require("core.item_location_registry")
 local UIDecorations = require("ui.ui_decorations")
+local ui_scale = require("ui.ui_scale")
 
 --------------------------------------------------------------------------------
 -- Z-Order constants for drag operations
@@ -34,6 +35,219 @@ local DRAG_Z = z_orders.ui_tooltips + 500         -- Dragged cards (above everyt
 -- Drag state tracking for return-to-origin behavior
 --------------------------------------------------------------------------------
 local _dragState = {}  -- [entityKey] = { originSlot, originGrid, originX, originY }
+
+--------------------------------------------------------------------------------
+-- Slot decoration rendering (DSL-configurable)
+--------------------------------------------------------------------------------
+
+local _decoratedGrids = {}     -- [gridKey] = { entity, slots = {}, overlayIds = {} }
+local _decorationsTimerStarted = false
+local _spriteSizeCache = {}
+
+local function getSpriteSize(spriteName)
+    if not spriteName then return nil, nil end
+
+    local cached = _spriteSizeCache[spriteName]
+    if cached ~= nil then
+        if cached then
+            return cached.w, cached.h
+        end
+        return nil, nil
+    end
+
+    if init and init.getSpriteFrame and globals and globals.g_ctx then
+        local frame = init.getSpriteFrame(spriteName, globals.g_ctx)
+        if frame and frame.frame and frame.frame.width and frame.frame.height then
+            local size = { w = frame.frame.width, h = frame.frame.height }
+            _spriteSizeCache[spriteName] = size
+            return size.w, size.h
+        end
+    end
+
+    _spriteSizeCache[spriteName] = false
+    return nil, nil
+end
+
+local function resolveVector2(value)
+    if not value then return 0, 0 end
+    if value.x ~= nil or value.y ~= nil then
+        return value.x or 0, value.y or 0
+    end
+    return value[1] or 0, value[2] or 0
+end
+
+local function resolveScale(value)
+    if not value then return 1, 1 end
+    if type(value) == "number" then
+        return value, value
+    end
+    if value.x ~= nil or value.y ~= nil then
+        return value.x or 1, value.y or 1
+    end
+    return value[1] or 1, value[2] or 1
+end
+
+local function resolveTint(tint, opacity)
+    local color = tint
+    if type(color) == "string" then
+        if util and util.getColor then
+            color = util.getColor(color)
+        end
+    end
+
+    if not color and Col then
+        color = Col(255, 255, 255, 255)
+    end
+
+    if color and opacity and opacity < 1 and Col then
+        local r = color.r or 255
+        local g = color.g or 255
+        local b = color.b or 255
+        local a = color.a or 255
+        local alpha = math.floor(a * opacity)
+        color = Col(r, g, b, alpha)
+    end
+
+    return color
+end
+
+local function resolveAnchor(position, elementW, elementH)
+    local anchorX, anchorY = 0, 0
+    local pivotX, pivotY = 0, 0
+    local pos = position or "top_left"
+
+    if pos == "top_center" then
+        anchorX = elementW * 0.5
+        pivotX = 0.5
+    elseif pos == "top_right" then
+        anchorX = elementW
+        pivotX = 1
+    elseif pos == "middle_left" or pos == "center_left" then
+        anchorY = elementH * 0.5
+        pivotY = 0.5
+    elseif pos == "center" then
+        anchorX = elementW * 0.5
+        anchorY = elementH * 0.5
+        pivotX = 0.5
+        pivotY = 0.5
+    elseif pos == "middle_right" or pos == "center_right" then
+        anchorX = elementW
+        anchorY = elementH * 0.5
+        pivotX = 1
+        pivotY = 0.5
+    elseif pos == "bottom_left" then
+        anchorY = elementH
+        pivotY = 1
+    elseif pos == "bottom_center" then
+        anchorX = elementW * 0.5
+        anchorY = elementH
+        pivotX = 0.5
+        pivotY = 1
+    elseif pos == "bottom_right" then
+        anchorX = elementW
+        anchorY = elementH
+        pivotX = 1
+        pivotY = 1
+    end
+
+    return anchorX, anchorY, pivotX, pivotY
+end
+
+local function buildSlotDecorationDraw(decorations)
+    local items = {}
+    if type(decorations) == "table" then
+        for _, decor in ipairs(decorations) do
+            if decor and decor.sprite then
+                table.insert(items, {
+                    sprite = decor.sprite,
+                    position = decor.position,
+                    offset = decor.offset,
+                    scale = decor.scale,
+                    opacity = decor.opacity,
+                    tint = decor.tint,
+                    zOffset = decor.zOffset or 0,
+                })
+            end
+        end
+    end
+
+    return function(_, x, y, w, h, z)
+        if #items == 0 then return end
+        local drawLayer = layers and (layers.sprites or layers.ui)
+        if not drawLayer or not command_buffer then return end
+        local space = layer and layer.DrawCommandSpace and layer.DrawCommandSpace.Screen
+
+        for _, decor in ipairs(items) do
+            local spriteW, spriteH = getSpriteSize(decor.sprite)
+            local baseW = spriteW or w
+            local baseH = spriteH or h
+            local scaleX, scaleY = resolveScale(decor.scale)
+            local spriteScale = ui_scale.SPRITE_SCALE
+            local drawW = baseW * scaleX * spriteScale
+            local drawH = baseH * scaleY * spriteScale
+            local offsetX, offsetY = resolveVector2(decor.offset)
+            local anchorX, anchorY, pivotX, pivotY = resolveAnchor(decor.position, w, h)
+            local drawX = x + anchorX + offsetX - (pivotX * drawW)
+            local drawY = y + anchorY + offsetY - (pivotY * drawH)
+            local tint = resolveTint(decor.tint, decor.opacity)
+            local zToUse = z + (decor.zOffset or 0)
+
+            if command_buffer.queueDrawSpriteTopLeft then
+                command_buffer.queueDrawSpriteTopLeft(drawLayer, function(c)
+                    c.spriteName = decor.sprite
+                    c.x = drawX
+                    c.y = drawY
+                    c.dstW = drawW
+                    c.dstH = drawH
+                    if tint then
+                        c.tint = tint
+                    end
+                end, zToUse, space)
+            elseif command_buffer.queueDrawSprite then
+                command_buffer.queueDrawSprite(drawLayer, function(c)
+                    c.sprite = decor.sprite
+                    c.x = drawX
+                    c.y = drawY
+                    c.w = drawW
+                    c.h = drawH
+                end, zToUse, space)
+            end
+        end
+    end
+end
+
+local function ensureSlotDecorationTimer()
+    if _decorationsTimerStarted then return end
+    local ok, timer = pcall(require, "core.timer")
+    if not ok or not timer or not timer.run_every_render_frame then return end
+
+    _decorationsTimerStarted = true
+    timer.run_every_render_frame(function()
+        if not next(_decoratedGrids) then return end
+        if not registry or not registry.valid then return end
+
+        for gridKey, info in pairs(_decoratedGrids) do
+            local gridEntity = info.entity
+            if not gridEntity or not registry:valid(gridEntity) then
+                _decoratedGrids[gridKey] = nil
+            else
+                for _, slotEntity in pairs(info.slots) do
+                    if slotEntity and registry:valid(slotEntity) then
+                        local baseZ = 0
+                        if layer_order_system and layer_order_system.getZIndex then
+                            local slotZ = layer_order_system.getZIndex(slotEntity)
+                            if slotZ and slotZ > 0 then
+                                baseZ = slotZ
+                            end
+                        end
+                        -- Render at exact baseZ - same z as slot, draw order determines layering
+                        UIDecorations.draw(slotEntity, baseZ)
+                    end
+                end
+            end
+        end
+    end, nil, "inventory_grid_slot_decorations", "inventory_grid")
+end
 
 --------------------------------------------------------------------------------
 -- Check if entity is an inventory grid and initialize it
@@ -77,6 +291,9 @@ function InventoryGridInit.initializeIfGrid(boxEntity, gridId)
     
     -- Find and register slot entities
     InventoryGridInit.registerSlotEntities(boxEntity, gridId, rows, cols)
+
+    -- Register slot decorations (if configured via DSL)
+    InventoryGridInit.registerSlotDecorations(boxEntity, gridId, rows, cols, gridData)
     
     grid.setCallbacks(boxEntity, {
         onSlotChange = gridData.onSlotChange,
@@ -119,6 +336,70 @@ function InventoryGridInit.registerSlotEntities(gridEntity, gridId, rows, cols)
             log_warn("[InventoryGridInit] Could not find slot entity: " .. slotId)
         end
     end
+end
+
+--------------------------------------------------------------------------------
+-- Slot decoration support (DSL: slotDecorations / slotConfig.decorations)
+--------------------------------------------------------------------------------
+
+function InventoryGridInit.registerSlotDecorations(gridEntity, gridId, rows, cols, gridData)
+    if not gridEntity or not registry:valid(gridEntity) then
+        return
+    end
+
+    local gridKey = tostring(gridEntity)
+    InventoryGridInit.unregisterSlotDecorations(gridEntity)
+
+    local slotsConfig = gridData and gridData.slotsConfig or {}
+    local gridConfig = gridData and gridData.config or {}
+    local defaultDecorations = gridConfig.slotDecorations
+
+    local slotEntries = {}
+    local overlayIds = {}
+    local slotCount = rows * cols
+
+    for i = 1, slotCount do
+        local slotConfig = slotsConfig[i] or {}
+        local decorations = slotConfig.decorations or defaultDecorations
+        if decorations and #decorations > 0 then
+            local slotEntity = grid.getSlotEntity(gridEntity, i)
+            if slotEntity and registry:valid(slotEntity) then
+                local overlayId = UIDecorations.addCustomOverlay(slotEntity, {
+                    id = "grid_slot_decor_" .. gridKey .. "_" .. i,
+                    z = 0,
+                    visible = true,
+                    onDraw = buildSlotDecorationDraw(decorations),
+                })
+                slotEntries[i] = slotEntity
+                overlayIds[i] = overlayId
+            end
+        end
+    end
+
+    if next(slotEntries) then
+        _decoratedGrids[gridKey] = {
+            entity = gridEntity,
+            slots = slotEntries,
+            overlayIds = overlayIds,
+        }
+        ensureSlotDecorationTimer()
+    end
+end
+
+function InventoryGridInit.unregisterSlotDecorations(gridEntity)
+    if not gridEntity then return end
+    local gridKey = tostring(gridEntity)
+    local info = _decoratedGrids[gridKey]
+    if not info then return end
+
+    for slotIndex, overlayId in pairs(info.overlayIds or {}) do
+        local slotEntity = info.slots and info.slots[slotIndex]
+        if slotEntity and registry:valid(slotEntity) then
+            UIDecorations.remove(slotEntity, overlayId)
+        end
+    end
+
+    _decoratedGrids[gridKey] = nil
 end
 
 --------------------------------------------------------------------------------

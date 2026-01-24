@@ -257,6 +257,83 @@ describe("Skill Confirmation Modal", function()
             expect(SkillSystem.has_skill(player, "kindle")).to_be(false)
         end)
     end)
+
+    --------------------------------------------------------------------------------
+    -- SIGNAL EMISSION
+    --------------------------------------------------------------------------------
+
+    describe("Signal Emission", function()
+        local SkillSystem = require("core.skill_system")
+
+        local function createTestPlayer(skillPoints)
+            local player = { skill_points = skillPoints or 10 }
+            SkillSystem.init(player)
+            return player
+        end
+
+        it("emits skill_learn_requested on confirm", function()
+            -- Mock signal module
+            local emittedEvents = {}
+            package.loaded["external.hump.signal"] = {
+                emit = function(event, data)
+                    table.insert(emittedEvents, { event = event, data = data })
+                end,
+            }
+
+            -- Reload module to pick up mock
+            package.loaded["ui.skill_confirmation_modal"] = nil
+            local ModalFresh = require("ui.skill_confirmation_modal")
+
+            local player = createTestPlayer(10)
+            ModalFresh.show(player, "kindle")
+            ModalFresh.confirm()
+
+            local found = false
+            for _, e in ipairs(emittedEvents) do
+                if e.event == "skill_learn_requested" then
+                    found = true
+                    expect(e.data.skill_id).to_be("kindle")
+                    break
+                end
+            end
+            expect(found).to_be(true)
+
+            -- Cleanup
+            ModalFresh._reset()
+            package.loaded["external.hump.signal"] = nil
+        end)
+
+        it("emits skill_modal_closed on hide", function()
+            -- Mock signal module
+            local emittedEvents = {}
+            package.loaded["external.hump.signal"] = {
+                emit = function(event, data)
+                    table.insert(emittedEvents, { event = event, data = data })
+                end,
+            }
+
+            -- Reload module to pick up mock
+            package.loaded["ui.skill_confirmation_modal"] = nil
+            local ModalFresh = require("ui.skill_confirmation_modal")
+
+            local player = createTestPlayer(10)
+            ModalFresh.show(player, "kindle")
+            ModalFresh.hide()
+
+            local found = false
+            for _, e in ipairs(emittedEvents) do
+                if e.event == "skill_modal_closed" then
+                    found = true
+                    break
+                end
+            end
+            expect(found).to_be(true)
+
+            -- Cleanup
+            ModalFresh._reset()
+            package.loaded["external.hump.signal"] = nil
+        end)
+    end)
 end)
 
 -- Run tests if executed directly

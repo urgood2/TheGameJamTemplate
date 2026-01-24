@@ -247,6 +247,75 @@ describe("Skills Panel Module", function()
             expect(display).to_contain("9")
         end)
     end)
+
+    --------------------------------------------------------------------------------
+    -- SIGNAL EMISSION
+    --------------------------------------------------------------------------------
+
+    describe("Signal Emission", function()
+        it("emits skills_panel_opened when opening", function()
+            -- Mock signal module
+            local emittedEvents = {}
+            package.loaded["external.hump.signal"] = {
+                emit = function(event, data)
+                    table.insert(emittedEvents, { event = event, data = data })
+                end,
+                register = function() end,
+                remove = function() end,
+            }
+
+            -- Reload module to pick up mock
+            package.loaded["ui.skills_panel"] = nil
+            local SkillsPanelFresh = require("ui.skills_panel")
+
+            SkillsPanelFresh.open()
+            local found = false
+            for _, e in ipairs(emittedEvents) do
+                if e.event == "skills_panel_opened" then
+                    found = true
+                    break
+                end
+            end
+            expect(found).to_be(true)
+
+            -- Cleanup
+            SkillsPanelFresh._reset()
+            package.loaded["external.hump.signal"] = nil
+        end)
+
+        it("emits skills_panel_closed when closing", function()
+            -- Mock signal module
+            local emittedEvents = {}
+            package.loaded["external.hump.signal"] = {
+                emit = function(event, data)
+                    table.insert(emittedEvents, { event = event, data = data })
+                end,
+                register = function() end,
+                remove = function() end,
+            }
+
+            -- Reload module to pick up mock
+            package.loaded["ui.skills_panel"] = nil
+            local SkillsPanelFresh = require("ui.skills_panel")
+
+            SkillsPanelFresh.open()
+            emittedEvents = {}  -- Clear open event
+            SkillsPanelFresh.close()
+
+            local found = false
+            for _, e in ipairs(emittedEvents) do
+                if e.event == "skills_panel_closed" then
+                    found = true
+                    break
+                end
+            end
+            expect(found).to_be(true)
+
+            -- Cleanup
+            SkillsPanelFresh._reset()
+            package.loaded["external.hump.signal"] = nil
+        end)
+    end)
 end)
 
 -- Run tests if executed directly

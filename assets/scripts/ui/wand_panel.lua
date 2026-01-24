@@ -192,8 +192,15 @@ end
 
 --- Get tab marker offsets relative to panel
 local function getTabMarkerOffsets()
-    local offsetX = math.floor((state.panelWidth - TAB_MARKER_WIDTH) / 2)
-    local offsetY = math.max(0, (state.panelHeight - TAB_MARKER_HEIGHT - TAB_MARKER_MARGIN))
+    local panelH = state.panelHeight
+    if not panelH or panelH <= 0 then
+        local _, fallbackH = getPanelDimensions()
+        panelH = fallbackH
+    end
+
+    local overlap = TAB_MARKER_MARGIN
+    local offsetX = TAB_MARKER_MARGIN
+    local offsetY = math.max(0, math.floor((panelH or 0)))
     return offsetX, offsetY
 end
 

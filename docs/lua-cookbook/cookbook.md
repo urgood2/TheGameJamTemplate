@@ -105,6 +105,7 @@ local component_cache, entity_cache, timer, signal = imports.core()
 | Draw text | \pageref{recipe:draw-text} |
 | Spawn dynamic text (damage numbers) | \pageref{recipe:text-builder} |
 | Flash entity on hit | \pageref{recipe:hitfx} |
+| Play animated GIF (tutorials) | \pageref{recipe:gif-system} |
 | **Particles** | |
 | Define particle effect | \pageref{recipe:particle-builder} |
 | Configure emission (where/how) | \pageref{recipe:particle-emission} |

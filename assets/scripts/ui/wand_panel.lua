@@ -73,7 +73,7 @@ local ACTION_GRID_COLS = 4  -- Fixed column count for action grids
 
 local TAB_WIDTH = UI(48)
 local TAB_HEIGHT = UI(64)
-local TAB_SPACING = UI(4)
+local TAB_SPACING = UI(1)
 local TAB_CONTAINER_PADDING = UI(4)
 local TAB_GAP = UI(8)
 local TAB_OVERLAP = UI(20)
@@ -1734,11 +1734,13 @@ local function positionTabMarker()
 end
 
 --- Update cached panel dimensions and position (centered at top)
-local function updatePanelPosition(wandDef)
+local function updatePanelPosition(wandDef, opts)
+    opts = opts or {}
+    local useMeasured = opts.useMeasured ~= false
     local screenW = _G.GetScreenWidth and _G.GetScreenWidth() or 1280
     local panelW, panelH = calculatePanelDimensions(wandDef)
 
-    if state.panelEntity and _G.registry and _G.registry.valid and _G.registry:valid(state.panelEntity) then
+    if useMeasured and state.panelEntity and _G.registry and _G.registry.valid and _G.registry:valid(state.panelEntity) then
         local component_cache = _G.component_cache
         if component_cache and component_cache.get then
             local t = component_cache.get(state.panelEntity, _G.Transform)
@@ -2182,8 +2184,6 @@ function WandPanel.selectWand(index)
     if state.initialized then
         local wandDef = state.wandDefs[state.activeWandIndex]
 
-        updatePanelPosition(wandDef)
-
         -- Suspend adapter sync during internal swap
         state.suspendSync = true
 
@@ -2204,6 +2204,9 @@ function WandPanel.selectWand(index)
         -- Inject new grids for active wand
         state.triggerGridEntity = injectTriggerGrid(wandDef)
         state.actionGridEntity = injectActionGrid(wandDef)
+
+        -- Recenter using the calculated size for the new wand before restoring items.
+        updatePanelPosition(wandDef, { useMeasured = false })
 
         state.suspendSync = false
 

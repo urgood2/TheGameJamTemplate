@@ -331,8 +331,9 @@ local function ensureMessageQueueHooks()
             local clamped = math.max(1, math.min(#board_sets, newIndex))
             if clamped ~= current_board_set_index then
                 current_board_set_index = clamped
+                -- Keep all board sets hidden (only wand selector buttons visible)
                 for index, boardSet in ipairs(board_sets) do
-                    toggleBoardSetVisibility(boardSet, index == current_board_set_index)
+                    toggleBoardSetVisibility(boardSet, false)
                 end
             end
         else
@@ -5680,6 +5681,8 @@ function initPlanningPhase()
         boardPadding
     )
 
+    -- Hide ALL board sets (boards and cards) - only wand selector buttons remain visible
+    toggleBoardSetVisibility(set, false)
     toggleBoardSetVisibility(set2, false)
     toggleBoardSetVisibility(set3, false)
 
@@ -7347,13 +7350,9 @@ function cycleBoardSets(amount)
         current_board_set_index = 1
     end
 
-    -- hide all board sets except the current one
+    -- hide ALL board sets (boards and cards hidden, only wand selector buttons visible)
     for index, boardSet in ipairs(board_sets) do
-        if index == current_board_set_index then
-            toggleBoardSetVisibility(boardSet, true)
-        else
-            toggleBoardSetVisibility(boardSet, false)
-        end
+        toggleBoardSetVisibility(boardSet, false)
     end
 
     

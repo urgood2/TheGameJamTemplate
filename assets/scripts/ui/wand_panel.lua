@@ -908,9 +908,8 @@ local function createTriggerGridDefinition(wandDef)
     local slotsConfig = {
         [1] = {
             decorations = {
-                -- zOffset = 0 renders BELOW slotSprite (decoration base is shifted down)
-                -- zOffset = 1 renders ABOVE slotSprite
-                { sprite = TRIGGER_BACKDROP_SPRITE, position = "center", zOffset = 0 },
+                -- zOffset < 0 renders as an underlay (behind slot sprite)
+                { sprite = TRIGGER_BACKDROP_SPRITE, position = "center", zOffset = -1 },
             },
         },
     }

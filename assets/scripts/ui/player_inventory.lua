@@ -490,6 +490,9 @@ local function cleanupGridEntity(gridEntity, tabId)
     if not gridEntity then return end
 
     InventoryGridInit.unregisterGridForDragFeedback(gridEntity)
+    if InventoryGridInit.unregisterSlotDecorations then
+        InventoryGridInit.unregisterSlotDecorations(gridEntity)
+    end
 
     local cfg = TAB_CONFIG[tabId]
     if cfg then

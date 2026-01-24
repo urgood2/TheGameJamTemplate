@@ -1621,6 +1621,7 @@ local _gridRegistry = {}
 ---@class SlotConfig
 ---@field color? string|Color Slot background color (overrides grid default)
 ---@field sprite? string Slot sprite filename (overrides grid default)
+---@field decorations? DecorationConfig[] Optional decoration sprites for this slot
 
 ---@class InventoryGridConfig
 ---@field backgroundColor? string|Color Grid background color
@@ -1628,6 +1629,7 @@ local _gridRegistry = {}
 ---@field slotSprite? string Default slot sprite filename
 ---@field slotEmboss? number Slot emboss depth (default: 1)
 ---@field padding? number Outer padding in pixels (default: 4)
+---@field slotDecorations? DecorationConfig[] Default decorations applied to every slot
 
 ---@class InventoryGridOpts
 ---@field rows? number Number of rows (default: 3)
@@ -1749,6 +1751,11 @@ function dsl.inventoryGrid(opts)
                 slotNodeConfig._borders = { left = 0, top = 0, right = 0, bottom = 0 }
                 slotNodeConfig.color = nil
                 slotNodeConfig.emboss = nil
+            end
+            
+            local slotDecorations = slotConfig.decorations or gridConfig.slotDecorations
+            if slotDecorations and type(slotDecorations) == "table" and next(slotDecorations) then
+                slotNodeConfig._decorations = slotDecorations
             end
             
             local slotNode = def{

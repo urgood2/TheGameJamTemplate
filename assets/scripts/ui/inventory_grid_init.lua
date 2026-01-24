@@ -364,14 +364,17 @@ function InventoryGridInit.registerSlotDecorations(gridEntity, gridId, rows, col
         if decorations and #decorations > 0 then
             local slotEntity = grid.getSlotEntity(gridEntity, i)
             if slotEntity and registry:valid(slotEntity) then
-                local overlayId = UIDecorations.addCustomOverlay(slotEntity, {
-                    id = "grid_slot_decor_" .. gridKey .. "_" .. i,
-                    z = 0,
-                    visible = true,
-                    onDraw = buildSlotDecorationDraw(decorations),
-                })
-                slotEntries[i] = slotEntity
-                overlayIds[i] = overlayId
+                local slotUIConfig = UIConfig and component_cache.get(slotEntity, UIConfig)
+                if not (slotUIConfig and slotUIConfig.decorations) then
+                    local overlayId = UIDecorations.addCustomOverlay(slotEntity, {
+                        id = "grid_slot_decor_" .. gridKey .. "_" .. i,
+                        z = 0,
+                        visible = true,
+                        onDraw = buildSlotDecorationDraw(decorations),
+                    })
+                    slotEntries[i] = slotEntity
+                    overlayIds[i] = overlayId
+                end
             end
         end
     end

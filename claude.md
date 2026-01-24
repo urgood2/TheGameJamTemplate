@@ -4,6 +4,7 @@ This file provides guidance to Claude Code when working with this repository.
 
 ## Workflow Reminders
 
+- **Always show full file paths.** When referencing files, always display the complete absolute path (e.g., `/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/docs/specs/example.md`), not just the relative path.
 - **Always dispatch a new agent for review purposes at the end of a feature.** Use the `superpowers:requesting-code-review` skill.
 - **Save progress before context compaction.** Commit WIP changes, note current task/next steps, push to remote.
 

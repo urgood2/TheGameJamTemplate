@@ -3,7 +3,7 @@
 TEST: Skills Phase 4 - Demo Implementation
 ================================================================================
 TDD tests for Phase 4 requirements:
-1. Skill data definitions (8-10 skills, 2 per element)
+1. Skill data definitions (32 skills, 8 per element)
 2. Skill runtime system (learn skills, apply stat changes)
 3. Skill cleanup on reset
 
@@ -23,14 +23,14 @@ local expect = TestRunner.expect
 describe("Phase 4: Skill Data Definitions", function()
     local Skills = require("data.skills")
 
-    it("has at least 8 skills defined", function()
+    it("has at least 32 skills defined", function()
         local count = 0
         for id, def in pairs(Skills) do
             if type(def) == "table" and def.name then
                 count = count + 1
             end
         end
-        expect(count >= 8).to_be(true)
+        expect(count >= 32).to_be(true)
     end)
 
     it("has fire element skills", function()
@@ -40,7 +40,7 @@ describe("Phase 4: Skill Data Definitions", function()
                 fireSkills[#fireSkills + 1] = id
             end
         end
-        expect(#fireSkills >= 2).to_be(true)
+        expect(#fireSkills >= 8).to_be(true)
     end)
 
     it("has ice element skills", function()
@@ -50,7 +50,7 @@ describe("Phase 4: Skill Data Definitions", function()
                 iceSkills[#iceSkills + 1] = id
             end
         end
-        expect(#iceSkills >= 2).to_be(true)
+        expect(#iceSkills >= 8).to_be(true)
     end)
 
     it("has lightning element skills", function()
@@ -60,7 +60,7 @@ describe("Phase 4: Skill Data Definitions", function()
                 lightningSkills[#lightningSkills + 1] = id
             end
         end
-        expect(#lightningSkills >= 2).to_be(true)
+        expect(#lightningSkills >= 8).to_be(true)
     end)
 
     it("has void element skills", function()
@@ -70,7 +70,7 @@ describe("Phase 4: Skill Data Definitions", function()
                 voidSkills[#voidSkills + 1] = id
             end
         end
-        expect(#voidSkills >= 2).to_be(true)
+        expect(#voidSkills >= 8).to_be(true)
     end)
 
     it("skills have required fields", function()
@@ -79,25 +79,20 @@ describe("Phase 4: Skill Data Definitions", function()
                 expect(def.name).never().to_be_nil()
                 expect(def.description).never().to_be_nil()
                 expect(def.element).never().to_be_nil()
+                expect(def.cost).never().to_be_nil()
+                expect(def.triggers).never().to_be_nil()
                 expect(def.effects).never().to_be_nil()
             end
         end
     end)
 
-    it("skill effects have stat_buff type", function()
-        local hasStatBuff = false
+    it("skills have at least one effect entry", function()
         for id, def in pairs(Skills) do
-            if type(def) == "table" and def.effects then
-                for _, effect in ipairs(def.effects) do
-                    if effect.type == "stat_buff" then
-                        hasStatBuff = true
-                        break
-                    end
-                end
+            if type(def) == "table" and def.name then
+                expect(type(def.effects)).to_be("table")
+                expect(#def.effects > 0).to_be(true)
             end
-            if hasStatBuff then break end
         end
-        expect(hasStatBuff).to_be(true)
     end)
 end)
 
@@ -157,7 +152,7 @@ describe("Phase 4: Skill Learning Flow", function()
         local player = {}
         SkillSystem.init(player)
 
-        local success = SkillSystem.learn_skill(player, "flame_affinity")
+        local success = SkillSystem.learn_skill(player, "kindle")
         expect(success).to_be(true)
 
         local learned = SkillSystem.get_learned_skills(player)
@@ -168,8 +163,8 @@ describe("Phase 4: Skill Learning Flow", function()
         local player = {}
         SkillSystem.init(player)
 
-        SkillSystem.learn_skill(player, "flame_affinity")
-        local success = SkillSystem.learn_skill(player, "flame_affinity")
+        SkillSystem.learn_skill(player, "kindle")
+        local success = SkillSystem.learn_skill(player, "kindle")
         expect(success).to_be(false)
 
         local learned = SkillSystem.get_learned_skills(player)
@@ -180,8 +175,8 @@ describe("Phase 4: Skill Learning Flow", function()
         local player = {}
         SkillSystem.init(player)
 
-        SkillSystem.learn_skill(player, "flame_affinity")
-        local success = SkillSystem.unlearn_skill(player, "flame_affinity")
+        SkillSystem.learn_skill(player, "kindle")
+        local success = SkillSystem.unlearn_skill(player, "kindle")
         expect(success).to_be(true)
 
         local learned = SkillSystem.get_learned_skills(player)

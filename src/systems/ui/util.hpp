@@ -82,7 +82,9 @@ namespace ui {
         void DrawNPatchUIElementImmediate(layer::Layer* layerPtr, entt::registry &registry, entt::entity entity, const Color &colorOverride, float parallaxModifier, std::optional<float> progress);
         
         void DrawUIDecorations(layer::Layer* layerPtr, const UIDecorations& decorations, float parentX, float parentY, float parentW, float parentH);
+        void DrawUIDecorationsUnderlay(layer::Layer* layerPtr, const UIDecorations& decorations, float parentX, float parentY, float parentW, float parentH);
         void DrawUIDecorationsQueued(layer::Layer* layerPtr, const UIDecorations& decorations, float parentX, float parentY, float parentW, float parentH, int zIndex);
+        void DrawUIDecorationsUnderlayQueued(layer::Layer* layerPtr, const UIDecorations& decorations, float parentX, float parentY, float parentW, float parentH, int zIndex);
 
     }
 }

@@ -626,11 +626,17 @@ function WandLoadoutUI.destroy()
 
     -- Cleanup grids
     if state.triggerGridEntity and registry:valid(state.triggerGridEntity) then
+        if InventoryGridInit and InventoryGridInit.unregisterSlotDecorations then
+            InventoryGridInit.unregisterSlotDecorations(state.triggerGridEntity)
+        end
         grid.cleanup(state.triggerGridEntity)
         dsl.cleanupGrid("wand_trigger_grid")
     end
 
     if state.actionGridEntity and registry:valid(state.actionGridEntity) then
+        if InventoryGridInit and InventoryGridInit.unregisterSlotDecorations then
+            InventoryGridInit.unregisterSlotDecorations(state.actionGridEntity)
+        end
         grid.cleanup(state.actionGridEntity)
         dsl.cleanupGrid("wand_action_grid")
     end

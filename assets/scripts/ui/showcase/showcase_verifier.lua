@@ -15,7 +15,40 @@ local _cachedResults = nil
 
 -- Expected items from design doc (ordered lists for showcase)
 local EXPECTED_GODS_CLASSES = { "pyra", "frost", "storm", "void", "warrior", "mage", "rogue" }
-local EXPECTED_SKILLS = { "flame_affinity", "pyromaniac", "frost_affinity", "permafrost", "storm_affinity", "chain_mastery", "void_affinity", "void_conduit", "battle_hardened", "swift_casting" }
+local EXPECTED_SKILLS = {
+    "kindle",
+    "pyrokinesis",
+    "fire_healing",
+    "combustion",
+    "flame_familiar",
+    "roil",
+    "scorch_master",
+    "fire_form",
+    "frostbite",
+    "cryokinesis",
+    "ice_armor",
+    "shatter_synergy",
+    "frost_familiar",
+    "frost_turret",
+    "freeze_master",
+    "ice_form",
+    "spark",
+    "electrokinesis",
+    "chain_lightning",
+    "surge",
+    "storm_familiar",
+    "amplify_pain",
+    "charge_master",
+    "storm_form",
+    "entropy",
+    "necrokinesis",
+    "cursed_flesh",
+    "grave_summon",
+    "doom_mark",
+    "anchor_of_doom",
+    "doom_master",
+    "void_form",
+}
 local EXPECTED_ARTIFACTS = { "ember_heart", "inferno_lens", "frost_core", "glacial_ward", "storm_core", "static_field", "void_heart", "entropy_shard", "battle_trophy", "desperate_power" }
 local EXPECTED_WANDS = { "RAGE_FIST", "STORM_WALKER", "FROST_ANCHOR", "SOUL_SIPHON", "PAIN_ECHO", "EMBER_PULSE" }
 local EXPECTED_STATUS_EFFECTS = { "arcane_charge", "focused", "fireform", "iceform", "stormform", "voidform" }

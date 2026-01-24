@@ -1597,6 +1597,9 @@ namespace ui
             //TODO: need to apply scale and rotation to the rounded rectangle - make a prepdraw method that applies the transform's values
             // layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
             layer::PushMatrix();
+            if (config->decorations.has_value()) {
+                util::DrawUIDecorationsUnderlay(layerPtr, config->decorations.value(), visualX, visualY, visualW, visualH);
+            }
             if (config->shadow && globals::getSettings().shadowsOn)
             {
                 Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(config->color->a * 0.3f)};
@@ -2317,6 +2320,9 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             ZONE_SCOPED("UI Element: Rectangle/Container Logic");
             //TODO: need to apply scale and rotation to the rounded rectangle - make a prepdraw method that applies the transform's values
             layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
+            if (config->decorations.has_value()) {
+                util::DrawUIDecorationsUnderlayQueued(layerPtr.get(), config->decorations.value(), visualX, visualY, visualW, visualH, zIndex);
+            }
             if (config->shadow && globals::getSettings().shadowsOn)
             {
                 // layer::QueueCommand<layer::CmdScale>(layerPtr, [](layer::CmdScale *cmd) {

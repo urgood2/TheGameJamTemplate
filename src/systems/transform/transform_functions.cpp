@@ -251,8 +251,13 @@ namespace transform
         
         if (!role.flags) return; // no flags, no alignment
 
+        bool extraOffsetUnchanged = role.flags->extraAlignmentFinetuningOffset.x == role.flags->prevExtraAlignmentFinetuningOffset.x
+            && role.flags->extraAlignmentFinetuningOffset.y == role.flags->prevExtraAlignmentFinetuningOffset.y;
+
         // if alignment and offset unchanged
-        if (role.flags->alignment == role.flags->prevAlignment && role.offset->x == role.prevOffset->x && role.offset->y == role.prevOffset->y && forceAlign == false && transform.frameCalculation.alignmentChanged == false)
+        if (role.flags->alignment == role.flags->prevAlignment && extraOffsetUnchanged
+            && role.offset->x == role.prevOffset->x && role.offset->y == role.prevOffset->y
+            && forceAlign == false && transform.frameCalculation.alignmentChanged == false)
         {
             // SPDLOG_DEBUG("Alignment and offset unchanged");
             return;
@@ -262,6 +267,10 @@ namespace transform
         if (role.flags->alignment != role.flags->prevAlignment)
         {
             role.flags->prevAlignment = role.flags->alignment;
+        }
+        if (!extraOffsetUnchanged)
+        {
+            role.flags->prevExtraAlignmentFinetuningOffset = role.flags->extraAlignmentFinetuningOffset;
         }
 
         // if alignment empty or no parent, return

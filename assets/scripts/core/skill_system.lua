@@ -142,6 +142,15 @@ function SkillSystem.learn_skill(player, skillId)
         return false
     end
 
+    -- Check if player has enough skill points
+    local cost = skill.cost or 0
+    local remaining = SkillSystem.get_skill_points_remaining(player)
+    if remaining < cost then
+        print(string.format("[SkillSystem] Insufficient skill points for %s (need %d, have %d)",
+            skill.name, cost, remaining))
+        return false
+    end
+
     -- Mark as learned
     state.learned[skillId] = true
 
@@ -283,7 +292,7 @@ function SkillSystem.get_skill_count_by_element(player, element)
     return count
 end
 
---- Get total skill points used
+--- Get total skills learned (count, not cost)
 --- @param player table Player script table
 --- @return number Number of learned skills
 function SkillSystem.get_total_skills_learned(player)
@@ -295,6 +304,75 @@ function SkillSystem.get_total_skills_learned(player)
         count = count + 1
     end
     return count
+end
+
+--------------------------------------------------------------------------------
+-- SKILL POINTS ACCOUNTING API
+--------------------------------------------------------------------------------
+
+--- Get the cost of a skill in skill points
+--- @param skillId string Skill ID
+--- @return number Cost (1-5) or 0 if unknown
+function SkillSystem.get_skill_cost(skillId)
+    if not skillId then return 0 end
+    local defs = loadDefs()
+    local skill = defs and defs.get and defs.get(skillId)
+    if not skill then return 0 end
+    return skill.cost or 0
+end
+
+--- Get total skill points spent (sum of costs of learned skills)
+--- @param player table Player script table
+--- @return number Total points spent
+function SkillSystem.get_skill_points_spent(player)
+    local state = player and player.skill_state
+    if not state then return 0 end
+
+    local defs = loadDefs()
+    local spent = 0
+
+    for skillId, _ in pairs(state.learned) do
+        local skill = defs and defs.get and defs.get(skillId)
+        if skill and skill.cost then
+            spent = spent + skill.cost
+        end
+    end
+
+    return spent
+end
+
+--- Get remaining skill points (total - spent)
+--- @param player table Player script table
+--- @return number Available points
+function SkillSystem.get_skill_points_remaining(player)
+    if not player then return 0 end
+    local total = player.skill_points or 0
+    local spent = SkillSystem.get_skill_points_spent(player)
+    return total - spent
+end
+
+--- Check if player can learn a skill (has enough points and not already learned)
+--- @param player table Player script table
+--- @param skillId string Skill ID
+--- @return boolean True if can learn
+function SkillSystem.can_learn_skill(player, skillId)
+    if not player or not skillId then return false end
+
+    -- Check if skill exists
+    local defs = loadDefs()
+    local skill = defs and defs.get and defs.get(skillId)
+    if not skill then return false end
+
+    -- Check if already learned
+    local state = player.skill_state
+    if state and state.learned[skillId] then
+        return false
+    end
+
+    -- Check if enough points
+    local cost = skill.cost or 0
+    local remaining = SkillSystem.get_skill_points_remaining(player)
+    return remaining >= cost
 end
 
 return SkillSystem

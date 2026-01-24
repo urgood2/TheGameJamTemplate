@@ -2037,6 +2037,9 @@ local function injectTriggerGrid(wandDef)
     if _G.ui and _G.ui.box and _G.ui.box.GetUIEByID then
         local gridEntity = _G.ui.box.GetUIEByID(_G.registry, state.triggerGridContainerEntity, gridId)
         if gridEntity then
+            if _G.layer_order_system and _G.layer_order_system.assignZIndexToEntity then
+                _G.layer_order_system.assignZIndexToEntity(gridEntity, GRID_Z)
+            end
             -- Initialize grid
             local init_ok, InventoryGridInit = pcall(require, "ui.inventory_grid_init")
             if init_ok and InventoryGridInit and InventoryGridInit.initializeIfGrid then
@@ -2092,6 +2095,9 @@ local function injectActionGrid(wandDef)
     if _G.ui and _G.ui.box and _G.ui.box.GetUIEByID then
         local gridEntity = _G.ui.box.GetUIEByID(_G.registry, state.actionGridContainerEntity, gridId)
         if gridEntity then
+            if _G.layer_order_system and _G.layer_order_system.assignZIndexToEntity then
+                _G.layer_order_system.assignZIndexToEntity(gridEntity, GRID_Z)
+            end
             -- Initialize grid
             local init_ok, InventoryGridInit = pcall(require, "ui.inventory_grid_init")
             if init_ok and InventoryGridInit and InventoryGridInit.initializeIfGrid then

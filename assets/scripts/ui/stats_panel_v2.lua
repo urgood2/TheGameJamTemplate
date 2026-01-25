@@ -670,18 +670,20 @@ local function buildElementalGrid(snapshot)
     local GRID_ROW_PADDING = ui_scale.ui(4)
     local GRID_HEADER_PADDING = ui_scale.ui(4)
     local GRID_ROW_HEIGHT = ROW_HEIGHT + ui_scale.ui(2)
-    local METRIC_LABEL_GAP = ui_scale.ui(4)  -- Reduced from 6
+    local METRIC_LABEL_GAP = ui_scale.ui(4)
     local METRIC_LABEL_COLOR = "gray"
     local METRIC_TEXT_COLOR = "apricot_cream"
-    local METRIC_VALUE_MIN_WIDTH = ui_scale.ui(32)  -- Reduced from 36
-    local METRIC_SPACING = ui_scale.ui(6)  -- Reduced from 10
-    local ELEM_MIN_WIDTH = ui_scale.ui(75)  -- Reduced from 90
-    local METRIC_BLOCK_MIN_WIDTH = ui_scale.ui(48)  -- Reduced from 52
+    local METRIC_VALUE_MIN_WIDTH = ui_scale.ui(30)  -- Tighter to give element names more room
+    local METRIC_SPACING = ui_scale.ui(5)  -- Tighter spacing between metric blocks
+    local ELEM_MIN_WIDTH = ui_scale.ui(85)  -- Enough for "Lightning" (longest element name)
+    local METRIC_BLOCK_MIN_WIDTH = ui_scale.ui(46)
 
-    -- Account for row padding and edge padding in available content width
-    local effectiveRowWidth = ROW_CONTENT_WIDTH - (GRID_ROW_PADDING * 2) - RIGHT_EDGE_PADDING
-    local rowContentWidth = effectiveRowWidth
-    local headerContentWidth = effectiveRowWidth
+    -- Available content width inside row (after padding)
+    -- Note: We removed the explicit RIGHT_EDGE_PADDING spacer, but keep a small
+    -- margin by not using the full inner width
+    local innerRowWidth = ROW_CONTENT_WIDTH - (GRID_ROW_PADDING * 2)  -- Available after padding
+    local rowContentWidth = innerRowWidth - ui_scale.ui(2)  -- Small right margin
+    local headerContentWidth = rowContentWidth
 
     -- Calculate metric block width to fit 3 blocks + spacing + element column
     local metricsRowWidth = rowContentWidth - ELEM_MIN_WIDTH
@@ -738,9 +740,10 @@ local function buildElementalGrid(snapshot)
         return dsl.strict.hbox {
             config = {
                 padding = 0,
-            minWidth = elemColWidth,
-            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
-        },
+                minWidth = elemColWidth,
+                maxWidth = elemColWidth,  -- Prevent expansion from long names like "Lightning"
+                align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
+            },
             children = {
                 dsl.strict.text("•", {
                     fontSize = GRID_VALUE_FONT + ui_scale.ui(1),

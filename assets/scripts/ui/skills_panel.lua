@@ -706,7 +706,8 @@ local function createSkillButton(skillId, skillDef, element, isLocked)
             id = "skill_btn_" .. skillId,
             minWidth = SLOT_SIZE,
             minHeight = SLOT_SIZE,
-            canCollide = true,  -- Always enable collision for tooltips
+            canCollide = true,  -- Enable collision for click detection
+            hover = true,       -- Required for buttonCallback to work
             padding = UI(2),
             align = "center",
             color = bgColor,
@@ -862,18 +863,11 @@ local function initializePanel()
         state.headerTextEntity = ui.box.GetUIEByID(_G.registry, state.panelEntity, "skills_points_display")
     end
 
-    -- Set up search input callback and focus handling
+    -- Set up search input entity and polling for text changes
+    -- Note: TextInput.callback only fires on Enter, so we poll for real-time updates
     if ui and ui.box and ui.box.GetUIEByID then
         state.searchInputEntity = ui.box.GetUIEByID(_G.registry, state.panelEntity, "skills_search_input")
         if state.searchInputEntity and _G.registry:valid(state.searchInputEntity) then
-            -- Set up the TextInput callback for text changes
-            local textInput = component_cache.get(state.searchInputEntity, TextInput)
-            if textInput then
-                textInput.callback = function(newText)
-                    onSearchTextChanged(newText or "")
-                end
-            end
-
             -- Set up click handler to gain focus
             local go = component_cache.get(state.searchInputEntity, GameObject)
             if go then
@@ -881,6 +875,26 @@ local function initializePanel()
                 go.methods.onClick = function()
                     state.searchFocused = true
                 end
+            end
+
+            -- Poll the TextInput.text field for real-time search updates
+            if timer and TextInput then
+                local lastSearchText = ""
+                timer.every_opts({
+                    delay = 0.1,  -- Poll every 100ms
+                    tag = "skills_search_poll",
+                    group = TIMER_GROUP,
+                    action = function()
+                        if not state.searchInputEntity or not _G.registry:valid(state.searchInputEntity) then
+                            return
+                        end
+                        local textInput = component_cache.get(state.searchInputEntity, TextInput)
+                        if textInput and textInput.text ~= lastSearchText then
+                            lastSearchText = textInput.text
+                            onSearchTextChanged(textInput.text or "")
+                        end
+                    end,
+                })
             end
         end
     end

@@ -65,7 +65,7 @@ local PANEL_PADDING = ui_scale.ui(10)
 local HEADER_PADDING = ui_scale.ui(8)
 local TITLE_ROW_PADDING = ui_scale.ui(2)
 local CLOSE_BUTTON_MARGIN = ui_scale.ui(4)
-local SCROLL_PANE_PADDING = ui_scale.ui(2)
+local SCROLL_PANE_PADDING = ui_scale.ui(0)
 local SECTION_CONTENT_PADDING = ui_scale.ui(0)
 local SCROLL_PANE_INSET = ui_scale.ui(0)
 local PANEL_INNER_WIDTH = PANEL_WIDTH - (PANEL_PADDING * 2)
@@ -663,16 +663,17 @@ end
 local function buildElementalGrid(snapshot)
     local perType = snapshot and snapshot.per_type or {}
     
-    local COL_WIDTH = ui_scale.ui(72)
-    local ELEM_COL_WIDTH = ui_scale.ui(86)
+    local COL_WIDTH = ui_scale.ui(76)
+    local ELEM_COL_WIDTH = ui_scale.ui(92)
     local GRID_HEADER_FONT = ROW_FONT_SIZE - ui_scale.ui(1)
-    local GRID_VALUE_FONT = ROW_FONT_SIZE
+    local GRID_VALUE_FONT = ROW_FONT_SIZE + ui_scale.ui(1)
     local GRID_ROW_PADDING = ui_scale.ui(4)
     local GRID_HEADER_PADDING = ui_scale.ui(4)
     local GRID_ROW_HEIGHT = ROW_HEIGHT + ui_scale.ui(2)
-    local GRID_DIVIDER_COLOR = "dark_gray_slate"
-    local GRID_DIVIDER_THICKNESS = ui_scale.ui(1)
-    local GRID_DIVIDER_HEIGHT = GRID_ROW_HEIGHT - ui_scale.ui(6)
+    local GRID_DIVIDER_COLOR = "gray"
+    local GRID_DIVIDER_THICKNESS = ui_scale.ui(2)
+    local GRID_DIVIDER_HEIGHT = GRID_ROW_HEIGHT - ui_scale.ui(4)
+    local DUR_COL_WIDTH = math.max(COL_WIDTH, ROW_CONTENT_WIDTH - (ELEM_COL_WIDTH + (COL_WIDTH * 2) + (GRID_DIVIDER_THICKNESS * 3)))
     
     -- Header row
     local headerRow = dsl.strict.hbox {
@@ -724,7 +725,7 @@ local function buildElementalGrid(snapshot)
                 fontSize = GRID_HEADER_FONT,
                 color = "apricot_cream",
                 shadow = true,
-                minWidth = COL_WIDTH,
+                minWidth = DUR_COL_WIDTH,
                 align = AlignmentFlag.HORIZONTAL_RIGHT,
             }),
         }
@@ -753,7 +754,7 @@ local function buildElementalGrid(snapshot)
         
         local function getGridColor(val, available)
             if not available then return "gray" end
-            if val == nil or math.abs(val) < 0.01 then return "gray" end
+            if val == nil or math.abs(val) < 0.01 then return "apricot_cream" end
             return val > 0 and "mint_green" or "fiery_red"
         end
         
@@ -812,7 +813,7 @@ local function buildElementalGrid(snapshot)
                     fontSize = GRID_VALUE_FONT,
                     color = getGridColor(data.duration, config.hasDuration),
                     shadow = true,
-                    minWidth = COL_WIDTH,
+                    minWidth = DUR_COL_WIDTH,
                     align = AlignmentFlag.HORIZONTAL_RIGHT,
                 }),
             }

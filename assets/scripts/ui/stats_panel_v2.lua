@@ -63,6 +63,8 @@ end
 local PANEL_WIDTH = ui_scale.ui(340)
 local PANEL_PADDING = ui_scale.ui(10)
 local HEADER_PADDING = ui_scale.ui(8)
+local TITLE_ROW_PADDING = ui_scale.ui(2)
+local CLOSE_BUTTON_MARGIN = ui_scale.ui(4)
 local SCROLL_PANE_PADDING = ui_scale.ui(4)
 local SECTION_CONTENT_PADDING = ui_scale.ui(4)
 local SCROLL_PANE_INSET = ui_scale.ui(8)
@@ -483,7 +485,7 @@ local function buildHeader(snapshot)
     -- Title row with close button (using filler pattern from player_inventory.lua)
     local titleRow = dsl.strict.hbox {
         config = {
-            padding = 0,
+            padding = TITLE_ROW_PADDING,
             minWidth = HEADER_CONTENT_WIDTH,
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
         },
@@ -515,6 +517,7 @@ local function buildHeader(snapshot)
                     StatsPanelModule.hide()
                 end,
             }),
+            dsl.strict.spacer(CLOSE_BUTTON_MARGIN),
         }
     }
 
@@ -660,7 +663,7 @@ end
 local function buildElementalGrid(snapshot)
     local perType = snapshot and snapshot.per_type or {}
     
-    local COL_WIDTH = ui_scale.ui(60)
+    local COL_WIDTH = ui_scale.ui(70)
     local ELEM_COL_WIDTH = ui_scale.ui(84)
     local GRID_HEADER_FONT = ROW_FONT_SIZE - ui_scale.ui(1)
     local GRID_VALUE_FONT = ROW_FONT_SIZE
@@ -683,26 +686,26 @@ local function buildElementalGrid(snapshot)
                 minWidth = ELEM_COL_WIDTH,
                 align = AlignmentFlag.HORIZONTAL_LEFT,
             }),
-            dsl.strict.text("Resist", {
+            dsl.strict.text("Res", {
                 fontSize = GRID_HEADER_FONT,
                 color = "apricot_cream",
                 shadow = true,
                 minWidth = COL_WIDTH,
-                align = AlignmentFlag.HORIZONTAL_RIGHT,
+                align = AlignmentFlag.HORIZONTAL_LEFT,
             }),
-            dsl.strict.text("Damage", {
+            dsl.strict.text("Dmg", {
                 fontSize = GRID_HEADER_FONT,
                 color = "apricot_cream",
                 shadow = true,
                 minWidth = COL_WIDTH,
-                align = AlignmentFlag.HORIZONTAL_RIGHT,
+                align = AlignmentFlag.HORIZONTAL_LEFT,
             }),
-            dsl.strict.text("Duration", {
+            dsl.strict.text("Dur", {
                 fontSize = GRID_HEADER_FONT,
                 color = "apricot_cream",
                 shadow = true,
                 minWidth = COL_WIDTH,
-                align = AlignmentFlag.HORIZONTAL_RIGHT,
+                align = AlignmentFlag.HORIZONTAL_LEFT,
             }),
         }
     }
@@ -715,11 +718,17 @@ local function buildElementalGrid(snapshot)
         
         local displayName = elemType:sub(1,1):upper() .. elemType:sub(2)
         
-        local function formatGridValue(val, available)
-            if not available then return "--" end
-            if val == nil or math.abs(val) < 0.01 then return "0%" end
-            local sign = val > 0 and "+" or ""
-            return string.format("%s%d%%", sign, math.floor(val + 0.5))
+        local function formatGridValue(val, available, label)
+            local valueText
+            if not available then
+                valueText = "--"
+            elseif val == nil or math.abs(val) < 0.01 then
+                valueText = "0%"
+            else
+                local sign = val > 0 and "+" or ""
+                valueText = string.format("%s%d%%", sign, math.floor(val + 0.5))
+            end
+            return label and (label .. " " .. valueText) or valueText
         end
         
         local function getGridColor(val, available)
@@ -746,29 +755,29 @@ local function buildElementalGrid(snapshot)
                     minWidth = ELEM_COL_WIDTH,
                     align = AlignmentFlag.HORIZONTAL_LEFT,
                 }),
-                dsl.strict.text(formatGridValue(data.resist, config.hasResist), {
+                dsl.strict.text(formatGridValue(data.resist, config.hasResist, "Res"), {
                     id = "elem_" .. elemType .. "_resist",
                     fontSize = GRID_VALUE_FONT,
                     color = getGridColor(data.resist, config.hasResist),
                     shadow = true,
                     minWidth = COL_WIDTH,
-                    align = AlignmentFlag.HORIZONTAL_RIGHT,
+                    align = AlignmentFlag.HORIZONTAL_LEFT,
                 }),
-                dsl.strict.text(formatGridValue(data.damage, true), {
+                dsl.strict.text(formatGridValue(data.damage, true, "Dmg"), {
                     id = "elem_" .. elemType .. "_damage",
                     fontSize = GRID_VALUE_FONT,
                     color = getGridColor(data.damage, true),
                     shadow = true,
                     minWidth = COL_WIDTH,
-                    align = AlignmentFlag.HORIZONTAL_RIGHT,
+                    align = AlignmentFlag.HORIZONTAL_LEFT,
                 }),
-                dsl.strict.text(formatGridValue(data.duration, config.hasDuration), {
+                dsl.strict.text(formatGridValue(data.duration, config.hasDuration, "Dur"), {
                     id = "elem_" .. elemType .. "_duration",
                     fontSize = GRID_VALUE_FONT,
                     color = getGridColor(data.duration, config.hasDuration),
                     shadow = true,
                     minWidth = COL_WIDTH,
-                    align = AlignmentFlag.HORIZONTAL_RIGHT,
+                    align = AlignmentFlag.HORIZONTAL_LEFT,
                 }),
             }
         })
@@ -1002,7 +1011,7 @@ function StatsPanel._updateElementalGrid(newPerType, oldPerType)
         
         local config = ELEMENT_CONFIG[elemType]
         
-        local function updateCell(column, newVal, oldVal, available)
+        local function updateCell(column, newVal, oldVal, available, label)
             if newVal == oldVal then return end
             
             local cellId = "elem_" .. elemType .. "_" .. column
@@ -1010,14 +1019,16 @@ function StatsPanel._updateElementalGrid(newPerType, oldPerType)
             if cellEntity and entity_cache.valid(cellEntity) then
                 local uiText = component_cache.get(cellEntity, UITextComponent)
                 if uiText then
+                    local valueText
                     if not available then
-                        uiText.text = "--"
+                        valueText = "--"
                     elseif newVal == nil or math.abs(newVal) < 0.01 then
-                        uiText.text = "0%"
+                        valueText = "0%"
                     else
                         local sign = newVal > 0 and "+" or ""
-                        uiText.text = string.format("%s%d%%", sign, math.floor(newVal + 0.5))
+                        valueText = string.format("%s%d%%", sign, math.floor(newVal + 0.5))
                     end
+                    uiText.text = label and (label .. " " .. valueText) or valueText
                     
                     local colorName = "gray"
                     if available and newVal and math.abs(newVal) >= 0.01 then
@@ -1031,9 +1042,9 @@ function StatsPanel._updateElementalGrid(newPerType, oldPerType)
             end
         end
         
-        updateCell("resist", newData.resist, oldData.resist, config.hasResist)
-        updateCell("damage", newData.damage, oldData.damage, true)
-        updateCell("duration", newData.duration, oldData.duration, config.hasDuration)
+        updateCell("resist", newData.resist, oldData.resist, config.hasResist, "Res")
+        updateCell("damage", newData.damage, oldData.damage, true, "Dmg")
+        updateCell("duration", newData.duration, oldData.duration, config.hasDuration, "Dur")
     end
 end
 

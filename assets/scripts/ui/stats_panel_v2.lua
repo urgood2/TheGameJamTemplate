@@ -656,7 +656,7 @@ local function buildStatRow(statKey, snapshot)
                     #deltaChildren > 0 and deltaChildren[1] or nil,
                 }
             },
-            dsl.strict.spacer(RIGHT_EDGE_PADDING),
+            -- Row padding provides right margin
         }
     }
 end
@@ -857,6 +857,7 @@ local function buildElementalGrid(snapshot)
     return dsl.strict.vbox {
         config = {
             padding = SECTION_CONTENT_PADDING,
+            minWidth = SCROLL_CONTENT_WIDTH,  -- Ensure full width fill
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
         },
         children = rows,
@@ -964,6 +965,7 @@ local function buildSectionContent(sectionDef, snapshot)
     return dsl.strict.vbox {
         config = {
             padding = SECTION_CONTENT_PADDING,
+            minWidth = SCROLL_CONTENT_WIDTH,  -- Ensure full width fill
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
         },
         children = statRows,

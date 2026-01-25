@@ -5922,7 +5922,7 @@ local function resetHeroToBaseline(hero)
     hero.level = 1
     hero.xp = 0
     hero.attr_points = 0
-    hero.skill_points = 0
+    hero.skill_points = 10  -- Reset to 10 skill points for testing
     hero.masteries = 0
 
     -- Calculate and remove level-up stat bonuses (10 OA/DA per level gained)
@@ -6418,6 +6418,13 @@ function initCombatSystem()
     hero.stats:add_base('attack_speed', 1.0)
     hero.stats:add_base('cast_speed', 1.0)
     hero.stats:recompute()
+
+    -- Initial progression state
+    hero.level = 1
+    hero.xp = 0
+    hero.attr_points = 0
+    hero.skill_points = 10  -- Start with 10 skill points for testing
+    hero.masteries = 0
 
     -- Ogre: tougher target with defense layers and reactive behaviors (reflect/retaliation/block).
     local ogre = make_actor('Ogre', combatStatDefs, CombatSystem.Game.Content.attach_attribute_derivations)

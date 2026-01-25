@@ -149,7 +149,10 @@ namespace input::lua_bindings {
                                           "gamepad", &input::InputState::gamepad,
                                           "overlay_menu_active_timer", &input::InputState::overlay_menu_active_timer,
                                           "overlay_menu_active", &input::InputState::overlay_menu_active,
-                                          "screen_keyboard", &input::InputState::screen_keyboard);
+                                          "screen_keyboard", &input::InputState::screen_keyboard,
+
+                                          // Active text input (for text input focus tracking)
+                                          "activeTextInput", &input::InputState::activeTextInput);
                                           
         inputStateType["cursor_hovering_target"] = sol::property(
             [](input::InputState &state) -> entt::entity {

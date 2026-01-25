@@ -865,19 +865,12 @@ local function initializePanel()
 
     -- Set up search input entity and polling for text changes
     -- Note: TextInput.callback only fires on Enter, so we poll for real-time updates
+    -- IMPORTANT: Do NOT override go.methods.onClick - it breaks C++ text input activation!
     if ui and ui.box and ui.box.GetUIEByID then
         state.searchInputEntity = ui.box.GetUIEByID(_G.registry, state.panelEntity, "skills_search_input")
         if state.searchInputEntity and _G.registry:valid(state.searchInputEntity) then
-            -- Set up click handler to gain focus
-            local go = component_cache.get(state.searchInputEntity, GameObject)
-            if go then
-                go.state.collisionEnabled = true
-                go.methods.onClick = function()
-                    state.searchFocused = true
-                end
-            end
-
             -- Poll the TextInput.text field for real-time search updates
+            -- Also track focus state by checking if this is the active text input
             if timer and TextInput then
                 local lastSearchText = ""
                 timer.every_opts({
@@ -888,6 +881,14 @@ local function initializePanel()
                         if not state.searchInputEntity or not _G.registry:valid(state.searchInputEntity) then
                             return
                         end
+
+                        -- Check if search input has keyboard focus
+                        local inputState = globals and globals.inputState
+                        if inputState then
+                            state.searchFocused = (inputState.activeTextInput == state.searchInputEntity)
+                        end
+
+                        -- Check for text changes
                         local textInput = component_cache.get(state.searchInputEntity, TextInput)
                         if textInput and textInput.text ~= lastSearchText then
                             lastSearchText = textInput.text

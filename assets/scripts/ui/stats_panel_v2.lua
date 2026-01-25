@@ -894,7 +894,8 @@ local function buildFooter()
     return dsl.strict.hbox {
         config = {
             padding = ui_scale.ui(6),
-            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+            minWidth = PANEL_INNER_WIDTH,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
         },
         children = {
             dsl.strict.text("C: toggle   1-5: tabs   Esc: close", {
@@ -989,7 +990,7 @@ local function buildPanelDefinition(snapshot)
         buttonColor = "dark_gray_slate",
         activeButtonColor = "gray",
         contentPadding = 0,
-        tabBarPadding = ui_scale.ui(4),
+        tabBarPadding = 0,
         tabBarAlign = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
         fontSize = ui_scale.ui(13),
         buttonPadding = ui_scale.ui(6),
@@ -1010,7 +1011,11 @@ local function buildPanelDefinition(snapshot)
         },
         children = {
             dsl.strict.vbox {
-                config = { padding = 0 },
+                config = {
+                    padding = 0,
+                    minWidth = PANEL_INNER_WIDTH,
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
+                },
                 children = {
                     buildHeader(snapshot),
                     dsl.strict.spacer(ui_scale.ui(4)),

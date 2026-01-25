@@ -663,18 +663,77 @@ end
 local function buildElementalGrid(snapshot)
     local perType = snapshot and snapshot.per_type or {}
     
-    local COL_WIDTH = ui_scale.ui(76)
-    local ELEM_COL_WIDTH = ui_scale.ui(92)
+    local ELEM_COL_WIDTH = ui_scale.ui(110)
     local GRID_HEADER_FONT = ROW_FONT_SIZE - ui_scale.ui(1)
     local GRID_VALUE_FONT = ROW_FONT_SIZE + ui_scale.ui(1)
     local GRID_ROW_PADDING = ui_scale.ui(4)
     local GRID_HEADER_PADDING = ui_scale.ui(4)
     local GRID_ROW_HEIGHT = ROW_HEIGHT + ui_scale.ui(2)
-    local GRID_DIVIDER_COLOR = "gray"
-    local GRID_DIVIDER_THICKNESS = ui_scale.ui(2)
-    local GRID_DIVIDER_HEIGHT = GRID_ROW_HEIGHT - ui_scale.ui(4)
-    local DUR_COL_WIDTH = math.max(COL_WIDTH, ROW_CONTENT_WIDTH - (ELEM_COL_WIDTH + (COL_WIDTH * 2) + (GRID_DIVIDER_THICKNESS * 3)))
+    local METRIC_BLOCK_MIN_WIDTH = ui_scale.ui(70)
+    local METRIC_LABEL_GAP = ui_scale.ui(6)
+    local METRIC_LABEL_COLOR = "gray"
+    local METRIC_TEXT_COLOR = "apricot_cream"
+    local METRIC_VALUE_MIN_WIDTH = ui_scale.ui(36)
     
+    local function metricHeader(label)
+        return dsl.strict.text(label, {
+            fontSize = GRID_HEADER_FONT,
+            color = METRIC_TEXT_COLOR,
+            shadow = true,
+            minWidth = METRIC_BLOCK_MIN_WIDTH,
+            align = AlignmentFlag.HORIZONTAL_RIGHT,
+        })
+    end
+
+    local function metricBlock(label, valueText, valueColor, valueId)
+        return dsl.strict.hbox {
+            config = {
+                padding = 0,
+                minWidth = METRIC_BLOCK_MIN_WIDTH,
+                align = bit.bor(AlignmentFlag.HORIZONTAL_RIGHT, AlignmentFlag.VERTICAL_CENTER),
+            },
+            children = {
+                dsl.strict.text(label, {
+                    fontSize = GRID_HEADER_FONT,
+                    color = METRIC_LABEL_COLOR,
+                    shadow = true,
+                }),
+                dsl.strict.spacer(METRIC_LABEL_GAP),
+                dsl.strict.text(valueText, {
+                    id = valueId,
+                    fontSize = GRID_VALUE_FONT,
+                    color = valueColor,
+                    shadow = true,
+                    minWidth = METRIC_VALUE_MIN_WIDTH,
+                    align = AlignmentFlag.HORIZONTAL_RIGHT,
+                }),
+            }
+        }
+    end
+
+    local function buildElementLabel(name, tint)
+        return dsl.strict.hbox {
+            config = {
+                padding = 0,
+                minWidth = ELEM_COL_WIDTH,
+                align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
+            },
+            children = {
+                dsl.strict.text("•", {
+                    fontSize = GRID_VALUE_FONT + ui_scale.ui(1),
+                    color = tint or METRIC_TEXT_COLOR,
+                    shadow = true,
+                }),
+                dsl.strict.spacer(ui_scale.ui(6)),
+                dsl.strict.text(name, {
+                    fontSize = GRID_VALUE_FONT,
+                    color = METRIC_TEXT_COLOR,
+                    shadow = true,
+                }),
+            }
+        }
+    end
+
     -- Header row
     local headerRow = dsl.strict.hbox {
         config = {
@@ -687,47 +746,17 @@ local function buildElementalGrid(snapshot)
         children = {
             dsl.strict.text("Element", {
                 fontSize = GRID_HEADER_FONT,
-                color = "apricot_cream",
+                color = METRIC_TEXT_COLOR,
                 shadow = true,
                 minWidth = ELEM_COL_WIDTH,
                 align = AlignmentFlag.HORIZONTAL_LEFT,
             }),
-            dsl.divider("vertical", {
-                color = GRID_DIVIDER_COLOR,
-                thickness = GRID_DIVIDER_THICKNESS,
-                length = GRID_DIVIDER_HEIGHT,
-            }),
-            dsl.strict.text("Res%", {
-                fontSize = GRID_HEADER_FONT,
-                color = "apricot_cream",
-                shadow = true,
-                minWidth = COL_WIDTH,
-                align = AlignmentFlag.HORIZONTAL_RIGHT,
-            }),
-            dsl.divider("vertical", {
-                color = GRID_DIVIDER_COLOR,
-                thickness = GRID_DIVIDER_THICKNESS,
-                length = GRID_DIVIDER_HEIGHT,
-            }),
-            dsl.strict.text("Dmg%", {
-                fontSize = GRID_HEADER_FONT,
-                color = "apricot_cream",
-                shadow = true,
-                minWidth = COL_WIDTH,
-                align = AlignmentFlag.HORIZONTAL_RIGHT,
-            }),
-            dsl.divider("vertical", {
-                color = GRID_DIVIDER_COLOR,
-                thickness = GRID_DIVIDER_THICKNESS,
-                length = GRID_DIVIDER_HEIGHT,
-            }),
-            dsl.strict.text("Dur%", {
-                fontSize = GRID_HEADER_FONT,
-                color = "apricot_cream",
-                shadow = true,
-                minWidth = DUR_COL_WIDTH,
-                align = AlignmentFlag.HORIZONTAL_RIGHT,
-            }),
+            dsl.filler(),
+            metricHeader("Res"),
+            dsl.filler(),
+            metricHeader("Dmg"),
+            dsl.filler(),
+            metricHeader("Dur"),
         }
     }
     
@@ -770,52 +799,13 @@ local function buildElementalGrid(snapshot)
                 color = rowColor,
             },
             children = {
-                dsl.strict.text(displayName, {
-                    fontSize = GRID_VALUE_FONT,
-                    color = config.color,
-                    shadow = true,
-                    minWidth = ELEM_COL_WIDTH,
-                    align = AlignmentFlag.HORIZONTAL_LEFT,
-                }),
-                dsl.divider("vertical", {
-                    color = GRID_DIVIDER_COLOR,
-                    thickness = GRID_DIVIDER_THICKNESS,
-                    length = GRID_DIVIDER_HEIGHT,
-                }),
-                dsl.strict.text(formatGridValue(data.resist, config.hasResist), {
-                    id = "elem_" .. elemType .. "_resist",
-                    fontSize = GRID_VALUE_FONT,
-                    color = getGridColor(data.resist, config.hasResist),
-                    shadow = true,
-                    minWidth = COL_WIDTH,
-                    align = AlignmentFlag.HORIZONTAL_RIGHT,
-                }),
-                dsl.divider("vertical", {
-                    color = GRID_DIVIDER_COLOR,
-                    thickness = GRID_DIVIDER_THICKNESS,
-                    length = GRID_DIVIDER_HEIGHT,
-                }),
-                dsl.strict.text(formatGridValue(data.damage, true), {
-                    id = "elem_" .. elemType .. "_damage",
-                    fontSize = GRID_VALUE_FONT,
-                    color = getGridColor(data.damage, true),
-                    shadow = true,
-                    minWidth = COL_WIDTH,
-                    align = AlignmentFlag.HORIZONTAL_RIGHT,
-                }),
-                dsl.divider("vertical", {
-                    color = GRID_DIVIDER_COLOR,
-                    thickness = GRID_DIVIDER_THICKNESS,
-                    length = GRID_DIVIDER_HEIGHT,
-                }),
-                dsl.strict.text(formatGridValue(data.duration, config.hasDuration), {
-                    id = "elem_" .. elemType .. "_duration",
-                    fontSize = GRID_VALUE_FONT,
-                    color = getGridColor(data.duration, config.hasDuration),
-                    shadow = true,
-                    minWidth = DUR_COL_WIDTH,
-                    align = AlignmentFlag.HORIZONTAL_RIGHT,
-                }),
+                buildElementLabel(displayName, config.color),
+                dsl.filler(),
+                metricBlock("Res", formatGridValue(data.resist, config.hasResist), getGridColor(data.resist, config.hasResist), "elem_" .. elemType .. "_resist"),
+                dsl.filler(),
+                metricBlock("Dmg", formatGridValue(data.damage, true), getGridColor(data.damage, true), "elem_" .. elemType .. "_damage"),
+                dsl.filler(),
+                metricBlock("Dur", formatGridValue(data.duration, config.hasDuration), getGridColor(data.duration, config.hasDuration), "elem_" .. elemType .. "_duration"),
             }
         })
     end
@@ -823,6 +813,7 @@ local function buildElementalGrid(snapshot)
     return dsl.strict.vbox {
         config = {
             padding = SECTION_CONTENT_PADDING,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
         },
         children = rows,
     }
@@ -849,7 +840,10 @@ local function buildSection(sectionDef, snapshot)
 
         if #statRows > 0 then
             table.insert(children, dsl.strict.vbox {
-                config = { padding = SECTION_CONTENT_PADDING },
+                config = {
+                    padding = SECTION_CONTENT_PADDING,
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
+                },
                 children = statRows,
             })
         end
@@ -922,7 +916,10 @@ local function buildSectionContent(sectionDef, snapshot)
     end
 
     return dsl.strict.vbox {
-        config = { padding = SECTION_CONTENT_PADDING },
+        config = {
+            padding = SECTION_CONTENT_PADDING,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
+        },
         children = statRows,
     }
 end

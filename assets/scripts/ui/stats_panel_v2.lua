@@ -663,24 +663,39 @@ end
 local function buildElementalGrid(snapshot)
     local perType = snapshot and snapshot.per_type or {}
     
-    local ELEM_COL_WIDTH = ui_scale.ui(110)
     local GRID_HEADER_FONT = ROW_FONT_SIZE - ui_scale.ui(1)
     local GRID_VALUE_FONT = ROW_FONT_SIZE + ui_scale.ui(1)
     local GRID_ROW_PADDING = ui_scale.ui(4)
     local GRID_HEADER_PADDING = ui_scale.ui(4)
     local GRID_ROW_HEIGHT = ROW_HEIGHT + ui_scale.ui(2)
-    local METRIC_BLOCK_MIN_WIDTH = ui_scale.ui(70)
     local METRIC_LABEL_GAP = ui_scale.ui(6)
     local METRIC_LABEL_COLOR = "gray"
     local METRIC_TEXT_COLOR = "apricot_cream"
     local METRIC_VALUE_MIN_WIDTH = ui_scale.ui(36)
+    local METRIC_SPACING = ui_scale.ui(10)
+    local ELEM_MIN_WIDTH = ui_scale.ui(90)
+    local METRIC_BLOCK_MIN_WIDTH = ui_scale.ui(52)
+
+    local rowContentWidth = ROW_CONTENT_WIDTH - (GRID_ROW_PADDING * 2)
+    local headerContentWidth = ROW_CONTENT_WIDTH - (GRID_HEADER_PADDING * 2)
+    local metricsRowWidth = rowContentWidth - ELEM_MIN_WIDTH
+    local metricBlockWidth = math.floor((metricsRowWidth - (METRIC_SPACING * 2)) / 3)
+    if metricBlockWidth < METRIC_BLOCK_MIN_WIDTH then
+        metricBlockWidth = METRIC_BLOCK_MIN_WIDTH
+    end
+    local elemColWidth = rowContentWidth - (metricBlockWidth * 3) - (METRIC_SPACING * 2)
+    if elemColWidth < ui_scale.ui(70) then
+        elemColWidth = ui_scale.ui(70)
+        metricBlockWidth = math.floor((rowContentWidth - elemColWidth - (METRIC_SPACING * 2)) / 3)
+    end
+    local metricsWidth = rowContentWidth - elemColWidth
     
     local function metricHeader(label)
         return dsl.strict.text(label, {
             fontSize = GRID_HEADER_FONT,
             color = METRIC_TEXT_COLOR,
             shadow = true,
-            minWidth = METRIC_BLOCK_MIN_WIDTH,
+            minWidth = metricBlockWidth,
             align = AlignmentFlag.HORIZONTAL_RIGHT,
         })
     end
@@ -689,9 +704,9 @@ local function buildElementalGrid(snapshot)
         return dsl.strict.hbox {
             config = {
                 padding = 0,
-                minWidth = METRIC_BLOCK_MIN_WIDTH,
-                align = bit.bor(AlignmentFlag.HORIZONTAL_RIGHT, AlignmentFlag.VERTICAL_CENTER),
-            },
+            minWidth = metricBlockWidth,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_RIGHT, AlignmentFlag.VERTICAL_CENTER),
+        },
             children = {
                 dsl.strict.text(label, {
                     fontSize = GRID_HEADER_FONT,
@@ -715,9 +730,9 @@ local function buildElementalGrid(snapshot)
         return dsl.strict.hbox {
             config = {
                 padding = 0,
-                minWidth = ELEM_COL_WIDTH,
-                align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
-            },
+            minWidth = elemColWidth,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
+        },
             children = {
                 dsl.strict.text("•", {
                     fontSize = GRID_VALUE_FONT + ui_scale.ui(1),
@@ -738,7 +753,7 @@ local function buildElementalGrid(snapshot)
     local headerRow = dsl.strict.hbox {
         config = {
             padding = GRID_HEADER_PADDING,
-            minWidth = ROW_CONTENT_WIDTH,
+            minWidth = headerContentWidth,
             minHeight = GRID_ROW_HEIGHT,
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
             color = getColors().section_bg,
@@ -748,15 +763,23 @@ local function buildElementalGrid(snapshot)
                 fontSize = GRID_HEADER_FONT,
                 color = METRIC_TEXT_COLOR,
                 shadow = true,
-                minWidth = ELEM_COL_WIDTH,
+                minWidth = elemColWidth,
                 align = AlignmentFlag.HORIZONTAL_LEFT,
             }),
             dsl.filler(),
-            metricHeader("Res"),
-            dsl.filler(),
-            metricHeader("Dmg"),
-            dsl.filler(),
-            metricHeader("Dur"),
+            dsl.strict.hbox {
+                config = {
+                    padding = 0,
+                    spacing = METRIC_SPACING,
+                    minWidth = metricsWidth,
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_RIGHT, AlignmentFlag.VERTICAL_CENTER),
+                },
+                children = {
+                    metricHeader("Res %"),
+                    metricHeader("Dmg %"),
+                    metricHeader("Dur %"),
+                }
+            },
         }
     }
     
@@ -793,7 +816,7 @@ local function buildElementalGrid(snapshot)
             config = {
                 id = "elem_row_" .. elemType,
                 padding = GRID_ROW_PADDING,
-                minWidth = ROW_CONTENT_WIDTH,
+                minWidth = rowContentWidth,
                 minHeight = GRID_ROW_HEIGHT,
                 align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
                 color = rowColor,
@@ -801,11 +824,19 @@ local function buildElementalGrid(snapshot)
             children = {
                 buildElementLabel(displayName, config.color),
                 dsl.filler(),
-                metricBlock("Res", formatGridValue(data.resist, config.hasResist), getGridColor(data.resist, config.hasResist), "elem_" .. elemType .. "_resist"),
-                dsl.filler(),
-                metricBlock("Dmg", formatGridValue(data.damage, true), getGridColor(data.damage, true), "elem_" .. elemType .. "_damage"),
-                dsl.filler(),
-                metricBlock("Dur", formatGridValue(data.duration, config.hasDuration), getGridColor(data.duration, config.hasDuration), "elem_" .. elemType .. "_duration"),
+                dsl.strict.hbox {
+                    config = {
+                        padding = 0,
+                        spacing = METRIC_SPACING,
+                        minWidth = metricsWidth,
+                        align = bit.bor(AlignmentFlag.HORIZONTAL_RIGHT, AlignmentFlag.VERTICAL_CENTER),
+                    },
+                    children = {
+                        metricBlock("Res", formatGridValue(data.resist, config.hasResist), getGridColor(data.resist, config.hasResist), "elem_" .. elemType .. "_resist"),
+                        metricBlock("Dmg", formatGridValue(data.damage, true), getGridColor(data.damage, true), "elem_" .. elemType .. "_damage"),
+                        metricBlock("Dur", formatGridValue(data.duration, config.hasDuration), getGridColor(data.duration, config.hasDuration), "elem_" .. elemType .. "_duration"),
+                    }
+                },
             }
         })
     end

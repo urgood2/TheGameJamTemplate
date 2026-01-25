@@ -699,14 +699,26 @@ local function buildElementalGrid(snapshot)
     local metricsWidth = rowContentWidth - elemColWidth
     
     local function metricHeader(label)
-        return dsl.strict.text(label, {
-            fontSize = GRID_HEADER_FONT,
-            color = METRIC_TEXT_COLOR,
-            shadow = true,
-            minWidth = metricBlockWidth,
-            maxWidth = metricBlockWidth,  -- Enforce strict width
-            align = AlignmentFlag.HORIZONTAL_RIGHT,
-        })
+        -- Match the structure of metricBlock: label area + value area
+        -- This ensures header aligns with data columns
+        return dsl.strict.hbox {
+            config = {
+                padding = 0,
+                minWidth = metricBlockWidth,
+                maxWidth = metricBlockWidth,
+                align = bit.bor(AlignmentFlag.HORIZONTAL_RIGHT, AlignmentFlag.VERTICAL_CENTER),
+            },
+            children = {
+                dsl.filler(),  -- Push header to right side of block
+                dsl.strict.text(label, {
+                    fontSize = GRID_HEADER_FONT,
+                    color = METRIC_TEXT_COLOR,
+                    shadow = true,
+                    minWidth = METRIC_VALUE_MIN_WIDTH,  -- Same width as value column
+                    align = AlignmentFlag.HORIZONTAL_RIGHT,
+                }),
+            }
+        }
     end
 
     local function metricBlock(label, valueText, valueColor, valueId)

@@ -670,24 +670,28 @@ local function buildElementalGrid(snapshot)
     local GRID_ROW_PADDING = ui_scale.ui(4)
     local GRID_HEADER_PADDING = ui_scale.ui(4)
     local GRID_ROW_HEIGHT = ROW_HEIGHT + ui_scale.ui(2)
-    local METRIC_LABEL_GAP = ui_scale.ui(6)
+    local METRIC_LABEL_GAP = ui_scale.ui(4)  -- Reduced from 6
     local METRIC_LABEL_COLOR = "gray"
     local METRIC_TEXT_COLOR = "apricot_cream"
-    local METRIC_VALUE_MIN_WIDTH = ui_scale.ui(36)
-    local METRIC_SPACING = ui_scale.ui(10)
-    local ELEM_MIN_WIDTH = ui_scale.ui(90)
-    local METRIC_BLOCK_MIN_WIDTH = ui_scale.ui(52)
+    local METRIC_VALUE_MIN_WIDTH = ui_scale.ui(32)  -- Reduced from 36
+    local METRIC_SPACING = ui_scale.ui(6)  -- Reduced from 10
+    local ELEM_MIN_WIDTH = ui_scale.ui(75)  -- Reduced from 90
+    local METRIC_BLOCK_MIN_WIDTH = ui_scale.ui(48)  -- Reduced from 52
 
-    local rowContentWidth = ROW_CONTENT_WIDTH
-    local headerContentWidth = ROW_CONTENT_WIDTH
+    -- Account for row padding and edge padding in available content width
+    local effectiveRowWidth = ROW_CONTENT_WIDTH - (GRID_ROW_PADDING * 2) - RIGHT_EDGE_PADDING
+    local rowContentWidth = effectiveRowWidth
+    local headerContentWidth = effectiveRowWidth
+
+    -- Calculate metric block width to fit 3 blocks + spacing + element column
     local metricsRowWidth = rowContentWidth - ELEM_MIN_WIDTH
     local metricBlockWidth = math.floor((metricsRowWidth - (METRIC_SPACING * 2)) / 3)
     if metricBlockWidth < METRIC_BLOCK_MIN_WIDTH then
         metricBlockWidth = METRIC_BLOCK_MIN_WIDTH
     end
     local elemColWidth = rowContentWidth - (metricBlockWidth * 3) - (METRIC_SPACING * 2)
-    if elemColWidth < ui_scale.ui(70) then
-        elemColWidth = ui_scale.ui(70)
+    if elemColWidth < ui_scale.ui(65) then
+        elemColWidth = ui_scale.ui(65)
         metricBlockWidth = math.floor((rowContentWidth - elemColWidth - (METRIC_SPACING * 2)) / 3)
     end
     local metricsWidth = rowContentWidth - elemColWidth
@@ -698,6 +702,7 @@ local function buildElementalGrid(snapshot)
             color = METRIC_TEXT_COLOR,
             shadow = true,
             minWidth = metricBlockWidth,
+            maxWidth = metricBlockWidth,  -- Enforce strict width
             align = AlignmentFlag.HORIZONTAL_RIGHT,
         })
     end
@@ -706,9 +711,10 @@ local function buildElementalGrid(snapshot)
         return dsl.strict.hbox {
             config = {
                 padding = 0,
-            minWidth = metricBlockWidth,
-            align = bit.bor(AlignmentFlag.HORIZONTAL_RIGHT, AlignmentFlag.VERTICAL_CENTER),
-        },
+                minWidth = metricBlockWidth,
+                maxWidth = metricBlockWidth,  -- Enforce strict width to prevent overflow
+                align = bit.bor(AlignmentFlag.HORIZONTAL_RIGHT, AlignmentFlag.VERTICAL_CENTER),
+            },
             children = {
                 dsl.strict.text(label, {
                     fontSize = GRID_HEADER_FONT,
@@ -751,11 +757,11 @@ local function buildElementalGrid(snapshot)
         }
     end
 
-    -- Header row
+    -- Header row - rowContentWidth already accounts for RIGHT_EDGE_PADDING
     local headerRow = dsl.strict.hbox {
         config = {
             padding = GRID_HEADER_PADDING,
-            minWidth = headerContentWidth,
+            minWidth = ROW_CONTENT_WIDTH,
             minHeight = GRID_ROW_HEIGHT,
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
             color = getColors().section_bg,
@@ -774,6 +780,7 @@ local function buildElementalGrid(snapshot)
                     padding = 0,
                     spacing = METRIC_SPACING,
                     minWidth = metricsWidth,
+                    maxWidth = metricsWidth,  -- Enforce strict width
                     align = bit.bor(AlignmentFlag.HORIZONTAL_RIGHT, AlignmentFlag.VERTICAL_CENTER),
                 },
                 children = {
@@ -782,7 +789,6 @@ local function buildElementalGrid(snapshot)
                     metricHeader("Dur %"),
                 }
             },
-            dsl.strict.spacer(RIGHT_EDGE_PADDING),
         }
     }
     
@@ -819,7 +825,7 @@ local function buildElementalGrid(snapshot)
             config = {
                 id = "elem_row_" .. elemType,
                 padding = GRID_ROW_PADDING,
-                minWidth = rowContentWidth,
+                minWidth = ROW_CONTENT_WIDTH,
                 minHeight = GRID_ROW_HEIGHT,
                 align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
                 color = rowColor,
@@ -832,6 +838,7 @@ local function buildElementalGrid(snapshot)
                         padding = 0,
                         spacing = METRIC_SPACING,
                         minWidth = metricsWidth,
+                        maxWidth = metricsWidth,  -- Enforce strict width
                         align = bit.bor(AlignmentFlag.HORIZONTAL_RIGHT, AlignmentFlag.VERTICAL_CENTER),
                     },
                     children = {
@@ -840,7 +847,6 @@ local function buildElementalGrid(snapshot)
                         metricBlock("Dur", formatGridValue(data.duration, config.hasDuration), getGridColor(data.duration, config.hasDuration), "elem_" .. elemType .. "_duration"),
                     }
                 },
-                dsl.strict.spacer(RIGHT_EDGE_PADDING),
             }
         })
     end

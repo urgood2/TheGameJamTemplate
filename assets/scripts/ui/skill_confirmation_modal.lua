@@ -52,9 +52,9 @@ local UI = ui_scale and ui_scale.ui or function(x) return x end
 local CONFIG = {
     width = UI(300),
     height = UI(200),
-    background_sprite = "modal-background",
-    confirm_button_sprite = "button-confirm",
-    cancel_button_sprite = "button-cancel",
+    -- Using inventory panel sprite temporarily (TODO: create dedicated modal sprite)
+    background_sprite = "inventory-back-panel.png",
+    -- Buttons are text-based with colors, not sprites
     button_width = UI(80),
     button_height = UI(30),
     padding = UI(16),
@@ -62,11 +62,12 @@ local CONFIG = {
 
 local MODAL_Z = 900  -- Above panel and tab marker
 
+-- Element colors - must be string color names for dsl.strict compatibility
 local ELEMENT_COLORS = {
-    fire = { 255, 100, 50 },
-    ice = { 100, 200, 255 },
-    lightning = { 255, 255, 100 },
-    void = { 150, 50, 200 },
+    fire = "gold",
+    ice = "cyan",
+    lightning = "amber",
+    void = "purple_slate",
 }
 
 --------------------------------------------------------------------------------
@@ -135,11 +136,11 @@ local function buildModalDef()
     if not dsl or not state.modalData then return nil end
 
     local data = state.modalData
-    local elementColor = ELEMENT_COLORS[data.skillElement] or { 255, 255, 255 }
+    local elementColor = ELEMENT_COLORS[data.skillElement] or "white"
     local canAffordColor = data.canAfford and "green" or "red"
 
     return dsl.strict.spritePanel {
-        sprite = CONFIG.background_sprite .. ".png",
+        sprite = CONFIG.background_sprite,
         borders = { 8, 8, 8, 8 },
         sizing = "stretch",
         config = {

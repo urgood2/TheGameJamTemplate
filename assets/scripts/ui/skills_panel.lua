@@ -61,9 +61,12 @@ local CONFIG = {
     element_order = { "fire", "ice", "lightning", "void" },
 
     -- Sprites
-    locked_sprite = "skill-locked",
-    learned_overlay = "skill-checkmark",
-    panel_background = "skills-panel-background",
+    -- TODO: Create dedicated skills-panel sprites
+    -- Using placeholder sprites until skill icons are created
+    skill_icon_sprite = "button-test-normal",
+    locked_sprite = "button-test-disabled",
+    learned_overlay = "button-test-pressed",  -- Placeholder checkmark sprite
+    panel_background = "inventory-back-panel",
 
     -- Hotkey
     toggle_key = "K",
@@ -84,9 +87,11 @@ local SPRITE_SCALE = ui_scale and ui_scale.SPRITE_SCALE or 1
 
 local SLOT_BASE_SIZE = 48
 local SLOT_SIZE = UI(SLOT_BASE_SIZE)
-local SLOT_SPACING = UI(4)
+local SLOT_SPACING = UI(0)  -- Near-zero spacing between grid cells
 local GRID_PADDING = UI(8)
 local HEADER_HEIGHT = UI(40)
+local HEADER_SPACING = UI(4)
+local COLUMN_HEADER_HEIGHT = UI(20)
 local PANEL_PADDING = UI(12)
 
 -- Grid dimensions (4 columns × 8 rows)
@@ -95,7 +100,13 @@ local GRID_HEIGHT = CONFIG.rows * SLOT_SIZE + (CONFIG.rows - 1) * SLOT_SPACING +
 
 -- Panel dimensions
 local PANEL_WIDTH = GRID_WIDTH + PANEL_PADDING * 2
-local PANEL_HEIGHT = HEADER_HEIGHT + GRID_HEIGHT + PANEL_PADDING * 2
+local COLUMN_HEADER_BLOCK_HEIGHT = COLUMN_HEADER_HEIGHT + GRID_PADDING * 2
+local PANEL_HEIGHT = HEADER_HEIGHT
+    + HEADER_SPACING
+    + COLUMN_HEADER_BLOCK_HEIGHT
+    + HEADER_SPACING
+    + GRID_HEIGHT
+    + PANEL_PADDING * 2
 
 local RENDER_LAYER = "ui"
 local PANEL_Z = 800
@@ -114,7 +125,10 @@ local state = {
     headerTextEntity = nil,
     panelX = 0,
     panelY = 0,
+    hiddenX = 0,
     player = nil,            -- Reference to player for skill point queries
+    activeTooltipKey = nil,
+    entityTooltipKeys = {},  -- Lua-side storage for entity tooltip keys (can't store on C++ userdata)
 }
 
 --------------------------------------------------------------------------------
@@ -226,7 +240,11 @@ local function calculatePositions()
 
     -- Panel on left edge, vertically centered
     state.panelX = PANEL_PADDING
-    state.panelY = (screenHeight - PANEL_HEIGHT) / 2
+    local desiredY = (screenHeight - PANEL_HEIGHT) / 2
+    local minY = PANEL_PADDING
+    local maxY = math.max(minY, screenHeight - PANEL_HEIGHT - PANEL_PADDING)
+    state.panelY = math.max(minY, math.min(maxY, desiredY))
+    state.hiddenX = -PANEL_WIDTH - PANEL_PADDING
 
     return true
 end
@@ -235,12 +253,13 @@ end
 -- VISIBILITY CONTROL
 --------------------------------------------------------------------------------
 
-local function setEntityVisible(entity, visible, onscreenX, onscreenY)
+local function setEntityVisible(entity, visible, onscreenX, onscreenY, offscreenX)
     if not entity then return end
     if not _G.registry or not _G.registry.valid or not _G.registry:valid(entity) then return end
 
-    local targetX = onscreenX
-    local targetY = visible and onscreenY or (GetScreenHeight and GetScreenHeight() or 2000)
+    local hiddenX = offscreenX or (onscreenX - PANEL_WIDTH - PANEL_PADDING)
+    local targetX = visible and onscreenX or hiddenX
+    local targetY = onscreenY
 
     -- Update Transform
     local t = component_cache.get(entity, Transform)
@@ -283,14 +302,18 @@ end
 -- NOTE: Signal handling (skill_learned, skill_unlearned, player_level_up)
 -- is consolidated in skills_panel_input.lua to avoid duplicate handlers.
 
+-- Element colors - must be string color names for dsl.strict compatibility
 local ELEMENT_COLORS = {
-    fire = { 255, 100, 50 },
-    ice = { 100, 200, 255 },
-    lightning = { 255, 255, 100 },
-    void = { 150, 50, 200 },
+    fire = "gold",
+    ice = "cyan",
+    lightning = "amber",
+    void = "purple_slate",
 }
 
-local COLUMN_HEADER_HEIGHT = UI(24)
+local TOOLTIP_OFFSET_X = UI(8)
+local TOOLTIP_TITLE_SIZE = UI(14)
+local TOOLTIP_BODY_SIZE = UI(11)
+local TOOLTIP_MAX_WIDTH = UI(220)
 
 --- Create the header row with title and skill points
 local function createHeader()
@@ -320,21 +343,22 @@ local function createHeader()
 end
 
 --- Create the element column headers (Fire, Ice, Lightning, Void)
+--- Headers are aligned with grid columns by using the same width as skill buttons
 local function createColumnHeaders()
     if not dsl then return nil end
 
     local headers = {}
     for _, element in ipairs(CONFIG.element_order) do
-        local color = ELEMENT_COLORS[element] or { 255, 255, 255 }
+        local color = ELEMENT_COLORS[element] or "white"
         local isLocked = LOCKED_ELEMENTS[element]
 
-        table.insert(headers, dsl.strict.box {
+        -- Wrap text in hbox with same width as skill buttons to align with grid
+        table.insert(headers, dsl.strict.hbox {
             config = {
                 id = "header_" .. element,
                 minWidth = SLOT_SIZE,
                 minHeight = COLUMN_HEADER_HEIGHT,
                 align = "center",
-                valign = "center",
             },
             children = {
                 dsl.strict.text(element:sub(1,1):upper() .. element:sub(2), {
@@ -344,7 +368,7 @@ local function createColumnHeaders()
             },
         })
 
-        -- Add spacing between columns (except after last)
+        -- Add spacing between columns (except after last) - matches grid spacing
         if element ~= CONFIG.element_order[#CONFIG.element_order] then
             table.insert(headers, dsl.strict.spacer(SLOT_SPACING))
         end
@@ -353,11 +377,145 @@ local function createColumnHeaders()
     return dsl.strict.hbox {
         config = {
             id = "column_headers",
-            padding = 0,
-            align = "center",
+            padding = GRID_PADDING,
+            minWidth = GRID_WIDTH,
+            minHeight = COLUMN_HEADER_BLOCK_HEIGHT,
         },
         children = headers,
     }
+end
+
+--- Build tooltip body text for a skill
+--- @param skillDef table Skill definition
+--- @param element string Element name
+--- @param buttonState string Current button state
+--- @param isLocked boolean Whether the element is locked
+--- @return string Formatted tooltip body
+local function buildSkillTooltipBody(skillDef, element, buttonState, isLocked)
+    local lines = {}
+
+    -- Element and cost
+    local elementName = element:sub(1,1):upper() .. element:sub(2)
+    table.insert(lines, elementName .. " • Cost: " .. (skillDef.cost or 1) .. " point(s)")
+
+    -- Description
+    if skillDef.description then
+        table.insert(lines, "")
+        table.insert(lines, skillDef.description)
+    end
+
+    -- Status indicator
+    if isLocked then
+        table.insert(lines, "")
+        table.insert(lines, "[LOCKED - Complete demo to unlock]")
+    elseif buttonState == "learned" then
+        table.insert(lines, "")
+        table.insert(lines, "[LEARNED]")
+    elseif buttonState == "insufficient" then
+        table.insert(lines, "")
+        table.insert(lines, "[Not enough skill points]")
+    elseif buttonState == "available" then
+        table.insert(lines, "")
+        table.insert(lines, "[Click to learn]")
+    end
+
+    return table.concat(lines, "\n")
+end
+
+local function showSkillTooltip(anchorEntity, tooltipKey, tooltipTitle, tooltipBody)
+    if not ensureSimpleTooltip then return end
+
+    local tooltip = ensureSimpleTooltip(tooltipKey, tooltipTitle, tooltipBody, {
+        titleFontSize = TOOLTIP_TITLE_SIZE,
+        bodyFontSize = TOOLTIP_BODY_SIZE,
+        maxWidth = TOOLTIP_MAX_WIDTH,
+    })
+
+    if not tooltip or not _G.registry or not _G.registry.valid or not _G.registry:valid(tooltip) then
+        return
+    end
+
+    if ui and ui.box and ui.box.AddStateTagToUIBox then
+        ui.box.ClearStateTagsFromUIBox(tooltip)
+        if PLANNING_STATE then ui.box.AddStateTagToUIBox(tooltip, PLANNING_STATE) end
+        if ACTION_STATE then ui.box.AddStateTagToUIBox(tooltip, ACTION_STATE) end
+        if SHOP_STATE then ui.box.AddStateTagToUIBox(tooltip, SHOP_STATE) end
+    end
+
+    local anchor = component_cache.get(anchorEntity, Transform)
+    local tt = component_cache.get(tooltip, Transform)
+    if anchor and tt then
+        local anchorX = anchor.actualX or 0
+        local anchorY = anchor.actualY or 0
+        local anchorW = anchor.actualW or SLOT_SIZE
+        local anchorH = anchor.actualH or SLOT_SIZE
+        local tooltipH = tt.actualH or 0
+
+        local tooltipX = anchorX + anchorW + TOOLTIP_OFFSET_X
+        local tooltipY = anchorY + (anchorH - tooltipH) * 0.5
+
+        tt.actualX = tooltipX
+        tt.actualY = tooltipY
+        tt.visualX = tt.actualX
+        tt.visualY = tt.actualY
+    end
+end
+
+local function attachSkillTooltipHandlers(skillId, element)
+    if not _G.registry or not ui or not ui.box or not ui.box.GetUIEByID then return end
+
+    local entity = ui.box.GetUIEByID(_G.registry, state.panelEntity, "skill_btn_" .. skillId)
+    if not entity then return end
+
+    local go = component_cache.get(entity, GameObject)
+    if not go then return end
+
+    go.state.hoverEnabled = true
+    go.state.collisionEnabled = true
+
+    go.methods.onHover = function()
+        local skillDef = Skills and Skills.get and Skills.get(skillId) or nil
+        local skillElement = element or (skillDef and skillDef.element) or "unknown"
+        local isLocked = isElementLocked(skillElement)
+        local buttonState = state.player and SkillsPanel.getSkillButtonState(state.player, skillId) or "locked"
+        local tooltipTitle = (skillDef and skillDef.name) or skillId
+        local tooltipBody = buildSkillTooltipBody(skillDef or {}, skillElement, buttonState, isLocked)
+        local tooltipKey = "skills_panel_" .. skillId .. "_" .. buttonState
+
+        -- Store in Lua-side table (can't set properties on C++ userdata)
+        state.entityTooltipKeys[entity] = tooltipKey
+        state.activeTooltipKey = tooltipKey
+        showSkillTooltip(entity, tooltipKey, tooltipTitle, tooltipBody)
+    end
+
+    go.methods.onStopHover = function()
+        local tooltipKey = state.entityTooltipKeys[entity]
+        if hideSimpleTooltip and tooltipKey then
+            hideSimpleTooltip(tooltipKey)
+        end
+        if state.activeTooltipKey == tooltipKey then
+            state.activeTooltipKey = nil
+        end
+        state.entityTooltipKeys[entity] = nil
+    end
+end
+
+local function applySkillTooltips()
+    if not state.panelEntity or not ui or not ui.box or not ui.box.GetUIEByID then return end
+
+    local gridData = SkillsPanel.getGridData()
+    if not gridData then return end
+
+    for _, element in ipairs(CONFIG.element_order) do
+        local skills = gridData[element]
+        if skills then
+            for _, entry in ipairs(skills) do
+                if entry and entry.id then
+                    attachSkillTooltipHandlers(entry.id, element)
+                end
+            end
+        end
+    end
 end
 
 --- Create a single skill button
@@ -373,45 +531,35 @@ local function createSkillButton(skillId, skillDef, element, isLocked)
     local isAvailable = buttonState == "available"
     local isInsufficient = buttonState == "insufficient"
 
-    -- Determine sprite based on state
-    local sprite = isLocked and CONFIG.locked_sprite or (skillDef.icon or "skill-default")
+    -- Use placeholder sprites for all icons (skill, lock, checkmark)
+    local skillSprite = CONFIG.skill_icon_sprite or "test-inventory-square-single"
+    local lockedSprite = CONFIG.locked_sprite or skillSprite
+    local learnedSprite = CONFIG.learned_overlay or skillSprite
 
-    -- Determine color/tint based on state
-    local tint = nil
+    local sprite = skillSprite
     if isLocked then
-        tint = { 100, 100, 100, 200 }
-    elseif isInsufficient then
-        tint = { 150, 150, 150, 200 }
+        sprite = lockedSprite
+    elseif isLearned then
+        sprite = learnedSprite
     end
 
     local children = {
         dsl.strict.anim(sprite .. ".png", {
             w = SLOT_SIZE - UI(4),
             h = SLOT_SIZE - UI(4),
-            tint = tint,
         }),
     }
-
-    -- Add checkmark overlay if learned
-    if isLearned then
-        table.insert(children, dsl.strict.anim(CONFIG.learned_overlay .. ".png", {
-            w = UI(16),
-            h = UI(16),
-        }))
-    end
 
     return dsl.strict.hbox {
         config = {
             id = "skill_btn_" .. skillId,
             minWidth = SLOT_SIZE,
             minHeight = SLOT_SIZE,
-            canCollide = not isLocked and not isLearned,
-            hover = not isLocked and not isLearned,
+            canCollide = true,  -- Always enable collision for tooltips
             padding = UI(2),
             align = "center",
-            valign = "center",
+            -- Click callback only for available/insufficient skills (not locked or learned)
             buttonCallback = (not isLocked and not isLearned) and function()
-                -- Trigger skill button clicked
                 local ok, SkillsPanelInput = pcall(require, "ui.skills_panel_input")
                 if ok and SkillsPanelInput and SkillsPanelInput.onSkillButtonClicked then
                     SkillsPanelInput.onSkillButtonClicked(skillId)
@@ -496,9 +644,9 @@ local function buildPanelDef()
         },
         children = {
             createHeader(),
-            dsl.strict.spacer(UI(4)),
+            dsl.strict.spacer(HEADER_SPACING),
             createColumnHeaders(),
-            dsl.strict.spacer(UI(4)),
+            dsl.strict.spacer(HEADER_SPACING),
             createSkillGrid(),
         },
     }
@@ -526,10 +674,10 @@ local function initializePanel()
         return
     end
 
-    -- Spawn panel offscreen (will be moved on open)
-    local offscreenY = GetScreenHeight and GetScreenHeight() or 1080
+    -- Spawn panel offscreen to the left (will slide in on open)
+    local offscreenX = state.hiddenX or (-PANEL_WIDTH - PANEL_PADDING)
     state.panelEntity = dsl.spawn(
-        { x = state.panelX, y = offscreenY },
+        { x = offscreenX, y = state.panelY },
         panelDef,
         RENDER_LAYER,
         PANEL_Z
@@ -559,6 +707,8 @@ local function initializePanel()
     -- Update the header text
     SkillsPanel.refreshHeader()
 
+    applySkillTooltips()
+
     state.initialized = true
 end
 
@@ -586,7 +736,7 @@ function SkillsPanel.open()
 
     if state.isVisible then return end
 
-    setEntityVisible(state.panelEntity, true, state.panelX, state.panelY)
+    setEntityVisible(state.panelEntity, true, state.panelX, state.panelY, state.hiddenX)
     state.isVisible = true
 
     if signal then
@@ -598,7 +748,12 @@ end
 function SkillsPanel.close()
     if not state.isVisible then return end
 
-    setEntityVisible(state.panelEntity, false, state.panelX, state.panelY)
+    if state.activeTooltipKey and hideSimpleTooltip then
+        hideSimpleTooltip(state.activeTooltipKey)
+        state.activeTooltipKey = nil
+    end
+
+    setEntityVisible(state.panelEntity, false, state.panelX, state.panelY, state.hiddenX)
     state.isVisible = false
 
     if signal then
@@ -632,6 +787,11 @@ function SkillsPanel.refreshButtonStates()
     if not state.initialized or not state.panelEntity then return end
     if not _G.registry or not _G.registry.valid or not _G.registry:valid(state.panelEntity) then return end
 
+    if state.activeTooltipKey and hideSimpleTooltip then
+        hideSimpleTooltip(state.activeTooltipKey)
+        state.activeTooltipKey = nil
+    end
+
     -- For a full refresh, rebuild the grid
     -- This is simpler than tracking individual button entities
     if ui and ui.box and ui.box.GetUIEByID then
@@ -650,6 +810,8 @@ function SkillsPanel.refreshButtonStates()
                 if ui.box.RenewAlignment then
                     ui.box.RenewAlignment(_G.registry, state.panelEntity)
                 end
+
+                applySkillTooltips()
             end
         end
     end
@@ -679,6 +841,11 @@ function SkillsPanel.destroy()
         timer.kill_group(TIMER_GROUP)
     end
 
+    if state.activeTooltipKey and hideSimpleTooltip then
+        hideSimpleTooltip(state.activeTooltipKey)
+        state.activeTooltipKey = nil
+    end
+
     -- Destroy panel entity
     if state.panelEntity and _G.registry and _G.registry.valid and _G.registry:valid(state.panelEntity) then
         if ui and ui.box and ui.box.Remove then
@@ -694,6 +861,7 @@ function SkillsPanel.destroy()
     state.skillButtons = {}
     state.headerTextEntity = nil
     state.player = nil
+    state.activeTooltipKey = nil
 end
 
 --- Reset module state (for testing)

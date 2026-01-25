@@ -5773,6 +5773,17 @@ function initPlanningPhase()
             log_warn("[gameplay] WandPanel module failed to load: " .. tostring(WandPanel_or_err))
         end
 
+        -- Initialize Skills Panel (K key toggle)
+        local SkillsPanelInput_ok, SkillsPanelInput = pcall(require, "ui.skills_panel_input")
+        if SkillsPanelInput_ok and SkillsPanelInput then
+            log_debug("[gameplay] SkillsPanelInput module loaded successfully")
+            -- Pass hero as player for skill point queries
+            SkillsPanelInput.initialize(hero)
+            log_debug("[gameplay] SkillsPanelInput initialized (K key enabled)")
+        else
+            log_warn("[gameplay] SkillsPanelInput module failed to load: " .. tostring(SkillsPanelInput))
+        end
+
         GridInventorySave.setCardRecreator(function(cardId, category)
             if not cardId then return nil end
 

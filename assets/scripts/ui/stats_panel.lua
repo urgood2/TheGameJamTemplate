@@ -1044,6 +1044,28 @@ local function buildElementalResistGrid(snapshot)
     local COL_WIDTH = ui_scale.ui(55)
     local ELEMENT_COL_WIDTH = ui_scale.ui(75)
 
+    local function gridCell(text, width, opts)
+        opts = opts or {}
+        local align = opts.align or bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER)
+        return dsl.strict.hbox {
+            config = {
+                minWidth = width,
+                maxWidth = width,
+                padding = 0,
+                align = align,
+            },
+            children = {
+                dsl.strict.text(text ~= nil and tostring(text) or "", {
+                    fontSize = opts.fontSize,
+                    color = opts.color,
+                    fontName = opts.fontName,
+                    shadow = opts.shadow,
+                    align = opts.textAlign or align,
+                }),
+            },
+        }
+    end
+
     local headerRow = dsl.strict.hbox {
         config = {
             padding = ui_scale.ui(2),
@@ -1051,10 +1073,22 @@ local function buildElementalResistGrid(snapshot)
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
         },
         children = {
-            dsl.strict.text("Element", { fontSize = ui_scale.ui(10), color = "gray", minWidth = ELEMENT_COL_WIDTH }),
-            dsl.strict.text("Resist", { fontSize = ui_scale.ui(10), color = "gray", minWidth = COL_WIDTH }),
-            dsl.strict.text("Damage", { fontSize = ui_scale.ui(10), color = "gray", minWidth = COL_WIDTH }),
-            dsl.strict.text("Duration", { fontSize = ui_scale.ui(10), color = "gray", minWidth = COL_WIDTH }),
+            gridCell("Element", ELEMENT_COL_WIDTH, { fontSize = ui_scale.ui(10), color = "gray" }),
+            gridCell("Resist", COL_WIDTH, {
+                fontSize = ui_scale.ui(10),
+                color = "gray",
+                align = bit.bor(AlignmentFlag.HORIZONTAL_RIGHT, AlignmentFlag.VERTICAL_CENTER),
+            }),
+            gridCell("Damage", COL_WIDTH, {
+                fontSize = ui_scale.ui(10),
+                color = "gray",
+                align = bit.bor(AlignmentFlag.HORIZONTAL_RIGHT, AlignmentFlag.VERTICAL_CENTER),
+            }),
+            gridCell("Duration", COL_WIDTH, {
+                fontSize = ui_scale.ui(10),
+                color = "gray",
+                align = bit.bor(AlignmentFlag.HORIZONTAL_RIGHT, AlignmentFlag.VERTICAL_CENTER),
+            }),
         }
     }
     
@@ -1079,25 +1113,24 @@ local function buildElementalResistGrid(snapshot)
                 align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
             },
             children = {
-                dsl.strict.text(icon .. " " .. displayName, {
+                gridCell(icon .. " " .. displayName, ELEMENT_COL_WIDTH, {
                     fontSize = PILL_FONT_SIZE - ui_scale.ui(1),
                     color = elementColor,
-                    minWidth = ELEMENT_COL_WIDTH,
                 }),
-                dsl.strict.text(resistText, {
+                gridCell(resistText, COL_WIDTH, {
                     fontSize = PILL_FONT_SIZE - ui_scale.ui(1),
                     color = hasResist and getGridValueColor(entry.resist) or "gray",
-                    minWidth = COL_WIDTH,
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_RIGHT, AlignmentFlag.VERTICAL_CENTER),
                 }),
-                dsl.strict.text(modText, {
+                gridCell(modText, COL_WIDTH, {
                     fontSize = PILL_FONT_SIZE - ui_scale.ui(1),
                     color = getGridValueColor(entry.mod),
-                    minWidth = COL_WIDTH,
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_RIGHT, AlignmentFlag.VERTICAL_CENTER),
                 }),
-                dsl.strict.text(durationText, {
+                gridCell(durationText, COL_WIDTH, {
                     fontSize = PILL_FONT_SIZE - ui_scale.ui(1),
                     color = hasDuration and getGridValueColor(entry.duration) or "gray",
-                    minWidth = COL_WIDTH,
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_RIGHT, AlignmentFlag.VERTICAL_CENTER),
                 }),
             }
         })

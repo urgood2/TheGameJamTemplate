@@ -41,7 +41,8 @@ local component_cache = _G.component_cache or { get = function() return nil end 
 local UI = ui_scale and ui_scale.ui or function(x) return x end
 
 local CONFIG = {
-    sprite = "skills-tab-marker",
+    -- TODO: Create dedicated skills-tab-marker sprite
+    sprite = "inventory-tab-marker",  -- Using inventory sprite temporarily
     width = UI(48),
     height = UI(64),
     edge_offset = UI(0),      -- Distance from left edge when closed

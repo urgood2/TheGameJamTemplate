@@ -626,7 +626,7 @@ local function buildStatRow(statKey, snapshot)
             id = "stat_row_" .. statKey,
             padding = ui_scale.ui(4),
             minHeight = ROW_HEIGHT,
-            minWidth = ROW_CONTENT_WIDTH,
+            minWidth = SCROLL_CONTENT_WIDTH,
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
             hover = false,
             tooltip = nil,

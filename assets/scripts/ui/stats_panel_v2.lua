@@ -80,11 +80,11 @@ local ROW_FONT_SIZE = ui_scale.ui(13)
 local HEADER_FONT_SIZE = ui_scale.ui(14)
 local SECTION_HEADER_HEIGHT = ui_scale.ui(26)
 
--- Tab marker constants (from player_inventory.lua pattern)
-local TAB_MARKER_WIDTH = ui_scale.ui(40)
-local TAB_MARKER_HEIGHT = ui_scale.ui(40)
-local TAB_MARKER_OFFSET_X = ui_scale.ui(-50)  -- Sticks out from left edge of panel
-local TAB_MARKER_OFFSET_Y = ui_scale.ui(20)   -- Near top of panel
+-- Tab marker constants (matching player_inventory.lua pattern)
+local TAB_MARKER_WIDTH = ui_scale.ui(64)
+local TAB_MARKER_HEIGHT = ui_scale.ui(64)
+local TAB_MARKER_OFFSET_X = ui_scale.ui(-54)  -- Sticks out from left edge of panel
+local TAB_MARKER_OFFSET_Y = ui_scale.ui(10)   -- Near top of panel
 
 -- Section icons (emoji fallback if sprites not available)
 local SECTION_ICONS = {
@@ -1409,15 +1409,8 @@ function StatsPanel._createTabMarker()
             end
         },
         children = {
-            -- Use text fallback if sprite not available
-            dsl.strict.text("C", {
-                fontSize = ui_scale.ui(20),
-                color = "gold",
-                minWidth = TAB_MARKER_WIDTH,
-                minHeight = TAB_MARKER_HEIGHT,
-            })
-            -- TODO: Replace with sprite when asset is available:
-            -- dsl.anim("character-tab-marker.png", { w = TAB_MARKER_WIDTH, h = TAB_MARKER_HEIGHT })
+            -- Sprite tab marker (matches inventory panel style)
+            dsl.anim("character-tab-marker.png", { w = TAB_MARKER_WIDTH, h = TAB_MARKER_HEIGHT })
         }
     }
 

@@ -197,6 +197,10 @@ command_buffer.queueDraw(layers.ui, fn, z, layer.DrawCommandSpace.World)
 command_buffer.queueDraw(layers.ui, fn, z, layer.DrawCommandSpace.Screen)
 ```
 
+### UI Decorations: Slot Underlays
+- To render a slot decoration behind the slot sprite (e.g., wand trigger backdrop), use a decoration with `zOffset < 0` on a sprite-panel slot.
+- Inventory grid slot decorations are supported via `slotConfig.decorations` or `gridConfig.slotDecorations`. When a slot uses a sprite panel, decorations are scaled by `ui_scale.SPRITE_SCALE` at definition time.
+
 ---
 
 ## Global Helper Functions

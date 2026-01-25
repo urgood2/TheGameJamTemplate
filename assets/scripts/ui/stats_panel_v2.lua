@@ -676,8 +676,8 @@ local function buildElementalGrid(snapshot)
     local ELEM_MIN_WIDTH = ui_scale.ui(90)
     local METRIC_BLOCK_MIN_WIDTH = ui_scale.ui(52)
 
-    local rowContentWidth = ROW_CONTENT_WIDTH - (GRID_ROW_PADDING * 2)
-    local headerContentWidth = ROW_CONTENT_WIDTH - (GRID_HEADER_PADDING * 2)
+    local rowContentWidth = ROW_CONTENT_WIDTH
+    local headerContentWidth = ROW_CONTENT_WIDTH
     local metricsRowWidth = rowContentWidth - ELEM_MIN_WIDTH
     local metricBlockWidth = math.floor((metricsRowWidth - (METRIC_SPACING * 2)) / 3)
     if metricBlockWidth < METRIC_BLOCK_MIN_WIDTH then

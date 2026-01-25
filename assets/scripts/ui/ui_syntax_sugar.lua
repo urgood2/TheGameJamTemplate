@@ -863,6 +863,109 @@ function dsl.filler(opts)
 end
 
 ------------------------------------------------------------
+-- 1️⃣1️⃣b Dot Filler Element
+-- Fills remaining horizontal space with visible dots.
+-- Visual: "Attack Power......125"
+------------------------------------------------------------
+
+---@class DotFillerOpts
+---@field dot? string Dot character to repeat (default: ".")
+---@field spacing? number Number of space characters between dots (default: 1)
+---@field minDots? number Reserved for future dynamic computation (default: 2)
+---@field maxDots? number Maximum number of dots to generate (default: 20)
+---@field fontSize? number Font size for dots (inherits from parent if nil)
+---@field color? string|Color Dot color (default: "gray")
+
+--- Create a dot filler that fills horizontal space with visible dots.
+--- Unlike regular `filler()` which is invisible, dotFiller displays dots
+--- to create visual separation between labels and values.
+---
+--- **Note:** Current implementation generates a static `maxDots` string that
+--- is clipped by the container. True dynamic width-based computation would
+--- require C++ layout system integration.
+---
+--- **Example:**
+--- ```lua
+--- -- Simple dot filler (uses defaults)
+--- dsl.hbox {
+---     children = {
+---         dsl.text("Attack Power"),
+---         dsl.dotFiller(),
+---         dsl.text("125"),
+---     }
+--- }
+--- -- Output: "Attack Power......125"
+---
+--- -- Custom dot character and styling
+--- dsl.hbox {
+---     children = {
+---         dsl.text("HP"),
+---         dsl.dotFiller({ dot = "-", color = "dim_gray" }),
+---         dsl.text("100/100"),
+---     }
+--- }
+--- -- Output: "HP---100/100"
+---
+--- -- Stat row with styled dots
+--- dsl.dotFiller({
+---     dot = ".",
+---     spacing = 2,
+---     maxDots = 15,
+---     fontSize = 12,
+---     color = "gray"
+--- })
+--- ```
+---@param opts? DotFillerOpts Optional configuration
+---@return table UIDefinition node for the dot filler element
+function dsl.dotFiller(opts)
+    opts = opts or {}
+
+    -- Configuration with defaults
+    local dotChar = opts.dot or "."
+    local dotSpacing = opts.spacing or 1
+    local minDots = opts.minDots or 2
+    local maxDots = opts.maxDots or 20
+    local fontSize = opts.fontSize
+    local dotColor = opts.color
+
+    -- Generate a dot string with minimum dots
+    -- Note: For true dynamic width-based dot counting, this would need
+    -- integration with the C++ layout system. For now, use maxDots as a
+    -- reasonable fill that will be clipped by the container.
+    local function generateDotString()
+        local dots = {}
+        for i = 1, maxDots do
+            table.insert(dots, dotChar)
+        end
+        return table.concat(dots, string.rep(" ", dotSpacing))
+    end
+
+    -- Use dynamic text to allow future enhancement for runtime dot counting
+    local dotText = generateDotString()
+
+    return def{
+        type = "TEXT",
+        config = {
+            text = dotText,
+            color = dotColor and color(dotColor) or color("gray"),
+            fontSize = fontSize,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+            -- Mark as dot filler for identification
+            isDotFiller = true,
+            dotChar = dotChar,
+            dotSpacing = dotSpacing,
+            minDots = minDots,
+            maxDots = maxDots,
+            -- Allow filler-like expansion
+            isFiller = false,  -- Distinct from invisible filler
+            flexWeight = 1,
+            -- Non-interactive
+            canCollide = false,
+        }
+    }
+end
+
+------------------------------------------------------------
 -- 1️⃣2️⃣ Divider Element
 -- Horizontal or vertical divider line.
 ------------------------------------------------------------
@@ -2246,6 +2349,7 @@ local STRICT_MAPPINGS = {
     { name = "anim",     fn = dsl.anim,         schema = Schema.UI_ANIM,         positional = { "id" } },
     { name = "spacer",   fn = dsl.spacer,       schema = Schema.UI_SPACER,       positional = { "w", "h" } },
     { name = "filler",   fn = dsl.filler,       schema = Schema.UI_FILLER,       positional = {} },
+    { name = "dotFiller", fn = dsl.dotFiller,  schema = Schema.UI_DOT_FILLER,   positional = {} },
     { name = "divider",  fn = dsl.divider,      schema = Schema.UI_DIVIDER,      positional = { "direction" } },
     { name = "iconLabel", fn = dsl.iconLabel,   schema = Schema.UI_ICON_LABEL,   positional = { "iconId", "label" } },
 

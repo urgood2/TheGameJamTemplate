@@ -312,6 +312,24 @@ Schema.UI_FILLER = {
     }
 }
 
+Schema.UI_DOT_FILLER = {
+    _name = "UI_DOT_FILLER",
+    _fields = {
+        -- Dot character to repeat (default: ".")
+        dot         = { type = "string",   required = false },
+        -- Spacing between dots in pixels (default: 1)
+        spacing     = { type = "number",   required = false },
+        -- Minimum number of dots (default: 2)
+        minDots     = { type = "number",   required = false },
+        -- Maximum number of dots (default: 20)
+        maxDots     = { type = "number",   required = false },
+        -- Font size for dots
+        fontSize    = { type = "number",   required = false },
+        -- Dot color
+        color       = { type = "string",   required = false },
+    }
+}
+
 Schema.UI_DIVIDER = {
     _name = "UI_DIVIDER",
     _fields = {

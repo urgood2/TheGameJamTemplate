@@ -68,6 +68,12 @@ local ROW_FONT_SIZE = ui_scale.ui(13)
 local HEADER_FONT_SIZE = ui_scale.ui(14)
 local SECTION_HEADER_HEIGHT = ui_scale.ui(26)
 
+-- Tab marker constants (from player_inventory.lua pattern)
+local TAB_MARKER_WIDTH = ui_scale.ui(40)
+local TAB_MARKER_HEIGHT = ui_scale.ui(40)
+local TAB_MARKER_OFFSET_X = ui_scale.ui(-50)  -- Sticks out from left edge of panel
+local TAB_MARKER_OFFSET_Y = ui_scale.ui(20)   -- Near top of panel
+
 -- Section icons (emoji fallback if sprites not available)
 local SECTION_ICONS = {
     combat = { sprite = "icon_sword", emoji = "crossed_swords" },
@@ -242,7 +248,12 @@ StatsPanel._state = {
     snapshotHash = nil,
     
     panelEntity = nil,
+    tabMarkerEntity = nil,  -- Tab marker for toggle
+    closeButtonEntity = nil,  -- Close button in header
     signalHandlers = nil,  -- signal_group for cleanup
+
+    -- Tab memory - remember last selected tab across show/hide cycles
+    lastSelectedTab = "combat",  -- Default tab on first open
 }
 
 --------------------------------------------------------------------------------
@@ -450,29 +461,49 @@ end
 --------------------------------------------------------------------------------
 
 -- Build header with title, level, and XP bar
+-- Close button size (matching player_inventory.lua: 24px)
+local CLOSE_BUTTON_SIZE = ui_scale.ui(24)
+
 local function buildHeader(snapshot)
     local level = snapshot and snapshot.level or 1
     local xp = snapshot and snapshot.xp or 0
     local xpToNext = snapshot and snapshot.xp_to_next or 100
     local xpRatio = xpToNext > 0 and (xp / xpToNext) or 0
-    
+
+    -- Title row with close button (using filler pattern from player_inventory.lua)
     local titleRow = dsl.strict.hbox {
         config = {
             padding = 0,
+            minWidth = PANEL_WIDTH - PANEL_PADDING * 2,
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
         },
         children = {
-            dsl.strict.text(L("stats_panel.title", "Character Stats"), {
+            dsl.strict.text(L("stats_panel.title", "Stats"), {
                 fontSize = ui_scale.ui(16),
                 color = "apricot_cream",
                 shadow = true,
             }),
-            dsl.strict.spacer(ui_scale.ui(10)),
+            dsl.strict.spacer(ui_scale.ui(8)),
             dsl.strict.text(string.format("Lv.%d", level), {
                 id = "header_level",
                 fontSize = ui_scale.ui(14),
                 color = "gold",
                 shadow = true,
+            }),
+            -- Filler pushes close button to right edge
+            dsl.filler(),
+            -- Close button (same pattern as player_inventory.lua)
+            dsl.strict.button("X", {
+                id = "stats_panel_close_btn",
+                fontSize = ui_scale.ui(12),
+                color = "red",  -- Match inventory panel
+                minWidth = CLOSE_BUTTON_SIZE,
+                minHeight = CLOSE_BUTTON_SIZE,
+                onClick = function()
+                    -- Use require() for hot-reload safety
+                    local StatsPanelModule = require("ui.stats_panel_v2")
+                    StatsPanelModule.hide()
+                end,
             }),
         }
     }
@@ -578,6 +609,7 @@ local function buildStatRow(statKey, snapshot)
             id = "stat_row_" .. statKey,
             padding = ui_scale.ui(4),
             minHeight = ROW_HEIGHT,
+            minWidth = PANEL_WIDTH - PANEL_PADDING * 2,  -- Full width for proper alignment
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
             hover = false,
             tooltip = nil,
@@ -588,15 +620,8 @@ local function buildStatRow(statKey, snapshot)
                 fontSize = ROW_FONT_SIZE,
                 color = "white",
             }),
-            -- Spacer to push value right
-            dsl.strict.hbox {
-                config = {
-                    padding = 0,
-                    minWidth = ui_scale.ui(1),  -- Flex spacer
-                    align = AlignmentFlag.HORIZONTAL_RIGHT,
-                },
-                children = {}
-            },
+            -- Flexible filler to push value right
+            dsl.filler(),
             -- Value + Delta (right side)
             dsl.strict.hbox {
                 config = {
@@ -628,13 +653,34 @@ local function buildElementalGrid(snapshot)
     local headerRow = dsl.strict.hbox {
         config = {
             padding = ui_scale.ui(2),
+            minWidth = PANEL_WIDTH - PANEL_PADDING * 2,
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
         },
         children = {
-            dsl.strict.text("Element", { fontSize = ui_scale.ui(10), color = "gray", minWidth = ELEM_COL_WIDTH }),
-            dsl.strict.text("Resist", { fontSize = ui_scale.ui(10), color = "gray", minWidth = COL_WIDTH }),
-            dsl.strict.text("Damage", { fontSize = ui_scale.ui(10), color = "gray", minWidth = COL_WIDTH }),
-            dsl.strict.text("Duration", { fontSize = ui_scale.ui(10), color = "gray", minWidth = COL_WIDTH }),
+            dsl.strict.text("Element", {
+                fontSize = ui_scale.ui(10),
+                color = "gray",
+                minWidth = ELEM_COL_WIDTH,
+                align = AlignmentFlag.HORIZONTAL_LEFT,
+            }),
+            dsl.strict.text("Resist", {
+                fontSize = ui_scale.ui(10),
+                color = "gray",
+                minWidth = COL_WIDTH,
+                align = AlignmentFlag.HORIZONTAL_CENTER,
+            }),
+            dsl.strict.text("Damage", {
+                fontSize = ui_scale.ui(10),
+                color = "gray",
+                minWidth = COL_WIDTH,
+                align = AlignmentFlag.HORIZONTAL_CENTER,
+            }),
+            dsl.strict.text("Duration", {
+                fontSize = ui_scale.ui(10),
+                color = "gray",
+                minWidth = COL_WIDTH,
+                align = AlignmentFlag.HORIZONTAL_CENTER,
+            }),
         }
     }
     
@@ -663,6 +709,7 @@ local function buildElementalGrid(snapshot)
             config = {
                 id = "elem_row_" .. elemType,
                 padding = ui_scale.ui(2),
+                minWidth = PANEL_WIDTH - PANEL_PADDING * 2,
                 align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
             },
             children = {
@@ -670,24 +717,28 @@ local function buildElementalGrid(snapshot)
                     fontSize = ROW_FONT_SIZE - ui_scale.ui(1),
                     color = config.color,
                     minWidth = ELEM_COL_WIDTH,
+                    align = AlignmentFlag.HORIZONTAL_LEFT,
                 }),
                 dsl.strict.text(formatGridValue(data.resist, config.hasResist), {
                     id = "elem_" .. elemType .. "_resist",
                     fontSize = ROW_FONT_SIZE - ui_scale.ui(1),
                     color = getGridColor(data.resist, config.hasResist),
                     minWidth = COL_WIDTH,
+                    align = AlignmentFlag.HORIZONTAL_CENTER,
                 }),
                 dsl.strict.text(formatGridValue(data.damage, true), {
                     id = "elem_" .. elemType .. "_damage",
                     fontSize = ROW_FONT_SIZE - ui_scale.ui(1),
                     color = getGridColor(data.damage, true),
                     minWidth = COL_WIDTH,
+                    align = AlignmentFlag.HORIZONTAL_CENTER,
                 }),
                 dsl.strict.text(formatGridValue(data.duration, config.hasDuration), {
                     id = "elem_" .. elemType .. "_duration",
                     fontSize = ROW_FONT_SIZE - ui_scale.ui(1),
                     color = getGridColor(data.duration, config.hasDuration),
                     minWidth = COL_WIDTH,
+                    align = AlignmentFlag.HORIZONTAL_CENTER,
                 }),
             }
         })
@@ -824,10 +875,13 @@ local function buildPanelDefinition(snapshot)
         })
     end
 
+    -- Use remembered tab or default to "combat"
+    local initialTab = StatsPanel._state.lastSelectedTab or "combat"
+
     local tabContainer = dsl.strict.tabs {
         id = "stats_panel_tabs",
         tabs = tabDefs,
-        activeTab = "combat",
+        activeTab = initialTab,
         buttonColor = "dark_gray_slate",
         activeButtonColor = "gray",
         contentPadding = 0,
@@ -1029,17 +1083,62 @@ function StatsPanel._updatePosition()
     local state = StatsPanel._state
     if not state.panelEntity then return end
     if not entity_cache or not entity_cache.valid(state.panelEntity) then return end
-    
+
     local t = component_cache.get(state.panelEntity, Transform)
     if not t then return end
-    
+
     local x = getPanelX(state.slideProgress)
     local y = 60
-    
+
     t.actualX = x
     t.actualY = y
     t.visualX = x
     t.visualY = y
+end
+
+-- Helper to set entity visibility and position (from player_inventory.lua pattern)
+-- This properly updates Transform, UIBoxComponent.uiRoot, and InheritedProperties
+local function setEntityVisible(entity, visible, onscreenX, onscreenY, dbgLabel)
+    if not entity or not entity_cache or not entity_cache.valid(entity) then return end
+
+    local screenW, screenH = getScreenSize()
+    local targetX = visible and onscreenX or (screenW + 100)  -- Offscreen X
+    local targetY = visible and onscreenY or (screenH + 100)  -- Offscreen Y
+
+    -- Update main Transform
+    local t = component_cache.get(entity, Transform)
+    if t then
+        t.actualX = targetX
+        t.actualY = targetY
+        t.visualX = targetX
+        t.visualY = targetY
+        log_debug(string.format("[StatsPanelV2] %s Transform: (%.0f, %.0f)",
+            dbgLabel or "Entity", targetX, targetY))
+    end
+
+    -- Update InheritedProperties offset (critical for layout system)
+    local role = component_cache.get(entity, InheritedProperties)
+    if role and role.offset then
+        role.offset.x = targetX
+        role.offset.y = targetY
+    end
+
+    -- Update UIBoxComponent.uiRoot (critical for UI boxes)
+    local boxComp = component_cache.get(entity, UIBoxComponent)
+    if boxComp and boxComp.uiRoot and registry:valid(boxComp.uiRoot) then
+        local rt = component_cache.get(boxComp.uiRoot, Transform)
+        if rt then
+            rt.actualX = targetX
+            rt.actualY = targetY
+            rt.visualX = targetX
+            rt.visualY = targetY
+        end
+
+        -- Force layout recalculation
+        if ui and ui.box and ui.box.RenewAlignment then
+            ui.box.RenewAlignment(registry, entity)
+        end
+    end
 end
 
 --------------------------------------------------------------------------------
@@ -1115,6 +1214,174 @@ function StatsPanel._createPanel()
     
     state.panelEntity = entity
     StatsPanel._updatePosition()
+
+    -- Find close button in panel hierarchy (for testing/accessibility)
+    if ui and ui.box and ui.box.GetUIEByID then
+        state.closeButtonEntity = ui.box.GetUIEByID(registry, entity, "stats_panel_close_btn")
+        if not state.closeButtonEntity then
+            log_debug("[StatsPanelV2] WARNING: Could not find stats_panel_close_btn in panel hierarchy")
+        end
+    end
+
+    -- Create tab marker if it doesn't exist
+    if not state.tabMarkerEntity or not entity_cache or not entity_cache.valid(state.tabMarkerEntity) then
+        StatsPanel._createTabMarker()
+    end
+end
+
+-- Get tab marker position based on panel position
+local function getTabMarkerPosition()
+    local screenW, _ = getScreenSize()
+    local state = StatsPanel._state
+
+    -- Panel visible position
+    local panelX = screenW - PANEL_WIDTH - 20
+    local panelY = 60
+
+    -- Tab marker offset from panel left edge
+    local markerX = panelX + TAB_MARKER_OFFSET_X
+    local markerY = panelY + TAB_MARKER_OFFSET_Y
+
+    return markerX, markerY
+end
+
+-- Get tab marker position when panel is hidden (clamped to screen edge)
+local function getTabMarkerHiddenPosition()
+    local screenW, _ = getScreenSize()
+    -- When panel is hidden, marker stays at right screen edge
+    local markerX = screenW - TAB_MARKER_WIDTH - 10
+    local markerY = 60 + TAB_MARKER_OFFSET_Y
+    return markerX, markerY
+end
+
+-- Create the tab marker entity
+function StatsPanel._createTabMarker()
+    log_debug("[StatsPanelV2] _createTabMarker called")
+    local state = StatsPanel._state
+
+    -- Destroy existing if any
+    if state.tabMarkerEntity and entity_cache and entity_cache.valid(state.tabMarkerEntity) then
+        if ui and ui.box and ui.box.Remove then
+            ui.box.Remove(registry, state.tabMarkerEntity)
+        else
+            registry:destroy(state.tabMarkerEntity)
+        end
+    end
+
+    -- Create tab marker definition (clickable to toggle panel)
+    local tabDef = dsl.hbox {
+        config = {
+            id = "stats_panel_tab_marker",
+            canCollide = true,
+            hover = true,
+            padding = 0,
+            buttonCallback = function()
+                StatsPanel.toggle()
+            end
+        },
+        children = {
+            -- Use text fallback if sprite not available
+            dsl.strict.text("C", {
+                fontSize = ui_scale.ui(20),
+                color = "gold",
+                minWidth = TAB_MARKER_WIDTH,
+                minHeight = TAB_MARKER_HEIGHT,
+            })
+            -- TODO: Replace with sprite when asset is available:
+            -- dsl.anim("character-tab-marker.png", { w = TAB_MARKER_WIDTH, h = TAB_MARKER_HEIGHT })
+        }
+    }
+
+    -- Spawn at visible position if panel is visible, otherwise at hidden position
+    local markerX, markerY
+    if state.visible then
+        markerX, markerY = getTabMarkerPosition()
+    else
+        markerX, markerY = getTabMarkerHiddenPosition()
+    end
+
+    local spawnOk, entity = pcall(function()
+        return dsl.spawn({ x = markerX, y = markerY }, tabDef, "ui")
+    end)
+
+    if not spawnOk then
+        log_debug("[StatsPanelV2] Tab marker spawn failed: " .. tostring(entity))
+        return
+    end
+
+    log_debug("[StatsPanelV2] Tab marker spawned entity=" .. tostring(entity))
+
+    -- Set screen space
+    if transform and transform.set_space then
+        transform.set_space(entity, "screen")
+    end
+
+    -- Set z-order (just below panel)
+    local zOrder = z_orders and z_orders.ui_tooltips and (z_orders.ui_tooltips + 5) or 9995
+    if layer_order_system and layer_order_system.assignZIndexToEntity then
+        layer_order_system.assignZIndexToEntity(entity, zOrder)
+    end
+
+    -- Set draw layer
+    if ui and ui.box and ui.box.set_draw_layer then
+        ui.box.set_draw_layer(entity, "ui")
+    end
+
+    -- Add state tag - only "default_state" needed for always-visible marker
+    if ui and ui.box then
+        ui.box.ClearStateTagsFromUIBox(entity)
+        ui.box.AddStateTagToUIBox(entity, "default_state")
+    end
+
+    -- Add ScreenSpaceCollisionMarker for click detection
+    if registry.emplace and ScreenSpaceCollisionMarker then
+        pcall(function()
+            registry:emplace(entity, ScreenSpaceCollisionMarker {})
+        end)
+    end
+
+    state.tabMarkerEntity = entity
+end
+
+-- Update tab marker position based on panel slide progress (for smooth animation)
+function StatsPanel._updateTabMarkerPosition()
+    local state = StatsPanel._state
+    if not state.tabMarkerEntity or not entity_cache or not entity_cache.valid(state.tabMarkerEntity) then
+        return
+    end
+
+    -- Get visible and hidden positions
+    local visibleX, visibleY = getTabMarkerPosition()
+    local hiddenX, hiddenY = getTabMarkerHiddenPosition()
+
+    -- Interpolate based on slide progress for smooth animation
+    local progress = state.slideProgress or 0
+    local easedProgress = easeOutQuad(progress)
+
+    local markerX = hiddenX + (visibleX - hiddenX) * easedProgress
+    local markerY = hiddenY + (visibleY - hiddenY) * easedProgress
+
+    -- Update tab marker position
+    local t = component_cache.get(state.tabMarkerEntity, Transform)
+    if t then
+        t.actualX = markerX
+        t.actualY = markerY
+        t.visualX = markerX
+        t.visualY = markerY
+    end
+end
+
+-- Destroy tab marker entity
+function StatsPanel._destroyTabMarker()
+    local state = StatsPanel._state
+    if state.tabMarkerEntity and entity_cache and entity_cache.valid(state.tabMarkerEntity) then
+        if ui and ui.box and ui.box.Remove then
+            ui.box.Remove(registry, state.tabMarkerEntity)
+        else
+            registry:destroy(state.tabMarkerEntity)
+        end
+    end
+    state.tabMarkerEntity = nil
 end
 
 function StatsPanel._destroyPanel()
@@ -1137,6 +1404,8 @@ function StatsPanel._destroyPanel()
     state.panelEntity = nil
     state.snapshot = nil
     state.snapshotHash = nil
+    -- Note: Tab marker is NOT destroyed here - it persists across show/hide cycles
+    -- Only cleanup() destroys the tab marker
 end
 
 local SIGNAL_DEBOUNCE_DELAY = 0.05
@@ -1186,14 +1455,56 @@ function StatsPanel.show()
     end
 
     state.visible = true
-    state.slideDirection = "idle"  -- Snap to full size (no animation)
-    state.slideProgress = 1        -- Start at full size
+    state.slideDirection = "entering"  -- Animate slide in from right
+    state.slideProgress = 0            -- Start offscreen
 
-    state.snapshot = StatsPanel._collectSnapshot()
-    state.snapshotHash = StatsPanel._computeSnapshotHash(state.snapshot)
+    -- TOGGLE FIX: Reuse existing panel entity if valid
+    if state.panelEntity and entity_cache and entity_cache.valid(state.panelEntity) then
+        -- Panel exists - refresh snapshot and update position
+        log_debug("[StatsPanelV2] Reusing existing panel entity")
 
-    StatsPanel._createPanel()
+        -- Collect fresh snapshot to detect changes while hidden
+        local newSnapshot = StatsPanel._collectSnapshot()
+        local oldHash = state.snapshotHash
+        state.snapshot = newSnapshot
+        state.snapshotHash = StatsPanel._computeSnapshotHash(newSnapshot)
+
+        -- If data changed while hidden, trigger update
+        if oldHash ~= state.snapshotHash then
+            log_debug("[StatsPanelV2] Data changed while hidden - refreshing")
+            StatsPanel._onStatsChanged({})
+        end
+
+        -- Move panel to visible position using comprehensive helper
+        local screenW, _ = getScreenSize()
+        local visibleX = screenW - PANEL_WIDTH - 20
+        local visibleY = 60
+        setEntityVisible(state.panelEntity, true, visibleX, visibleY, "panel")
+
+        -- Reapply state tags to ensure correctness after game state changes
+        if ui and ui.box then
+            ui.box.ClearStateTagsFromUIBox(state.panelEntity)
+            if PLANNING_STATE then ui.box.AddStateTagToUIBox(state.panelEntity, PLANNING_STATE) end
+            if ACTION_STATE then ui.box.AddStateTagToUIBox(state.panelEntity, ACTION_STATE) end
+            if SHOP_STATE then ui.box.AddStateTagToUIBox(state.panelEntity, SHOP_STATE) end
+            if STATS_PANEL_STATE then ui.box.AddStateTagToUIBox(state.panelEntity, STATS_PANEL_STATE) end
+        end
+    else
+        -- No valid panel - create new one
+        log_debug("[StatsPanelV2] Creating new panel entity")
+        state.snapshot = StatsPanel._collectSnapshot()
+        state.snapshotHash = StatsPanel._computeSnapshotHash(state.snapshot)
+        StatsPanel._createPanel()
+    end
+
     StatsPanel._registerSignalHandler()
+
+    -- Create or update tab marker position
+    if not state.tabMarkerEntity or not entity_cache or not entity_cache.valid(state.tabMarkerEntity) then
+        StatsPanel._createTabMarker()
+    else
+        StatsPanel._updateTabMarkerPosition()
+    end
 
     if activate_state and STATS_PANEL_STATE then
         activate_state(STATS_PANEL_STATE)
@@ -1204,20 +1515,33 @@ function StatsPanel.hide()
     local state = StatsPanel._state
     if not state.visible or state.slideDirection == "exiting" then return end
 
-    -- Snap closed immediately (no animation)
-    state.slideDirection = "idle"
-    state.slideProgress = 0
-    state.visible = false
+    -- Animate slide out to right
+    state.slideDirection = "exiting"
+    -- slideProgress keeps current value and decrements in update()
+    -- visible stays true until animation completes
+    -- Panel offscreen move + state deactivation happens when animation completes in update()
 
     StatsPanel._unregisterSignalHandler()
-    StatsPanel._destroyPanel()
+end
 
-    if deactivate_state and STATS_PANEL_STATE then
-        deactivate_state(STATS_PANEL_STATE)
-    end
+-- Toggle debounce to prevent rapid key-repeat toggles
+local _lastToggleTime = 0
+local TOGGLE_DEBOUNCE = 0.15  -- 150ms cooldown between toggles
+
+-- Reset debounce timer (for testing)
+function StatsPanel._resetToggleDebounce()
+    _lastToggleTime = 0
 end
 
 function StatsPanel.toggle()
+    -- Debounce rapid toggles
+    local now = os.clock()
+    if now - _lastToggleTime < TOGGLE_DEBOUNCE then
+        log_debug("[StatsPanelV2] Toggle debounced")
+        return
+    end
+    _lastToggleTime = now
+
     log_debug("[StatsPanelV2] toggle() called, visible=" .. tostring(StatsPanel.isVisible()))
     if StatsPanel.isVisible() then
         StatsPanel.hide()
@@ -1229,6 +1553,49 @@ end
 function StatsPanel.isVisible()
     local state = StatsPanel._state
     return state.visible and state.slideDirection ~= "exiting"
+end
+
+-- Get tab marker entity for testing
+function StatsPanel.getTabMarkerEntity()
+    return StatsPanel._state.tabMarkerEntity
+end
+
+-- Get close button entity for testing (with validity check)
+function StatsPanel.getCloseButtonEntity()
+    local entity = StatsPanel._state.closeButtonEntity
+    if entity and entity_cache and entity_cache.valid(entity) then
+        return entity
+    end
+    return nil
+end
+
+-- Get last selected tab (tab memory)
+function StatsPanel.getLastSelectedTab()
+    return StatsPanel._state.lastSelectedTab
+end
+
+-- Set active tab and remember it (for external API usage)
+function StatsPanel.setActiveTab(tabId)
+    if not tabId then return false end
+    -- Validate tab ID
+    local validTab = false
+    for _, section in ipairs(SECTIONS) do
+        if section.id == tabId then
+            validTab = true
+            break
+        end
+    end
+    if not validTab then
+        log_warn("[StatsPanelV2] Invalid tab ID: " .. tostring(tabId))
+        return false
+    end
+    -- Save to memory
+    StatsPanel._state.lastSelectedTab = tabId
+    -- Switch if panel is visible
+    if StatsPanel.isVisible() then
+        dsl.switchTab("stats_panel_tabs", tabId)
+    end
+    return true
 end
 
 function StatsPanel.rebuild()
@@ -1270,7 +1637,8 @@ function StatsPanel.update(dt)
             state.slideProgress = 1
         end
         StatsPanel._updatePosition()
-        
+        StatsPanel._updateTabMarkerPosition()  -- Smooth tab marker animation
+
     elseif state.slideDirection == "exiting" then
         local exitDuration = SLIDE_DURATION * 0.8
         state.slideProgress = math.max(0, state.slideProgress - dt / exitDuration)
@@ -1278,9 +1646,21 @@ function StatsPanel.update(dt)
             state.slideDirection = "idle"
             state.slideProgress = 0
             state.visible = false
-            StatsPanel._destroyPanel()
+            -- TOGGLE FIX: Move panel offscreen instead of destroying
+            -- Panel entity is preserved for reuse on next show()
+            if state.panelEntity and entity_cache and entity_cache.valid(state.panelEntity) then
+                setEntityVisible(state.panelEntity, false, 0, 0, "panel")
+                log_debug("[StatsPanelV2] Exit animation complete - panel moved offscreen")
+            end
+            -- Update tab marker to final hidden position
+            StatsPanel._updateTabMarkerPosition()
+            -- Deactivate state
+            if deactivate_state and STATS_PANEL_STATE then
+                deactivate_state(STATS_PANEL_STATE)
+            end
         else
             StatsPanel._updatePosition()
+            StatsPanel._updateTabMarkerPosition()  -- Smooth tab marker animation
         end
     end
 end
@@ -1322,6 +1702,9 @@ function StatsPanel.handleInput()
         if input.action_pressed and input.action_pressed("stats_panel_tab_" .. i) then
             local sectionId = SECTIONS[i].id
             dsl.switchTab("stats_panel_tabs", sectionId)
+            -- Tab memory: save selected tab for next toggle
+            StatsPanel._state.lastSelectedTab = sectionId
+            log_debug("[StatsPanelV2] Tab switched to: " .. sectionId)
             return true
         end
     end
@@ -1365,8 +1748,32 @@ function StatsPanel.debugState()
 end
 
 --------------------------------------------------------------------------------
--- Initialization
+-- Initialization & Cleanup
 --------------------------------------------------------------------------------
+
+-- Full cleanup - destroys panel entity and resets all state
+-- Call when module is unloaded, scene changes, or full reset needed
+function StatsPanel.cleanup()
+    log_debug("[StatsPanelV2] cleanup() called")
+    local state = StatsPanel._state
+
+    -- Hide first (unregisters signals)
+    if state.visible then
+        StatsPanel.hide()
+    end
+
+    -- Destroy tab marker (only done in cleanup, not hide)
+    StatsPanel._destroyTabMarker()
+
+    -- Now destroy the panel entity (unlike hide() which preserves it)
+    if state.panelEntity then
+        StatsPanel._destroyPanel()
+    end
+
+    -- Reset state to clean
+    StatsPanel.init()
+end
+
 function StatsPanel.init()
     StatsPanel._state = {
         visible = false,
@@ -1375,7 +1782,12 @@ function StatsPanel.init()
         snapshot = nil,
         snapshotHash = nil,
         panelEntity = nil,
+        tabMarkerEntity = nil,  -- Tab marker for toggle
+        closeButtonEntity = nil,  -- Close button in header
         signalHandlers = nil,
+
+        -- Tab memory persists across show/hide but resets in cleanup
+        lastSelectedTab = "combat",  -- Default tab on first open
     }
 end
 

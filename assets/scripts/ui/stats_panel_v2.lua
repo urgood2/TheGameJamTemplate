@@ -65,7 +65,8 @@ local PANEL_PADDING = ui_scale.ui(10)
 local HEADER_PADDING = ui_scale.ui(8)
 local TITLE_ROW_PADDING = ui_scale.ui(2)
 local CLOSE_BUTTON_MARGIN = ui_scale.ui(4)
-local SCROLL_PANE_PADDING = ui_scale.ui(0)
+local SCROLL_PANE_PADDING = ui_scale.ui(2)
+local RIGHT_EDGE_PADDING = ui_scale.ui(4)
 local SECTION_CONTENT_PADDING = ui_scale.ui(0)
 local SCROLL_PANE_INSET = ui_scale.ui(0)
 local PANEL_INNER_WIDTH = PANEL_WIDTH - (PANEL_PADDING * 2)
@@ -655,6 +656,7 @@ local function buildStatRow(statKey, snapshot)
                     #deltaChildren > 0 and deltaChildren[1] or nil,
                 }
             },
+            dsl.strict.spacer(RIGHT_EDGE_PADDING),
         }
     }
 end
@@ -780,6 +782,7 @@ local function buildElementalGrid(snapshot)
                     metricHeader("Dur %"),
                 }
             },
+            dsl.strict.spacer(RIGHT_EDGE_PADDING),
         }
     }
     
@@ -837,6 +840,7 @@ local function buildElementalGrid(snapshot)
                         metricBlock("Dur", formatGridValue(data.duration, config.hasDuration), getGridColor(data.duration, config.hasDuration), "elem_" .. elemType .. "_duration"),
                     }
                 },
+                dsl.strict.spacer(RIGHT_EDGE_PADDING),
             }
         })
     end
@@ -893,7 +897,7 @@ end
 local function buildFooter()
     return dsl.strict.hbox {
         config = {
-            padding = ui_scale.ui(6),
+            padding = ui_scale.ui(8),
             minWidth = PANEL_INNER_WIDTH,
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
         },
@@ -902,6 +906,7 @@ local function buildFooter()
                 fontSize = ui_scale.ui(9),
                 color = "gray",
             }),
+            dsl.strict.spacer(RIGHT_EDGE_PADDING),
         }
     }
 end

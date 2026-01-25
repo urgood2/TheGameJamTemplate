@@ -65,9 +65,9 @@ local PANEL_PADDING = ui_scale.ui(10)
 local HEADER_PADDING = ui_scale.ui(8)
 local TITLE_ROW_PADDING = ui_scale.ui(2)
 local CLOSE_BUTTON_MARGIN = ui_scale.ui(4)
-local SCROLL_PANE_PADDING = ui_scale.ui(4)
-local SECTION_CONTENT_PADDING = ui_scale.ui(4)
-local SCROLL_PANE_INSET = ui_scale.ui(8)
+local SCROLL_PANE_PADDING = ui_scale.ui(2)
+local SECTION_CONTENT_PADDING = ui_scale.ui(0)
+local SCROLL_PANE_INSET = ui_scale.ui(0)
 local PANEL_INNER_WIDTH = PANEL_WIDTH - (PANEL_PADDING * 2)
 local SCROLL_PANE_WIDTH = PANEL_INNER_WIDTH - SCROLL_PANE_INSET
 local SCROLL_CONTENT_WIDTH = SCROLL_PANE_WIDTH - (SCROLL_PANE_PADDING * 2)
@@ -663,18 +663,23 @@ end
 local function buildElementalGrid(snapshot)
     local perType = snapshot and snapshot.per_type or {}
     
-    local COL_WIDTH = ui_scale.ui(70)
-    local ELEM_COL_WIDTH = ui_scale.ui(84)
+    local COL_WIDTH = ui_scale.ui(72)
+    local ELEM_COL_WIDTH = ui_scale.ui(86)
     local GRID_HEADER_FONT = ROW_FONT_SIZE - ui_scale.ui(1)
     local GRID_VALUE_FONT = ROW_FONT_SIZE
     local GRID_ROW_PADDING = ui_scale.ui(4)
     local GRID_HEADER_PADDING = ui_scale.ui(4)
+    local GRID_ROW_HEIGHT = ROW_HEIGHT + ui_scale.ui(2)
+    local GRID_DIVIDER_COLOR = "dark_gray_slate"
+    local GRID_DIVIDER_THICKNESS = ui_scale.ui(1)
+    local GRID_DIVIDER_HEIGHT = GRID_ROW_HEIGHT - ui_scale.ui(6)
     
     -- Header row
     local headerRow = dsl.strict.hbox {
         config = {
             padding = GRID_HEADER_PADDING,
             minWidth = ROW_CONTENT_WIDTH,
+            minHeight = GRID_ROW_HEIGHT,
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
             color = getColors().section_bg,
         },
@@ -686,26 +691,41 @@ local function buildElementalGrid(snapshot)
                 minWidth = ELEM_COL_WIDTH,
                 align = AlignmentFlag.HORIZONTAL_LEFT,
             }),
-            dsl.strict.text("Res", {
-                fontSize = GRID_HEADER_FONT,
-                color = "apricot_cream",
-                shadow = true,
-                minWidth = COL_WIDTH,
-                align = AlignmentFlag.HORIZONTAL_LEFT,
+            dsl.divider("vertical", {
+                color = GRID_DIVIDER_COLOR,
+                thickness = GRID_DIVIDER_THICKNESS,
+                length = GRID_DIVIDER_HEIGHT,
             }),
-            dsl.strict.text("Dmg", {
+            dsl.strict.text("Res%", {
                 fontSize = GRID_HEADER_FONT,
                 color = "apricot_cream",
                 shadow = true,
                 minWidth = COL_WIDTH,
-                align = AlignmentFlag.HORIZONTAL_LEFT,
+                align = AlignmentFlag.HORIZONTAL_RIGHT,
             }),
-            dsl.strict.text("Dur", {
+            dsl.divider("vertical", {
+                color = GRID_DIVIDER_COLOR,
+                thickness = GRID_DIVIDER_THICKNESS,
+                length = GRID_DIVIDER_HEIGHT,
+            }),
+            dsl.strict.text("Dmg%", {
                 fontSize = GRID_HEADER_FONT,
                 color = "apricot_cream",
                 shadow = true,
                 minWidth = COL_WIDTH,
-                align = AlignmentFlag.HORIZONTAL_LEFT,
+                align = AlignmentFlag.HORIZONTAL_RIGHT,
+            }),
+            dsl.divider("vertical", {
+                color = GRID_DIVIDER_COLOR,
+                thickness = GRID_DIVIDER_THICKNESS,
+                length = GRID_DIVIDER_HEIGHT,
+            }),
+            dsl.strict.text("Dur%", {
+                fontSize = GRID_HEADER_FONT,
+                color = "apricot_cream",
+                shadow = true,
+                minWidth = COL_WIDTH,
+                align = AlignmentFlag.HORIZONTAL_RIGHT,
             }),
         }
     }
@@ -718,7 +738,7 @@ local function buildElementalGrid(snapshot)
         
         local displayName = elemType:sub(1,1):upper() .. elemType:sub(2)
         
-        local function formatGridValue(val, available, label)
+        local function formatGridValue(val, available)
             local valueText
             if not available then
                 valueText = "--"
@@ -728,7 +748,7 @@ local function buildElementalGrid(snapshot)
                 local sign = val > 0 and "+" or ""
                 valueText = string.format("%s%d%%", sign, math.floor(val + 0.5))
             end
-            return label and (label .. " " .. valueText) or valueText
+            return valueText
         end
         
         local function getGridColor(val, available)
@@ -744,6 +764,7 @@ local function buildElementalGrid(snapshot)
                 id = "elem_row_" .. elemType,
                 padding = GRID_ROW_PADDING,
                 minWidth = ROW_CONTENT_WIDTH,
+                minHeight = GRID_ROW_HEIGHT,
                 align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
                 color = rowColor,
             },
@@ -755,29 +776,44 @@ local function buildElementalGrid(snapshot)
                     minWidth = ELEM_COL_WIDTH,
                     align = AlignmentFlag.HORIZONTAL_LEFT,
                 }),
-                dsl.strict.text(formatGridValue(data.resist, config.hasResist, "Res"), {
+                dsl.divider("vertical", {
+                    color = GRID_DIVIDER_COLOR,
+                    thickness = GRID_DIVIDER_THICKNESS,
+                    length = GRID_DIVIDER_HEIGHT,
+                }),
+                dsl.strict.text(formatGridValue(data.resist, config.hasResist), {
                     id = "elem_" .. elemType .. "_resist",
                     fontSize = GRID_VALUE_FONT,
                     color = getGridColor(data.resist, config.hasResist),
                     shadow = true,
                     minWidth = COL_WIDTH,
-                    align = AlignmentFlag.HORIZONTAL_LEFT,
+                    align = AlignmentFlag.HORIZONTAL_RIGHT,
                 }),
-                dsl.strict.text(formatGridValue(data.damage, true, "Dmg"), {
+                dsl.divider("vertical", {
+                    color = GRID_DIVIDER_COLOR,
+                    thickness = GRID_DIVIDER_THICKNESS,
+                    length = GRID_DIVIDER_HEIGHT,
+                }),
+                dsl.strict.text(formatGridValue(data.damage, true), {
                     id = "elem_" .. elemType .. "_damage",
                     fontSize = GRID_VALUE_FONT,
                     color = getGridColor(data.damage, true),
                     shadow = true,
                     minWidth = COL_WIDTH,
-                    align = AlignmentFlag.HORIZONTAL_LEFT,
+                    align = AlignmentFlag.HORIZONTAL_RIGHT,
                 }),
-                dsl.strict.text(formatGridValue(data.duration, config.hasDuration, "Dur"), {
+                dsl.divider("vertical", {
+                    color = GRID_DIVIDER_COLOR,
+                    thickness = GRID_DIVIDER_THICKNESS,
+                    length = GRID_DIVIDER_HEIGHT,
+                }),
+                dsl.strict.text(formatGridValue(data.duration, config.hasDuration), {
                     id = "elem_" .. elemType .. "_duration",
                     fontSize = GRID_VALUE_FONT,
                     color = getGridColor(data.duration, config.hasDuration),
                     shadow = true,
                     minWidth = COL_WIDTH,
-                    align = AlignmentFlag.HORIZONTAL_LEFT,
+                    align = AlignmentFlag.HORIZONTAL_RIGHT,
                 }),
             }
         })
@@ -925,8 +961,10 @@ local function buildPanelDefinition(snapshot)
         activeButtonColor = "gray",
         contentPadding = 0,
         tabBarPadding = ui_scale.ui(4),
+        tabBarAlign = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
         fontSize = ui_scale.ui(13),
         buttonPadding = ui_scale.ui(6),
+        contentMinWidth = PANEL_INNER_WIDTH,
         contentMinHeight = scrollHeight + ui_scale.ui(20),
     }
 
@@ -1011,7 +1049,7 @@ function StatsPanel._updateElementalGrid(newPerType, oldPerType)
         
         local config = ELEMENT_CONFIG[elemType]
         
-        local function updateCell(column, newVal, oldVal, available, label)
+        local function updateCell(column, newVal, oldVal, available)
             if newVal == oldVal then return end
             
             local cellId = "elem_" .. elemType .. "_" .. column
@@ -1028,7 +1066,7 @@ function StatsPanel._updateElementalGrid(newPerType, oldPerType)
                         local sign = newVal > 0 and "+" or ""
                         valueText = string.format("%s%d%%", sign, math.floor(newVal + 0.5))
                     end
-                    uiText.text = label and (label .. " " .. valueText) or valueText
+                    uiText.text = valueText
                     
                     local colorName = "gray"
                     if available and newVal and math.abs(newVal) >= 0.01 then
@@ -1042,9 +1080,9 @@ function StatsPanel._updateElementalGrid(newPerType, oldPerType)
             end
         end
         
-        updateCell("resist", newData.resist, oldData.resist, config.hasResist, "Res")
-        updateCell("damage", newData.damage, oldData.damage, true, "Dmg")
-        updateCell("duration", newData.duration, oldData.duration, config.hasDuration, "Dur")
+        updateCell("resist", newData.resist, oldData.resist, config.hasResist)
+        updateCell("damage", newData.damage, oldData.damage, true)
+        updateCell("duration", newData.duration, oldData.duration, config.hasDuration)
     end
 end
 

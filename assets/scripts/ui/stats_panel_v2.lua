@@ -1213,9 +1213,9 @@ end
 --------------------------------------------------------------------------------
 local function getPanelX(progress)
     local screenW, _ = getScreenSize()
-    local hiddenX = screenW + 20
-    local visibleX = screenW - PANEL_WIDTH - 20
-    
+    local hiddenX = screenW  -- Completely offscreen (panel left edge at screen right edge)
+    local visibleX = screenW - PANEL_WIDTH  -- Flush with screen edge
+
     local easedProgress = easeOutQuad(progress)
     return hiddenX + (visibleX - hiddenX) * easedProgress
 end
@@ -1370,27 +1370,26 @@ function StatsPanel._createPanel()
     end
 end
 
--- Get tab marker position based on panel position
+-- Get tab marker position based on panel position (when panel is visible)
 local function getTabMarkerPosition()
     local screenW, _ = getScreenSize()
-    local state = StatsPanel._state
 
-    -- Panel visible position
-    local panelX = screenW - PANEL_WIDTH - 20
+    -- Panel visible position (flush with screen edge)
+    local panelX = screenW - PANEL_WIDTH
     local panelY = 60
 
-    -- Tab marker offset from panel left edge
+    -- Tab marker offset from panel left edge (sticks out to the left)
     local markerX = panelX + TAB_MARKER_OFFSET_X
     local markerY = panelY + TAB_MARKER_OFFSET_Y
 
     return markerX, markerY
 end
 
--- Get tab marker position when panel is hidden (clamped to screen edge)
+-- Get tab marker position when panel is hidden (tab sticks out from screen edge)
 local function getTabMarkerHiddenPosition()
     local screenW, _ = getScreenSize()
-    -- When panel is hidden, marker stays at right screen edge
-    local markerX = screenW - TAB_MARKER_WIDTH - 10
+    -- Tab marker sticks out from right edge when panel is hidden
+    local markerX = screenW - TAB_MARKER_WIDTH
     local markerY = 60 + TAB_MARKER_OFFSET_Y
     return markerX, markerY
 end
@@ -1612,7 +1611,7 @@ function StatsPanel.show()
         -- Move panel to STARTING position (offscreen) for animation
         -- slideProgress = 0 means offscreen, so use getPanelX(0) for consistency
         local screenW, _ = getScreenSize()
-        local startX = screenW + 20  -- Offscreen right (matches getPanelX(0))
+        local startX = screenW  -- Completely offscreen (matches getPanelX(0))
         local startY = 60
         setEntityVisible(state.panelEntity, true, startX, startY, "panel")
 

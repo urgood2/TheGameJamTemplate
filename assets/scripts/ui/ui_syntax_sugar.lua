@@ -2292,6 +2292,74 @@ function dsl.spriteButton(opts)
 end
 
 ------------------------------------------------------------
+-- 🔠 Input Text Element
+-- A text input field with cursor and optional callbacks
+------------------------------------------------------------
+
+---@class InputTextOpts
+---@field id? string Unique identifier for lookups
+---@field text? string Initial text content (default: "")
+---@field placeholder? string Placeholder text when empty
+---@field maxLength? number Maximum allowed text length (default: unlimited)
+---@field allCaps? boolean Convert all input to uppercase (default: false)
+---@field fontSize? number Font size in pixels (default: 16)
+---@field color? string|Color Text color (default: "white")
+---@field backgroundColor? string|Color Background color (default: "dark_gray")
+---@field minWidth? number Minimum width in pixels (default: 100)
+---@field minHeight? number Minimum height in pixels (default: 30)
+---@field padding? number Inner padding in pixels (default: 4)
+---@field shadow? boolean Enable text shadow (default: false)
+---@field emboss? number Emboss depth (default: 2)
+---@field onTextChange? function Callback when text changes: function(newText, entity)
+---@field onSubmit? function Callback when Enter is pressed: function(text, entity)
+
+--- Create a text input field for user keyboard input.
+--- Supports cursor navigation, text editing, and change callbacks.
+---
+--- **Example:**
+--- ```lua
+--- dsl.inputText({
+---     id = "search_field",
+---     placeholder = "Search...",
+---     minWidth = 200,
+---     onTextChange = function(text)
+---         print("Search: " .. text)
+---     end
+--- })
+--- ```
+---@param opts? InputTextOpts Input text configuration
+---@return table UIDefinition node for the input text element
+function dsl.inputText(opts)
+    opts = opts or {}
+
+    local inputId = opts.id or ("input_text_" .. tostring(math.random(100000, 999999)))
+
+    return def{
+        type = "INPUT_TEXT",
+        config = {
+            id = inputId,
+            text = opts.text or "",
+            placeholder = opts.placeholder,
+            maxLength = opts.maxLength,
+            allCaps = opts.allCaps,
+            fontSize = opts.fontSize or 16,
+            color = color(opts.color or "white"),
+            backgroundColor = color(opts.backgroundColor or "dark_gray"),
+            minWidth = opts.minWidth or 100,
+            minHeight = opts.minHeight or 30,
+            padding = opts.padding or 4,
+            shadow = opts.shadow,
+            emboss = opts.emboss or 2,
+            hover = true,
+            canCollide = true,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
+            _onTextChange = opts.onTextChange,
+            _onSubmit = opts.onSubmit,
+        }
+    }
+end
+
+------------------------------------------------------------
 -- STRICT VALIDATION API
 -- Usage: dsl.strict.vbox, dsl.strict.text, etc.
 -- Validates props before delegating to regular DSL functions.

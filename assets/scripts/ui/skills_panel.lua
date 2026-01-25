@@ -93,6 +93,7 @@ local HEADER_HEIGHT = UI(40)
 local HEADER_SPACING = UI(4)
 local COLUMN_HEADER_HEIGHT = UI(20)
 local PANEL_PADDING = UI(12)
+local SEARCH_BAR_HEIGHT = UI(28)
 
 -- Grid dimensions (4 columns × 8 rows)
 local GRID_WIDTH = CONFIG.columns * SLOT_SIZE + (CONFIG.columns - 1) * SLOT_SPACING + GRID_PADDING * 2
@@ -102,6 +103,8 @@ local GRID_HEIGHT = CONFIG.rows * SLOT_SIZE + (CONFIG.rows - 1) * SLOT_SPACING +
 local PANEL_WIDTH = GRID_WIDTH + PANEL_PADDING * 2
 local COLUMN_HEADER_BLOCK_HEIGHT = COLUMN_HEADER_HEIGHT + GRID_PADDING * 2
 local PANEL_HEIGHT = HEADER_HEIGHT
+    + HEADER_SPACING
+    + SEARCH_BAR_HEIGHT
     + HEADER_SPACING
     + COLUMN_HEADER_BLOCK_HEIGHT
     + HEADER_SPACING
@@ -123,12 +126,15 @@ local state = {
     gridEntity = nil,
     skillButtons = {},       -- skillId -> buttonEntity
     headerTextEntity = nil,
+    searchInputEntity = nil,
     panelX = 0,
     panelY = 0,
     hiddenX = 0,
     player = nil,            -- Reference to player for skill point queries
     activeTooltipKey = nil,
     entityTooltipKeys = {},  -- Lua-side storage for entity tooltip keys (can't store on C++ userdata)
+    searchText = "",         -- Current search filter text
+    matchingSkills = {},     -- Set of skill IDs that match current search
 }
 
 --------------------------------------------------------------------------------
@@ -147,6 +153,93 @@ end
 
 local function isElementLocked(element)
     return LOCKED_ELEMENTS[element] == true
+end
+
+--------------------------------------------------------------------------------
+-- SEARCH FUNCTIONALITY
+--------------------------------------------------------------------------------
+
+--- Check if a skill matches the search query
+--- @param skillDef table Skill definition
+--- @param query string Search query (lowercase)
+--- @return boolean True if the skill matches
+local function skillMatchesSearch(skillDef, query)
+    if not skillDef or not query or query == "" then
+        return true  -- Empty query matches all
+    end
+
+    -- Search in name (case-insensitive)
+    if skillDef.name and string.find(string.lower(skillDef.name), query, 1, true) then
+        return true
+    end
+
+    -- Search in element (case-insensitive)
+    if skillDef.element and string.find(string.lower(skillDef.element), query, 1, true) then
+        return true
+    end
+
+    -- Search in description (case-insensitive)
+    if skillDef.description and string.find(string.lower(skillDef.description), query, 1, true) then
+        return true
+    end
+
+    -- Search in ID (case-insensitive)
+    if skillDef.id and string.find(string.lower(skillDef.id), query, 1, true) then
+        return true
+    end
+
+    return false
+end
+
+--- Update the set of matching skills based on search text
+--- @param searchText string The search query
+local function updateMatchingSkills(searchText)
+    state.matchingSkills = {}
+    local query = searchText and string.lower(searchText) or ""
+
+    if query == "" then
+        -- Empty search = all skills match
+        return
+    end
+
+    if not Skills then return end
+
+    -- Check each skill for matches
+    local gridData = SkillsPanel.getGridData()
+    for _, element in ipairs(CONFIG.element_order) do
+        local skills = gridData[element]
+        if skills then
+            for _, entry in ipairs(skills) do
+                if entry and entry.def and skillMatchesSearch(entry.def, query) then
+                    state.matchingSkills[entry.id] = true
+                end
+            end
+        end
+    end
+end
+
+--- Check if a skill should be highlighted (matches current search)
+--- @param skillId string Skill ID
+--- @return boolean True if the skill matches and should be highlighted
+local function isSkillHighlighted(skillId)
+    -- If no search text, nothing is highlighted (all visible)
+    if not state.searchText or state.searchText == "" then
+        return false
+    end
+    -- If there's search text, return true only for matching skills
+    return state.matchingSkills[skillId] == true
+end
+
+--- Check if a skill should be dimmed (doesn't match current search)
+--- @param skillId string Skill ID
+--- @return boolean True if the skill should be dimmed
+local function isSkillDimmed(skillId)
+    -- If no search text, nothing is dimmed
+    if not state.searchText or state.searchText == "" then
+        return false
+    end
+    -- If there's search text, dim non-matching skills
+    return state.matchingSkills[skillId] ~= true
 end
 
 --------------------------------------------------------------------------------
@@ -342,6 +435,49 @@ local function createHeader()
     }
 end
 
+--- Handle search text changes
+--- @param newText string The new search text
+local function onSearchTextChanged(newText)
+    state.searchText = newText or ""
+    updateMatchingSkills(state.searchText)
+
+    -- Refresh skill button visuals to apply highlighting
+    SkillsPanel.refreshButtonStates()
+end
+
+--- Create the search bar for filtering skills
+local function createSearchBar()
+    if not dsl then return nil end
+
+    return dsl.strict.hbox {
+        config = {
+            id = "search_bar_container",
+            padding = UI(4),
+            minHeight = SEARCH_BAR_HEIGHT,
+            minWidth = GRID_WIDTH,
+            align = "center",
+        },
+        children = {
+            dsl.strict.text("Search:", {
+                fontSize = UI(11),
+                color = "gray",
+            }),
+            dsl.strict.spacer(UI(6)),
+            dsl.inputText({
+                id = "skills_search_input",
+                placeholder = "name, element...",
+                minWidth = GRID_WIDTH - UI(60),
+                minHeight = SEARCH_BAR_HEIGHT - UI(4),
+                fontSize = UI(11),
+                color = "white",
+                backgroundColor = "blackberry",
+                emboss = 1,
+                onTextChange = onSearchTextChanged,
+            }),
+        },
+    }
+end
+
 --- Create the element column headers (Fire, Ice, Lightning, Void)
 --- Headers are aligned with grid columns by using the same width as skill buttons
 local function createColumnHeaders()
@@ -531,6 +667,10 @@ local function createSkillButton(skillId, skillDef, element, isLocked)
     local isAvailable = buttonState == "available"
     local isInsufficient = buttonState == "insufficient"
 
+    -- Check search matching for visual highlighting
+    local isDimmed = isSkillDimmed(skillId)
+    local isHighlighted = isSkillHighlighted(skillId)
+
     -- Use placeholder sprites for all icons (skill, lock, checkmark)
     local skillSprite = CONFIG.skill_icon_sprite or "test-inventory-square-single"
     local lockedSprite = CONFIG.locked_sprite or skillSprite
@@ -541,6 +681,16 @@ local function createSkillButton(skillId, skillDef, element, isLocked)
         sprite = lockedSprite
     elseif isLearned then
         sprite = learnedSprite
+    end
+
+    -- Determine background color based on search state
+    local bgColor = nil
+    if isHighlighted then
+        -- Highlight matching skills with element color glow
+        bgColor = ELEMENT_COLORS[element] or "gold"
+    elseif isDimmed then
+        -- Dim non-matching skills with dark overlay
+        bgColor = "blackberry"
     end
 
     local children = {
@@ -558,6 +708,8 @@ local function createSkillButton(skillId, skillDef, element, isLocked)
             canCollide = true,  -- Always enable collision for tooltips
             padding = UI(2),
             align = "center",
+            color = bgColor,
+            emboss = isHighlighted and 2 or nil,  -- Add depth to highlighted skills
             -- Click callback only for available/insufficient skills (not locked or learned)
             buttonCallback = (not isLocked and not isLearned) and function()
                 local ok, SkillsPanelInput = pcall(require, "ui.skills_panel_input")
@@ -645,6 +797,8 @@ local function buildPanelDef()
         children = {
             createHeader(),
             dsl.strict.spacer(HEADER_SPACING),
+            createSearchBar(),
+            dsl.strict.spacer(HEADER_SPACING),
             createColumnHeaders(),
             dsl.strict.spacer(HEADER_SPACING),
             createSkillGrid(),
@@ -702,6 +856,20 @@ local function initializePanel()
     -- Store reference to header text for updates
     if ui and ui.box and ui.box.GetUIEByID then
         state.headerTextEntity = ui.box.GetUIEByID(_G.registry, state.panelEntity, "skills_points_display")
+    end
+
+    -- Set up search input callback
+    if ui and ui.box and ui.box.GetUIEByID then
+        state.searchInputEntity = ui.box.GetUIEByID(_G.registry, state.panelEntity, "skills_search_input")
+        if state.searchInputEntity and _G.registry:valid(state.searchInputEntity) then
+            -- Set up the TextInput callback for text changes
+            local textInput = component_cache.get(state.searchInputEntity, TextInput)
+            if textInput then
+                textInput.callback = function(newText)
+                    onSearchTextChanged(newText or "")
+                end
+            end
+        end
     end
 
     -- Update the header text
@@ -860,8 +1028,11 @@ function SkillsPanel.destroy()
     state.gridEntity = nil
     state.skillButtons = {}
     state.headerTextEntity = nil
+    state.searchInputEntity = nil
     state.player = nil
     state.activeTooltipKey = nil
+    state.searchText = ""
+    state.matchingSkills = {}
 end
 
 --- Reset module state (for testing)

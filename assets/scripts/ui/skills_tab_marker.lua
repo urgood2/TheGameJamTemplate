@@ -4,8 +4,8 @@ SKILLS TAB MARKER - Persistent Tab for Skills Panel Toggle
 ================================================================================
 
 A clickable tab marker that:
-- Stays visible on the right edge when the skills panel is closed
-- Moves to attach to the left edge of the panel when open
+- Stays visible on the left edge when the skills panel is closed
+- Moves to attach to the right edge of the panel when open
 - Clicking toggles the skills panel
 
 USAGE:
@@ -64,24 +64,22 @@ local state = {
 -- POSITION CALCULATION
 --------------------------------------------------------------------------------
 
---- Get position when panel is closed (at right edge)
+--- Get position when panel is closed (at left edge)
 --- @return number x, number y
 function SkillsTabMarker.getClosedPosition()
-    local screenWidth = GetScreenWidth and GetScreenWidth() or 1920
     local screenHeight = GetScreenHeight and GetScreenHeight() or 1080
-    local x = screenWidth - CONFIG.width - CONFIG.edge_offset
+    local x = CONFIG.edge_offset
     local y = (screenHeight - CONFIG.height) / 2
     return x, y
 end
 
---- Get position when panel is open (attached to panel left edge)
+--- Get position when panel is open (attached to panel right edge)
 --- @param panelWidth number Width of the skills panel
 --- @return number x, number y
 function SkillsTabMarker.getOpenPosition(panelWidth)
-    local screenWidth = GetScreenWidth and GetScreenWidth() or 1920
     local screenHeight = GetScreenHeight and GetScreenHeight() or 1080
-    local panelX = screenWidth - panelWidth - UI(4)  -- Panel position from right edge
-    local x = panelX - CONFIG.width + CONFIG.panel_overlap
+    local panelX = UI(4)  -- Panel padding from left edge
+    local x = panelX + panelWidth - CONFIG.panel_overlap
     local y = (screenHeight - CONFIG.height) / 2
     return x, y
 end

@@ -62,6 +62,15 @@ end
 --------------------------------------------------------------------------------
 local PANEL_WIDTH = ui_scale.ui(340)
 local PANEL_PADDING = ui_scale.ui(10)
+local HEADER_PADDING = ui_scale.ui(8)
+local SCROLL_PANE_PADDING = ui_scale.ui(4)
+local SECTION_CONTENT_PADDING = ui_scale.ui(4)
+local SCROLL_PANE_INSET = ui_scale.ui(8)
+local PANEL_INNER_WIDTH = PANEL_WIDTH - (PANEL_PADDING * 2)
+local SCROLL_PANE_WIDTH = PANEL_INNER_WIDTH - SCROLL_PANE_INSET
+local SCROLL_CONTENT_WIDTH = SCROLL_PANE_WIDTH - (SCROLL_PANE_PADDING * 2)
+local ROW_CONTENT_WIDTH = SCROLL_CONTENT_WIDTH - (SECTION_CONTENT_PADDING * 2)
+local HEADER_CONTENT_WIDTH = PANEL_INNER_WIDTH - (HEADER_PADDING * 2)
 local SLIDE_DURATION = 0.3
 local ROW_HEIGHT = ui_scale.ui(22)
 local ROW_FONT_SIZE = ui_scale.ui(13)
@@ -226,6 +235,7 @@ local function getColors()
         header_bg = safeGetColor("dark_gray_slate", "black"),
         section_bg = safeGetColor("dark_gray_slate", "black"),
         row_bg = safeGetColor("black"),
+        row_bg_alt = safeGetColor("dark_gray_slate", "black"),
         outline = safeGetColor("apricot_cream", "white"),
         positive = safeGetColor("mint_green", "green"),
         negative = safeGetColor("fiery_red", "red"),
@@ -474,7 +484,7 @@ local function buildHeader(snapshot)
     local titleRow = dsl.strict.hbox {
         config = {
             padding = 0,
-            minWidth = PANEL_WIDTH - PANEL_PADDING * 2,
+            minWidth = HEADER_CONTENT_WIDTH,
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
         },
         children = {
@@ -517,7 +527,7 @@ local function buildHeader(snapshot)
         end,
         emptyColor = "dark_gray_slate",
         fullColor = "gold",
-        minWidth = PANEL_WIDTH - ui_scale.ui(40),
+        minWidth = HEADER_CONTENT_WIDTH,
         minHeight = ui_scale.ui(8),
     })
 
@@ -525,13 +535,16 @@ local function buildHeader(snapshot)
         id = "header_xp_text",
         fontSize = ui_scale.ui(10),
         color = "gray",
+        minWidth = HEADER_CONTENT_WIDTH,
+        align = AlignmentFlag.HORIZONTAL_LEFT,
     })
 
     return dsl.strict.vbox {
         config = {
             id = "stats_panel_header",
-            padding = ui_scale.ui(8),
+            padding = HEADER_PADDING,
             color = getColors().header_bg,
+            minWidth = PANEL_INNER_WIDTH,
         },
         children = {
             titleRow,
@@ -556,6 +569,7 @@ local function buildSectionHeader(sectionDef)
             padding = ui_scale.ui(6),
             color = getColors().section_bg,
             minHeight = SECTION_HEADER_HEIGHT,
+            minWidth = ROW_CONTENT_WIDTH,
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
         },
         children = {
@@ -609,7 +623,7 @@ local function buildStatRow(statKey, snapshot)
             id = "stat_row_" .. statKey,
             padding = ui_scale.ui(4),
             minHeight = ROW_HEIGHT,
-            minWidth = PANEL_WIDTH - PANEL_PADDING * 2,  -- Full width for proper alignment
+            minWidth = ROW_CONTENT_WIDTH,
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
             hover = false,
             tooltip = nil,
@@ -646,47 +660,56 @@ end
 local function buildElementalGrid(snapshot)
     local perType = snapshot and snapshot.per_type or {}
     
-    local COL_WIDTH = ui_scale.ui(55)
-    local ELEM_COL_WIDTH = ui_scale.ui(70)
+    local COL_WIDTH = ui_scale.ui(60)
+    local ELEM_COL_WIDTH = ui_scale.ui(84)
+    local GRID_HEADER_FONT = ROW_FONT_SIZE - ui_scale.ui(1)
+    local GRID_VALUE_FONT = ROW_FONT_SIZE
+    local GRID_ROW_PADDING = ui_scale.ui(4)
+    local GRID_HEADER_PADDING = ui_scale.ui(4)
     
     -- Header row
     local headerRow = dsl.strict.hbox {
         config = {
-            padding = ui_scale.ui(2),
-            minWidth = PANEL_WIDTH - PANEL_PADDING * 2,
+            padding = GRID_HEADER_PADDING,
+            minWidth = ROW_CONTENT_WIDTH,
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
+            color = getColors().section_bg,
         },
         children = {
             dsl.strict.text("Element", {
-                fontSize = ui_scale.ui(10),
-                color = "gray",
+                fontSize = GRID_HEADER_FONT,
+                color = "apricot_cream",
+                shadow = true,
                 minWidth = ELEM_COL_WIDTH,
                 align = AlignmentFlag.HORIZONTAL_LEFT,
             }),
             dsl.strict.text("Resist", {
-                fontSize = ui_scale.ui(10),
-                color = "gray",
+                fontSize = GRID_HEADER_FONT,
+                color = "apricot_cream",
+                shadow = true,
                 minWidth = COL_WIDTH,
-                align = AlignmentFlag.HORIZONTAL_CENTER,
+                align = AlignmentFlag.HORIZONTAL_RIGHT,
             }),
             dsl.strict.text("Damage", {
-                fontSize = ui_scale.ui(10),
-                color = "gray",
+                fontSize = GRID_HEADER_FONT,
+                color = "apricot_cream",
+                shadow = true,
                 minWidth = COL_WIDTH,
-                align = AlignmentFlag.HORIZONTAL_CENTER,
+                align = AlignmentFlag.HORIZONTAL_RIGHT,
             }),
             dsl.strict.text("Duration", {
-                fontSize = ui_scale.ui(10),
-                color = "gray",
+                fontSize = GRID_HEADER_FONT,
+                color = "apricot_cream",
+                shadow = true,
                 minWidth = COL_WIDTH,
-                align = AlignmentFlag.HORIZONTAL_CENTER,
+                align = AlignmentFlag.HORIZONTAL_RIGHT,
             }),
         }
     }
     
     local rows = { headerRow }
     
-    for _, elemType in ipairs(ELEMENT_TYPES) do
+    for idx, elemType in ipairs(ELEMENT_TYPES) do
         local config = ELEMENT_CONFIG[elemType]
         local data = perType[elemType] or { resist = 0, damage = 0, duration = 0 }
         
@@ -705,40 +728,47 @@ local function buildElementalGrid(snapshot)
             return val > 0 and "mint_green" or "fiery_red"
         end
         
+        local rowColor = (idx % 2 == 0) and getColors().row_bg_alt or getColors().row_bg
+
         table.insert(rows, dsl.strict.hbox {
             config = {
                 id = "elem_row_" .. elemType,
-                padding = ui_scale.ui(2),
-                minWidth = PANEL_WIDTH - PANEL_PADDING * 2,
+                padding = GRID_ROW_PADDING,
+                minWidth = ROW_CONTENT_WIDTH,
                 align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
+                color = rowColor,
             },
             children = {
                 dsl.strict.text(displayName, {
-                    fontSize = ROW_FONT_SIZE - ui_scale.ui(1),
+                    fontSize = GRID_VALUE_FONT,
                     color = config.color,
+                    shadow = true,
                     minWidth = ELEM_COL_WIDTH,
                     align = AlignmentFlag.HORIZONTAL_LEFT,
                 }),
                 dsl.strict.text(formatGridValue(data.resist, config.hasResist), {
                     id = "elem_" .. elemType .. "_resist",
-                    fontSize = ROW_FONT_SIZE - ui_scale.ui(1),
+                    fontSize = GRID_VALUE_FONT,
                     color = getGridColor(data.resist, config.hasResist),
+                    shadow = true,
                     minWidth = COL_WIDTH,
-                    align = AlignmentFlag.HORIZONTAL_CENTER,
+                    align = AlignmentFlag.HORIZONTAL_RIGHT,
                 }),
                 dsl.strict.text(formatGridValue(data.damage, true), {
                     id = "elem_" .. elemType .. "_damage",
-                    fontSize = ROW_FONT_SIZE - ui_scale.ui(1),
+                    fontSize = GRID_VALUE_FONT,
                     color = getGridColor(data.damage, true),
+                    shadow = true,
                     minWidth = COL_WIDTH,
-                    align = AlignmentFlag.HORIZONTAL_CENTER,
+                    align = AlignmentFlag.HORIZONTAL_RIGHT,
                 }),
                 dsl.strict.text(formatGridValue(data.duration, config.hasDuration), {
                     id = "elem_" .. elemType .. "_duration",
-                    fontSize = ROW_FONT_SIZE - ui_scale.ui(1),
+                    fontSize = GRID_VALUE_FONT,
                     color = getGridColor(data.duration, config.hasDuration),
+                    shadow = true,
                     minWidth = COL_WIDTH,
-                    align = AlignmentFlag.HORIZONTAL_CENTER,
+                    align = AlignmentFlag.HORIZONTAL_RIGHT,
                 }),
             }
         })
@@ -746,7 +776,7 @@ local function buildElementalGrid(snapshot)
 
     return dsl.strict.vbox {
         config = {
-            padding = ui_scale.ui(4),
+            padding = SECTION_CONTENT_PADDING,
         },
         children = rows,
     }
@@ -773,7 +803,7 @@ local function buildSection(sectionDef, snapshot)
 
         if #statRows > 0 then
             table.insert(children, dsl.strict.vbox {
-                config = { padding = ui_scale.ui(4) },
+                config = { padding = SECTION_CONTENT_PADDING },
                 children = statRows,
             })
         end
@@ -809,7 +839,7 @@ local function createScrollPane(children, opts)
     opts = opts or {}
     local _, screenH = getScreenSize()
     local height = opts.height or math.floor(screenH * 0.6)
-    local width = PANEL_WIDTH - (PANEL_PADDING * 2) - ui_scale.ui(8)
+    local width = SCROLL_PANE_WIDTH
     
     return ui.definitions.def {
         type = "SCROLL_PANE",
@@ -819,7 +849,7 @@ local function createScrollPane(children, opts)
             height = height,
             maxWidth = width,
             width = width,
-            padding = ui_scale.ui(4),
+            padding = SCROLL_PANE_PADDING,
             color = getColors().bg,
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
         },
@@ -846,7 +876,7 @@ local function buildSectionContent(sectionDef, snapshot)
     end
 
     return dsl.strict.vbox {
-        config = { padding = ui_scale.ui(4) },
+        config = { padding = SECTION_CONTENT_PADDING },
         children = statRows,
     }
 end

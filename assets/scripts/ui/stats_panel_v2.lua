@@ -1597,11 +1597,12 @@ function StatsPanel.show()
             StatsPanel._onStatsChanged({})
         end
 
-        -- Move panel to visible position using comprehensive helper
+        -- Move panel to STARTING position (offscreen) for animation
+        -- slideProgress = 0 means offscreen, so use getPanelX(0) for consistency
         local screenW, _ = getScreenSize()
-        local visibleX = screenW - PANEL_WIDTH - 20
-        local visibleY = 60
-        setEntityVisible(state.panelEntity, true, visibleX, visibleY, "panel")
+        local startX = screenW + 20  -- Offscreen right (matches getPanelX(0))
+        local startY = 60
+        setEntityVisible(state.panelEntity, true, startX, startY, "panel")
 
         -- Reapply state tags to ensure correctness after game state changes
         if ui and ui.box then

@@ -65,6 +65,18 @@ local function setupKeyboardHandler()
         tag = "skills_panel_keyboard",
         group = TIMER_GROUP,
         action = function()
+            -- Skip keyboard shortcuts if search input has focus (let text input handle keys)
+            if SkillsPanel and SkillsPanel.isSearchFocused and SkillsPanel.isSearchFocused() then
+                -- Only allow ESC to clear focus and close
+                if isKeyPressed and isKeyPressed(KEY_CLOSE) then
+                    -- Clear search focus first
+                    if SkillsPanel.setSearchFocused then
+                        SkillsPanel.setSearchFocused(false)
+                    end
+                end
+                return  -- Don't process other keyboard shortcuts while typing
+            end
+
             -- K key toggles panel (only if modal is not open)
             if isKeyPressed and isKeyPressed(KEY_TOGGLE) then
                 if SkillConfirmationModal and SkillConfirmationModal.isVisible() then

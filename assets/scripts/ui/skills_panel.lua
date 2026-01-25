@@ -87,13 +87,13 @@ local SPRITE_SCALE = ui_scale and ui_scale.SPRITE_SCALE or 1
 
 local SLOT_BASE_SIZE = 48
 local SLOT_SIZE = UI(SLOT_BASE_SIZE)
-local SLOT_SPACING = UI(0)  -- Near-zero spacing between grid cells
-local GRID_PADDING = UI(8)
-local HEADER_HEIGHT = UI(40)
-local HEADER_SPACING = UI(4)
-local COLUMN_HEADER_HEIGHT = UI(20)
-local PANEL_PADDING = UI(12)
-local SEARCH_BAR_HEIGHT = UI(28)
+local SLOT_SPACING = UI(0)  -- No spacing between grid cells
+local GRID_PADDING = UI(2)  -- Minimal grid padding
+local HEADER_HEIGHT = UI(24)  -- Compact header
+local HEADER_SPACING = UI(1)  -- Near-zero spacing between sections
+local COLUMN_HEADER_HEIGHT = UI(14)  -- Compact column headers
+local PANEL_PADDING = UI(4)  -- Minimal panel padding
+local SEARCH_BAR_HEIGHT = UI(22)  -- Compact search bar
 
 -- Grid dimensions (4 columns × 8 rows)
 local GRID_WIDTH = CONFIG.columns * SLOT_SIZE + (CONFIG.columns - 1) * SLOT_SPACING + GRID_PADDING * 2
@@ -101,7 +101,7 @@ local GRID_HEIGHT = CONFIG.rows * SLOT_SIZE + (CONFIG.rows - 1) * SLOT_SPACING +
 
 -- Panel dimensions
 local PANEL_WIDTH = GRID_WIDTH + PANEL_PADDING * 2
-local COLUMN_HEADER_BLOCK_HEIGHT = COLUMN_HEADER_HEIGHT + GRID_PADDING * 2
+local COLUMN_HEADER_BLOCK_HEIGHT = COLUMN_HEADER_HEIGHT + UI(2)  -- Minimal header block padding
 local PANEL_HEIGHT = HEADER_HEIGHT
     + HEADER_SPACING
     + SEARCH_BAR_HEIGHT
@@ -135,6 +135,7 @@ local state = {
     entityTooltipKeys = {},  -- Lua-side storage for entity tooltip keys (can't store on C++ userdata)
     searchText = "",         -- Current search filter text
     matchingSkills = {},     -- Set of skill IDs that match current search
+    searchFocused = false,   -- True when search input has keyboard focus
 }
 
 --------------------------------------------------------------------------------
@@ -415,20 +416,20 @@ local function createHeader()
     return dsl.strict.hbox {
         config = {
             id = "skills_header",
-            padding = UI(4),
+            padding = UI(2),  -- Compact padding
             minHeight = HEADER_HEIGHT,
             align = "center",
         },
         children = {
             dsl.strict.text("Skills", {
                 id = "skills_title",
-                fontSize = UI(16),
+                fontSize = UI(12),  -- Smaller font
                 color = "white",
             }),
-            dsl.strict.spacer(UI(20)),
+            dsl.strict.spacer(UI(8)),  -- Less spacing
             dsl.strict.text("Points: 0/0", {
                 id = "skills_points_display",
-                fontSize = UI(12),
+                fontSize = UI(10),  -- Smaller font
                 color = "yellow",
             }),
         },
@@ -452,23 +453,23 @@ local function createSearchBar()
     return dsl.strict.hbox {
         config = {
             id = "search_bar_container",
-            padding = UI(4),
+            padding = UI(1),  -- Minimal padding
             minHeight = SEARCH_BAR_HEIGHT,
             minWidth = GRID_WIDTH,
             align = "center",
         },
         children = {
             dsl.strict.text("Search:", {
-                fontSize = UI(11),
+                fontSize = UI(9),  -- Smaller font
                 color = "gray",
             }),
-            dsl.strict.spacer(UI(6)),
+            dsl.strict.spacer(UI(3)),  -- Less spacer
             dsl.inputText({
                 id = "skills_search_input",
                 placeholder = "name, element...",
-                minWidth = GRID_WIDTH - UI(60),
-                minHeight = SEARCH_BAR_HEIGHT - UI(4),
-                fontSize = UI(11),
+                minWidth = GRID_WIDTH - UI(48),  -- More space for input
+                minHeight = SEARCH_BAR_HEIGHT - UI(2),
+                fontSize = UI(9),  -- Smaller font
                 color = "white",
                 backgroundColor = "blackberry",
                 emboss = 1,
@@ -498,7 +499,7 @@ local function createColumnHeaders()
             },
             children = {
                 dsl.strict.text(element:sub(1,1):upper() .. element:sub(2), {
-                    fontSize = UI(10),
+                    fontSize = UI(8),  -- Smaller compact font
                     color = isLocked and "gray" or color,
                 }),
             },
@@ -712,6 +713,9 @@ local function createSkillButton(skillId, skillDef, element, isLocked)
             emboss = isHighlighted and 2 or nil,  -- Add depth to highlighted skills
             -- Click callback only for available/insufficient skills (not locked or learned)
             buttonCallback = (not isLocked and not isLearned) and function()
+                -- Clear search focus when clicking a skill button
+                state.searchFocused = false
+
                 local ok, SkillsPanelInput = pcall(require, "ui.skills_panel_input")
                 if ok and SkillsPanelInput and SkillsPanelInput.onSkillButtonClicked then
                     SkillsPanelInput.onSkillButtonClicked(skillId)
@@ -858,7 +862,7 @@ local function initializePanel()
         state.headerTextEntity = ui.box.GetUIEByID(_G.registry, state.panelEntity, "skills_points_display")
     end
 
-    -- Set up search input callback
+    -- Set up search input callback and focus handling
     if ui and ui.box and ui.box.GetUIEByID then
         state.searchInputEntity = ui.box.GetUIEByID(_G.registry, state.panelEntity, "skills_search_input")
         if state.searchInputEntity and _G.registry:valid(state.searchInputEntity) then
@@ -867,6 +871,15 @@ local function initializePanel()
             if textInput then
                 textInput.callback = function(newText)
                     onSearchTextChanged(newText or "")
+                end
+            end
+
+            -- Set up click handler to gain focus
+            local go = component_cache.get(state.searchInputEntity, GameObject)
+            if go then
+                go.state.collisionEnabled = true
+                go.methods.onClick = function()
+                    state.searchFocused = true
                 end
             end
         end
@@ -896,6 +909,18 @@ function SkillsPanel.isOpen()
     return state.isVisible
 end
 
+--- Check if search input has keyboard focus
+--- @return boolean
+function SkillsPanel.isSearchFocused()
+    return state.searchFocused
+end
+
+--- Set search input focus state
+--- @param focused boolean True if search has focus
+function SkillsPanel.setSearchFocused(focused)
+    state.searchFocused = focused
+end
+
 --- Open the skills panel
 function SkillsPanel.open()
     if not state.initialized then
@@ -920,6 +945,9 @@ function SkillsPanel.close()
         hideSimpleTooltip(state.activeTooltipKey)
         state.activeTooltipKey = nil
     end
+
+    -- Clear search focus when panel closes
+    state.searchFocused = false
 
     setEntityVisible(state.panelEntity, false, state.panelX, state.panelY, state.hiddenX)
     state.isVisible = false
@@ -1033,6 +1061,7 @@ function SkillsPanel.destroy()
     state.activeTooltipKey = nil
     state.searchText = ""
     state.matchingSkills = {}
+    state.searchFocused = false
 end
 
 --- Reset module state (for testing)

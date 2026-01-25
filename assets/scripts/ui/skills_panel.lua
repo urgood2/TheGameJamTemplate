@@ -1,9 +1,9 @@
 --[[
 ================================================================================
-SKILLS PANEL - Left-Aligned Skills Selection Panel
+SKILLS PANEL - Right-Aligned Skills Selection Panel
 ================================================================================
 
-A slide-out panel on the left edge of the screen displaying all available
+A slide-out panel on the right edge of the screen displaying all available
 skills organized by element (Fire, Ice, Lightning, Void).
 
 USAGE:
@@ -332,13 +332,13 @@ local function calculatePositions()
     local screenWidth = GetScreenWidth and GetScreenWidth() or 1920
     local screenHeight = GetScreenHeight and GetScreenHeight() or 1080
 
-    -- Panel on left edge, vertically centered
-    state.panelX = PANEL_PADDING
+    -- Panel on right edge, vertically centered
+    state.panelX = screenWidth - PANEL_WIDTH - PANEL_PADDING
     local desiredY = (screenHeight - PANEL_HEIGHT) / 2
     local minY = PANEL_PADDING
     local maxY = math.max(minY, screenHeight - PANEL_HEIGHT - PANEL_PADDING)
     state.panelY = math.max(minY, math.min(maxY, desiredY))
-    state.hiddenX = -PANEL_WIDTH - PANEL_PADDING
+    state.hiddenX = screenWidth + PANEL_PADDING  -- Offscreen to the right
 
     return true
 end
@@ -833,8 +833,9 @@ local function initializePanel()
         return
     end
 
-    -- Spawn panel offscreen to the left (will slide in on open)
-    local offscreenX = state.hiddenX or (-PANEL_WIDTH - PANEL_PADDING)
+    -- Spawn panel offscreen to the right (will slide in on open)
+    local screenWidth = GetScreenWidth and GetScreenWidth() or 1920
+    local offscreenX = state.hiddenX or (screenWidth + PANEL_PADDING)
     state.panelEntity = dsl.spawn(
         { x = offscreenX, y = state.panelY },
         panelDef,

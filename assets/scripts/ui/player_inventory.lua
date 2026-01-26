@@ -388,6 +388,77 @@ local function createSimpleCard(spriteName, x, y, cardData, gridEntity)
     return entity
 end
 
+-- Creates an equipment card entity from an equipment definition.
+-- Follows createSimpleCard pattern with shader pipeline and screen-space setup.
+local function createEquipmentCard(equipmentDef)
+    if not equipmentDef then
+        log_warn("[PlayerInventory] createEquipmentCard: equipmentDef is nil")
+        return nil
+    end
+
+    local sprite = equipmentDef.sprite or "frame0012.png"
+    
+    -- Create animated sprite entity
+    local entity = animation_system.createAnimatedObjectWithTransform(
+        sprite, true, -9999, -9999, nil, true  -- Start off-screen
+    )
+    
+    if not entity or not registry:valid(entity) then
+        log_warn("[PlayerInventory] Failed to create equipment card: " .. tostring(equipmentDef.id))
+        return nil
+    end
+    
+    -- NOTE: Do NOT add ObjectAttachedToUITag - it excludes entities from shader rendering pipeline!
+    -- Equipment cards need to render via the normal sprite pipeline to respect z-ordering properly.
+    
+    -- Set initial state tag
+    if add_state_tag then
+        add_state_tag(entity, "default_state")
+    end
+    
+    -- Setup shader pipeline BEFORE resize
+    if shader_pipeline and shader_pipeline.ShaderPipelineComponent then
+        local shaderComp = registry:emplace(entity, shader_pipeline.ShaderPipelineComponent)
+        shaderComp:addPass("3d_skew")
+        
+        local skewSeed = math.random() * 10000
+        local passes = shaderComp.passes
+        if passes and #passes >= 1 then
+            local pass = passes[#passes]
+            if pass and pass.shaderName and pass.shaderName:sub(1, 7) == "3d_skew" then
+                pass.customPrePassFunction = function()
+                    if globalShaderUniforms then
+                        globalShaderUniforms:set(pass.shaderName, "rand_seed", skewSeed)
+                    end
+                end
+            end
+        end
+    end
+    
+    -- Setup script data with equipmentDef reference
+    local scriptData = {
+        entity = entity,
+        id = equipmentDef.id,
+        name = equipmentDef.name,
+        slot = equipmentDef.slot,
+        category = "equipment",
+        cardData = equipmentDef,
+        equipmentDef = equipmentDef,  -- Direct reference for equip logic
+        noVisualSnap = true,
+    }
+    
+    if setScriptTableForEntityID then
+        setScriptTableForEntityID(entity, scriptData)
+    end
+    
+    state.cardRegistry[entity] = scriptData
+    
+    -- Setup for screen-space rendering
+    CardUIPolicy.setupForScreenSpace(entity)
+    
+    return entity
+end
+
 -- Creates a grid definition (template node) WITHOUT spawning.
 -- Returns the DSL definition that can be passed to ui.box.AddChild
 local function createGridDefinition(tabId)

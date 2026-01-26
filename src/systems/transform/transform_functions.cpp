@@ -1411,13 +1411,18 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
         springX.velocity = 0;
         springY.velocity = 0;
+        springW.velocity = 0;
+        springH.velocity = 0;
         springR.velocity = 0;
         springS.velocity = 0;
 
         springR.targetValue = transform.getActualRotation();
         springS.targetValue = transform.getActualScale();
+        springR.value = springR.targetValue;
+        springS.value = springS.targetValue;
 
         UpdateParallaxCalculations(registry, e);
+        transform.updateCachedValues(true);
     }
 
     auto SnapVisualTransformValues(entt::registry *registry, entt::entity e) -> void
@@ -1434,11 +1439,17 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         springY.value = springY.targetValue;
         springW.value = springW.targetValue;
         springH.value = springH.targetValue;
+        springR.value = springR.targetValue;
+        springS.value = springS.targetValue;
 
         springX.velocity = 0;
         springY.velocity = 0;
         springW.velocity = 0;
         springH.velocity = 0;
+        springR.velocity = 0;
+        springS.velocity = 0;
+
+        transform.updateCachedValues(true);
     }
     
     // PERF: This function was dead code - never called (all call sites were commented out).

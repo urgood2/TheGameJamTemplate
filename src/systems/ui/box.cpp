@@ -2001,6 +2001,10 @@ node.state.collisionEnabled = true; // enable collision for scroll pane
         // 4️⃣ Apply calculated dimensions to the UIBox transform
         transform->setActualW(registry.get<transform::Transform>(rootEntity).getActualW());
         transform->setActualH(registry.get<transform::Transform>(rootEntity).getActualH());
+        transform->setVisualW(transform->getActualW());
+        transform->setVisualH(transform->getActualH());
+        transform->getWSpring().velocity = 0.0f;
+        transform->getHSpring().velocity = 0.0f;
 
         // 5️⃣ Refresh major cache
         // TODO: figure out what this does exactly

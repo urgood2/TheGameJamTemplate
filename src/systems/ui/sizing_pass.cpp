@@ -143,12 +143,16 @@ Vector2 SizingPass::commitToTransforms() {
             transform.setActualH(scr->viewportSize.y);
             transform.setVisualW(scr->viewportSize.x);
             transform.setVisualH(scr->viewportSize.y);
+            transform.getWSpring().velocity = 0.0f;
+            transform.getHSpring().velocity = 0.0f;
             finalContentSize = Vector2{scr->viewportSize.x, contentSize.y};
         } else {
             transform.setActualW(contentSize.x);
             transform.setActualH(contentSize.y);
             transform.setVisualW(contentSize.x);
             transform.setVisualH(contentSize.y);
+            transform.getWSpring().velocity = 0.0f;
+            transform.getHSpring().velocity = 0.0f;
         }
 
         if (finalContentSize.x > biggestSize.x) biggestSize.x = finalContentSize.x;
@@ -189,11 +193,20 @@ void SizingPass::finalizeRootHeight(const Vector2& biggestSize) {
         }
     }
 
+    rootTransform.setVisualW(rootTransform.getActualW());
+    rootTransform.setVisualH(rootTransform.getActualH());
+    rootTransform.getWSpring().velocity = 0.0f;
+    rootTransform.getHSpring().velocity = 0.0f;
+
     // Update the UIBox entity's transform to match root
     auto& rootUIElementComp = reg_.get<UIElementComponent>(root_);
     auto& uiBoxTransform = reg_.get<transform::Transform>(rootUIElementComp.uiBox);
     uiBoxTransform.setActualW(rootTransform.getActualW());
     uiBoxTransform.setActualH(rootTransform.getActualH());
+    uiBoxTransform.setVisualW(uiBoxTransform.getActualW());
+    uiBoxTransform.setVisualH(uiBoxTransform.getActualH());
+    uiBoxTransform.getWSpring().velocity = 0.0f;
+    uiBoxTransform.getHSpring().velocity = 0.0f;
 }
 
 void SizingPass::applyMaxConstraints() {

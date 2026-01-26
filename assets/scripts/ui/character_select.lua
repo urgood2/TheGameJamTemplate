@@ -113,6 +113,16 @@ CharacterSelect.LAYOUT = {
     PORTRAIT_SPACING = 8,
     SCREEN_MARGIN = 20,
     OFFSCREEN_Y_OFFSET = 120,
+    PANEL_MIN_WIDTH = 660,
+    PANEL_MIN_HEIGHT = 520,
+    INFO_PANEL_MIN_HEIGHT = 160,
+}
+
+local AURA_COLORS = {
+    fire = "crimson",
+    ice = "skyblue",
+    lightning = "gold",
+    void = "purple",
 }
 
 --------------------------------------------------------------------------------
@@ -279,6 +289,8 @@ local state = {
     panelX = 0,
     panelY = 0,
     panelOffscreenY = 0,
+    panelWidth = 0,
+    panelHeight = 0,
 
     -- Selection state
     selectedGod = nil,
@@ -310,6 +322,27 @@ local function clamp(value, minValue, maxValue)
     if value < minValue then return minValue end
     if value > maxValue then return maxValue end
     return value
+end
+
+local function getPanelMetrics()
+    local screenW, screenH = getScreenDimensions()
+    local margin = UI(CharacterSelect.LAYOUT.SCREEN_MARGIN)
+    local panelMinW = UI(CharacterSelect.LAYOUT.PANEL_MIN_WIDTH)
+    local panelMinH = UI(CharacterSelect.LAYOUT.PANEL_MIN_HEIGHT)
+    local panelWidth = math.max(0, math.min(panelMinW, screenW - (margin * 2)))
+    local panelHeight = math.max(0, math.min(panelMinH, screenH - (margin * 2)))
+    local contentWidth = math.max(0, panelWidth - (UI(CharacterSelect.LAYOUT.PANEL_PADDING) * 2))
+    local godInfoWidth = math.floor(contentWidth * (CharacterSelect.LAYOUT.INFO_GOD_WIDTH_PCT / 100))
+    local classInfoWidth = math.max(0, contentWidth - godInfoWidth)
+    return {
+        screenW = screenW,
+        screenH = screenH,
+        margin = margin,
+        panelWidth = panelWidth,
+        panelHeight = panelHeight,
+        godInfoWidth = godInfoWidth,
+        classInfoWidth = classInfoWidth,
+    }
 end
 
 local function getPanelTransform(entity)
@@ -360,19 +393,15 @@ end
 local function updatePanelLayout()
     if not state.panelEntity then return end
 
-    local screenW, screenH = getScreenDimensions()
-    local margin = UI(CharacterSelect.LAYOUT.SCREEN_MARGIN)
+    local metrics = getPanelMetrics()
+    local panelW = metrics.panelWidth
+    local panelH = metrics.panelHeight
+    local screenW = metrics.screenW
+    local screenH = metrics.screenH
+    local margin = metrics.margin
 
-    local t = getPanelTransform(state.panelEntity)
-    local panelW = (t and t.actualW) or 0
-    local panelH = (t and t.actualH) or 0
-
-    if panelW <= 0 then
-        panelW = math.max(0, screenW - (margin * 2))
-    end
-    if panelH <= 0 then
-        panelH = math.max(0, screenH - (margin * 2))
-    end
+    state.panelWidth = panelW
+    state.panelHeight = panelH
 
     local rawX = math.floor((screenW - panelW) / 2)
     local rawY = math.floor((screenH - panelH) / 2)
@@ -471,6 +500,8 @@ function CharacterSelect.destroy()
     state.panelX = 0
     state.panelY = 0
     state.panelOffscreenY = 0
+    state.panelWidth = 0
+    state.panelHeight = 0
     state.selectedGod = nil
     state.selectedClass = nil
     state.focusSection = 1
@@ -896,6 +927,8 @@ local GOD_ORDER = { "pyr", "glah", "vix", "nil", "locked_god_1", "locked_god_2" 
 -- Order for class portraits (left-to-right)
 local CLASS_ORDER = { "channeler", "seer", "locked_class_1" }
 
+local TEXT_ALIGN_LEFT = AlignmentFlag and bit and bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER) or nil
+
 --- Create a portrait button for a god or class
 --- @param id string The god/class ID
 --- @param data table The god/class data
@@ -912,13 +945,7 @@ local function createPortrait(id, data, isGod)
     local portraitColor = isLocked and "charcoal" or (isSelected and "gold" or "slate")
 
     -- Determine portrait inner color based on aura or type
-    local auraColors = {
-        fire = "crimson",
-        ice = "skyblue",
-        lightning = "gold",
-        void = "purple",
-    }
-    local innerColor = isLocked and "gray" or (data.aura and auraColors[data.aura]) or "slate"
+    local innerColor = isLocked and "gray" or (data.aura and AURA_COLORS[data.aura]) or "slate"
 
     local displayName = L(data.name_key, id)
     local portraitNode
@@ -959,6 +986,7 @@ local function createPortrait(id, data, isGod)
             -- Portrait placeholder (colored box with initial)
             strict.vbox {
                 config = {
+                    id = "portrait_inner_" .. id,
                     color = innerColor,
                     minWidth = UI(CharacterSelect.LAYOUT.PORTRAIT_SIZE),
                     minHeight = UI(CharacterSelect.LAYOUT.PORTRAIT_SIZE),
@@ -971,6 +999,7 @@ local function createPortrait(id, data, isGod)
             },
             -- Name label (short)
             strict.text(displayName, {
+                id = "portrait_label_" .. id,
                 fontSize = UI(10),
                 color = isLocked and "gray" or "white",
             }),
@@ -996,6 +1025,7 @@ local function createGodRow()
             id = "god_row",
             spacing = UI(CharacterSelect.LAYOUT.PORTRAIT_SPACING),
             padding = UI(8),
+            align = TEXT_ALIGN_LEFT,
         },
         children = children,
     }
@@ -1019,6 +1049,7 @@ local function createClassRow()
             id = "class_row",
             spacing = UI(CharacterSelect.LAYOUT.PORTRAIT_SPACING),
             padding = UI(8),
+            align = TEXT_ALIGN_LEFT,
         },
         children = children,
     }
@@ -1030,18 +1061,14 @@ local function createGodInfoPanel()
     if not dsl then return nil end
 
     local info = CharacterSelect.getGodInfo()
-
-    if not info then
-        return strict.vbox {
-            config = { id = "god_info", padding = UI(10), color = "charcoal" },
-            children = {
-                strict.text(L("character_select.select_god", "Select a God"), {
-                    fontSize = UI(16),
-                    color = "gray",
-                }),
-            },
-        }
-    end
+    local hasInfo = info ~= nil
+    local metrics = getPanelMetrics()
+    local titleText = hasInfo and L(info.name_key, info.id) or L("character_select.select_god", "Select a God")
+    local loreText = hasInfo and L(info.lore_key, "") or ""
+    local blessingText = hasInfo and L(info.blessing_key, "") or ""
+    local passiveText = hasInfo and L(info.passive_key, "") or ""
+    local blessingLabel = hasInfo and L("character_select.blessing", "Blessing:") or ""
+    local passiveLabel = hasInfo and L("character_select.passive", "Passive:") or ""
 
     return strict.vbox {
         config = {
@@ -1049,36 +1076,51 @@ local function createGodInfoPanel()
             padding = UI(10),
             spacing = UI(6),
             color = "charcoal",
+            minWidth = metrics.godInfoWidth,
+            minHeight = UI(CharacterSelect.LAYOUT.INFO_PANEL_MIN_HEIGHT),
+            align = TEXT_ALIGN_LEFT,
         },
         children = {
             -- God name
-            strict.text(L(info.name_key, info.id), {
+            strict.text(titleText, {
+                id = "god_info_title",
                 fontSize = UI(18),
-                color = "gold",
+                color = hasInfo and "gold" or "gray",
+                align = TEXT_ALIGN_LEFT,
             }),
             -- Lore/description
-            strict.text(L(info.lore_key, ""), {
+            strict.text(loreText, {
+                id = "god_info_lore",
                 fontSize = UI(12),
                 color = "white",
+                align = TEXT_ALIGN_LEFT,
             }),
             strict.divider("horizontal", { color = "slate" }),
             -- Blessing label
-            strict.text(L("character_select.blessing", "Blessing:"), {
+            strict.text(blessingLabel, {
+                id = "god_info_blessing_label",
                 fontSize = UI(12),
-                color = "cyan",
+                color = hasInfo and "cyan" or "gray",
+                align = TEXT_ALIGN_LEFT,
             }),
-            strict.text(L(info.blessing_key, ""), {
+            strict.text(blessingText, {
+                id = "god_info_blessing",
                 fontSize = UI(11),
                 color = "white",
+                align = TEXT_ALIGN_LEFT,
             }),
             -- Passive label
-            strict.text(L("character_select.passive", "Passive:"), {
+            strict.text(passiveLabel, {
+                id = "god_info_passive_label",
                 fontSize = UI(12),
-                color = "green",
+                color = hasInfo and "green" or "gray",
+                align = TEXT_ALIGN_LEFT,
             }),
-            strict.text(L(info.passive_key, ""), {
+            strict.text(passiveText, {
+                id = "god_info_passive",
                 fontSize = UI(11),
                 color = "white",
+                align = TEXT_ALIGN_LEFT,
             }),
         },
     }
@@ -1090,18 +1132,14 @@ local function createClassInfoPanel()
     if not dsl then return nil end
 
     local info = CharacterSelect.getClassInfo()
-
-    if not info then
-        return strict.vbox {
-            config = { id = "class_info", padding = UI(10), color = "charcoal" },
-            children = {
-                strict.text(L("character_select.select_class", "Select a Class"), {
-                    fontSize = UI(16),
-                    color = "gray",
-                }),
-            },
-        }
-    end
+    local hasInfo = info ~= nil
+    local metrics = getPanelMetrics()
+    local titleText = hasInfo and L(info.name_key, info.id) or L("character_select.select_class", "Select a Class")
+    local loreText = hasInfo and L(info.lore_key, "") or ""
+    local passiveText = hasInfo and L(info.passive_key, "") or ""
+    local triggeredText = hasInfo and L(info.triggered_key, "") or ""
+    local passiveLabel = hasInfo and L("character_select.passive", "Passive:") or ""
+    local triggeredLabel = hasInfo and L("character_select.triggered", "Triggered:") or ""
 
     return strict.vbox {
         config = {
@@ -1109,36 +1147,51 @@ local function createClassInfoPanel()
             padding = UI(10),
             spacing = UI(6),
             color = "charcoal",
+            minWidth = metrics.classInfoWidth,
+            minHeight = UI(CharacterSelect.LAYOUT.INFO_PANEL_MIN_HEIGHT),
+            align = TEXT_ALIGN_LEFT,
         },
         children = {
             -- Class name
-            strict.text(L(info.name_key, info.id), {
+            strict.text(titleText, {
+                id = "class_info_title",
                 fontSize = UI(18),
-                color = "gold",
+                color = hasInfo and "gold" or "gray",
+                align = TEXT_ALIGN_LEFT,
             }),
             -- Lore/description
-            strict.text(L(info.lore_key, ""), {
+            strict.text(loreText, {
+                id = "class_info_lore",
                 fontSize = UI(12),
                 color = "white",
+                align = TEXT_ALIGN_LEFT,
             }),
             strict.divider("horizontal", { color = "slate" }),
             -- Passive label
-            strict.text(L("character_select.passive", "Passive:"), {
+            strict.text(passiveLabel, {
+                id = "class_info_passive_label",
                 fontSize = UI(12),
-                color = "green",
+                color = hasInfo and "green" or "gray",
+                align = TEXT_ALIGN_LEFT,
             }),
-            strict.text(L(info.passive_key, ""), {
+            strict.text(passiveText, {
+                id = "class_info_passive",
                 fontSize = UI(11),
                 color = "white",
+                align = TEXT_ALIGN_LEFT,
             }),
             -- Triggered ability
-            strict.text(L("character_select.triggered", "Triggered:"), {
+            strict.text(triggeredLabel, {
+                id = "class_info_triggered_label",
                 fontSize = UI(12),
-                color = "orange",
+                color = hasInfo and "orange" or "gray",
+                align = TEXT_ALIGN_LEFT,
             }),
-            strict.text(L(info.triggered_key, ""), {
+            strict.text(triggeredText, {
+                id = "class_info_triggered",
                 fontSize = UI(11),
                 color = "white",
+                align = TEXT_ALIGN_LEFT,
             }),
         },
     }
@@ -1154,6 +1207,7 @@ local function createInfoZone()
             id = "info_zone",
             spacing = UI(10),
             padding = UI(10),
+            align = TEXT_ALIGN_LEFT,
         },
         children = {
             createGodInfoPanel(),
@@ -1178,6 +1232,7 @@ local function createButtonRow()
         children = {
             -- Random button (left side)
             strict.button(L("character_select.random", "Random"), {
+                id = "character_select_random_button",
                 minWidth = UI(100),
                 color = "blue",
                 onClick = function()
@@ -1189,6 +1244,7 @@ local function createButtonRow()
             dsl.filler and dsl.filler() or strict.spacer(UI(100)),
             -- Confirm button (right side)
             strict.button(L("character_select.confirm", "Confirm"), {
+                id = "character_select_confirm_button",
                 minWidth = UI(120),
                 color = confirmEnabled and "green" or "charcoal",
                 disabled = not confirmEnabled,
@@ -1208,16 +1264,21 @@ end
 local function createPanelDefinition()
     if not dsl then return nil end
 
+    local metrics = getPanelMetrics()
+
     return strict.root {
         config = {
             id = "character_select_panel",
             color = "blackberry",
             padding = UI(CharacterSelect.LAYOUT.PANEL_PADDING),
+            minWidth = metrics.panelWidth,
+            minHeight = metrics.panelHeight,
         },
         children = {
             strict.vbox {
                 config = {
                     spacing = UI(10),
+                    align = TEXT_ALIGN_LEFT,
                 },
                 children = {
                     -- Title
@@ -1235,6 +1296,7 @@ local function createPanelDefinition()
                             id = "god_row_container",
                             spacing = 0,
                             padding = 0,
+                            align = TEXT_ALIGN_LEFT,
                         },
                         children = {
                             createGodRow(),
@@ -1250,6 +1312,7 @@ local function createPanelDefinition()
                             id = "class_row_container",
                             spacing = 0,
                             padding = 0,
+                            align = TEXT_ALIGN_LEFT,
                         },
                         children = {
                             createClassRow(),
@@ -1263,6 +1326,7 @@ local function createPanelDefinition()
                             id = "info_zone_container",
                             spacing = 0,
                             padding = 0,
+                            align = TEXT_ALIGN_LEFT,
                         },
                         children = {
                             createInfoZone(),
@@ -1274,6 +1338,7 @@ local function createPanelDefinition()
                             id = "button_row_container",
                             spacing = 0,
                             padding = 0,
+                            align = TEXT_ALIGN_LEFT,
                         },
                         children = {
                             createButtonRow(),
@@ -1333,49 +1398,149 @@ function CharacterSelect.spawnPanel()
     return state.panelEntity
 end
 
+local function resolveUIColor(colorName)
+    if util and util.getColor then
+        local ok, colorValue = pcall(util.getColor, colorName)
+        if ok and colorValue then
+            return colorValue
+        end
+    end
+    return colorName
+end
+
+local function updateUIConfigColor(entity, colorName)
+    if not entity or not component_cache or not UIConfig then return end
+    local cfg = component_cache.get(entity, UIConfig)
+    if cfg then
+        cfg.color = resolveUIColor(colorName)
+    end
+end
+
+local function updateUIText(entity, text, colorName)
+    if not entity or not component_cache or not UITextComponent then return end
+    local uiText = component_cache.get(entity, UITextComponent)
+    if uiText then
+        if text ~= nil then
+            uiText.text = text
+        end
+        if colorName then
+            uiText.color = resolveUIColor(colorName)
+        end
+    end
+end
+
 --- Refresh the UI to reflect current selection state
 function CharacterSelect.refreshUI()
     if not state.panelEntity then return end
-    if not dsl then return end
+    if not (ui and ui.box and ui.box.GetUIEByID and component_cache) then return end
 
-    if ui and ui.box and ui.box.GetUIEByID and ui.box.ReplaceChildren then
-        local godContainer = ui.box.GetUIEByID(registry, state.panelEntity, "god_row_container")
-        if godContainer then
-            ui.box.ReplaceChildren(godContainer, createGodRow())
+    local function updatePortrait(id, data, isGod)
+        if not data then return end
+        local isLocked = not data.unlocked
+        local isSelected = isGod and (state.selectedGod == id) or (state.selectedClass == id)
+        local outerColor = isLocked and "charcoal" or (isSelected and "gold" or "slate")
+        local innerColor = isLocked and "gray" or (data.aura and AURA_COLORS[data.aura]) or "slate"
+        local labelColor = isLocked and "gray" or "white"
+
+        local outer = ui.box.GetUIEByID(registry, state.panelEntity, "portrait_" .. id)
+        if outer then
+            updateUIConfigColor(outer, outerColor)
         end
 
-        local classContainer = ui.box.GetUIEByID(registry, state.panelEntity, "class_row_container")
-        if classContainer then
-            ui.box.ReplaceChildren(classContainer, createClassRow())
+        local inner = ui.box.GetUIEByID(registry, state.panelEntity, "portrait_inner_" .. id)
+        if inner then
+            updateUIConfigColor(inner, innerColor)
         end
 
-        local infoContainer = ui.box.GetUIEByID(registry, state.panelEntity, "info_zone_container")
-        if infoContainer then
-            ui.box.ReplaceChildren(infoContainer, createInfoZone())
+        local label = ui.box.GetUIEByID(registry, state.panelEntity, "portrait_label_" .. id)
+        if label then
+            updateUIText(label, nil, labelColor)
         end
-
-        local buttonContainer = ui.box.GetUIEByID(registry, state.panelEntity, "button_row_container")
-        if buttonContainer then
-            ui.box.ReplaceChildren(buttonContainer, createButtonRow())
-        end
-
-        if ui.box.AddStateTagToUIBox then
-            ui.box.AddStateTagToUIBox(registry, state.panelEntity, "default_state")
-        end
-
-        if ui.box.RenewAlignment then
-            ui.box.RenewAlignment(registry, state.panelEntity)
-        end
-
-        return
     end
 
-    local wasVisible = state.isVisible
-    dsl.remove(state.panelEntity)
-    state.panelEntity = nil
-    CharacterSelect.spawnPanel()
-    updatePanelLayout()
-    setPanelVisible(wasVisible, false)
+    for _, godId in ipairs(GOD_ORDER) do
+        updatePortrait(godId, CharacterSelect.GOD_DATA[godId], true)
+    end
+
+    for _, classId in ipairs(CLASS_ORDER) do
+        updatePortrait(classId, CharacterSelect.CLASS_DATA[classId], false)
+    end
+
+    local godInfo = CharacterSelect.getGodInfo()
+    local hasGod = godInfo ~= nil
+    updateUIText(
+        ui.box.GetUIEByID(registry, state.panelEntity, "god_info_title"),
+        hasGod and L(godInfo.name_key, godInfo.id) or L("character_select.select_god", "Select a God"),
+        hasGod and "gold" or "gray"
+    )
+    updateUIText(
+        ui.box.GetUIEByID(registry, state.panelEntity, "god_info_lore"),
+        hasGod and L(godInfo.lore_key, "") or "",
+        "white"
+    )
+    updateUIText(
+        ui.box.GetUIEByID(registry, state.panelEntity, "god_info_blessing_label"),
+        hasGod and L("character_select.blessing", "Blessing:") or "",
+        hasGod and "cyan" or "gray"
+    )
+    updateUIText(
+        ui.box.GetUIEByID(registry, state.panelEntity, "god_info_blessing"),
+        hasGod and L(godInfo.blessing_key, "") or "",
+        "white"
+    )
+    updateUIText(
+        ui.box.GetUIEByID(registry, state.panelEntity, "god_info_passive_label"),
+        hasGod and L("character_select.passive", "Passive:") or "",
+        hasGod and "green" or "gray"
+    )
+    updateUIText(
+        ui.box.GetUIEByID(registry, state.panelEntity, "god_info_passive"),
+        hasGod and L(godInfo.passive_key, "") or "",
+        "white"
+    )
+
+    local classInfo = CharacterSelect.getClassInfo()
+    local hasClass = classInfo ~= nil
+    updateUIText(
+        ui.box.GetUIEByID(registry, state.panelEntity, "class_info_title"),
+        hasClass and L(classInfo.name_key, classInfo.id) or L("character_select.select_class", "Select a Class"),
+        hasClass and "gold" or "gray"
+    )
+    updateUIText(
+        ui.box.GetUIEByID(registry, state.panelEntity, "class_info_lore"),
+        hasClass and L(classInfo.lore_key, "") or "",
+        "white"
+    )
+    updateUIText(
+        ui.box.GetUIEByID(registry, state.panelEntity, "class_info_passive_label"),
+        hasClass and L("character_select.passive", "Passive:") or "",
+        hasClass and "green" or "gray"
+    )
+    updateUIText(
+        ui.box.GetUIEByID(registry, state.panelEntity, "class_info_passive"),
+        hasClass and L(classInfo.passive_key, "") or "",
+        "white"
+    )
+    updateUIText(
+        ui.box.GetUIEByID(registry, state.panelEntity, "class_info_triggered_label"),
+        hasClass and L("character_select.triggered", "Triggered:") or "",
+        hasClass and "orange" or "gray"
+    )
+    updateUIText(
+        ui.box.GetUIEByID(registry, state.panelEntity, "class_info_triggered"),
+        hasClass and L(classInfo.triggered_key, "") or "",
+        "white"
+    )
+
+    local confirmEntity = ui.box.GetUIEByID(registry, state.panelEntity, "character_select_confirm_button")
+    if confirmEntity and UIConfig then
+        local cfg = component_cache.get(confirmEntity, UIConfig)
+        if cfg then
+            local enabled = CharacterSelect.isConfirmEnabled()
+            cfg.disableButton = not enabled
+            cfg.color = resolveUIColor(enabled and "green" or "charcoal")
+        end
+    end
 end
 
 --- Check if running with game engine (has DSL available)

@@ -125,7 +125,6 @@ local state = {
     panelEntity = nil,
     gridEntity = nil,
     skillButtons = {},       -- skillId -> buttonEntity
-    headerTextEntity = nil,
     searchInputEntity = nil,
     panelX = 0,
     panelY = 0,
@@ -413,12 +412,6 @@ local TOOLTIP_MAX_WIDTH = UI(220)
 local function createHeader()
     if not dsl then return nil end
 
-    -- Use actual player data if available, otherwise placeholder
-    local pointsText = "Points: 0/0"
-    if state.player then
-        pointsText = SkillsPanel.getSkillPointsDisplay(state.player)
-    end
-
     return dsl.strict.hbox {
         config = {
             id = "skills_header",
@@ -433,11 +426,15 @@ local function createHeader()
                 color = "white",
             }),
             dsl.strict.spacer(UI(8)),  -- Less spacing
-            dsl.strict.text(pointsText, {
-                id = "skills_points_display",
-                fontSize = UI(10),  -- Smaller font
-                color = "yellow",
-            }),
+            -- Use dynamicText so skill points auto-update when spent
+            dsl.dynamicText(
+                function()
+                    return SkillsPanel.getSkillPointsDisplay(state.player)
+                end,
+                UI(10),  -- fontSize
+                "",      -- effect (none)
+                { id = "skills_points_display", color = "yellow" }
+            ),
         },
     }
 end
@@ -839,10 +836,10 @@ local function initializePanel()
         return
     end
 
-    -- Spawn panel offscreen to the left (will slide in on open)
-    local offscreenX = state.hiddenX or (-PANEL_WIDTH - PANEL_PADDING)
+    -- Spawn panel at the visible position (since initializePanel is called from open())
+    -- The panel will be moved offscreen when close() is called
     state.panelEntity = dsl.spawn(
-        { x = offscreenX, y = state.panelY },
+        { x = state.panelX, y = state.panelY },
         panelDef,
         RENDER_LAYER,
         PANEL_Z
@@ -864,10 +861,7 @@ local function initializePanel()
         ui.box.AddStateTagToUIBox(_G.registry, state.panelEntity, "default_state")
     end
 
-    -- Store reference to header text for updates
-    if ui and ui.box and ui.box.GetUIEByID then
-        state.headerTextEntity = ui.box.GetUIEByID(_G.registry, state.panelEntity, "skills_points_display")
-    end
+    -- Note: headerTextEntity no longer needed since dynamicText auto-updates
 
     -- Set up search input entity and polling for text changes
     -- Note: TextInput.callback only fires on Enter, so we poll for real-time updates
@@ -1037,19 +1031,10 @@ function SkillsPanel.refreshButtonStates()
 end
 
 --- Refresh header text (skill points display)
+--- Note: With dynamicText, the skill points display auto-updates via callback,
+--- so this function is kept for API compatibility but doesn't need to do anything.
 function SkillsPanel.refreshHeader()
-    if not state.player then return end
-
-    local displayText = SkillsPanel.getSkillPointsDisplay(state.player)
-
-    -- Update the header text entity if we have UI access
-    if state.headerTextEntity and _G.registry and _G.registry.valid and _G.registry:valid(state.headerTextEntity) then
-        -- Try to update the text component (must use TextSystem.Text, not just Text)
-        local textComp = component_cache.get(state.headerTextEntity, TextSystem.Text)
-        if textComp then
-            textComp.text = displayText
-        end
-    end
+    -- dynamicText handles updates automatically via its callback
 end
 
 --- Destroy the panel and cleanup
@@ -1078,7 +1063,6 @@ function SkillsPanel.destroy()
     state.panelEntity = nil
     state.gridEntity = nil
     state.skillButtons = {}
-    state.headerTextEntity = nil
     state.searchInputEntity = nil
     state.player = nil
     state.activeTooltipKey = nil

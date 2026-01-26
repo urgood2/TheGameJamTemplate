@@ -45,8 +45,8 @@ local PANEL_PADDING = UI(4) -- Matches skills_panel.lua PANEL_PADDING
 local CONFIG = {
     -- Match inventory tab marker sizing for consistent visuals
     sprite = "inventory-tab-marker",
-    width = UI(48),
-    height = UI(32),
+    width = UI(64),
+    height = UI(64),
     edge_offset = UI(0),      -- Distance from left edge when closed
     panel_overlap = UI(0),    -- Flush with panel edge when open
 }
@@ -146,6 +146,26 @@ local function setMarkerPosition(x, y)
         role.offset.y = y
     end
 
+    -- For UIBox entities, also update uiRoot (matches skills_panel.lua pattern)
+    local boxComp = component_cache.get(state.markerEntity, UIBoxComponent)
+    if boxComp and boxComp.uiRoot and _G.registry:valid(boxComp.uiRoot) then
+        local rt = component_cache.get(boxComp.uiRoot, Transform)
+        if rt then
+            rt.actualX = x
+            rt.actualY = y
+        end
+        local rootRole = component_cache.get(boxComp.uiRoot, InheritedProperties)
+        if rootRole and rootRole.offset then
+            rootRole.offset.x = x
+            rootRole.offset.y = y
+        end
+
+        -- Force layout recalculation
+        if _G.ui and _G.ui.box and _G.ui.box.RenewAlignment then
+            _G.ui.box.RenewAlignment(_G.registry, state.markerEntity)
+        end
+    end
+
     state.currentX = x
     state.currentY = y
 end
@@ -175,12 +195,9 @@ local function createMarkerEntity()
         return nil
     end
 
-    -- Create tab marker definition
-    local markerDef = dsl.strict.hbox {
+    -- Create tab marker definition using non-strict DSL (matches inventory_tab_marker.lua pattern)
+    local markerDef = dsl.hbox {
         config = {
-            id = "skills_tab_marker",
-            canCollide = true,
-            hover = true,
             padding = 0,
             minWidth = CONFIG.width,
             minHeight = CONFIG.height,
@@ -193,7 +210,7 @@ local function createMarkerEntity()
             end,
         },
         children = {
-            dsl.strict.anim(CONFIG.sprite .. ".png", {
+            dsl.anim(CONFIG.sprite .. ".png", {
                 w = CONFIG.width,
                 h = CONFIG.height,
                 shadow = false,

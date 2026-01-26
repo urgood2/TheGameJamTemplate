@@ -41,6 +41,7 @@ local ui_scale = require("ui.ui_scale")
 -- CardUIPolicy required to register signal handlers for planning card elevation
 -- This ensures world-space planning cards render above the inventory grid
 local CardUIPolicy = require("ui.card_ui_policy")
+local EquipmentPanel = require("ui.equipment_panel")
 
 local TIMER_GROUP = "player_inventory"
 local PANEL_ID = "player_inventory_panel"
@@ -126,6 +127,10 @@ local CARD_Z = z_orders.ui_tooltips + 100  -- = 1000, above grid (850), below to
 
 local OFFSCREEN_Y_OFFSET = UI(600)
 
+-- Equipment panel integration
+local EQUIPMENT_PANEL_WIDTH = UI(180)
+local EQUIPMENT_PANEL_GAP = UI(10)
+
 local state = {
     initialized = false,
     isVisible = false,
@@ -148,6 +153,8 @@ local state = {
     gridY = 0,
     tabItems = {},
     slotCountEntity = nil,
+    equipmentPanelEntity = nil,
+    equipmentPanelX = 0,
 }
 
 local function getLocalizedText(key, fallback)
@@ -583,6 +590,13 @@ local function switchTab(tabId)
         end
     end
 
+    -- Show/hide equipment panel based on tab
+    if tabId == "equipment" then
+        EquipmentPanel.show()
+    else
+        EquipmentPanel.hide()
+    end
+
     -- Update tab button highlighting
     for id, btnEntity in pairs(state.tabButtons or {}) do
         if btnEntity and registry:valid(btnEntity) then
@@ -1004,6 +1018,12 @@ local function setupSignalHandlers()
             updateSlotCount(gridEntity)
         end
     end)
+
+    registerHandler("equipment_item_returned_to_inventory", function(slotId, itemEntity, equipDef)
+        if itemEntity and registry:valid(itemEntity) then
+            PlayerInventory.addCard(itemEntity, "equipment", equipDef)
+        end
+    end)
 end
 
 local function cleanupSignalHandlers()
@@ -1072,7 +1092,11 @@ local function calculatePositions()
         return false
     end
 
-    state.panelX = (screenW - PANEL_RENDER_WIDTH) / 2
+    local totalWidth = EQUIPMENT_PANEL_WIDTH + EQUIPMENT_PANEL_GAP + PANEL_RENDER_WIDTH
+    local startX = (screenW - totalWidth) / 2
+    
+    state.equipmentPanelX = startX
+    state.panelX = startX + EQUIPMENT_PANEL_WIDTH + EQUIPMENT_PANEL_GAP
     state.panelY = screenH - PANEL_RENDER_HEIGHT
     state.gridX = state.panelX + PANEL_PADDING
     state.gridY = state.panelY + HEADER_HEIGHT + TABS_HEIGHT + PANEL_PADDING
@@ -1086,6 +1110,17 @@ local function initializeInventory()
     if not calculatePositions() then
         log_warn("[PlayerInventory] Cannot initialize - screen dimensions not ready")
         return
+    end
+    
+    EquipmentPanel.create()
+    state.equipmentPanelEntity = EquipmentPanel.getPanelEntity()
+    if state.equipmentPanelEntity then
+        -- Position equipment panel
+        local t = component_cache.get(state.equipmentPanelEntity, Transform)
+        if t then
+            t.actualX = state.equipmentPanelX
+            t.actualY = state.panelY
+        end
     end
     
     -- make tab that sticks out the top
@@ -1272,6 +1307,11 @@ function PlayerInventory.destroy()
     -- Cleanup quick equip system
     QuickEquip.destroy()
 
+    -- Cleanup equipment panel
+    if EquipmentPanel.destroy then
+        EquipmentPanel.destroy()
+    end
+
     cleanupSignalHandlers()
     timer.kill_group(TIMER_GROUP)
     
@@ -1309,6 +1349,7 @@ function PlayerInventory.destroy()
         end
     end
     state.tabMarkerEntity = nil
+    state.equipmentPanelEntity = nil
     
     state.initialized = false
     state.isVisible = false

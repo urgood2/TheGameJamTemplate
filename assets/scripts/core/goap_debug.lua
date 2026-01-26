@@ -194,6 +194,10 @@ end
 function goap_debug.set_plan(entity, plan)
     local data = ensure_entity_data(entity)
     if not data then return end
+    if plan == nil then
+        data.plan = nil
+        return
+    end
     -- Copy the plan to avoid external mutation
     data.plan = {}
     for i, action in ipairs(plan) do
@@ -216,6 +220,10 @@ end
 function goap_debug.set_world_state(entity, state)
     local data = ensure_entity_data(entity)
     if not data then return end
+    if state == nil then
+        data.world_state = nil
+        return
+    end
     -- Shallow copy the state
     data.world_state = {}
     for k, v in pairs(state) do
@@ -262,6 +270,10 @@ end
 function goap_debug.set_action_preconditions(entity, action, preconditions)
     local data = ensure_entity_data(entity)
     if not data then return end
+    if preconditions == nil then
+        data.action_preconditions = nil
+        return
+    end
 
     -- Copy preconditions to avoid external mutation
     local conditions = {}
@@ -288,6 +300,14 @@ end
 function goap_debug.set_action_cost(entity, action, total, breakdown)
     local data = ensure_entity_data(entity)
     if not data then return end
+    if breakdown == nil then
+        data.action_cost = {
+            action = action,
+            total = total,
+            breakdown = {}
+        }
+        return
+    end
 
     -- Copy breakdown to avoid external mutation
     local components = {}

@@ -215,7 +215,8 @@ end
 ---@param ctx table Context with player, rng, debug flag, etc.
 ---@return table[] items, table|nil debug_info
 function Loot:roll(ctx)
-    local rng = ctx.rng
+    ctx = ctx or {}
+    local rng = ctx.rng or procgen.create_rng(0)
     local debug_mode = ctx.debug
     local results = {}
     local debug_info = nil
@@ -434,11 +435,18 @@ end
 local function resolve_dynamic(value, ctx)
     if value == nil then
         return nil
-    elseif type(value) == "table" and value.resolve then
-        return value:resolve(ctx)
+    elseif type(value) == "table" then
+        if value.resolve then
+            return value:resolve(ctx)
+        elseif value.roll then
+            -- Rollables (Range/Constant); prefer caller-provided rng, fallback to deterministic seed
+            local rng = ctx and ctx.rng or procgen.create_rng(0)
+            return value:roll(rng)
+        end
     else
         return value
     end
+    return value
 end
 
 --- Get the number of waves.
@@ -463,8 +471,17 @@ function Waves:get_wave(index, ctx)
     local enemies = resolve_dynamic(wave_def.enemies, ctx)
     local spawn_delay = resolve_dynamic(wave_def.spawn_delay, ctx)
 
+    -- Return a defensive copy of enemies to avoid caller mutation persisting
+    local enemies_copy = enemies
+    if type(enemies) == "table" then
+        enemies_copy = {}
+        for i = 1, #enemies do
+            enemies_copy[i] = enemies[i]
+        end
+    end
+
     return {
-        enemies = enemies,
+        enemies = enemies_copy,
         spawn_delay = spawn_delay or wave_def.spawn_delay,
         spawn_pattern = wave_def.spawn_pattern,
         min_interval = wave_def.min_interval,
@@ -529,7 +546,8 @@ end
 ---@param ctx table { rng }
 ---@return table
 function Layout:resolve(ctx)
-    local rng = ctx.rng
+    ctx = ctx or {}
+    local rng = ctx.rng or procgen.create_rng(0)
 
     return {
         type = self.type,
@@ -561,7 +579,8 @@ end
 ---@param ctx table { difficulty?, variant?, rng }
 ---@return table
 function Stats:generate(ctx)
-    local rng = ctx.rng
+    ctx = ctx or {}
+    local rng = ctx.rng or procgen.create_rng(0)
     local difficulty = ctx.difficulty or 0
     local variant_name = ctx.variant
     local result = {}

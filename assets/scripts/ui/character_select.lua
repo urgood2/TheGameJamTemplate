@@ -1413,19 +1413,19 @@ local function updateUIConfigColor(entity, colorName)
 end
 
 local function updateUIText(entity, text, colorName)
-    if not entity or not component_cache or not UITextComponent then return end
-    local uiText = component_cache.get(entity, UITextComponent)
-    if uiText then
+    if not entity or not component_cache or not UIConfig then return end
+
+    local cfg = component_cache.get(entity, UIConfig)
+    if cfg then
         if text ~= nil then
-            uiText.text = text
+            cfg.text = text
         end
         if colorName then
-            uiText.color = resolveUIColor(colorName)
+            cfg.color = resolveUIColor(colorName)
         end
     end
 
-    if ui and ui.element and ui.element.UpdateText and UIConfig and UIState then
-        local cfg = component_cache.get(entity, UIConfig)
+    if ui and ui.element and ui.element.UpdateText and UIState then
         local stateComp = component_cache.get(entity, UIState)
         if cfg and stateComp then
             ui.element.UpdateText(registry, entity, cfg, stateComp)

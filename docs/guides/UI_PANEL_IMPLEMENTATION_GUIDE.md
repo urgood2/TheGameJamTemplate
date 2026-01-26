@@ -523,7 +523,10 @@ local function createItem(spriteName, x, y, itemData, gridEntity)
         return nil
     end
 
-    -- STEP 2: DO NOT add ObjectAttachedToUITag - it breaks shader rendering!
+    -- STEP 2: DO NOT add ObjectAttachedToUITag - it prevents standalone rendering!
+    -- ObjectAttachedToUITag excludes entities from normal rendering passes (by design).
+    -- Only use it for child objects (text, sprites) that render through their parent UI element.
+    -- Standalone UI elements with shaders should NEVER have this tag.
 
     -- STEP 3: Set initial state tag for visibility
     if add_state_tag then
@@ -997,7 +1000,7 @@ end
 
 | # | Pitfall | Symptom | Fix |
 |---|---------|---------|-----|
-| 1 | Adding `ObjectAttachedToUITag` to cards | Cards don't render via shader pipeline | **NEVER** add this tag to draggable items |
+| 1 | Adding `ObjectAttachedToUITag` to standalone UI elements | Elements excluded from all rendering passes | Only use for child objects (text/sprites) rendered by parent; standalone UI elements with shaders must NOT have this tag |
 | 2 | Forgetting `default_state` tag | UI elements exist but don't render | Call `ui.box.AddStateTagToUIBox` after spawn AND after `ReplaceChildren` |
 | 3 | Not moving `UIBoxComponent.uiRoot` | Visual moves but clicks don't work | Always move BOTH entity Transform AND uiRoot Transform |
 | 4 | Skipping `ui.box.RenewAlignment` | Injected grids overlap/misaligned | Call after ANY `ReplaceChildren` operation |

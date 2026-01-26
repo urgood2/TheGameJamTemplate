@@ -5773,16 +5773,8 @@ function initPlanningPhase()
             log_warn("[gameplay] WandPanel module failed to load: " .. tostring(WandPanel_or_err))
         end
 
-        -- Initialize Skills Panel (K key toggle)
-        local SkillsPanelInput_ok, SkillsPanelInput = pcall(require, "ui.skills_panel_input")
-        if SkillsPanelInput_ok and SkillsPanelInput then
-            log_debug("[gameplay] SkillsPanelInput module loaded successfully")
-            -- Pass hero as player for skill point queries
-            SkillsPanelInput.initialize(hero)
-            log_debug("[gameplay] SkillsPanelInput initialized (K key enabled)")
-        else
-            log_warn("[gameplay] SkillsPanelInput module failed to load: " .. tostring(SkillsPanelInput))
-        end
+        -- NOTE: Skills Panel is initialized in initCombatSystem() after hero is created
+        -- This ensures playerScript.combatTable (hero) has skill_points set
 
         GridInventorySave.setCardRecreator(function(cardId, category)
             if not cardId then return nil end
@@ -6455,6 +6447,17 @@ function initCombatSystem()
     playerScript.combatTable  = hero
     combatActorToEntity[hero] = survivorEntity
     hero.entity_id            = survivorEntity  -- For combat_system.lua signal emission
+
+    -- Initialize Skills Panel (K key toggle) now that hero has skill_points
+    local SkillsPanelInput_ok, SkillsPanelInput = pcall(require, "ui.skills_panel_input")
+    if SkillsPanelInput_ok and SkillsPanelInput then
+        log_debug("[gameplay] SkillsPanelInput module loaded successfully")
+        -- Pass hero (playerScript.combatTable) which has skill_points = 10
+        SkillsPanelInput.initialize(hero)
+        log_debug("[gameplay] SkillsPanelInput initialized (K key enabled)")
+    else
+        log_warn("[gameplay] SkillsPanelInput module failed to load: " .. tostring(SkillsPanelInput))
+    end
 
     -- DEBUG: Auto-equip avatar for testing
     if gameplay_cfg.DEBUG_AUTO_EQUIP_AVATAR then

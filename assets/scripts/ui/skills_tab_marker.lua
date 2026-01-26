@@ -41,12 +41,12 @@ local component_cache = _G.component_cache or { get = function() return nil end 
 local UI = ui_scale and ui_scale.ui or function(x) return x end
 
 local CONFIG = {
-    -- TODO: Create dedicated skills-tab-marker sprite
-    sprite = "inventory-tab-marker",  -- Using inventory sprite temporarily
+    -- Using same dimensions as inventory tab marker for consistency
+    sprite = "inventory-tab-marker",
     width = UI(48),
-    height = UI(64),
+    height = UI(32),  -- Match inventory tab marker height
     edge_offset = UI(0),      -- Distance from left edge when closed
-    panel_overlap = UI(4),    -- How much to overlap with panel when open
+    panel_overlap = UI(0),    -- Flush with panel edge when open
 }
 
 --------------------------------------------------------------------------------
@@ -64,12 +64,28 @@ local state = {
 -- POSITION CALCULATION
 --------------------------------------------------------------------------------
 
---- Get position when panel is closed (at left edge)
+--- Get panel Y position (vertically centered)
+--- @return number panelY, number panelHeight
+local function getPanelYPosition()
+    local screenHeight = GetScreenHeight and GetScreenHeight() or 1080
+    -- Match skills_panel.lua calculatePositions() logic
+    local ok, SkillsPanel = pcall(require, "ui.skills_panel")
+    local panelHeight = 400  -- fallback
+    if ok and SkillsPanel and SkillsPanel.getPanelDimensions then
+        local w, h = SkillsPanel.getPanelDimensions()
+        panelHeight = h or panelHeight
+    end
+    local panelY = (screenHeight - panelHeight) / 2
+    return panelY, panelHeight
+end
+
+--- Get position when panel is closed (flush with left edge, only tab shows)
 --- @return number x, number y
 function SkillsTabMarker.getClosedPosition()
-    local screenHeight = GetScreenHeight and GetScreenHeight() or 1080
+    local panelY, panelHeight = getPanelYPosition()
+    -- Tab sits at left edge, vertically aligned with top of panel
     local x = CONFIG.edge_offset
-    local y = (screenHeight - CONFIG.height) / 2
+    local y = panelY
     return x, y
 end
 
@@ -77,10 +93,11 @@ end
 --- @param panelWidth number Width of the skills panel
 --- @return number x, number y
 function SkillsTabMarker.getOpenPosition(panelWidth)
-    local screenHeight = GetScreenHeight and GetScreenHeight() or 1080
-    local panelX = UI(4)  -- Panel padding from left edge
+    local panelY, panelHeight = getPanelYPosition()
+    local panelX = UI(4)  -- Panel padding from left edge (matches skills_panel.lua)
+    -- Tab attaches to right edge of panel
     local x = panelX + panelWidth - CONFIG.panel_overlap
-    local y = (screenHeight - CONFIG.height) / 2
+    local y = panelY
     return x, y
 end
 

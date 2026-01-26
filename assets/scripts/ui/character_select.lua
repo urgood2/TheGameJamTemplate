@@ -1025,7 +1025,6 @@ local function createGodRow()
             id = "god_row",
             spacing = UI(CharacterSelect.LAYOUT.PORTRAIT_SPACING),
             padding = UI(8),
-            align = TEXT_ALIGN_LEFT,
         },
         children = children,
     }
@@ -1049,7 +1048,6 @@ local function createClassRow()
             id = "class_row",
             spacing = UI(CharacterSelect.LAYOUT.PORTRAIT_SPACING),
             padding = UI(8),
-            align = TEXT_ALIGN_LEFT,
         },
         children = children,
     }
@@ -1078,6 +1076,7 @@ local function createGodInfoPanel()
             color = "charcoal",
             minWidth = metrics.godInfoWidth,
             minHeight = UI(CharacterSelect.LAYOUT.INFO_PANEL_MIN_HEIGHT),
+            maxWidth = metrics.godInfoWidth,
             align = TEXT_ALIGN_LEFT,
         },
         children = {
@@ -1149,6 +1148,7 @@ local function createClassInfoPanel()
             color = "charcoal",
             minWidth = metrics.classInfoWidth,
             minHeight = UI(CharacterSelect.LAYOUT.INFO_PANEL_MIN_HEIGHT),
+            maxWidth = metrics.classInfoWidth,
             align = TEXT_ALIGN_LEFT,
         },
         children = {
@@ -1207,7 +1207,6 @@ local function createInfoZone()
             id = "info_zone",
             spacing = UI(10),
             padding = UI(10),
-            align = TEXT_ALIGN_LEFT,
         },
         children = {
             createGodInfoPanel(),
@@ -1273,12 +1272,13 @@ local function createPanelDefinition()
             padding = UI(CharacterSelect.LAYOUT.PANEL_PADDING),
             minWidth = metrics.panelWidth,
             minHeight = metrics.panelHeight,
+            maxWidth = metrics.panelWidth,
+            maxHeight = metrics.panelHeight,
         },
         children = {
             strict.vbox {
                 config = {
                     spacing = UI(10),
-                    align = TEXT_ALIGN_LEFT,
                 },
                 children = {
                     -- Title
@@ -1296,7 +1296,6 @@ local function createPanelDefinition()
                             id = "god_row_container",
                             spacing = 0,
                             padding = 0,
-                            align = TEXT_ALIGN_LEFT,
                         },
                         children = {
                             createGodRow(),
@@ -1312,7 +1311,6 @@ local function createPanelDefinition()
                             id = "class_row_container",
                             spacing = 0,
                             padding = 0,
-                            align = TEXT_ALIGN_LEFT,
                         },
                         children = {
                             createClassRow(),
@@ -1326,7 +1324,6 @@ local function createPanelDefinition()
                             id = "info_zone_container",
                             spacing = 0,
                             padding = 0,
-                            align = TEXT_ALIGN_LEFT,
                         },
                         children = {
                             createInfoZone(),
@@ -1338,7 +1335,6 @@ local function createPanelDefinition()
                             id = "button_row_container",
                             spacing = 0,
                             padding = 0,
-                            align = TEXT_ALIGN_LEFT,
                         },
                         children = {
                             createButtonRow(),
@@ -1425,6 +1421,14 @@ local function updateUIText(entity, text, colorName)
         end
         if colorName then
             uiText.color = resolveUIColor(colorName)
+        end
+    end
+
+    if ui and ui.element and ui.element.UpdateText and UIConfig and UIState then
+        local cfg = component_cache.get(entity, UIConfig)
+        local stateComp = component_cache.get(entity, UIState)
+        if cfg and stateComp then
+            ui.element.UpdateText(registry, entity, cfg, stateComp)
         end
     end
 end
@@ -1533,13 +1537,9 @@ function CharacterSelect.refreshUI()
     )
 
     local confirmEntity = ui.box.GetUIEByID(registry, state.panelEntity, "character_select_confirm_button")
-    if confirmEntity and UIConfig then
-        local cfg = component_cache.get(confirmEntity, UIConfig)
-        if cfg then
-            local enabled = CharacterSelect.isConfirmEnabled()
-            cfg.disableButton = not enabled
-            cfg.color = resolveUIColor(enabled and "green" or "charcoal")
-        end
+    if confirmEntity then
+        local enabled = CharacterSelect.isConfirmEnabled()
+        updateUIConfigColor(confirmEntity, enabled and "green" or "charcoal")
     end
 end
 

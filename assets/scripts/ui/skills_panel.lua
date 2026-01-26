@@ -413,6 +413,12 @@ local TOOLTIP_MAX_WIDTH = UI(220)
 local function createHeader()
     if not dsl then return nil end
 
+    -- Use actual player data if available, otherwise placeholder
+    local pointsText = "Points: 0/0"
+    if state.player then
+        pointsText = SkillsPanel.getSkillPointsDisplay(state.player)
+    end
+
     return dsl.strict.hbox {
         config = {
             id = "skills_header",
@@ -427,7 +433,7 @@ local function createHeader()
                 color = "white",
             }),
             dsl.strict.spacer(UI(8)),  -- Less spacing
-            dsl.strict.text("Points: 0/0", {
+            dsl.strict.text(pointsText, {
                 id = "skills_points_display",
                 fontSize = UI(10),  -- Smaller font
                 color = "yellow",

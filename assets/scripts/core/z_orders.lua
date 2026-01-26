@@ -17,6 +17,7 @@ local z_orders = {
   -- general
   particle_vfx = 0,
   player_char = 1,
+  character_select = 950,
   ui_transition = 1000,
   ui_tooltips   = 1100,
 }

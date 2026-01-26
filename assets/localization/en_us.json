@@ -802,6 +802,60 @@
 			"description": "Electrocute heals you for 2 HP per tick."
 		}
 	},
+	"character_select": {
+		"title": "Choose Your Path",
+		"gods_label": "Patron God",
+		"classes_label": "Combat Style",
+		"random": "Random",
+		"confirm": "Confirm",
+		"select_god": "Select a God",
+		"select_class": "Select a Class",
+		"blessing": "Blessing:",
+		"passive": "Passive:",
+		"triggered": "Triggered:",
+		"locked": "Locked",
+		"unlock_hint": "Unlock by completing challenges."
+	},
+	"god": {
+		"pyr": {
+			"name": "Pyr",
+			"lore": "A volatile patron of flame and fury.",
+			"blessing": "Ignite foes and kindle ember power.",
+			"passive": "Fire spells build Heat that boosts your next cast."
+		},
+		"glah": {
+			"name": "Glah",
+			"lore": "A patient god of frost and stillness.",
+			"blessing": "Freeze enemies to slow and shatter them.",
+			"passive": "Cold spells stack Chill for bonus damage."
+		},
+		"vix": {
+			"name": "Vix",
+			"lore": "A crackling patron of storms and speed.",
+			"blessing": "Strike with lightning that leaps between foes.",
+			"passive": "Lightning spells build Charge for crit chance."
+		},
+		"nil": {
+			"name": "Nil",
+			"lore": "A quiet god of void and entropy.",
+			"blessing": "Warp space to weaken and unravel enemies.",
+			"passive": "Void spells apply Ruin, amplifying later hits."
+		}
+	},
+	"class": {
+		"channeler": {
+			"name": "Channeler",
+			"lore": "A focused caster who threads power through timing.",
+			"passive": "Repeated casts empower the next spell.",
+			"triggered": "Trigger: Release a focused burst after chaining casts."
+		},
+		"seer": {
+			"name": "Seer",
+			"lore": "A precognitive mage who bends the flow of battle.",
+			"passive": "Gain Clarity stacks over time.",
+			"triggered": "Trigger: Consume Clarity to slow nearby enemies."
+		}
+	},
 	"avatar": {
 		"stormlord": {
 			"name": "Avatar of the Storm",

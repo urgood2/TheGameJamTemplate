@@ -111,6 +111,8 @@ CharacterSelect.LAYOUT = {
     PANEL_PADDING = 10,
     PORTRAIT_SIZE = 64,
     PORTRAIT_SPACING = 8,
+    SCREEN_MARGIN = 20,
+    OFFSCREEN_Y_OFFSET = 120,
 }
 
 --------------------------------------------------------------------------------
@@ -166,7 +168,7 @@ CharacterSelect.GOD_DATA = {
         passive_key = "god.pyr.passive",
         starterEquipment = "burning_gloves",
         starterArtifact = "ember_charm",
-        portrait = "ui_god_pyr",
+        portrait = "ui-decor-test-1.png",
         aura = "fire",
         unlocked = true,
     },
@@ -177,7 +179,7 @@ CharacterSelect.GOD_DATA = {
         passive_key = "god.glah.passive",
         starterEquipment = "frost_gauntlets",
         starterArtifact = "ice_crystal",
-        portrait = "ui_god_glah",
+        portrait = "test-gem-ui-decor.png",
         aura = "ice",
         unlocked = true,
     },
@@ -188,7 +190,7 @@ CharacterSelect.GOD_DATA = {
         passive_key = "god.vix.passive",
         starterEquipment = "spark_bracers",
         starterArtifact = "lightning_rod",
-        portrait = "ui_god_vix",
+        portrait = "inventory-tab-marker.png",
         aura = "lightning",
         unlocked = true,
     },
@@ -199,7 +201,7 @@ CharacterSelect.GOD_DATA = {
         passive_key = "god.nil.passive",
         starterEquipment = "void_wraps",
         starterArtifact = "void_shard",
-        portrait = "ui_god_nil",
+        portrait = "character-tab-marker.png",
         aura = "void",
         unlocked = true,
     },
@@ -207,14 +209,14 @@ CharacterSelect.GOD_DATA = {
     locked_god_1 = {
         name_key = "character_select.locked",
         lore_key = "character_select.locked",
-        portrait = "ui_portrait_locked",
+        portrait = "frame0012.png",
         unlocked = false,
         unlock_hint_key = "character_select.unlock_hint",
     },
     locked_god_2 = {
         name_key = "character_select.locked",
         lore_key = "character_select.locked",
-        portrait = "ui_portrait_locked",
+        portrait = "frame0012.png",
         unlocked = false,
         unlock_hint_key = "character_select.unlock_hint",
     },
@@ -231,7 +233,7 @@ CharacterSelect.CLASS_DATA = {
         passive_key = "class.channeler.passive",
         triggered_key = "class.channeler.triggered",
         starterWand = "void_edge",
-        portrait = "ui_class_channeler",
+        portrait = "equipment-tab-marker.png",
         unlocked = true,
     },
     seer = {
@@ -240,14 +242,14 @@ CharacterSelect.CLASS_DATA = {
         passive_key = "class.seer.passive",
         triggered_key = "class.seer.triggered",
         starterWand = "sight_beam",
-        portrait = "ui_class_seer",
+        portrait = "ui-decor-test-2.png",
         unlocked = true,
     },
     -- Locked class (demo placeholder)
     locked_class_1 = {
         name_key = "character_select.locked",
         lore_key = "character_select.locked",
-        portrait = "ui_portrait_locked",
+        portrait = "frame0012.png",
         unlocked = false,
         unlock_hint_key = "character_select.unlock_hint",
     },
@@ -274,6 +276,9 @@ local state = {
     initialized = false,
     isVisible = false,
     panelEntity = nil,
+    panelX = 0,
+    panelY = 0,
+    panelOffscreenY = 0,
 
     -- Selection state
     selectedGod = nil,
@@ -292,6 +297,125 @@ local state = {
 }
 
 --------------------------------------------------------------------------------
+-- POSITIONING HELPERS
+--------------------------------------------------------------------------------
+
+local function getScreenDimensions()
+    local screenWidth = globals and globals.screenWidth and globals.screenWidth() or 800
+    local screenHeight = globals and globals.screenHeight and globals.screenHeight() or 600
+    return screenWidth, screenHeight
+end
+
+local function clamp(value, minValue, maxValue)
+    if value < minValue then return minValue end
+    if value > maxValue then return maxValue end
+    return value
+end
+
+local function getPanelTransform(entity)
+    if not entity or not registry or not registry.valid or not registry:valid(entity) then return nil end
+    if not component_cache or not component_cache.get then return nil end
+
+    local boxComp = UIBoxComponent and component_cache.get(entity, UIBoxComponent)
+    if boxComp and boxComp.uiRoot and registry:valid(boxComp.uiRoot) then
+        local rt = component_cache.get(boxComp.uiRoot, Transform)
+        if rt then return rt end
+    end
+
+    return component_cache.get(entity, Transform)
+end
+
+local function setPanelPosition(entity, x, y)
+    if not entity or not registry or not registry.valid or not registry:valid(entity) then return end
+    if not component_cache or not component_cache.get then return end
+
+    local function applyPosition(target)
+        local t = component_cache.get(target, Transform)
+        if t then
+            t.actualX = x
+            t.actualY = y
+        end
+
+        if InheritedProperties then
+            local role = component_cache.get(target, InheritedProperties)
+            if role and role.offset then
+                role.offset.x = x
+                role.offset.y = y
+            end
+        end
+    end
+
+    applyPosition(entity)
+
+    local boxComp = UIBoxComponent and component_cache.get(entity, UIBoxComponent)
+    if boxComp and boxComp.uiRoot and registry:valid(boxComp.uiRoot) then
+        applyPosition(boxComp.uiRoot)
+    end
+
+    if ui and ui.box and ui.box.RenewAlignment then
+        ui.box.RenewAlignment(registry, entity)
+    end
+end
+
+local function updatePanelLayout()
+    if not state.panelEntity then return end
+
+    local screenW, screenH = getScreenDimensions()
+    local margin = UI(CharacterSelect.LAYOUT.SCREEN_MARGIN)
+
+    local t = getPanelTransform(state.panelEntity)
+    local panelW = (t and t.actualW) or 0
+    local panelH = (t and t.actualH) or 0
+
+    if panelW <= 0 then
+        panelW = math.max(0, screenW - (margin * 2))
+    end
+    if panelH <= 0 then
+        panelH = math.max(0, screenH - (margin * 2))
+    end
+
+    local rawX = math.floor((screenW - panelW) / 2)
+    local rawY = math.floor((screenH - panelH) / 2)
+    local maxX = screenW - panelW - margin
+    local maxY = screenH - panelH - margin
+    if maxX < margin then maxX = margin end
+    if maxY < margin then maxY = margin end
+
+    state.panelX = clamp(rawX, margin, maxX)
+    state.panelY = clamp(rawY, margin, maxY)
+    state.panelOffscreenY = screenH + UI(CharacterSelect.LAYOUT.OFFSCREEN_Y_OFFSET)
+end
+
+local function setPanelVisible(visible, animate)
+    if not state.panelEntity then return end
+
+    local targetX = state.panelX or 0
+    local targetY = visible and (state.panelY or 0) or (state.panelOffscreenY or 0)
+    local durationMs = visible and CharacterSelect.LAYOUT.SLIDE_IN_DURATION or CharacterSelect.LAYOUT.SLIDE_OUT_DURATION
+    local duration = (durationMs or 0) / 1000
+
+    if animate and duration > 0 and timer and timer.tween_scalar then
+        timer.tween_scalar(
+            duration,
+            function()
+                local t = getPanelTransform(state.panelEntity)
+                return (t and t.actualY) or targetY
+            end,
+            function(v)
+                setPanelPosition(state.panelEntity, targetX, v)
+            end,
+            targetY,
+            nil,
+            nil,
+            "character_select_panel_slide",
+            "character_select"
+        )
+    else
+        setPanelPosition(state.panelEntity, targetX, targetY)
+    end
+end
+
+--------------------------------------------------------------------------------
 -- CORE API
 --------------------------------------------------------------------------------
 
@@ -303,6 +427,8 @@ function CharacterSelect.open()
     -- Spawn the UI panel if game engine available
     if dsl then
         CharacterSelect.spawnPanel()
+        updatePanelLayout()
+        setPanelVisible(true, true)
     end
 
     emit("character_select_opened")
@@ -313,10 +439,9 @@ function CharacterSelect.close()
 
     state.isVisible = false
 
-    -- Remove the UI panel if it exists
+    -- Hide the UI panel if it exists
     if dsl and state.panelEntity then
-        dsl.remove(state.panelEntity)
-        state.panelEntity = nil
+        setPanelVisible(false, true)
     end
 
     emit("character_select_closed")
@@ -343,6 +468,9 @@ function CharacterSelect.destroy()
     state.initialized = false
     state.isVisible = false
     state.panelEntity = nil
+    state.panelX = 0
+    state.panelY = 0
+    state.panelOffscreenY = 0
     state.selectedGod = nil
     state.selectedClass = nil
     state.focusSection = 1
@@ -778,9 +906,35 @@ local function createPortrait(id, data, isGod)
 
     local isLocked = not data.unlocked
     local isSelected = isGod and (state.selectedGod == id) or (state.selectedClass == id)
+    local isClickable = not isLocked
 
     -- Portrait container with selection highlight
     local portraitColor = isLocked and "charcoal" or (isSelected and "gold" or "slate")
+
+    -- Determine portrait inner color based on aura or type
+    local auraColors = {
+        fire = "crimson",
+        ice = "skyblue",
+        lightning = "gold",
+        void = "purple",
+    }
+    local innerColor = isLocked and "gray" or (data.aura and auraColors[data.aura]) or "slate"
+
+    local displayName = L(data.name_key, id)
+    local portraitNode
+    if data.portrait then
+        portraitNode = dsl.anim(data.portrait, {
+            w = UI(CharacterSelect.LAYOUT.PORTRAIT_SIZE),
+            h = UI(CharacterSelect.LAYOUT.PORTRAIT_SIZE),
+            shadow = false,
+        })
+    else
+        local initial = displayName:sub(1, 1):upper()
+        portraitNode = strict.text(initial, {
+            fontSize = UI(32),
+            color = isLocked and "charcoal" or "white",
+        })
+    end
 
     return strict.vbox {
         config = {
@@ -790,27 +944,37 @@ local function createPortrait(id, data, isGod)
             color = portraitColor,
             minWidth = UI(CharacterSelect.LAYOUT.PORTRAIT_SIZE),
             minHeight = UI(CharacterSelect.LAYOUT.PORTRAIT_SIZE + 20),
+            canCollide = isClickable,
+            hover = isClickable,
+            buttonCallback = isClickable and function()
+                if isGod then
+                    CharacterSelect.selectGod(id)
+                else
+                    CharacterSelect.selectClass(id)
+                end
+                CharacterSelect.refreshUI()
+            end or nil,
         },
         children = {
-            -- Portrait sprite
-            strict.anim(data.portrait, {
-                w = UI(CharacterSelect.LAYOUT.PORTRAIT_SIZE),
-                h = UI(CharacterSelect.LAYOUT.PORTRAIT_SIZE),
-            }),
+            -- Portrait placeholder (colored box with initial)
+            strict.vbox {
+                config = {
+                    color = innerColor,
+                    minWidth = UI(CharacterSelect.LAYOUT.PORTRAIT_SIZE),
+                    minHeight = UI(CharacterSelect.LAYOUT.PORTRAIT_SIZE),
+                    align = "center",
+                    valign = "center",
+                },
+                children = {
+                    portraitNode,
+                },
+            },
             -- Name label (short)
-            strict.text(L(data.name_key, id), {
+            strict.text(displayName, {
                 fontSize = UI(10),
                 color = isLocked and "gray" or "white",
             }),
         },
-        onClick = isLocked and nil or function()
-            if isGod then
-                CharacterSelect.selectGod(id)
-            else
-                CharacterSelect.selectClass(id)
-            end
-            CharacterSelect.refreshUI()
-        end,
     }
 end
 
@@ -1091,29 +1255,30 @@ function CharacterSelect.spawnPanel()
     if not dsl then return nil end
     if state.panelEntity then return state.panelEntity end
 
-    -- Get screen dimensions (function calls per player_inventory.lua pattern)
-    local screenWidth = globals and globals.screenWidth and globals.screenWidth() or 800
-    local screenHeight = globals and globals.screenHeight and globals.screenHeight() or 600
+    local screenWidth, screenHeight = getScreenDimensions()
 
     local panelDef = createPanelDefinition()
     if not panelDef then return nil end
-
-    -- Center the panel
-    local x = screenWidth / 2
-    local y = screenHeight / 2
 
     -- Get z-order from constants if available
     local panelZ = 800  -- Default fallback
     pcall(function()
         local z_orders = require("core.z_orders")
-        if z_orders and z_orders.CHARACTER_SELECT then
-            panelZ = z_orders.CHARACTER_SELECT
-        elseif z_orders and z_orders.OVERLAY then
-            panelZ = z_orders.OVERLAY
+        if z_orders and z_orders.character_select then
+            panelZ = z_orders.character_select
+        elseif z_orders and z_orders.ui_transition then
+            panelZ = z_orders.ui_transition
+        elseif z_orders and z_orders.ui_tooltips then
+            panelZ = z_orders.ui_tooltips
         end
     end)
 
-    state.panelEntity = dsl.spawn({ x = x, y = y }, panelDef, "ui", panelZ)
+    state.panelEntity = dsl.spawn(
+        { x = 0, y = screenHeight + UI(CharacterSelect.LAYOUT.OFFSCREEN_Y_OFFSET) },
+        panelDef,
+        "ui",
+        panelZ
+    )
     state.initialized = true
 
     -- CRITICAL: Add state tags to UI boxes so they render
@@ -1126,6 +1291,9 @@ function CharacterSelect.spawnPanel()
         ui.box.RenewAlignment(registry, state.panelEntity)
     end
 
+    updatePanelLayout()
+    setPanelPosition(state.panelEntity, state.panelX or 0, state.panelOffscreenY or (screenHeight + UI(40)))
+
     return state.panelEntity
 end
 
@@ -1134,12 +1302,12 @@ function CharacterSelect.refreshUI()
     if not state.panelEntity then return end
     if not dsl then return end
 
-    -- Destroy and respawn with updated state
+    local wasVisible = state.isVisible
     dsl.remove(state.panelEntity)
     state.panelEntity = nil
     CharacterSelect.spawnPanel()
-
-    -- RenewAlignment is called inside spawnPanel, no need to call again
+    updatePanelLayout()
+    setPanelVisible(wasVisible, false)
 end
 
 --- Check if running with game engine (has DSL available)

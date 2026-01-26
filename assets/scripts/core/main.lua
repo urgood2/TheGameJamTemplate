@@ -93,6 +93,129 @@ mainMenuEntities = {
 local MAIN_MENU_TIMER_GROUP = "main_menu"
 local MAIN_MENU_PHASE_TIMER_TAG = "main_menu_shape_phase"
 
+local function setMainMenuEntityPosition(entity, x, y)
+    if not entity or not registry or not registry.valid or not registry:valid(entity) then return end
+    if not component_cache or not component_cache.get then return end
+
+    local function applyPosition(target)
+        local t = component_cache.get(target, Transform)
+        if t then
+            t.actualX = x
+            t.actualY = y
+        end
+
+        if InheritedProperties then
+            local role = component_cache.get(target, InheritedProperties)
+            if role and role.offset then
+                role.offset.x = x
+                role.offset.y = y
+            end
+        end
+    end
+
+    applyPosition(entity)
+
+    local boxComp = UIBoxComponent and component_cache.get(entity, UIBoxComponent)
+    if boxComp and boxComp.uiRoot and registry:valid(boxComp.uiRoot) then
+        applyPosition(boxComp.uiRoot)
+        if ui and ui.box and ui.box.RenewAlignment then
+            ui.box.RenewAlignment(registry, entity)
+        end
+    end
+end
+
+local function getMainMenuEntityY(entity)
+    if not entity or not component_cache or not component_cache.get then return 0 end
+
+    local boxComp = UIBoxComponent and component_cache.get(entity, UIBoxComponent)
+    if boxComp and boxComp.uiRoot and registry and registry.valid and registry:valid(boxComp.uiRoot) then
+        local rt = component_cache.get(boxComp.uiRoot, Transform)
+        if rt then return rt.actualY or 0 end
+    end
+
+    local t = component_cache.get(entity, Transform)
+    return (t and t.actualY) or 0
+end
+
+local function tweenMainMenuEntityTo(entity, x, y, duration, tag)
+    if not entity or duration <= 0 or not timer or not timer.tween_scalar then
+        setMainMenuEntityPosition(entity, x, y)
+        return
+    end
+
+    timer.tween_scalar(
+        duration,
+        function() return getMainMenuEntityY(entity) end,
+        function(v) setMainMenuEntityPosition(entity, x, v) end,
+        y,
+        nil,
+        nil,
+        tag,
+        MAIN_MENU_TIMER_GROUP
+    )
+end
+
+local function setMainMenuVisible(visible, opts)
+    opts = opts or {}
+    if not mainMenuEntities.mainMenuButtons then return end
+
+    local duration = opts.duration or 0
+    local offscreenY = globals.screenHeight() + 200
+    mainMenuEntities.isHiddenForCharacterSelect = not visible
+
+    if mainMenuEntities.mainMenuButtons.setVisible then
+        mainMenuEntities.mainMenuButtons.setVisible(visible, { tween = opts.tween, duration = duration })
+    end
+
+    if globals.ui and globals.ui.logo and entity_cache.valid(globals.ui.logo) and mainMenuEntities.logoHome then
+        local targetY = visible and mainMenuEntities.logoHome.y or offscreenY
+        tweenMainMenuEntityTo(globals.ui.logo, mainMenuEntities.logoHome.x, targetY, duration, "main_menu_logo_slide")
+    end
+
+    if mainMenuEntities.patch_notes_button and mainMenuEntities.patchNotesHome then
+        local targetY = visible and mainMenuEntities.patchNotesHome.y or offscreenY
+        tweenMainMenuEntityTo(
+            mainMenuEntities.patch_notes_button,
+            mainMenuEntities.patchNotesHome.x,
+            targetY,
+            duration,
+            "main_menu_patch_notes_slide"
+        )
+    end
+
+    if mainMenuEntities.language_button_uibox and mainMenuEntities.languageHome then
+        local targetY = visible and mainMenuEntities.languageHome.y or offscreenY
+        tweenMainMenuEntityTo(
+            mainMenuEntities.language_button_uibox,
+            mainMenuEntities.languageHome.x,
+            targetY,
+            duration,
+            "main_menu_language_slide"
+        )
+    end
+end
+
+local function registerCharacterSelectSignals()
+    if mainMenuEntities._characterSelectSignalsRegistered then return end
+
+    local ok, signal = pcall(require, "external.hump.signal")
+    if not ok or not signal then return end
+
+    signal.register("character_select_opened", function()
+        if mainMenuEntities.mainMenuButtons then
+            setMainMenuVisible(false, { tween = true, duration = 0.25 })
+        end
+    end)
+
+    signal.register("character_select_closed", function()
+        if mainMenuEntities.mainMenuButtons then
+            setMainMenuVisible(true, { tween = true, duration = 0.2 })
+        end
+    end)
+
+    mainMenuEntities._characterSelectSignalsRegistered = true
+end
+
 function myCustomCallback()
     -- a test to see if the callback works for text typing
     wait(5)
@@ -103,6 +226,8 @@ function initMainMenu()
     log_debug("[initMainMenu] Starting main menu initialization...")
 
     local MainMenuButtons = require("ui.main_menu_buttons")
+    local CharacterSelect = require("ui.character_select")
+    mainMenuEntities.characterSelect = CharacterSelect
 
     -- create a timer to increment the phase
     timer.run(
@@ -127,13 +252,28 @@ function initMainMenu()
     -- REMOVED: Special items (per spec - Phase 1)
     -- REMOVED: Input text field (per spec - Phase 1)
 
+    -- Set up character select confirmation to start the game
+    CharacterSelect.setOnConfirm(function(selection)
+        record_telemetry("character_selected", {
+            god = selection.god,
+            class = selection.class,
+            scene = "character_select"
+        })
+        -- Store selection for gameplay use
+        globals.playerSelection = selection
+        -- Continue with game start
+        startGameButtonCallback()
+    end)
+
     -- NEW: Minimalist main menu buttons using MainMenuButtons module
     MainMenuButtons.setButtons({
         {
             label = localization.get("ui.start_game_button"),
             onClick = function()
                 record_telemetry("start_game_clicked", { scene = "main_menu" })
-                startGameButtonCallback()
+                -- Open character select instead of starting directly
+                CharacterSelect.open()
+                CharacterSelect.spawnPanel()
             end
         },
         {
@@ -168,6 +308,7 @@ function initMainMenu()
 
     -- Store reference for cleanup and for keyboard handling in main.update()
     mainMenuEntities.mainMenuButtons = MainMenuButtons
+    registerCharacterSelectSignals()
 
     -- Create main logo (centered horizontally, above menu buttons)
     globals.ui.logo = animation_system.createAnimatedObjectWithTransform(
@@ -184,6 +325,7 @@ function initMainMenu()
     local logoBaseY = screenH * 0.20  -- Position in upper portion of screen
     logoTransform.actualX = screenW / 2 - logoTransform.actualW / 2
     logoTransform.actualY = logoBaseY
+    mainMenuEntities.logoHome = { x = logoTransform.actualX, y = logoTransform.actualY }
 
     -- Logo bob animation (subtle float effect per spec)
     local LOGO_BOB_HEIGHT = 8   -- pixels
@@ -194,6 +336,9 @@ function initMainMenu()
         function()
             if not globals.ui.logo or not entity_cache.valid(globals.ui.logo) then
                 timer.cancel("logo_text_pulse")  -- Stop timer when entity is invalid
+                return
+            end
+            if mainMenuEntities.isHiddenForCharacterSelect then
                 return
             end
             local transformComp = component_cache.get(globals.ui.logo, Transform)
@@ -662,6 +807,7 @@ function createPatchNotesButton()
         100
     )
     ui.box.set_draw_layer(mainMenuEntities.patch_notes_button, "ui")
+    mainMenuEntities.patchNotesHome = { x = 20, y = globals.screenHeight() - 60 }
 
     mainMenuEntities._patchNotesHasUnread = hasUnread
 end
@@ -726,6 +872,7 @@ function createLanguageCornerButton()
         100
     )
     ui.box.set_draw_layer(mainMenuEntities.language_button_uibox, "ui")
+    mainMenuEntities.languageHome = { x = globals.screenWidth() - 60, y = globals.screenHeight() - 60 }
 end
 
 function drawPatchNotesBadge()
@@ -812,6 +959,12 @@ function clearMainMenu()
     if mainMenuEntities.mainMenuButtons then
         mainMenuEntities.mainMenuButtons.destroy()
         mainMenuEntities.mainMenuButtons = nil
+    end
+
+    -- Clean up CharacterSelect panel
+    local ok, CharacterSelect = pcall(require, "ui.character_select")
+    if ok and CharacterSelect then
+        CharacterSelect.destroy()
     end
 
     for _, entity in pairs(mainMenuEntities) do
@@ -1208,7 +1361,10 @@ function main.update(dt)
         drawPatchNotesBadge()
 
         -- Keyboard navigation for main menu buttons
-        if mainMenuEntities.mainMenuButtons and IsKeyPressed then
+        local characterSelectOpen = mainMenuEntities.characterSelect
+            and mainMenuEntities.characterSelect.isOpen
+            and mainMenuEntities.characterSelect.isOpen()
+        if mainMenuEntities.mainMenuButtons and IsKeyPressed and not characterSelectOpen then
             if IsKeyPressed(KEY_UP) or IsKeyPressed(KEY_W) then
                 mainMenuEntities.mainMenuButtons.handleKeyDown("UP")
             elseif IsKeyPressed(KEY_DOWN) or IsKeyPressed(KEY_S) then

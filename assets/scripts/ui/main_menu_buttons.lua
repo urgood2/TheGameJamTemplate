@@ -30,6 +30,10 @@ local MainMenuButtons = {}
 --------------------------------------------------------------------------------
 
 local ui_scale = _G.ui_scale or { ui = function(v) return math.floor(v * 1.25) end }
+local timer
+pcall(function()
+    timer = require("core.timer")
+end)
 
 local CONFIG = {
     -- Font settings
@@ -66,6 +70,8 @@ local state = {
     decoratorEntities = { left = nil, right = nil },  -- Decorator sprites
     _processingHover = false,  -- Guard against recursive hover calls
     _initialized = false,  -- Prevent double initialization
+    layout = nil,
+    visible = true,
 }
 
 --------------------------------------------------------------------------------
@@ -492,6 +498,107 @@ function MainMenuButtons._setDecoratorsVisible(visible)
 end
 
 --------------------------------------------------------------------------------
+-- Visibility Control
+--------------------------------------------------------------------------------
+
+local function setMenuPosition(x, y)
+    if not state.entities.menuBox then return end
+    if not _G.registry or not _G.registry.valid or not _G.registry:valid(state.entities.menuBox) then return end
+    if not _G.component_cache or not _G.component_cache.get then return end
+
+    local function applyPosition(target)
+        local t = _G.component_cache.get(target, _G.Transform)
+        if t then
+            t.actualX = x
+            t.actualY = y
+        end
+
+        if _G.InheritedProperties then
+            local role = _G.component_cache.get(target, _G.InheritedProperties)
+            if role and role.offset then
+                role.offset.x = x
+                role.offset.y = y
+            end
+        end
+    end
+
+    applyPosition(state.entities.menuBox)
+
+    local boxComp = _G.UIBoxComponent and _G.component_cache.get(state.entities.menuBox, _G.UIBoxComponent)
+    if boxComp and boxComp.uiRoot and _G.registry:valid(boxComp.uiRoot) then
+        applyPosition(boxComp.uiRoot)
+    end
+
+    if _G.ui and _G.ui.box and _G.ui.box.RenewAlignment then
+        _G.ui.box.RenewAlignment(_G.registry, state.entities.menuBox)
+    end
+
+    MainMenuButtons._updateDecoratorPositions()
+end
+
+local function getMenuY()
+    if not state.entities.menuBox then return 0 end
+    if not _G.component_cache or not _G.component_cache.get then return 0 end
+
+    local boxComp = _G.UIBoxComponent and _G.component_cache.get(state.entities.menuBox, _G.UIBoxComponent)
+    if boxComp and boxComp.uiRoot and _G.registry and _G.registry.valid and _G.registry:valid(boxComp.uiRoot) then
+        local rt = _G.component_cache.get(boxComp.uiRoot, _G.Transform)
+        if rt then return rt.actualY or 0 end
+    end
+
+    local t = _G.component_cache.get(state.entities.menuBox, _G.Transform)
+    return (t and t.actualY) or 0
+end
+
+local function getOffscreenY()
+    local screenH = _G.globals and _G.globals.screenHeight and _G.globals.screenHeight() or 1080
+    return screenH + ui_scale.ui(160)
+end
+
+--- Set menu visibility by moving the UI box on/off screen
+--- @param visible boolean
+--- @param opts table? Optional {tween: boolean, duration: number}
+function MainMenuButtons.setVisible(visible, opts)
+    if not state.entities.menuBox then return end
+
+    opts = opts or {}
+    local layout = state.layout or MainMenuButtons.getLayoutConfig()
+    state.layout = layout
+    state.visible = visible
+
+    local targetX = layout.menuX
+    local targetY = visible and layout.menuY or getOffscreenY()
+    local duration = opts.duration or 0
+    local animate = opts.tween and duration > 0 and timer and timer.tween_scalar
+
+    if visible then
+        MainMenuButtons._setDecoratorsVisible(true)
+    end
+
+    if animate then
+        timer.tween_scalar(
+            duration,
+            function() return getMenuY() end,
+            function(v) setMenuPosition(targetX, v) end,
+            targetY,
+            nil,
+            function()
+                if not visible then
+                    MainMenuButtons._setDecoratorsVisible(false)
+                end
+            end,
+            "main_menu_visibility_tween",
+            "main_menu"
+        )
+    else
+        setMenuPosition(targetX, targetY)
+        if not visible then
+            MainMenuButtons._setDecoratorsVisible(false)
+        end
+    end
+end
+
+--------------------------------------------------------------------------------
 -- Lifecycle
 --------------------------------------------------------------------------------
 
@@ -511,6 +618,8 @@ function MainMenuButtons.init()
     local dsl = require("ui.ui_syntax_sugar")
     local layout = MainMenuButtons.getLayoutConfig()
     local config = MainMenuButtons.getButtonConfig()
+    state.layout = layout
+    state.visible = true
 
     -- Build button children for vertical layout
     local children = {}
@@ -718,6 +827,8 @@ function MainMenuButtons.destroy()
     state.entities = {}
     state.buttons = {}
     state.selectedIndex = 1
+    state.layout = nil
+    state.visible = true
     state.decoratorsVisible = false
     state.decoratorsForButton = nil
     state._processingHover = false

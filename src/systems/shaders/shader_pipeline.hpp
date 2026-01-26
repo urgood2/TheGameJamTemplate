@@ -4,13 +4,23 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <algorithm>
+#include <cmath>
 #include <entt/entt.hpp>
+#include <spdlog/spdlog.h>
 
 #include "shader_system.hpp"
 
 struct EngineContext;
 
 #include "systems/scripting/binding_recorder.hpp"
+
+namespace layer {
+    namespace render_stack_switch_internal {
+        bool Push(RenderTexture2D target, const char* context);
+        void Pop();
+    }
+}
 
 namespace shader_pipeline {
 
@@ -224,6 +234,108 @@ namespace shader_pipeline {
             }
         }
     };
+
+    /**
+     * @brief RAII guard for render target switching.
+     * 
+     * Ensures proper cleanup of render_stack_switch_internal::Push/Pop pairs.
+     * Automatically calls Pop() when guard goes out of scope, preventing
+     * render stack corruption from early returns or exceptions.
+     */
+    class RenderTargetGuard {
+        bool active = false;
+    public:
+        RenderTargetGuard() = default;
+        
+        RenderTargetGuard(const RenderTargetGuard&) = delete;
+        RenderTargetGuard& operator=(const RenderTargetGuard&) = delete;
+        
+        bool push(RenderTexture2D& target, const char* context = "RenderTargetGuard") {
+            if (active) return false;
+            if (layer::render_stack_switch_internal::Push(target, context)) {
+                active = true;
+                return true;
+            }
+            return false;
+        }
+        
+        ~RenderTargetGuard() {
+            if (active) layer::render_stack_switch_internal::Pop();
+        }
+    };
+
+    /**
+     * @brief RAII guard for matrix stack operations.
+     * 
+     * Ensures proper cleanup of rlPushMatrix/rlPopMatrix pairs.
+     * Prevents matrix stack overflow (max 32 entries) and corruption.
+     */
+    class MatrixStackGuard {
+        bool pushed = false;
+    public:
+        MatrixStackGuard() = default;
+        
+        MatrixStackGuard(const MatrixStackGuard&) = delete;
+        MatrixStackGuard& operator=(const MatrixStackGuard&) = delete;
+        
+        bool push() {
+            if (pushed) return false;
+            rlPushMatrix();
+            pushed = true;
+            return true;
+        }
+        
+        ~MatrixStackGuard() {
+            if (pushed) rlPopMatrix();
+        }
+    };
+
+    /**
+     * @brief Safe texture drawing with bounds validation.
+     * 
+     * Validates texture rectangle bounds before drawing to prevent
+     * Metal backend crashes and visual corruption from out-of-bounds coordinates.
+     */
+    inline bool ValidateTextureRect(const Texture2D& texture, const Rectangle& sourceRect, const char* context = "Unknown") {
+        if (texture.id == 0) {
+            SPDLOG_WARN("[{}] ValidateTextureRect: Invalid texture (id=0)", context);
+            return false;
+        }
+        
+        float texW = static_cast<float>(texture.width);
+        float texH = static_cast<float>(texture.height);
+        
+        bool valid = true;
+        if (std::abs(sourceRect.x) > texW || std::abs(sourceRect.x + sourceRect.width) > texW) {
+            SPDLOG_WARN("[{}] ValidateTextureRect: X bounds out of range. Texture: {}x{}, SourceRect: ({},{},{}x{})",
+                context, texW, texH, sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height);
+            valid = false;
+        }
+        if (std::abs(sourceRect.y) > texH || std::abs(sourceRect.y + sourceRect.height) > texH) {
+            SPDLOG_WARN("[{}] ValidateTextureRect: Y bounds out of range. Texture: {}x{}, SourceRect: ({},{},{}x{})",
+                context, texW, texH, sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height);
+            valid = false;
+        }
+        
+        return valid;
+    }
+
+    inline void SafeDrawTextureRec(const Texture2D& texture, Rectangle sourceRect, Vector2 position, Color tint, const char* context = "Unknown") {
+        if (!ValidateTextureRect(texture, sourceRect, context)) {
+            float texW = static_cast<float>(texture.width);
+            float texH = static_cast<float>(texture.height);
+            
+            sourceRect.x = std::clamp(sourceRect.x, -texW, texW);
+            sourceRect.y = std::clamp(sourceRect.y, -texH, texH);
+            sourceRect.width = std::clamp(sourceRect.width, -texW, texW);
+            sourceRect.height = std::clamp(sourceRect.height, -texH, texH);
+            
+            SPDLOG_WARN("[{}] SafeDrawTextureRec: Clamped to ({},{},{}x{})",
+                context, sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height);
+        }
+        
+        DrawTextureRec(texture, sourceRect, position, tint);
+    }
 
     inline RenderTexture2D ping = {};
     inline RenderTexture2D pong = {};

@@ -2294,40 +2294,43 @@ void renderSliceOffscreenFromDrawList(
   uiCtx->resetSwapCount();
 
   // 2. Draw to front()
-  layer::render_stack_switch_internal::Push(uiCtx->front());
-  ClearBackground({0, 0, 0, 0});
+  {
+    shader_pipeline::RenderTargetGuard rtGuard;
+    rtGuard.push(uiCtx->front(), "UI_DrawToFront");
+    ClearBackground({0, 0, 0, 0});
 
-  rlPushMatrix();
-  rlTranslatef(-xMin + pad, -yMin + pad, 0);
-  for (size_t i = startIndex; i < endIndex; ++i) {
-    entt::entity e = drawList[i].e;
-    auto &uiElementComp = ui::globalUIGroup.get<ui::UIElementComponent>(e);
-    auto &configComp = ui::globalUIGroup.get<ui::UIConfig>(e);
-    auto &stateComp = ui::globalUIGroup.get<ui::UIState>(e);
-    auto &nodeComp = ui::globalUIGroup.get<transform::GameObject>(e);
-    auto &transformComp = ui::globalUIGroup.get<transform::Transform>(e);
-    ui::element::DrawSelfImmediate(layerPtr, e, uiElementComp, configComp,
-                                   stateComp, nodeComp, transformComp);
+    shader_pipeline::MatrixStackGuard matrixGuard;
+    matrixGuard.push();
+    rlTranslatef(-xMin + pad, -yMin + pad, 0);
+    for (size_t i = startIndex; i < endIndex; ++i) {
+      entt::entity e = drawList[i].e;
+      auto &uiElementComp = ui::globalUIGroup.get<ui::UIElementComponent>(e);
+      auto &configComp = ui::globalUIGroup.get<ui::UIConfig>(e);
+      auto &stateComp = ui::globalUIGroup.get<ui::UIState>(e);
+      auto &nodeComp = ui::globalUIGroup.get<transform::GameObject>(e);
+      auto &transformComp = ui::globalUIGroup.get<transform::Transform>(e);
+      ui::element::DrawSelfImmediate(layerPtr, e, uiElementComp, configComp,
+                                     stateComp, nodeComp, transformComp);
+    }
   }
-  rlPopMatrix();
-  layer::render_stack_switch_internal::Pop(); // TODO: is the right texture now
-                                              // in front()?
 
   // 3. Copy front() to base cache
   RenderTexture2D& baseRT = uiCtx->baseCache;
-  layer::render_stack_switch_internal::Push(baseRT); // FIXME: flip every time.
-  ClearBackground({0, 0, 0, 0});
-  // DrawTexture(uiCtx->front().texture, 0, 0, WHITE);
+  Rectangle sourceRect;
+  {
+    shader_pipeline::RenderTargetGuard rtGuard;
+    rtGuard.push(baseRT, "UI_CopyToBaseCache");
+    ClearBackground({0, 0, 0, 0});
 
-  Rectangle sourceRect = {
-      0.0f, // x
-      (float)uiCtx->front().texture.height -
-          renderH, // y = start at top of the texture
-      renderW,     // width
-      renderH      // negative height to flip back
-  };
-  DrawTextureRec(uiCtx->front().texture, sourceRect, {0, 0}, WHITE);
-  layer::render_stack_switch_internal::Pop();
+    sourceRect = {
+        0.0f, // x
+        (float)uiCtx->front().texture.height -
+            renderH, // y = start at top of the texture
+        renderW,     // width
+        renderH      // negative height to flip back
+    };
+    DrawTextureRec(uiCtx->front().texture, sourceRect, {0, 0}, WHITE);
+  }
 
   // FIXME: draw the baseRT to the screen here, so we can see what we're
   // rendering offscreen.
@@ -2344,27 +2347,27 @@ void renderSliceOffscreenFromDrawList(
     if (!sh.id)
       continue;
 
-    layer::render_stack_switch_internal::Push(uiCtx->back());
-    ClearBackground({0, 0, 0, 0});
-    BeginShaderMode(sh);
-    if (pass.injectAtlasUniforms)
-      injectAtlasUniforms(globals::getGlobalShaderUniforms(), pass.shaderName,
-                          {0, 0, renderW, renderH}, {renderW, renderH});
-    if (pass.customPrePassFunction)
-      pass.customPrePassFunction();
-    TryApplyUniforms(sh, globals::getGlobalShaderUniforms(), pass.shaderName);
-    Rectangle sourceRect = {
-        0.0f, // x
-        (float)uiCtx->front().texture.height -
-            renderH, // y = start at top of the texture
-        renderW,     // width
-        renderH      // negative height to flip back
-    };
-    DrawTextureRec(uiCtx->front().texture, sourceRect, {0, 0}, WHITE);
-    // DrawTextureRec(uiCtx->front().texture, {0, 0, renderW,
-    // renderH}, {0, 0}, WHITE);  // y-flipped, maintained
-    EndShaderMode();
-    layer::render_stack_switch_internal::Pop();
+    {
+      shader_pipeline::RenderTargetGuard rtGuard;
+      rtGuard.push(uiCtx->back(), "UI_ShaderPass");
+      ClearBackground({0, 0, 0, 0});
+      BeginShaderMode(sh);
+      if (pass.injectAtlasUniforms)
+        injectAtlasUniforms(globals::getGlobalShaderUniforms(), pass.shaderName,
+                            {0, 0, renderW, renderH}, {renderW, renderH});
+      if (pass.customPrePassFunction)
+        pass.customPrePassFunction();
+      TryApplyUniforms(sh, globals::getGlobalShaderUniforms(), pass.shaderName);
+      Rectangle sourceRect = {
+          0.0f, // x
+          (float)uiCtx->front().texture.height -
+              renderH, // y = start at top of the texture
+          renderW,     // width
+          renderH      // negative height to flip back
+      };
+      DrawTextureRec(uiCtx->front().texture, sourceRect, {0, 0}, WHITE);
+      EndShaderMode();
+    }
     uiCtx->swap();
     shader_pipeline::SetLastRenderTarget(uiCtx->front());
   }
@@ -2379,10 +2382,12 @@ void renderSliceOffscreenFromDrawList(
                                    : uiCtx->front();
 
   auto& postCache = uiCtx->postPassCache;
-  layer::render_stack_switch_internal::Push(postCache);
-  ClearBackground({0, 0, 0, 0});
-  DrawTexture(postPassRT.texture, 0, 0, WHITE);
-  layer::render_stack_switch_internal::Pop(); // also y-flipped
+  {
+    shader_pipeline::RenderTargetGuard rtGuard;
+    rtGuard.push(postCache, "UI_PostPassCache");
+    ClearBackground({0, 0, 0, 0});
+    DrawTexture(postPassRT.texture, 0, 0, WHITE);
+  }
 
   if (globals::getDrawDebugInfo()) {
     // DrawTexture(postPassRT.texture, 0, 0, WHITE);
@@ -2403,14 +2408,16 @@ void renderSliceOffscreenFromDrawList(
   // prime for overlays, if any
   if (!pipeline.overlayDraws.empty()) {
     auto &first = pipeline.overlayDraws.front();
-    render_stack_switch_internal::Push(uiCtx->front());
-    ClearBackground({0, 0, 0, 0});
-    if (first.inputSource == shader_pipeline::OverlayInputSource::BaseSprite)
-      DrawTextureRec(baseRT.texture, {0, 0, renderW, renderH}, {0, 0}, WHITE);
-    else
-      DrawTextureRec(postCache.texture, {0, 0, renderW, renderH}, {0, 0},
-                     WHITE); // everything stays y-flipped
-    render_stack_switch_internal::Pop();
+    {
+      shader_pipeline::RenderTargetGuard rtGuard;
+      rtGuard.push(uiCtx->front(), "UI_OverlayPrime");
+      ClearBackground({0, 0, 0, 0});
+      if (first.inputSource == shader_pipeline::OverlayInputSource::BaseSprite)
+        DrawTextureRec(baseRT.texture, {0, 0, renderW, renderH}, {0, 0}, WHITE);
+      else
+        DrawTextureRec(postCache.texture, {0, 0, renderW, renderH}, {0, 0},
+                       WHITE);
+    }
   }
 
   // 6. Overlays
@@ -2421,22 +2428,23 @@ void renderSliceOffscreenFromDrawList(
     if (!sh.id)
       continue;
 
-    layer::render_stack_switch_internal::Push(uiCtx->front());
-    BeginShaderMode(sh);
-    if (ov.injectAtlasUniforms)
-      injectAtlasUniforms(globals::getGlobalShaderUniforms(), ov.shaderName,
-                          {0, 0, renderW, renderH}, {renderW, renderH});
-    if (ov.customPrePassFunction)
-      ov.customPrePassFunction();
-    TryApplyUniforms(sh, globals::getGlobalShaderUniforms(), ov.shaderName);
-    RenderTexture2D &src =
-        (ov.inputSource == shader_pipeline::OverlayInputSource::BaseSprite)
-            ? baseRT
-            : postPassRT;
-    DrawTextureRec(src.texture, {0, 0, renderW, renderH}, {0, 0},
-                   WHITE); // y-flipped, maintained
-    EndShaderMode();
-    layer::render_stack_switch_internal::Pop();
+    {
+      shader_pipeline::RenderTargetGuard rtGuard;
+      rtGuard.push(uiCtx->front(), "UI_Overlay");
+      BeginShaderMode(sh);
+      if (ov.injectAtlasUniforms)
+        injectAtlasUniforms(globals::getGlobalShaderUniforms(), ov.shaderName,
+                            {0, 0, renderW, renderH}, {renderW, renderH});
+      if (ov.customPrePassFunction)
+        ov.customPrePassFunction();
+      TryApplyUniforms(sh, globals::getGlobalShaderUniforms(), ov.shaderName);
+      RenderTexture2D &src =
+          (ov.inputSource == shader_pipeline::OverlayInputSource::BaseSprite)
+              ? baseRT
+              : postPassRT;
+      DrawTextureRec(src.texture, {0, 0, renderW, renderH}, {0, 0}, WHITE);
+      EndShaderMode();
+    }
     shader_pipeline::SetLastRenderTarget(uiCtx->back());
   }
 

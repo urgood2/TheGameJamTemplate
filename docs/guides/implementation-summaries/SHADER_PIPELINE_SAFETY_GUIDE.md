@@ -320,19 +320,43 @@ if (activeRenderCount > 0) {
 }
 ```
 
-### Issue #7: Global Pipeline State
-**Status**: Not fixed yet (requires major refactoring).
+### ✅ Fix #7: Per-Element Shader Pipeline Isolation
 
-**Workaround**: Only render one entity with pipeline per frame, or use a mutex:
+**Problem**: The global `shader_pipeline::ping`, `pong`, `baseCache`, and `postPassCache` render textures were shared across all entities. When multiple UI elements with shaders rendered simultaneously, they corrupted each other's texture state, causing visual artifacts (elements flipping upside-down).
+
+**Solution**: `UIShaderRenderContext` component provides isolated render textures per UI element.
 
 ```cpp
-#include <mutex>
-inline std::mutex pipelineMutex;
-
-// In render function:
-std::lock_guard<std::mutex> lock(pipelineMutex);
-DrawTransformEntityWithAnimationWithPipeline(registry, entity);
+// Each UI element with shaders gets its own render context
+struct UIShaderRenderContext {
+    RenderTexture2D ping = {};
+    RenderTexture2D pong = {};
+    RenderTexture2D baseCache = {};
+    RenderTexture2D postPassCache = {};
+    int swapCount = 0;  // Tracks swaps for Y-flip determination
+    bool initialized = false;
+    
+    void init(int w, int h);           // Lazy initialization
+    void swap();                       // Increments swapCount automatically
+    void resetSwapCount();             // Call at start of render pass
+    bool needsYFlip() const;           // Returns (swapCount % 2) != 0
+};
 ```
+
+**Usage in UI Rendering**:
+- `UIShaderRenderContext` is automatically created for UI elements with `ShaderPipelineComponent`
+- Textures are lazily initialized to match element bounds
+- Each element's render pass uses its own isolated textures
+- `swapCount` tracks actual swaps (not total pass count) for correct Y-flip
+- EnTT `on_destroy` hook automatically unloads textures
+
+**Benefits**:
+- ✅ Multiple UI elements with shaders render correctly
+- ✅ No texture state corruption between elements
+- ✅ Automatic cleanup via RAII (EnTT hook)
+- ✅ More accurate Y-flip logic (tracks actual swaps, not pass count)
+
+**Note**: World sprite rendering still uses global textures (unaffected by this fix)
 
 ## Best Practices
 
@@ -340,9 +364,9 @@ DrawTransformEntityWithAnimationWithPipeline(registry, entity);
 2. **Never copy RenderTexture2D** - Always use references or pointers
 3. **Validate before drawing** - Use `SafeDrawTextureRec()` and `ValidateTextureRect()`
 4. **Monitor stack depth** - Log depth in debug builds
-5. **One entity at a time** - Until issue #7 is fixed, avoid concurrent pipeline rendering
-6. **Check texture IDs** - Validate `texture.id != 0` before use
-7. **Use context strings** - Pass descriptive context to validation functions for better error messages
+5. **Check texture IDs** - Validate `texture.id != 0` before use
+6. **Use context strings** - Pass descriptive context to validation functions for better error messages
+7. **UI shader isolation** - `UIShaderRenderContext` is automatically created; no manual management needed
 
 ## Performance Notes
 

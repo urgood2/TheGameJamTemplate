@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <entt/entt.hpp>
 
 #include "shader_system.hpp"
 
@@ -106,8 +107,123 @@ namespace shader_pipeline {
         // Useful for text entities that only want shader effects on local draw commands
         bool skipBaseSprite = false;
     };
-    
-    
+
+    /**
+     * @brief Per-UI-element render context for shader pipeline isolation.
+     * 
+     * Solves the bug where multiple shader-enabled UI elements corrupt each other's
+     * state due to shared global ping/pong/baseCache/postPassCache textures.
+     * Each UI element with shaders gets its own UIShaderRenderContext with isolated textures.
+     * 
+     * Lifecycle:
+     * - init(w, h): Called lazily when UI shader rendering first needs this context
+     * - resize(w, h): Called if element bounds change
+     * - unload(): Called automatically via EnTT on_destroy hook when entity is destroyed
+     * 
+     * swapCount semantics:
+     * - Reset to 0 at start of each render pass for this element
+     * - Incremented each time swap() is called during shader pass loop
+     * - Used for Y-flip determination: (swapCount % 2 == 0) means no Y-flip needed
+     */
+    struct UIShaderRenderContext {
+        RenderTexture2D ping = {};
+        RenderTexture2D pong = {};
+        RenderTexture2D baseCache = {};
+        RenderTexture2D postPassCache = {};
+        int width = 0;
+        int height = 0;
+        int swapCount = 0;
+        bool initialized = false;
+
+        void init(int w, int h) {
+            if (initialized && width == w && height == h) return;
+            if (initialized) unload();
+            
+            width = w;
+            height = h;
+            ping = LoadRenderTexture(w, h);
+            pong = LoadRenderTexture(w, h);
+            baseCache = LoadRenderTexture(w, h);
+            postPassCache = LoadRenderTexture(w, h);
+            
+            SetTextureFilter(ping.texture, TEXTURE_FILTER_POINT);
+            SetTextureFilter(pong.texture, TEXTURE_FILTER_POINT);
+            SetTextureFilter(baseCache.texture, TEXTURE_FILTER_POINT);
+            SetTextureFilter(postPassCache.texture, TEXTURE_FILTER_POINT);
+            
+            initialized = true;
+            swapCount = 0;
+        }
+
+        void resize(int newW, int newH) {
+            if (newW != width || newH != height) {
+                init(newW, newH);
+            }
+        }
+
+        void unload() {
+            if (ping.id != 0) UnloadRenderTexture(ping);
+            if (pong.id != 0) UnloadRenderTexture(pong);
+            if (baseCache.id != 0) UnloadRenderTexture(baseCache);
+            if (postPassCache.id != 0) UnloadRenderTexture(postPassCache);
+            ping = {};
+            pong = {};
+            baseCache = {};
+            postPassCache = {};
+            width = 0;
+            height = 0;
+            initialized = false;
+            swapCount = 0;
+        }
+
+        RenderTexture2D& front() { return ping; }
+        RenderTexture2D& back() { return pong; }
+
+        void swap() {
+            std::swap(ping, pong);
+            swapCount++;
+        }
+
+        void resetSwapCount() {
+            swapCount = 0;
+        }
+
+        bool needsYFlip() const {
+            return (swapCount % 2) != 0;
+        }
+
+        void clearTextures(Color color = {0, 0, 0, 0}) {
+            Color opaqueColor = color;
+            opaqueColor.a = 255;
+
+            if (ping.id != 0) {
+                BeginTextureMode(ping);
+                ClearBackground(opaqueColor);
+                EndTextureMode();
+            }
+            if (pong.id != 0) {
+                BeginTextureMode(pong);
+                ClearBackground(opaqueColor);
+                EndTextureMode();
+            }
+            if (baseCache.id != 0) {
+                BeginTextureMode(baseCache);
+                ClearBackground(opaqueColor);
+                EndTextureMode();
+            }
+            if (postPassCache.id != 0) {
+                BeginTextureMode(postPassCache);
+                ClearBackground(opaqueColor);
+                EndTextureMode();
+            }
+        }
+
+        static void onDestroyCallback(entt::registry& reg, entt::entity e) {
+            if (reg.all_of<UIShaderRenderContext>(e)) {
+                reg.get<UIShaderRenderContext>(e).unload();
+            }
+        }
+    };
 
     inline RenderTexture2D ping = {};
     inline RenderTexture2D pong = {};
@@ -456,7 +572,77 @@ namespace shader_pipeline {
             "---@param self ShaderPipelineComponent\n---@return nil",
             "Clear both passes and overlays"}
         );
-        // 6) Helper to convert table to ShaderUniformValue
+
+        // 6) UIShaderRenderContext
+        sp.new_usertype<shader_pipeline::UIShaderRenderContext>("UIShaderRenderContext",
+            sol::constructors<>(),
+            "width", &shader_pipeline::UIShaderRenderContext::width,
+            "height", &shader_pipeline::UIShaderRenderContext::height,
+            "swapCount", &shader_pipeline::UIShaderRenderContext::swapCount,
+            "initialized", &shader_pipeline::UIShaderRenderContext::initialized,
+            "init", &shader_pipeline::UIShaderRenderContext::init,
+            "resize", &shader_pipeline::UIShaderRenderContext::resize,
+            "unload", &shader_pipeline::UIShaderRenderContext::unload,
+            "swap", &shader_pipeline::UIShaderRenderContext::swap,
+            "resetSwapCount", &shader_pipeline::UIShaderRenderContext::resetSwapCount,
+            "needsYFlip", &shader_pipeline::UIShaderRenderContext::needsYFlip,
+            "clearTextures", &shader_pipeline::UIShaderRenderContext::clearTextures,
+            "type_id", []() { return entt::type_hash<shader_pipeline::UIShaderRenderContext>::value(); }
+        );
+        rec.add_type("shader_pipeline.UIShaderRenderContext", /*is_data_class=*/true)
+            .doc = "Per-UI-element render context for shader pipeline isolation.";
+        rec.record_property("shader_pipeline.UIShaderRenderContext",
+            { "width", "int", "Render texture width" });
+        rec.record_property("shader_pipeline.UIShaderRenderContext",
+            { "height", "int", "Render texture height" });
+        rec.record_property("shader_pipeline.UIShaderRenderContext",
+            { "swapCount", "int", "Number of swaps in current render pass" });
+        rec.record_property("shader_pipeline.UIShaderRenderContext",
+            { "initialized", "bool", "Whether textures are initialized" });
+        rec.record_free_function(
+            {"shader_pipeline.UIShaderRenderContext"},
+            {"init",
+            "---@param self UIShaderRenderContext\n---@param w integer\n---@param h integer\n---@return nil",
+            "Initialize render textures with given dimensions"}
+        );
+        rec.record_free_function(
+            {"shader_pipeline.UIShaderRenderContext"},
+            {"resize",
+            "---@param self UIShaderRenderContext\n---@param w integer\n---@param h integer\n---@return nil",
+            "Resize render textures if dimensions changed"}
+        );
+        rec.record_free_function(
+            {"shader_pipeline.UIShaderRenderContext"},
+            {"unload",
+            "---@param self UIShaderRenderContext\n---@return nil",
+            "Unload all render textures"}
+        );
+        rec.record_free_function(
+            {"shader_pipeline.UIShaderRenderContext"},
+            {"swap",
+            "---@param self UIShaderRenderContext\n---@return nil",
+            "Swap ping/pong and increment swap count"}
+        );
+        rec.record_free_function(
+            {"shader_pipeline.UIShaderRenderContext"},
+            {"resetSwapCount",
+            "---@param self UIShaderRenderContext\n---@return nil",
+            "Reset swap count to 0"}
+        );
+        rec.record_free_function(
+            {"shader_pipeline.UIShaderRenderContext"},
+            {"needsYFlip",
+            "---@param self UIShaderRenderContext\n---@return boolean",
+            "Check if Y-flip is needed based on swap count parity"}
+        );
+        rec.record_free_function(
+            {"shader_pipeline.UIShaderRenderContext"},
+            {"clearTextures",
+            "---@param self UIShaderRenderContext\n---@param color? Color\n---@return nil",
+            "Clear all textures to a color"}
+        );
+
+        // 7) Helper to convert table to ShaderUniformValue
         auto to_uniform_value = [&](sol::object obj) -> ShaderUniformValue {
             if (obj.is<float>()) return obj.as<float>();
             if (obj.is<bool>()) return obj.as<bool>();

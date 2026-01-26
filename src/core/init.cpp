@@ -21,6 +21,7 @@
 #include "../systems/localization/localization.hpp"
 #include "../systems/physics/physics_manager.hpp"
 #include "../systems/shaders/shader_system.hpp"
+#include "../systems/shaders/shader_pipeline.hpp"
 #include "../systems/shaders/shader_presets.hpp"
 #include "../systems/sound/sound_system.hpp"
 #include "../systems/telemetry/telemetry.hpp"
@@ -846,6 +847,11 @@ auto base_init() -> void {
     globals::getRegistry()
         .on_destroy<physics::ColliderComponent>()
         .connect<&onColliderDestroyed>();
+
+    // set up UIShaderRenderContext destruction
+    globals::getRegistry()
+        .on_destroy<shader_pipeline::UIShaderRenderContext>()
+        .connect<&shader_pipeline::UIShaderRenderContext::onDestroyCallback>();
   }
 
   {

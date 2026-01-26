@@ -317,11 +317,15 @@ local function initializePanel()
 end
 
 function EquipmentPanel.create()
-    if not state.initialized then
-        initializePanel()
-    end
-    log_debug("[EquipmentPanel] Created")
-end
+     if not state.initialized then
+         initializePanel()
+     end
+     
+     setupSlotInteractions()
+     setupRenderTimer()
+     
+     log_debug("[EquipmentPanel] Created")
+ end
 
 function EquipmentPanel.show()
     if not state.initialized then
@@ -420,50 +424,143 @@ local function getCombatContext()
 end
 
 local function centerItemOnSlot(itemEntity, slotEntity)
-    if not registry:valid(itemEntity) or not registry:valid(slotEntity) then
-        log_warn("[EquipmentPanel] Invalid entity in centerItemOnSlot")
-        return false
+     if not registry:valid(itemEntity) or not registry:valid(slotEntity) then
+         log_warn("[EquipmentPanel] Invalid entity in centerItemOnSlot")
+         return false
+     end
+
+     local slotTransform = component_cache.get(slotEntity, Transform)
+     local itemTransform = component_cache.get(itemEntity, Transform)
+
+     if not slotTransform or not itemTransform then
+         log_warn("[EquipmentPanel] Missing Transform components")
+         return false
+     end
+
+     local slotRole = component_cache.get(slotEntity, InheritedProperties)
+     local slotOffsetX = slotRole and slotRole.offset and slotRole.offset.x or 0
+     local slotOffsetY = slotRole and slotRole.offset and slotRole.offset.y or 0
+
+     local gridEntity = slotRole and slotRole.master
+     local gridTransform = gridEntity and component_cache.get(gridEntity, Transform)
+
+     local slotX, slotY
+     if gridTransform then
+         slotX = (gridTransform.actualX or 0) + slotOffsetX
+         slotY = (gridTransform.actualY or 0) + slotOffsetY
+     else
+         slotX = slotTransform.visualX or slotTransform.actualX or 0
+         slotY = slotTransform.visualY or slotTransform.actualY or 0
+     end
+
+     local slotW = slotTransform.actualW or 48
+     local slotH = slotTransform.actualH or 48
+     local itemW = itemTransform.actualW or 48
+     local itemH = itemTransform.actualH or 48
+
+     local centerX = slotX + (slotW - itemW) / 2
+     local centerY = slotY + (slotH - itemH) / 2
+
+     itemTransform.actualX = centerX
+     itemTransform.actualY = centerY
+     itemTransform.visualX = centerX
+     itemTransform.visualY = centerY
+
+     log_debug(string.format("[EquipmentPanel] Centered item at (%.1f, %.1f) in slot", centerX, centerY))
+     return true
+ end
+
+local function setupSlotInteractions()
+    local leftButton = MouseButton and MouseButton.MOUSE_BUTTON_LEFT or 0
+    
+    for slotName, slotEntity in pairs(state.slotEntities) do
+        if not registry:valid(slotEntity) then
+            goto continue
+        end
+        
+        local slotConfig = SLOT_CONFIG[slotName]
+        if not slotConfig or not slotConfig.enabled then
+            goto continue
+        end
+        
+        local go = component_cache.get(slotEntity, GameObject)
+        if not go then
+            goto continue
+        end
+        
+        go.methods.onClick = function(reg, entity)
+            local equippedItem = state.equippedItems[slotName]
+            if equippedItem then
+                local itemEntity = equippedItem.entity
+                local itemDef = equippedItem.equipDef
+                
+                EquipmentPanel.unequipSlot(slotName)
+                
+                if itemEntity and registry:valid(itemEntity) then
+                    signal.emit("equipment_item_returned_to_inventory", slotName, itemEntity, itemDef)
+                    log_debug("[EquipmentPanel] Emitted item return signal for " .. slotName)
+                end
+            end
+        end
+        
+        go.methods.onHoverStart = function(reg, entity)
+            local uiCfg = component_cache.get(entity, UIConfig)
+            if uiCfg and _G.util then
+                uiCfg.color = _G.util.getColor("steel_blue")
+            end
+        end
+        
+        go.methods.onHoverEnd = function(reg, entity)
+            local uiCfg = component_cache.get(entity, UIConfig)
+            if uiCfg and _G.util then
+                uiCfg.color = _G.util.getColor("purple_slate")
+            end
+        end
+        
+        ::continue::
     end
+    
+    log_debug("[EquipmentPanel] Slot interactions setup complete")
+end
 
-    local slotTransform = component_cache.get(slotEntity, Transform)
-    local itemTransform = component_cache.get(itemEntity, Transform)
-
-    if not slotTransform or not itemTransform then
-        log_warn("[EquipmentPanel] Missing Transform components")
-        return false
-    end
-
-    local slotRole = component_cache.get(slotEntity, InheritedProperties)
-    local slotOffsetX = slotRole and slotRole.offset and slotRole.offset.x or 0
-    local slotOffsetY = slotRole and slotRole.offset and slotRole.offset.y or 0
-
-    local gridEntity = slotRole and slotRole.master
-    local gridTransform = gridEntity and component_cache.get(gridEntity, Transform)
-
-    local slotX, slotY
-    if gridTransform then
-        slotX = (gridTransform.actualX or 0) + slotOffsetX
-        slotY = (gridTransform.actualY or 0) + slotOffsetY
-    else
-        slotX = slotTransform.visualX or slotTransform.actualX or 0
-        slotY = slotTransform.visualY or slotTransform.actualY or 0
-    end
-
-    local slotW = slotTransform.actualW or 48
-    local slotH = slotTransform.actualH or 48
-    local itemW = itemTransform.actualW or 48
-    local itemH = itemTransform.actualH or 48
-
-    local centerX = slotX + (slotW - itemW) / 2
-    local centerY = slotY + (slotH - itemH) / 2
-
-    itemTransform.actualX = centerX
-    itemTransform.actualY = centerY
-    itemTransform.visualX = centerX
-    itemTransform.visualY = centerY
-
-    log_debug(string.format("[EquipmentPanel] Centered item at (%.1f, %.1f) in slot", centerX, centerY))
-    return true
+local function setupRenderTimer()
+    local ITEM_Z = 1000
+    
+    timer.run_every_render_frame(function()
+        if not state.isVisible then return end
+        
+        -- Center each equipped item in its slot
+        for slotName, item in pairs(state.equippedItems) do
+            if item and item.entity and registry:valid(item.entity) then
+                local slotEntity = state.slotEntities[slotName]
+                if slotEntity and registry:valid(slotEntity) then
+                    centerItemOnSlot(item.entity, slotEntity)
+                end
+            end
+        end
+        
+        -- Batch render equipped items
+        if not (command_buffer and command_buffer.queueDrawBatchedEntities and layers and layers.sprites) then
+            return
+        end
+        
+        local equippedItemsList = {}
+        for slotName, item in pairs(state.equippedItems) do
+            if item and item.entity and registry:valid(item.entity) then
+                table.insert(equippedItemsList, item.entity)
+            end
+        end
+        
+        if #equippedItemsList > 0 then
+            command_buffer.queueDrawBatchedEntities(layers.sprites, function(cmd)
+                cmd.registry = registry
+                cmd.entities = equippedItemsList
+                cmd.autoOptimize = true
+            end, ITEM_Z, layer.DrawCommandSpace.Screen)
+        end
+    end, nil, "equipment_render_timer", TIMER_GROUP)
+    
+    log_debug("[EquipmentPanel] Render timer setup complete")
 end
 
 function EquipmentPanel.canSlotAccept(slotId, equipmentDef)

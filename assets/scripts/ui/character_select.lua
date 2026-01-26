@@ -1077,7 +1077,6 @@ local function createGodInfoPanel()
             minWidth = metrics.godInfoWidth,
             minHeight = UI(CharacterSelect.LAYOUT.INFO_PANEL_MIN_HEIGHT),
             maxWidth = metrics.godInfoWidth,
-            align = TEXT_ALIGN_LEFT,
         },
         children = {
             -- God name
@@ -1149,7 +1148,6 @@ local function createClassInfoPanel()
             minWidth = metrics.classInfoWidth,
             minHeight = UI(CharacterSelect.LAYOUT.INFO_PANEL_MIN_HEIGHT),
             maxWidth = metrics.classInfoWidth,
-            align = TEXT_ALIGN_LEFT,
         },
         children = {
             -- Class name
@@ -1413,15 +1411,28 @@ local function updateUIConfigColor(entity, colorName)
 end
 
 local function updateUIText(entity, text, colorName)
-    if not entity or not component_cache or not UIConfig then return end
+    if not entity or not component_cache then return end
 
-    local cfg = component_cache.get(entity, UIConfig)
+    local resolvedColor = colorName and resolveUIColor(colorName) or nil
+    local cfg = UIConfig and component_cache.get(entity, UIConfig) or nil
     if cfg then
         if text ~= nil then
             cfg.text = text
         end
-        if colorName then
-            cfg.color = resolveUIColor(colorName)
+        if resolvedColor then
+            cfg.color = resolvedColor
+        end
+    end
+
+    if UITextComponent then
+        local uiText = component_cache.get(entity, UITextComponent)
+        if uiText then
+            if text ~= nil then
+                uiText.text = text
+            end
+            if resolvedColor then
+                uiText.color = resolvedColor
+            end
         end
     end
 

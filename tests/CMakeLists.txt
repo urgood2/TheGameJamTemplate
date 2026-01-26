@@ -16,6 +16,7 @@ add_executable(unit_tests
     unit/test_physics_manager.cpp
     unit/test_shader_system.cpp
     unit/test_shader_presets.cpp
+    unit/test_ui_shader_isolation.cpp
     unit/test_binding_recorder.cpp
     unit/test_crash_reporter.cpp
     unit/test_event_bus.cpp

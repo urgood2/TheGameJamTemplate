@@ -2276,8 +2276,25 @@ void renderSliceOffscreenFromDrawList(
   auto &pipeline = registry.get<shader_pipeline::ShaderPipelineComponent>(
       drawList[startIndex].e);
 
+  // Get or create UIShaderRenderContext for per-element texture isolation
+  entt::entity firstEntity = drawList[startIndex].e;
+  shader_pipeline::UIShaderRenderContext* uiCtx = nullptr;
+  
+  if (!registry.all_of<shader_pipeline::UIShaderRenderContext>(firstEntity)) {
+    // Lazily create UIShaderRenderContext for this UI element
+    registry.emplace<shader_pipeline::UIShaderRenderContext>(firstEntity);
+  }
+  
+  uiCtx = &registry.get<shader_pipeline::UIShaderRenderContext>(firstEntity);
+  
+  // Initialize or resize context textures to match render bounds
+  uiCtx->init((int)renderW, (int)renderH);
+  
+  // Reset swap count at start of rendering this element
+  uiCtx->resetSwapCount();
+
   // 2. Draw to front()
-  layer::render_stack_switch_internal::Push(shader_pipeline::front());
+  layer::render_stack_switch_internal::Push(uiCtx->front());
   ClearBackground({0, 0, 0, 0});
 
   rlPushMatrix();
@@ -2297,19 +2314,19 @@ void renderSliceOffscreenFromDrawList(
                                               // in front()?
 
   // 3. Copy front() to base cache
-  RenderTexture2D baseRT = shader_pipeline::GetBaseRenderTextureCache();
+  RenderTexture2D& baseRT = uiCtx->baseCache;
   layer::render_stack_switch_internal::Push(baseRT); // FIXME: flip every time.
   ClearBackground({0, 0, 0, 0});
-  // DrawTexture(shader_pipeline::front().texture, 0, 0, WHITE);
+  // DrawTexture(uiCtx->front().texture, 0, 0, WHITE);
 
   Rectangle sourceRect = {
       0.0f, // x
-      (float)shader_pipeline::front().texture.height -
+      (float)uiCtx->front().texture.height -
           renderH, // y = start at top of the texture
       renderW,     // width
       renderH      // negative height to flip back
   };
-  DrawTextureRec(shader_pipeline::front().texture, sourceRect, {0, 0}, WHITE);
+  DrawTextureRec(uiCtx->front().texture, sourceRect, {0, 0}, WHITE);
   layer::render_stack_switch_internal::Pop();
 
   // FIXME: draw the baseRT to the screen here, so we can see what we're
@@ -2327,7 +2344,7 @@ void renderSliceOffscreenFromDrawList(
     if (!sh.id)
       continue;
 
-    layer::render_stack_switch_internal::Push(shader_pipeline::back());
+    layer::render_stack_switch_internal::Push(uiCtx->back());
     ClearBackground({0, 0, 0, 0});
     BeginShaderMode(sh);
     if (pass.injectAtlasUniforms)
@@ -2338,19 +2355,18 @@ void renderSliceOffscreenFromDrawList(
     TryApplyUniforms(sh, globals::getGlobalShaderUniforms(), pass.shaderName);
     Rectangle sourceRect = {
         0.0f, // x
-        (float)shader_pipeline::front().texture.height -
+        (float)uiCtx->front().texture.height -
             renderH, // y = start at top of the texture
         renderW,     // width
         renderH      // negative height to flip back
     };
-    DrawTextureRec(shader_pipeline::front().texture, sourceRect, {0, 0}, WHITE);
-    // DrawTextureRec(shader_pipeline::front().texture, {0, 0, renderW,
+    DrawTextureRec(uiCtx->front().texture, sourceRect, {0, 0}, WHITE);
+    // DrawTextureRec(uiCtx->front().texture, {0, 0, renderW,
     // renderH}, {0, 0}, WHITE);  // y-flipped, maintained
     EndShaderMode();
     layer::render_stack_switch_internal::Pop();
-    shader_pipeline::Swap();
-    shader_pipeline::SetLastRenderTarget(
-        shader_pipeline::front()); // TODO: is this logic right?
+    uiCtx->swap();
+    shader_pipeline::SetLastRenderTarget(uiCtx->front());
   }
 
   // 5. Collect post-pass
@@ -2360,10 +2376,9 @@ void renderSliceOffscreenFromDrawList(
 
   RenderTexture2D postPassRT = shader_pipeline::GetLastRenderTarget()
                                    ? *shader_pipeline::GetLastRenderTarget()
-                                   : shader_pipeline::front();
+                                   : uiCtx->front();
 
-  auto postCache = shader_pipeline::
-      GetPostShaderPassRenderTextureCache(); // TODO: resize to renderW, renderH
+  auto& postCache = uiCtx->postPassCache;
   layer::render_stack_switch_internal::Push(postCache);
   ClearBackground({0, 0, 0, 0});
   DrawTexture(postPassRT.texture, 0, 0, WHITE);
@@ -2388,7 +2403,7 @@ void renderSliceOffscreenFromDrawList(
   // prime for overlays, if any
   if (!pipeline.overlayDraws.empty()) {
     auto &first = pipeline.overlayDraws.front();
-    render_stack_switch_internal::Push(shader_pipeline::front());
+    render_stack_switch_internal::Push(uiCtx->front());
     ClearBackground({0, 0, 0, 0});
     if (first.inputSource == shader_pipeline::OverlayInputSource::BaseSprite)
       DrawTextureRec(baseRT.texture, {0, 0, renderW, renderH}, {0, 0}, WHITE);
@@ -2406,7 +2421,7 @@ void renderSliceOffscreenFromDrawList(
     if (!sh.id)
       continue;
 
-    layer::render_stack_switch_internal::Push(shader_pipeline::front());
+    layer::render_stack_switch_internal::Push(uiCtx->front());
     BeginShaderMode(sh);
     if (ov.injectAtlasUniforms)
       injectAtlasUniforms(globals::getGlobalShaderUniforms(), ov.shaderName,
@@ -2422,12 +2437,12 @@ void renderSliceOffscreenFromDrawList(
                    WHITE); // y-flipped, maintained
     EndShaderMode();
     layer::render_stack_switch_internal::Pop();
-    shader_pipeline::SetLastRenderTarget(shader_pipeline::back());
+    shader_pipeline::SetLastRenderTarget(uiCtx->back());
   }
 
   // 7. Choose final RT
   RenderTexture2D finalRT = !pipeline.overlayDraws.empty()
-                                ? shader_pipeline::front()
+                                ? uiCtx->front()
                             : !pipeline.passes.empty() ? postCache
                                                        : baseRT;
   // restore camera if it was active

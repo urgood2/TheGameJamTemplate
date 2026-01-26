@@ -303,6 +303,8 @@ local state = {
     -- Persistence
     lastGod = nil,
     lastClass = nil,
+    lastInfoGod = nil,
+    lastInfoClass = nil,
 
     -- Callbacks
     onConfirm = nil,
@@ -510,6 +512,8 @@ function CharacterSelect.destroy()
     -- Also clear persistence state for full reset (important for test isolation)
     state.lastGod = nil
     state.lastClass = nil
+    state.lastInfoGod = nil
+    state.lastInfoClass = nil
 end
 
 function CharacterSelect.getPanelEntity()
@@ -538,6 +542,9 @@ function CharacterSelect.selectGod(godId)
 
     if previousGod ~= godId then
         emit("character_select_god_changed", godId, previousGod)
+        if state.panelEntity then
+            CharacterSelect.refreshUI()
+        end
     end
     return true
 end
@@ -552,6 +559,9 @@ function CharacterSelect.selectClass(classId)
 
     if previousClass ~= classId then
         emit("character_select_class_changed", classId, previousClass)
+        if state.panelEntity then
+            CharacterSelect.refreshUI()
+        end
     end
     return true
 end
@@ -586,6 +596,10 @@ function CharacterSelect.randomize()
     if #unlockedClasses > 0 then
         local randomClassIndex = math.random(1, #unlockedClasses)
         state.selectedClass = unlockedClasses[randomClassIndex]
+    end
+
+    if state.panelEntity then
+        CharacterSelect.refreshUI()
     end
 end
 
@@ -979,7 +993,6 @@ local function createPortrait(id, data, isGod)
                 else
                     CharacterSelect.selectClass(id)
                 end
-                CharacterSelect.refreshUI()
             end or nil,
         },
         children = {
@@ -1234,7 +1247,6 @@ local function createButtonRow()
                 color = "blue",
                 onClick = function()
                     CharacterSelect.randomize()
-                    CharacterSelect.refreshUI()
                 end,
             }),
             -- Filler to push Confirm to right side
@@ -1481,71 +1493,27 @@ function CharacterSelect.refreshUI()
         updatePortrait(classId, CharacterSelect.CLASS_DATA[classId], false)
     end
 
-    local godInfo = CharacterSelect.getGodInfo()
-    local hasGod = godInfo ~= nil
-    updateUIText(
-        ui.box.GetUIEByID(registry, state.panelEntity, "god_info_title"),
-        hasGod and L(godInfo.name_key, godInfo.id) or L("character_select.select_god", "Select a God"),
-        hasGod and "gold" or "gray"
-    )
-    updateUIText(
-        ui.box.GetUIEByID(registry, state.panelEntity, "god_info_lore"),
-        hasGod and L(godInfo.lore_key, "") or "",
-        "white"
-    )
-    updateUIText(
-        ui.box.GetUIEByID(registry, state.panelEntity, "god_info_blessing_label"),
-        hasGod and L("character_select.blessing", "Blessing:") or "",
-        hasGod and "cyan" or "gray"
-    )
-    updateUIText(
-        ui.box.GetUIEByID(registry, state.panelEntity, "god_info_blessing"),
-        hasGod and L(godInfo.blessing_key, "") or "",
-        "white"
-    )
-    updateUIText(
-        ui.box.GetUIEByID(registry, state.panelEntity, "god_info_passive_label"),
-        hasGod and L("character_select.passive", "Passive:") or "",
-        hasGod and "green" or "gray"
-    )
-    updateUIText(
-        ui.box.GetUIEByID(registry, state.panelEntity, "god_info_passive"),
-        hasGod and L(godInfo.passive_key, "") or "",
-        "white"
-    )
-
-    local classInfo = CharacterSelect.getClassInfo()
-    local hasClass = classInfo ~= nil
-    updateUIText(
-        ui.box.GetUIEByID(registry, state.panelEntity, "class_info_title"),
-        hasClass and L(classInfo.name_key, classInfo.id) or L("character_select.select_class", "Select a Class"),
-        hasClass and "gold" or "gray"
-    )
-    updateUIText(
-        ui.box.GetUIEByID(registry, state.panelEntity, "class_info_lore"),
-        hasClass and L(classInfo.lore_key, "") or "",
-        "white"
-    )
-    updateUIText(
-        ui.box.GetUIEByID(registry, state.panelEntity, "class_info_passive_label"),
-        hasClass and L("character_select.passive", "Passive:") or "",
-        hasClass and "green" or "gray"
-    )
-    updateUIText(
-        ui.box.GetUIEByID(registry, state.panelEntity, "class_info_passive"),
-        hasClass and L(classInfo.passive_key, "") or "",
-        "white"
-    )
-    updateUIText(
-        ui.box.GetUIEByID(registry, state.panelEntity, "class_info_triggered_label"),
-        hasClass and L("character_select.triggered", "Triggered:") or "",
-        hasClass and "orange" or "gray"
-    )
-    updateUIText(
-        ui.box.GetUIEByID(registry, state.panelEntity, "class_info_triggered"),
-        hasClass and L(classInfo.triggered_key, "") or "",
-        "white"
-    )
+    if ui and ui.box and ui.box.GetUIEByID and ui.box.ReplaceChildren then
+        local currentGod = state.selectedGod
+        local currentClass = state.selectedClass
+        if currentGod ~= state.lastInfoGod or currentClass ~= state.lastInfoClass then
+            local infoContainer = ui.box.GetUIEByID(registry, state.panelEntity, "info_zone_container")
+            if infoContainer then
+                local infoDef = createInfoZone()
+                if infoDef then
+                    ui.box.ReplaceChildren(infoContainer, infoDef)
+                    if ui.box.AddStateTagToUIBox then
+                        ui.box.AddStateTagToUIBox(registry, state.panelEntity, "default_state")
+                    end
+                    if ui.box.RenewAlignment then
+                        ui.box.RenewAlignment(registry, state.panelEntity)
+                    end
+                    state.lastInfoGod = currentGod
+                    state.lastInfoClass = currentClass
+                end
+            end
+        end
+    end
 
     local confirmEntity = ui.box.GetUIEByID(registry, state.panelEntity, "character_select_confirm_button")
     if confirmEntity then

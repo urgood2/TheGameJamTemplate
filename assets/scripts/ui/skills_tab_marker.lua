@@ -40,11 +40,13 @@ local component_cache = _G.component_cache or { get = function() return nil end 
 
 local UI = ui_scale and ui_scale.ui or function(x) return x end
 
+local PANEL_PADDING = UI(4) -- Matches skills_panel.lua PANEL_PADDING
+
 local CONFIG = {
-    -- Using inventory tab marker sprite scaled for side panel visibility
+    -- Match inventory tab marker sizing for consistent visuals
     sprite = "inventory-tab-marker",
     width = UI(48),
-    height = UI(48),  -- Square aspect for side-positioned tab (more visible)
+    height = UI(32),
     edge_offset = UI(0),      -- Distance from left edge when closed
     panel_overlap = UI(0),    -- Flush with panel edge when open
 }
@@ -75,7 +77,10 @@ local function getPanelYPosition()
         local w, h = SkillsPanel.getPanelDimensions()
         panelHeight = h or panelHeight
     end
-    local panelY = (screenHeight - panelHeight) / 2
+    local desiredY = (screenHeight - panelHeight) / 2
+    local minY = PANEL_PADDING
+    local maxY = math.max(minY, screenHeight - panelHeight - PANEL_PADDING)
+    local panelY = math.max(minY, math.min(maxY, desiredY))
     return panelY, panelHeight
 end
 
@@ -94,7 +99,7 @@ end
 --- @return number x, number y
 function SkillsTabMarker.getOpenPosition(panelWidth)
     local panelY, panelHeight = getPanelYPosition()
-    local panelX = UI(4)  -- Panel padding from left edge (matches skills_panel.lua)
+    local panelX = PANEL_PADDING  -- Panel padding from left edge (matches skills_panel.lua)
     -- Tab attaches to right edge of panel
     local x = panelX + panelWidth - CONFIG.panel_overlap
     local y = panelY

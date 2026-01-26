@@ -1044,8 +1044,8 @@ function SkillsPanel.refreshHeader()
 
     -- Update the header text entity if we have UI access
     if state.headerTextEntity and _G.registry and _G.registry.valid and _G.registry:valid(state.headerTextEntity) then
-        -- Try to update the text component
-        local textComp = component_cache.get(state.headerTextEntity, Text)
+        -- Try to update the text component (must use TextSystem.Text, not just Text)
+        local textComp = component_cache.get(state.headerTextEntity, TextSystem.Text)
         if textComp then
             textComp.text = displayText
         end

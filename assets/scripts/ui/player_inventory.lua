@@ -417,7 +417,33 @@ local function createGridDefinition(tabId)
         end,
 
         onSlotClick = function(gridEntity, slotIndex, button)
-            if button == 2 then
+            local leftButton = MouseButton and MouseButton.MOUSE_BUTTON_LEFT or 0
+            local rightButton = MouseButton and MouseButton.MOUSE_BUTTON_RIGHT or 1
+            
+            if button == leftButton and tabId == "equipment" then
+                local item = grid.getItemAtIndex(gridEntity, slotIndex)
+                if item and registry:valid(item) then
+                    local cardData = getCardData(item)
+                    if cardData and cardData.equipmentDef then
+                        local equipDef = cardData.equipmentDef
+                        local canEquip, reason = EquipmentPanel.canSlotAccept(equipDef.slot, equipDef)
+                        if canEquip then
+                            grid.removeItem(gridEntity, slotIndex)
+                            local success = EquipmentPanel.equipItem(item, equipDef)
+                            if success then
+                                updateSlotCount(gridEntity)
+                                if playSoundEffect then
+                                    playSoundEffect("effects", "button-click")
+                                end
+                            else
+                                grid.addItem(gridEntity, item, slotIndex)
+                            end
+                        else
+                            log_debug("[PlayerInventory] Cannot equip: " .. tostring(reason))
+                        end
+                    end
+                end
+            elseif button == rightButton then
                 local item = grid.getItemAtIndex(gridEntity, slotIndex)
                 if item and registry:valid(item) then
                     local isLocked = state.lockedCards[item]

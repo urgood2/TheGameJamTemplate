@@ -114,6 +114,47 @@ CharacterSelect.LAYOUT = {
 }
 
 --------------------------------------------------------------------------------
+-- VISUAL POLISH CONFIGURATION (CS-07)
+--------------------------------------------------------------------------------
+
+-- Particle aura configurations for selected gods
+CharacterSelect.AURA_PARTICLES = {
+    pyr = {
+        sprite = "fire_particles",
+        color = { 255, 120, 0 },  -- Orange/red
+        rate = 20,
+        lifetime = 0.8,
+    },
+    glah = {
+        sprite = "ice_particles",
+        color = { 100, 200, 255 },  -- Blue/cyan
+        rate = 15,
+        lifetime = 1.0,
+    },
+    vix = {
+        sprite = "spark_particles",
+        color = { 255, 255, 100 },  -- Yellow/white
+        rate = 25,
+        lifetime = 0.5,
+    },
+    ["nil"] = {
+        sprite = "void_particles",
+        color = { 128, 0, 255 },  -- Purple/black
+        rate = 12,
+        lifetime = 1.2,
+    },
+}
+
+-- Sound effect keys for UI events
+CharacterSelect.SOUNDS = {
+    HOVER = "ui_hover",              -- Portrait hover
+    SELECT = "ui_select",            -- Portrait/button select
+    CONFIRM_ENABLED = "ui_ready",    -- Confirm button becomes enabled
+    CONFIRM_PRESSED = "ui_confirm",  -- Confirm button pressed
+    RANDOM = "ui_shuffle",           -- Random button pressed
+}
+
+--------------------------------------------------------------------------------
 -- GOD DATA
 --------------------------------------------------------------------------------
 
@@ -213,6 +254,19 @@ CharacterSelect.CLASS_DATA = {
 }
 
 --------------------------------------------------------------------------------
+-- FOCUS SECTIONS
+--------------------------------------------------------------------------------
+
+CharacterSelect.FOCUS_SECTIONS = {
+    GODS = 1,
+    CLASSES = 2,
+    BUTTONS = 3,
+}
+
+-- Button order for focus navigation
+local BUTTON_ORDER = { "random", "confirm" }
+
+--------------------------------------------------------------------------------
 -- STATE
 --------------------------------------------------------------------------------
 
@@ -224,6 +278,10 @@ local state = {
     -- Selection state
     selectedGod = nil,
     selectedClass = nil,
+
+    -- Focus state
+    focusSection = 1,  -- GODS by default
+    focusIndex = 1,    -- First item in section
 
     -- Persistence
     lastGod = nil,
@@ -287,6 +345,8 @@ function CharacterSelect.destroy()
     state.panelEntity = nil
     state.selectedGod = nil
     state.selectedClass = nil
+    state.focusSection = 1
+    state.focusIndex = 1
     state.onConfirm = nil
 end
 
@@ -472,6 +532,169 @@ function CharacterSelect.applyLastSelection()
             state.selectedClass = state.lastClass
         end
     end
+end
+
+--------------------------------------------------------------------------------
+-- FOCUS MANAGEMENT API
+--------------------------------------------------------------------------------
+
+-- Order arrays for focus navigation (must match UI scaffold order)
+local FOCUS_GOD_ORDER = { "pyr", "glah", "vix", "nil", "locked_god_1", "locked_god_2" }
+local FOCUS_CLASS_ORDER = { "channeler", "seer", "locked_class_1" }
+local FOCUS_BUTTON_ORDER = { "random", "confirm" }
+
+-- Get section size for wrapping
+local function getSectionSize(section)
+    if section == CharacterSelect.FOCUS_SECTIONS.GODS then
+        return #FOCUS_GOD_ORDER
+    elseif section == CharacterSelect.FOCUS_SECTIONS.CLASSES then
+        return #FOCUS_CLASS_ORDER
+    elseif section == CharacterSelect.FOCUS_SECTIONS.BUTTONS then
+        return #FOCUS_BUTTON_ORDER
+    end
+    return 1
+end
+
+--- Get current focus section
+--- @return number Section ID (1=GODS, 2=CLASSES, 3=BUTTONS)
+function CharacterSelect.getFocusSection()
+    return state.focusSection
+end
+
+--- Get current focus index within section
+--- @return number 1-based index
+function CharacterSelect.getFocusIndex()
+    return state.focusIndex
+end
+
+--- Set focus to a specific section and index
+--- @param section number Section ID
+--- @param index number 1-based index
+function CharacterSelect.setFocus(section, index)
+    state.focusSection = section
+    state.focusIndex = index
+    emit("character_select_focus_changed", section, index)
+end
+
+--- Move focus right within current section (with wrap)
+function CharacterSelect.moveFocusRight()
+    local size = getSectionSize(state.focusSection)
+    state.focusIndex = state.focusIndex + 1
+    if state.focusIndex > size then
+        state.focusIndex = 1
+    end
+    emit("character_select_focus_changed", state.focusSection, state.focusIndex)
+end
+
+--- Move focus left within current section (with wrap)
+function CharacterSelect.moveFocusLeft()
+    local size = getSectionSize(state.focusSection)
+    state.focusIndex = state.focusIndex - 1
+    if state.focusIndex < 1 then
+        state.focusIndex = size
+    end
+    emit("character_select_focus_changed", state.focusSection, state.focusIndex)
+end
+
+--- Move to next focus section (Tab key)
+function CharacterSelect.nextFocusSection()
+    state.focusSection = state.focusSection + 1
+    if state.focusSection > 3 then
+        state.focusSection = 1
+    end
+    state.focusIndex = 1  -- Reset to first item in new section
+    emit("character_select_focus_changed", state.focusSection, state.focusIndex)
+end
+
+--- Move to previous focus section (Shift+Tab)
+function CharacterSelect.prevFocusSection()
+    state.focusSection = state.focusSection - 1
+    if state.focusSection < 1 then
+        state.focusSection = 3
+    end
+    state.focusIndex = 1  -- Reset to first item in new section
+    emit("character_select_focus_changed", state.focusSection, state.focusIndex)
+end
+
+--- Get the ID of the currently focused item
+--- @return string|nil The god/class/button ID or nil
+function CharacterSelect.getFocusedItemId()
+    if state.focusSection == CharacterSelect.FOCUS_SECTIONS.GODS then
+        return FOCUS_GOD_ORDER[state.focusIndex]
+    elseif state.focusSection == CharacterSelect.FOCUS_SECTIONS.CLASSES then
+        return FOCUS_CLASS_ORDER[state.focusIndex]
+    elseif state.focusSection == CharacterSelect.FOCUS_SECTIONS.BUTTONS then
+        return FOCUS_BUTTON_ORDER[state.focusIndex]
+    end
+    return nil
+end
+
+--- Activate the currently focused item (Enter/Space key)
+function CharacterSelect.activateFocus()
+    local itemId = CharacterSelect.getFocusedItemId()
+    if not itemId then return end
+
+    if state.focusSection == CharacterSelect.FOCUS_SECTIONS.GODS then
+        -- Try to select the god (will fail silently if locked)
+        CharacterSelect.selectGod(itemId)
+    elseif state.focusSection == CharacterSelect.FOCUS_SECTIONS.CLASSES then
+        -- Try to select the class (will fail silently if locked)
+        CharacterSelect.selectClass(itemId)
+    elseif state.focusSection == CharacterSelect.FOCUS_SECTIONS.BUTTONS then
+        if itemId == "random" then
+            CharacterSelect.randomize()
+        elseif itemId == "confirm" then
+            CharacterSelect.confirm()
+        end
+    end
+end
+
+--------------------------------------------------------------------------------
+-- VISUAL STATE HELPERS (CS-07)
+--------------------------------------------------------------------------------
+
+--- Check if a specific item is currently focused
+--- @param id string The item ID (god/class/button name)
+--- @param itemType string The item type: "god", "class", or "button"
+--- @return boolean True if this item is currently focused
+function CharacterSelect.isItemFocused(id, itemType)
+    -- Map itemType to section constant
+    local expectedSection
+    local orderArray
+    if itemType == "god" then
+        expectedSection = CharacterSelect.FOCUS_SECTIONS.GODS
+        orderArray = FOCUS_GOD_ORDER
+    elseif itemType == "class" then
+        expectedSection = CharacterSelect.FOCUS_SECTIONS.CLASSES
+        orderArray = FOCUS_CLASS_ORDER
+    elseif itemType == "button" then
+        expectedSection = CharacterSelect.FOCUS_SECTIONS.BUTTONS
+        orderArray = FOCUS_BUTTON_ORDER
+    else
+        return false
+    end
+
+    -- Check if we're in the right section
+    if state.focusSection ~= expectedSection then
+        return false
+    end
+
+    -- Check if the focused item matches the given ID
+    local focusedId = orderArray[state.focusIndex]
+    return focusedId == id
+end
+
+--- Check if a specific item is currently selected
+--- @param id string The item ID (god/class name)
+--- @param itemType string The item type: "god" or "class"
+--- @return boolean True if this item is currently selected
+function CharacterSelect.isItemSelected(id, itemType)
+    if itemType == "god" then
+        return state.selectedGod == id
+    elseif itemType == "class" then
+        return state.selectedClass == id
+    end
+    return false
 end
 
 --------------------------------------------------------------------------------

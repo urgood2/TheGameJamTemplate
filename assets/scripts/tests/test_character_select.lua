@@ -525,6 +525,362 @@ describe("CS-01: UI Scaffold Functions", function()
 end)
 
 --------------------------------------------------------------------------------
+-- CS-05: Focus Management
+--------------------------------------------------------------------------------
+
+describe("CS-05: Focus State API", function()
+    it("has getFocusSection() method", function()
+        local CharacterSelect = require("ui.character_select")
+        expect(CharacterSelect.getFocusSection).to_be_type("function")
+    end)
+
+    it("has getFocusIndex() method", function()
+        local CharacterSelect = require("ui.character_select")
+        expect(CharacterSelect.getFocusIndex).to_be_type("function")
+    end)
+
+    it("has setFocus() method", function()
+        local CharacterSelect = require("ui.character_select")
+        expect(CharacterSelect.setFocus).to_be_type("function")
+    end)
+
+    it("has FOCUS_SECTIONS constant", function()
+        local CharacterSelect = require("ui.character_select")
+        expect(CharacterSelect.FOCUS_SECTIONS).never().to_be_nil()
+        expect(CharacterSelect.FOCUS_SECTIONS.GODS).to_be(1)
+        expect(CharacterSelect.FOCUS_SECTIONS.CLASSES).to_be(2)
+        expect(CharacterSelect.FOCUS_SECTIONS.BUTTONS).to_be(3)
+    end)
+end)
+
+describe("CS-05: Arrow Key Navigation", function()
+    it("has moveFocusLeft() method", function()
+        local CharacterSelect = require("ui.character_select")
+        expect(CharacterSelect.moveFocusLeft).to_be_type("function")
+    end)
+
+    it("has moveFocusRight() method", function()
+        local CharacterSelect = require("ui.character_select")
+        expect(CharacterSelect.moveFocusRight).to_be_type("function")
+    end)
+
+    it("moveFocusRight increments index", function()
+        local CharacterSelect = require("ui.character_select")
+        CharacterSelect.destroy()
+        CharacterSelect.setFocus(CharacterSelect.FOCUS_SECTIONS.GODS, 1)
+        CharacterSelect.moveFocusRight()
+        expect(CharacterSelect.getFocusIndex()).to_be(2)
+    end)
+
+    it("moveFocusLeft decrements index", function()
+        local CharacterSelect = require("ui.character_select")
+        CharacterSelect.destroy()
+        CharacterSelect.setFocus(CharacterSelect.FOCUS_SECTIONS.GODS, 3)
+        CharacterSelect.moveFocusLeft()
+        expect(CharacterSelect.getFocusIndex()).to_be(2)
+    end)
+
+    it("moveFocusRight wraps at end of gods row", function()
+        local CharacterSelect = require("ui.character_select")
+        CharacterSelect.destroy()
+        -- Gods row has 6 slots (index 1-6)
+        CharacterSelect.setFocus(CharacterSelect.FOCUS_SECTIONS.GODS, 6)
+        CharacterSelect.moveFocusRight()
+        expect(CharacterSelect.getFocusIndex()).to_be(1)
+    end)
+
+    it("moveFocusLeft wraps at start of gods row", function()
+        local CharacterSelect = require("ui.character_select")
+        CharacterSelect.destroy()
+        CharacterSelect.setFocus(CharacterSelect.FOCUS_SECTIONS.GODS, 1)
+        CharacterSelect.moveFocusLeft()
+        expect(CharacterSelect.getFocusIndex()).to_be(6)
+    end)
+
+    it("moveFocusRight wraps at end of classes row", function()
+        local CharacterSelect = require("ui.character_select")
+        CharacterSelect.destroy()
+        -- Classes row has 3 slots (index 1-3)
+        CharacterSelect.setFocus(CharacterSelect.FOCUS_SECTIONS.CLASSES, 3)
+        CharacterSelect.moveFocusRight()
+        expect(CharacterSelect.getFocusIndex()).to_be(1)
+    end)
+
+    it("moveFocusRight wraps at end of buttons row", function()
+        local CharacterSelect = require("ui.character_select")
+        CharacterSelect.destroy()
+        -- Buttons row has 2 slots (index 1-2)
+        CharacterSelect.setFocus(CharacterSelect.FOCUS_SECTIONS.BUTTONS, 2)
+        CharacterSelect.moveFocusRight()
+        expect(CharacterSelect.getFocusIndex()).to_be(1)
+    end)
+end)
+
+describe("CS-05: Tab Navigation", function()
+    it("has nextFocusSection() method", function()
+        local CharacterSelect = require("ui.character_select")
+        expect(CharacterSelect.nextFocusSection).to_be_type("function")
+    end)
+
+    it("has prevFocusSection() method", function()
+        local CharacterSelect = require("ui.character_select")
+        expect(CharacterSelect.prevFocusSection).to_be_type("function")
+    end)
+
+    it("nextFocusSection cycles Gods -> Classes -> Buttons -> Gods", function()
+        local CharacterSelect = require("ui.character_select")
+        CharacterSelect.destroy()
+        CharacterSelect.setFocus(CharacterSelect.FOCUS_SECTIONS.GODS, 1)
+        expect(CharacterSelect.getFocusSection()).to_be(CharacterSelect.FOCUS_SECTIONS.GODS)
+
+        CharacterSelect.nextFocusSection()
+        expect(CharacterSelect.getFocusSection()).to_be(CharacterSelect.FOCUS_SECTIONS.CLASSES)
+
+        CharacterSelect.nextFocusSection()
+        expect(CharacterSelect.getFocusSection()).to_be(CharacterSelect.FOCUS_SECTIONS.BUTTONS)
+
+        CharacterSelect.nextFocusSection()
+        expect(CharacterSelect.getFocusSection()).to_be(CharacterSelect.FOCUS_SECTIONS.GODS)
+    end)
+
+    it("prevFocusSection cycles backwards", function()
+        local CharacterSelect = require("ui.character_select")
+        CharacterSelect.destroy()
+        CharacterSelect.setFocus(CharacterSelect.FOCUS_SECTIONS.GODS, 1)
+
+        CharacterSelect.prevFocusSection()
+        expect(CharacterSelect.getFocusSection()).to_be(CharacterSelect.FOCUS_SECTIONS.BUTTONS)
+    end)
+
+    it("section change resets index to 1", function()
+        local CharacterSelect = require("ui.character_select")
+        CharacterSelect.destroy()
+        CharacterSelect.setFocus(CharacterSelect.FOCUS_SECTIONS.GODS, 4)
+        CharacterSelect.nextFocusSection()
+        expect(CharacterSelect.getFocusIndex()).to_be(1)
+    end)
+end)
+
+describe("CS-05: Activate Focus", function()
+    it("has activateFocus() method", function()
+        local CharacterSelect = require("ui.character_select")
+        expect(CharacterSelect.activateFocus).to_be_type("function")
+    end)
+
+    it("activateFocus on god selects that god", function()
+        local CharacterSelect = require("ui.character_select")
+        CharacterSelect.destroy()
+        -- Focus on first god (pyr is index 1 in GOD_ORDER)
+        CharacterSelect.setFocus(CharacterSelect.FOCUS_SECTIONS.GODS, 1)
+        CharacterSelect.activateFocus()
+        expect(CharacterSelect.getSelectedGod()).to_be("pyr")
+    end)
+
+    it("activateFocus on class selects that class", function()
+        local CharacterSelect = require("ui.character_select")
+        CharacterSelect.destroy()
+        -- Focus on first class (channeler is index 1 in CLASS_ORDER)
+        CharacterSelect.setFocus(CharacterSelect.FOCUS_SECTIONS.CLASSES, 1)
+        CharacterSelect.activateFocus()
+        expect(CharacterSelect.getSelectedClass()).to_be("channeler")
+    end)
+
+    it("activateFocus on locked god does nothing", function()
+        local CharacterSelect = require("ui.character_select")
+        CharacterSelect.destroy()
+        CharacterSelect.selectGod("pyr")
+        -- Focus on locked god (index 5 = locked_god_1)
+        CharacterSelect.setFocus(CharacterSelect.FOCUS_SECTIONS.GODS, 5)
+        CharacterSelect.activateFocus()
+        -- Should still be pyr
+        expect(CharacterSelect.getSelectedGod()).to_be("pyr")
+    end)
+
+    it("activateFocus on Random button triggers randomize", function()
+        local CharacterSelect = require("ui.character_select")
+        CharacterSelect.destroy()
+        -- Focus on Random button (index 1 in buttons)
+        CharacterSelect.setFocus(CharacterSelect.FOCUS_SECTIONS.BUTTONS, 1)
+        CharacterSelect.activateFocus()
+        -- Should have selected both
+        expect(CharacterSelect.getSelectedGod()).never().to_be_nil()
+        expect(CharacterSelect.getSelectedClass()).never().to_be_nil()
+    end)
+
+    it("activateFocus on Confirm button triggers confirm when enabled", function()
+        local CharacterSelect = require("ui.character_select")
+        CharacterSelect.destroy()
+        CharacterSelect.selectGod("pyr")
+        CharacterSelect.selectClass("channeler")
+
+        local confirmed = false
+        CharacterSelect.setOnConfirm(function() confirmed = true end)
+
+        -- Focus on Confirm button (index 2 in buttons)
+        CharacterSelect.setFocus(CharacterSelect.FOCUS_SECTIONS.BUTTONS, 2)
+        CharacterSelect.activateFocus()
+
+        expect(confirmed).to_be(true)
+    end)
+
+    it("activateFocus on Confirm button does nothing when disabled", function()
+        local CharacterSelect = require("ui.character_select")
+        CharacterSelect.destroy()
+        -- No selection made
+
+        local confirmed = false
+        CharacterSelect.setOnConfirm(function() confirmed = true end)
+
+        -- Focus on Confirm button (index 2 in buttons)
+        CharacterSelect.setFocus(CharacterSelect.FOCUS_SECTIONS.BUTTONS, 2)
+        CharacterSelect.activateFocus()
+
+        expect(confirmed).to_be(false)
+    end)
+end)
+
+describe("CS-05: Focused Item Helpers", function()
+    it("has getFocusedItemId() method", function()
+        local CharacterSelect = require("ui.character_select")
+        expect(CharacterSelect.getFocusedItemId).to_be_type("function")
+    end)
+
+    it("getFocusedItemId returns god id when focused on gods", function()
+        local CharacterSelect = require("ui.character_select")
+        CharacterSelect.destroy()
+        CharacterSelect.setFocus(CharacterSelect.FOCUS_SECTIONS.GODS, 2)
+        expect(CharacterSelect.getFocusedItemId()).to_be("glah")
+    end)
+
+    it("getFocusedItemId returns class id when focused on classes", function()
+        local CharacterSelect = require("ui.character_select")
+        CharacterSelect.destroy()
+        CharacterSelect.setFocus(CharacterSelect.FOCUS_SECTIONS.CLASSES, 2)
+        expect(CharacterSelect.getFocusedItemId()).to_be("seer")
+    end)
+
+    it("getFocusedItemId returns button name when focused on buttons", function()
+        local CharacterSelect = require("ui.character_select")
+        CharacterSelect.destroy()
+        CharacterSelect.setFocus(CharacterSelect.FOCUS_SECTIONS.BUTTONS, 1)
+        expect(CharacterSelect.getFocusedItemId()).to_be("random")
+
+        CharacterSelect.setFocus(CharacterSelect.FOCUS_SECTIONS.BUTTONS, 2)
+        expect(CharacterSelect.getFocusedItemId()).to_be("confirm")
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- CS-07: Visual Polish Configuration
+--------------------------------------------------------------------------------
+
+describe("CS-07: Aura Particle Configuration", function()
+    it("has AURA_PARTICLES constant", function()
+        local CharacterSelect = require("ui.character_select")
+        expect(CharacterSelect.AURA_PARTICLES).never().to_be_nil()
+    end)
+
+    it("AURA_PARTICLES has config for each unlocked god", function()
+        local CharacterSelect = require("ui.character_select")
+        expect(CharacterSelect.AURA_PARTICLES.pyr).never().to_be_nil()
+        expect(CharacterSelect.AURA_PARTICLES.glah).never().to_be_nil()
+        expect(CharacterSelect.AURA_PARTICLES.vix).never().to_be_nil()
+        expect(CharacterSelect.AURA_PARTICLES["nil"]).never().to_be_nil()
+    end)
+
+    it("aura config has sprite and color", function()
+        local CharacterSelect = require("ui.character_select")
+        local pyrAura = CharacterSelect.AURA_PARTICLES.pyr
+        expect(pyrAura.sprite).never().to_be_nil()
+        expect(pyrAura.color).never().to_be_nil()
+    end)
+end)
+
+describe("CS-07: Sound Effect Keys", function()
+    it("has SOUNDS constant", function()
+        local CharacterSelect = require("ui.character_select")
+        expect(CharacterSelect.SOUNDS).never().to_be_nil()
+    end)
+
+    it("SOUNDS has hover key", function()
+        local CharacterSelect = require("ui.character_select")
+        expect(CharacterSelect.SOUNDS.HOVER).never().to_be_nil()
+    end)
+
+    it("SOUNDS has select key", function()
+        local CharacterSelect = require("ui.character_select")
+        expect(CharacterSelect.SOUNDS.SELECT).never().to_be_nil()
+    end)
+
+    it("SOUNDS has confirm_enabled key", function()
+        local CharacterSelect = require("ui.character_select")
+        expect(CharacterSelect.SOUNDS.CONFIRM_ENABLED).never().to_be_nil()
+    end)
+
+    it("SOUNDS has confirm_pressed key", function()
+        local CharacterSelect = require("ui.character_select")
+        expect(CharacterSelect.SOUNDS.CONFIRM_PRESSED).never().to_be_nil()
+    end)
+
+    it("SOUNDS has random key", function()
+        local CharacterSelect = require("ui.character_select")
+        expect(CharacterSelect.SOUNDS.RANDOM).never().to_be_nil()
+    end)
+end)
+
+describe("CS-07: Visual State Helpers", function()
+    it("has isItemFocused() method", function()
+        local CharacterSelect = require("ui.character_select")
+        expect(CharacterSelect.isItemFocused).to_be_type("function")
+    end)
+
+    it("isItemFocused returns true for focused god", function()
+        local CharacterSelect = require("ui.character_select")
+        CharacterSelect.destroy()
+        CharacterSelect.setFocus(CharacterSelect.FOCUS_SECTIONS.GODS, 2)
+        expect(CharacterSelect.isItemFocused("glah", "god")).to_be(true)
+        expect(CharacterSelect.isItemFocused("pyr", "god")).to_be(false)
+    end)
+
+    it("isItemFocused returns true for focused class", function()
+        local CharacterSelect = require("ui.character_select")
+        CharacterSelect.destroy()
+        CharacterSelect.setFocus(CharacterSelect.FOCUS_SECTIONS.CLASSES, 1)
+        expect(CharacterSelect.isItemFocused("channeler", "class")).to_be(true)
+        expect(CharacterSelect.isItemFocused("seer", "class")).to_be(false)
+    end)
+
+    it("isItemFocused returns true for focused button", function()
+        local CharacterSelect = require("ui.character_select")
+        CharacterSelect.destroy()
+        CharacterSelect.setFocus(CharacterSelect.FOCUS_SECTIONS.BUTTONS, 2)
+        expect(CharacterSelect.isItemFocused("confirm", "button")).to_be(true)
+        expect(CharacterSelect.isItemFocused("random", "button")).to_be(false)
+    end)
+
+    it("has isItemSelected() method", function()
+        local CharacterSelect = require("ui.character_select")
+        expect(CharacterSelect.isItemSelected).to_be_type("function")
+    end)
+
+    it("isItemSelected returns true for selected god", function()
+        local CharacterSelect = require("ui.character_select")
+        CharacterSelect.destroy()
+        CharacterSelect.selectGod("vix")
+        expect(CharacterSelect.isItemSelected("vix", "god")).to_be(true)
+        expect(CharacterSelect.isItemSelected("pyr", "god")).to_be(false)
+    end)
+
+    it("isItemSelected returns true for selected class", function()
+        local CharacterSelect = require("ui.character_select")
+        CharacterSelect.destroy()
+        CharacterSelect.selectClass("seer")
+        expect(CharacterSelect.isItemSelected("seer", "class")).to_be(true)
+        expect(CharacterSelect.isItemSelected("channeler", "class")).to_be(false)
+    end)
+end)
+
+--------------------------------------------------------------------------------
 -- Run Tests
 --------------------------------------------------------------------------------
 

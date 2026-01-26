@@ -42,6 +42,7 @@ local ui_scale = require("ui.ui_scale")
 -- This ensures world-space planning cards render above the inventory grid
 local CardUIPolicy = require("ui.card_ui_policy")
 local EquipmentPanel = require("ui.equipment_panel")
+local DemoEquipment = require("data.demo_equipment")
 
 local TIMER_GROUP = "player_inventory"
 local PANEL_ID = "player_inventory_panel"
@@ -1642,6 +1643,44 @@ function PlayerInventory.spawnDummyCards()
     log_debug("[PlayerInventory] Spawned " .. #cards .. " dummy cards")
 end
 
+function PlayerInventory.spawnStarterEquipment()
+    if not state.initialized then
+        initializeInventory()
+    end
+    
+    if not state.activeGrid then
+        state.activeGrid = injectGridForTab(state.activeTab)
+        if state.activeGrid then
+            state.grids[state.activeTab] = state.activeGrid
+            restoreGridItems(state.activeTab, state.activeGrid)
+        end
+    end
+    
+    local starterItems = DemoEquipment.getStarterEquipment()
+    
+    local activeGrid = state.activeGrid
+    for _, equipDef in ipairs(starterItems) do
+        local entity = createEquipmentCard(equipDef)
+        if entity then
+            local cardData = {
+                id = equipDef.id,
+                name = equipDef.name,
+                slot = equipDef.slot,
+                category = "equipment",
+                equipmentDef = equipDef,
+            }
+            local success = PlayerInventory.addCard(entity, "equipment", cardData)
+            if success then
+                log_debug("[PlayerInventory] Added starter equipment: " .. equipDef.name)
+            else
+                log_warn("[PlayerInventory] Failed to add starter equipment: " .. equipDef.name)
+            end
+        end
+    end
+    
+    log_debug("[PlayerInventory] Spawned " .. #starterItems .. " starter equipment items")
+end
+
 -- Setup input handler via signal after game systems are ready
 -- Guarded to prevent handler accumulation on game restart
 if not state.gameStateHandlerRegistered then
@@ -1652,6 +1691,11 @@ if not state.gameStateHandlerRegistered then
         end
         if data.current == "PLANNING" and not state.initialized then
             initializeInventory()
+            -- Spawn starter equipment on first PLANNING state entry, guarded against duplicates
+            if not state.starterEquipmentSpawned then
+                state.starterEquipmentSpawned = true
+                PlayerInventory.spawnStarterEquipment()
+            end
         end
         if data.current == "PLANNING" or data.current == "ACTION" then
             setupInputHandler()

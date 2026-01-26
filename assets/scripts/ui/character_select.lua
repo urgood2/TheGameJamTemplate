@@ -263,8 +263,8 @@ CharacterSelect.FOCUS_SECTIONS = {
     BUTTONS = 3,
 }
 
--- Button order for focus navigation
-local BUTTON_ORDER = { "random", "confirm" }
+-- Number of focus sections (for bounds checking)
+local NUM_FOCUS_SECTIONS = 3
 
 --------------------------------------------------------------------------------
 -- STATE
@@ -626,6 +626,12 @@ end
 --- @param section number Section ID
 --- @param index number 1-based index
 function CharacterSelect.setFocus(section, index)
+    -- Bounds check: section must be 1-3
+    if section < 1 or section > NUM_FOCUS_SECTIONS then return end
+    -- Bounds check: index must be within section size
+    local maxIndex = getSectionSize(section)
+    if index < 1 or index > maxIndex then return end
+
     state.focusSection = section
     state.focusIndex = index
     emit("character_select_focus_changed", section, index)
@@ -654,7 +660,7 @@ end
 --- Move to next focus section (Tab key)
 function CharacterSelect.nextFocusSection()
     state.focusSection = state.focusSection + 1
-    if state.focusSection > 3 then
+    if state.focusSection > NUM_FOCUS_SECTIONS then
         state.focusSection = 1
     end
     state.focusIndex = 1  -- Reset to first item in new section
@@ -665,7 +671,7 @@ end
 function CharacterSelect.prevFocusSection()
     state.focusSection = state.focusSection - 1
     if state.focusSection < 1 then
-        state.focusSection = 3
+        state.focusSection = NUM_FOCUS_SECTIONS
     end
     state.focusIndex = 1  -- Reset to first item in new section
     emit("character_select_focus_changed", state.focusSection, state.focusIndex)

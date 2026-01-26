@@ -220,6 +220,7 @@ function initMainMenu()
     createLanguageCornerButton()   -- bottom-right
     createTabDemo()
     createInventoryTestButton()
+    createGOAPDemoButton()
 
     log_debug("[initMainMenu] Main menu initialized with minimalist UI")
 end
@@ -281,6 +282,53 @@ function createInventoryTestButton()
                 end
             end,
             tag = "auto_open_test_inventory"
+        })
+    end
+end
+
+function createGOAPDemoButton()
+    local dsl = require("ui.ui_syntax_sugar")
+    local GOAPDemo = require("demos.goap_ai_demo")
+
+    local buttonDef = dsl.strict.root {
+        config = {
+            color = util.getColor("cyan"),
+            padding = 8,
+            emboss = 3,
+        },
+        children = {
+            dsl.strict.button("GOAP AI Demo", {
+                fontSize = 14,
+                color = "transparent",
+                textColor = "white",
+                shadow = true,
+                onClick = function()
+                    log_debug("[GOAP Demo] Button clicked!")
+                    if playSoundEffect then playSoundEffect("effects", "button-click") end
+                    GOAPDemo.toggle()
+                end
+            })
+        }
+    }
+
+    mainMenuEntities.goap_demo_button = dsl.spawn(
+        { x = 240, y = globals.screenHeight() - 60 },
+        buttonDef,
+        "ui",
+        100
+    )
+    ui.box.set_draw_layer(mainMenuEntities.goap_demo_button, "ui")
+    log_debug("[TRACE] GOAP AI Demo button created")
+
+    -- Auto-start demo if environment variable is set
+    if os.getenv and os.getenv("AUTO_GOAP_DEMO") == "1" then
+        local timer = require("core.timer")
+        timer.after_opts({
+            delay = 0.5,
+            action = function()
+                GOAPDemo.start()
+            end,
+            tag = "auto_start_goap_demo"
         })
     end
 end
@@ -804,6 +852,19 @@ function clearMainMenu()
         mainMenuEntities.patch_notes_button = nil
     end
     PatchNotesModal.destroy()
+    -- Clean up GOAP demo if running
+    local ok, GOAPDemo = pcall(require, "demos.goap_ai_demo")
+    if ok and GOAPDemo and GOAPDemo.isActive and GOAPDemo.isActive() then
+        GOAPDemo.stop()
+    end
+    if mainMenuEntities.goap_demo_button and ui.box and ui.box.Remove then
+        ui.box.Remove(registry, mainMenuEntities.goap_demo_button)
+        mainMenuEntities.goap_demo_button = nil
+    end
+    if mainMenuEntities.inventory_test_button and ui.box and ui.box.Remove then
+        ui.box.Remove(registry, mainMenuEntities.inventory_test_button)
+        mainMenuEntities.inventory_test_button = nil
+    end
     -- Clean up gallery viewer if open
     local GalleryViewer = require("ui.showcase.gallery_viewer")
     GalleryViewer.destroyGlobal()

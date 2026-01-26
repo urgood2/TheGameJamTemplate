@@ -74,6 +74,58 @@ ai.goals  = ai.goals  or {
       ai.set_goal(e, { wander = true })
     end
   },
+
+  -- ============================================================================
+  -- DEMO BOT GOALS - For GOAP AI System Demo
+  -- ============================================================================
+
+  -- COMBAT band: Highest priority - respond to threats
+  DEMO_ALERT = {
+    band    = "COMBAT",
+    persist = 0.15, -- Strong hysteresis to complete alert
+    desire  = function(e, S)
+      return ai.get_worldstate(e, "threat_detected") and 1.0 or 0.0
+    end,
+    on_apply = function(e)
+      ai.set_goal(e, { threat_detected = false, alert_complete = true })
+    end
+  },
+
+  -- SURVIVAL band: Rest when tired
+  DEMO_REST = {
+    band    = "SURVIVAL",
+    persist = 0.1,
+    desire  = function(e, S)
+      return ai.get_worldstate(e, "tired") and 0.9 or 0.0
+    end,
+    on_apply = function(e)
+      ai.set_goal(e, { tired = false, rested = true })
+    end
+  },
+
+  -- WORK band: Patrol duty
+  DEMO_PATROL = {
+    band    = "WORK",
+    persist = 0.08,
+    desire  = function(e, S)
+      -- Want to patrol if not currently patrolling
+      local patrolling = ai.get_worldstate(e, "patrolling")
+      return (not patrolling) and 0.7 or 0.0
+    end,
+    on_apply = function(e)
+      ai.set_goal(e, { patrolling = true })
+    end
+  },
+
+  -- IDLE band: Fallback when nothing else to do
+  DEMO_IDLE = {
+    band    = "IDLE",
+    persist = 0.05,
+    desire  = function(e, S) return 0.2 end, -- Always slightly desires idle
+    on_apply = function(e)
+      ai.set_goal(e, { idle = true })
+    end
+  },
 }
 
 -- Default per-type selector → uses the generic selector and the shared goals/policy

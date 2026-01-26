@@ -61,24 +61,26 @@ static int idx_for_actionname( actionplanner_t* ap, const char* actionname )
 /*
  * @brief Clears the action planner by resetting atom and action counts and data.
  * This function resets the action planner's atoms, actions, and world states.
+ * IMPORTANT: This function properly handles uninitialized memory by clearing
+ * ALL array entries, not just 0..numatoms/numactions (which may be garbage).
  */
 void goap_actionplanner_clear( actionplanner_t* ap )
 {
-    // Free all atom names
-    for (int i = 0; i < ap->numatoms; ++i) {
+    // Clear ALL atom names (not just 0..numatoms, which may be garbage on first init)
+    for (int i = 0; i < MAXATOMS; ++i) {
         if (ap->atm_names[i]) {
             free(ap->atm_names[i]);
-            ap->atm_names[i] = NULL;
         }
+        ap->atm_names[i] = NULL;
     }
     ap->numatoms = 0;   // Reset the number of atoms
 
-    // Free all action names and clear state
-    for (int i = 0; i < ap->numactions; ++i) {
+    // Clear ALL action names and state (not just 0..numactions)
+    for (int i = 0; i < MAXACTIONS; ++i) {
         if (ap->act_names[i]) {
             free(ap->act_names[i]);
-            ap->act_names[i] = NULL;
         }
+        ap->act_names[i] = NULL;
         ap->act_costs[i] = 0;      // Reset all action costs
         goap_worldstate_clear(ap->act_pre + i); // Clear preconditions for the action
         goap_worldstate_clear(ap->act_pst + i); // Clear postconditions for the action

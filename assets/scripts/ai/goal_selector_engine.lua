@@ -1,6 +1,6 @@
 -- scripts/ai/selector.lua
 -- Minimal goal selector: desire + hysteresis (persist) + band arbitration
--- Uses your global blackboard helpers (getBlackboard*/setBlackboard*).
+-- Uses ai.get_blackboard(e) to access the Blackboard usertype methods.
 
 local M = {}
 

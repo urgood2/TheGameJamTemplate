@@ -133,7 +133,7 @@ int astar_plan
 
 	do
 	{
-		if ( numOpened == 0 ) { LOGI( "Did not find a path." ); return -1; }
+		if ( numOpened == 0 ) { LOGI( "Did not find a path." ); *plansize = 0; return -1; }
 		// find the node with lowest rank
 		int lowestIdx=-1;
 		int lowestVal=INT_MAX;
@@ -162,7 +162,7 @@ int astar_plan
 		}
 		// add it to closed
 		closed[ numClosed++ ] = cur;
-		if ( numClosed == MAXCLOS ) { LOGI("Closed set overflow"); return -1; } // ran out of storage for closed set
+		if ( numClosed == MAXCLOS ) { LOGI("Closed set overflow"); *plansize = 0; return -1; } // ran out of storage for closed set
 		// iterate over neighbours
 		const char* actionnames[ MAXACTIONS ];
 		int actioncosts[ MAXACTIONS ];
@@ -202,7 +202,7 @@ int astar_plan
 				nb.parentws = cur.ws;
 				opened[ numOpened++ ] = nb;
 			}
-			if ( numOpened == MAXOPEN ) { LOGI("Opened set overflow"); return -1; } // ran out of storage for opened set
+			if ( numOpened == MAXOPEN ) { LOGI("Opened set overflow"); *plansize = 0; return -1; } // ran out of storage for opened set
 		}
 	} while( true );
 

@@ -10,6 +10,7 @@
 #include "sol/sol.hpp"
 
 #include <string>
+#include <cstring>
 #include <vector>
 #include <map>
 #include <functional>
@@ -75,6 +76,20 @@ struct GOAPComponent
 {
     GOAPComponent()
     {
+        // Zero-initialize POD members before calling goap_actionplanner_clear
+        // This ensures all pointers in ap are NULL, preventing UB when free() is called
+        std::memset(&ap, 0, sizeof(ap));
+        std::memset(&cached_current_state, 0, sizeof(cached_current_state));
+        std::memset(&current_state, 0, sizeof(current_state));
+        std::memset(&goal, 0, sizeof(goal));
+        std::memset(&plan_start_state, 0, sizeof(plan_start_state));
+        std::memset(plan, 0, sizeof(plan));
+        std::memset(states, 0, sizeof(states));
+        planSize = 0;
+        planCost = 0;
+        current_action = 0;
+        retries = 0;
+
         goap_actionplanner_clear(&ap);
     }
 

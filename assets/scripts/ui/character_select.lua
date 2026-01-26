@@ -90,6 +90,42 @@ local function UI(value)
     return value
 end
 
+local function wrapTextToWidth(text, maxWidth, fontSize)
+    if not text or text == "" then return "" end
+    if not localization or not localization.getTextWidthWithCurrentFont then
+        return text
+    end
+    if not maxWidth or maxWidth <= 0 then
+        return text
+    end
+
+    local spaceWidth = localization.getTextWidthWithCurrentFont(" ", fontSize, 1)
+    local lines = {}
+    local current = ""
+    local currentWidth = 0
+
+    for word in text:gmatch("%S+") do
+        local w = localization.getTextWidthWithCurrentFont(word, fontSize, 1)
+        if current == "" then
+            current = word
+            currentWidth = w
+        elseif currentWidth + spaceWidth + w <= maxWidth then
+            current = current .. " " .. word
+            currentWidth = currentWidth + spaceWidth + w
+        else
+            table.insert(lines, current)
+            current = word
+            currentWidth = w
+        end
+    end
+
+    if current ~= "" then
+        table.insert(lines, current)
+    end
+
+    return table.concat(lines, "\n")
+end
+
 --------------------------------------------------------------------------------
 -- LAYOUT CONSTANTS
 --------------------------------------------------------------------------------
@@ -342,6 +378,7 @@ local function getPanelMetrics()
         margin = margin,
         panelWidth = panelWidth,
         panelHeight = panelHeight,
+        contentWidth = contentWidth,
         godInfoWidth = godInfoWidth,
         classInfoWidth = classInfoWidth,
     }
@@ -1074,17 +1111,19 @@ local function createGodInfoPanel()
     local info = CharacterSelect.getGodInfo()
     local hasInfo = info ~= nil
     local metrics = getPanelMetrics()
+    local infoPadding = UI(10)
+    local textMaxWidth = math.max(0, metrics.godInfoWidth - (infoPadding * 2))
     local titleText = hasInfo and L(info.name_key, info.id) or L("character_select.select_god", "Select a God")
-    local loreText = hasInfo and L(info.lore_key, "") or ""
-    local blessingText = hasInfo and L(info.blessing_key, "") or ""
-    local passiveText = hasInfo and L(info.passive_key, "") or ""
+    local loreText = hasInfo and wrapTextToWidth(L(info.lore_key, ""), textMaxWidth, UI(12)) or ""
+    local blessingText = hasInfo and wrapTextToWidth(L(info.blessing_key, ""), textMaxWidth, UI(11)) or ""
+    local passiveText = hasInfo and wrapTextToWidth(L(info.passive_key, ""), textMaxWidth, UI(11)) or ""
     local blessingLabel = hasInfo and L("character_select.blessing", "Blessing:") or ""
     local passiveLabel = hasInfo and L("character_select.passive", "Passive:") or ""
 
     return strict.vbox {
         config = {
             id = "god_info",
-            padding = UI(10),
+            padding = infoPadding,
             spacing = UI(6),
             color = "charcoal",
             minWidth = metrics.godInfoWidth,
@@ -1145,17 +1184,19 @@ local function createClassInfoPanel()
     local info = CharacterSelect.getClassInfo()
     local hasInfo = info ~= nil
     local metrics = getPanelMetrics()
+    local infoPadding = UI(10)
+    local textMaxWidth = math.max(0, metrics.classInfoWidth - (infoPadding * 2))
     local titleText = hasInfo and L(info.name_key, info.id) or L("character_select.select_class", "Select a Class")
-    local loreText = hasInfo and L(info.lore_key, "") or ""
-    local passiveText = hasInfo and L(info.passive_key, "") or ""
-    local triggeredText = hasInfo and L(info.triggered_key, "") or ""
+    local loreText = hasInfo and wrapTextToWidth(L(info.lore_key, ""), textMaxWidth, UI(12)) or ""
+    local passiveText = hasInfo and wrapTextToWidth(L(info.passive_key, ""), textMaxWidth, UI(11)) or ""
+    local triggeredText = hasInfo and wrapTextToWidth(L(info.triggered_key, ""), textMaxWidth, UI(11)) or ""
     local passiveLabel = hasInfo and L("character_select.passive", "Passive:") or ""
     local triggeredLabel = hasInfo and L("character_select.triggered", "Triggered:") or ""
 
     return strict.vbox {
         config = {
             id = "class_info",
-            padding = UI(10),
+            padding = infoPadding,
             spacing = UI(6),
             color = "charcoal",
             minWidth = metrics.classInfoWidth,
@@ -1213,11 +1254,15 @@ end
 local function createInfoZone()
     if not dsl then return nil end
 
+    local metrics = getPanelMetrics()
+
     return strict.hbox {
         config = {
             id = "info_zone",
             spacing = UI(10),
             padding = UI(10),
+            minWidth = metrics.contentWidth,
+            maxWidth = metrics.contentWidth,
         },
         children = {
             createGodInfoPanel(),
@@ -1280,6 +1325,8 @@ local function createPanelDefinition()
             id = "character_select_panel",
             color = "blackberry",
             padding = UI(CharacterSelect.LAYOUT.PANEL_PADDING),
+            width = metrics.panelWidth,
+            height = metrics.panelHeight,
             minWidth = metrics.panelWidth,
             minHeight = metrics.panelHeight,
             maxWidth = metrics.panelWidth,
@@ -1334,6 +1381,8 @@ local function createPanelDefinition()
                             id = "info_zone_container",
                             spacing = 0,
                             padding = 0,
+                            minWidth = metrics.contentWidth,
+                            maxWidth = metrics.contentWidth,
                         },
                         children = {
                             createInfoZone(),

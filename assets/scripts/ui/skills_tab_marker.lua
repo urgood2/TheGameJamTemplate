@@ -41,10 +41,10 @@ local component_cache = _G.component_cache or { get = function() return nil end 
 local UI = ui_scale and ui_scale.ui or function(x) return x end
 
 local CONFIG = {
-    -- Using same dimensions as inventory tab marker for consistency
+    -- Using inventory tab marker sprite scaled for side panel visibility
     sprite = "inventory-tab-marker",
     width = UI(48),
-    height = UI(32),  -- Match inventory tab marker height
+    height = UI(48),  -- Square aspect for side-positioned tab (more visible)
     edge_offset = UI(0),      -- Distance from left edge when closed
     panel_overlap = UI(0),    -- Flush with panel edge when open
 }

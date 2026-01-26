@@ -985,6 +985,8 @@ end
 --- @param player table Player object
 function SkillsPanel.setPlayer(player)
     state.player = player
+    -- Refresh header to show actual skill points now that player is set
+    SkillsPanel.refreshHeader()
 end
 
 --- Get current player reference

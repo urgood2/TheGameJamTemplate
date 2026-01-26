@@ -151,22 +151,20 @@ local function buildModalDef()
             align = "center",
         },
         children = {
-            -- Skill name
+            -- Skill name (align defaults to centered)
             dsl.strict.text(data.skillName or "Unknown Skill", {
                 id = "modal_skill_name",
                 fontSize = UI(18),
                 color = elementColor,
-                align = "center",
             }),
 
             dsl.strict.spacer(UI(8)),
 
-            -- Skill description
+            -- Skill description (align defaults to centered)
             dsl.strict.text(data.skillDescription or "", {
                 id = "modal_skill_desc",
                 fontSize = UI(11),
                 color = "white",
-                align = "center",
                 maxWidth = CONFIG.width - CONFIG.padding * 2,
             }),
 

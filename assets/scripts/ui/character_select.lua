@@ -1230,19 +1230,55 @@ local function createPanelDefinition()
                         fontSize = UI(14),
                         color = "gold",
                     }),
-                    createGodRow(),
+                    strict.vbox {
+                        config = {
+                            id = "god_row_container",
+                            spacing = 0,
+                            padding = 0,
+                        },
+                        children = {
+                            createGodRow(),
+                        },
+                    },
                     -- Classes section
                     strict.text(L("character_select.classes_label", "Combat Style"), {
                         fontSize = UI(14),
                         color = "gold",
                     }),
-                    createClassRow(),
+                    strict.vbox {
+                        config = {
+                            id = "class_row_container",
+                            spacing = 0,
+                            padding = 0,
+                        },
+                        children = {
+                            createClassRow(),
+                        },
+                    },
                     -- Divider
                     strict.divider("horizontal", { color = "slate" }),
                     -- Info zone
-                    createInfoZone(),
+                    strict.vbox {
+                        config = {
+                            id = "info_zone_container",
+                            spacing = 0,
+                            padding = 0,
+                        },
+                        children = {
+                            createInfoZone(),
+                        },
+                    },
                     -- Buttons
-                    createButtonRow(),
+                    strict.vbox {
+                        config = {
+                            id = "button_row_container",
+                            spacing = 0,
+                            padding = 0,
+                        },
+                        children = {
+                            createButtonRow(),
+                        },
+                    },
                 },
             },
         },
@@ -1301,6 +1337,38 @@ end
 function CharacterSelect.refreshUI()
     if not state.panelEntity then return end
     if not dsl then return end
+
+    if ui and ui.box and ui.box.GetUIEByID and ui.box.ReplaceChildren then
+        local godContainer = ui.box.GetUIEByID(registry, state.panelEntity, "god_row_container")
+        if godContainer then
+            ui.box.ReplaceChildren(godContainer, createGodRow())
+        end
+
+        local classContainer = ui.box.GetUIEByID(registry, state.panelEntity, "class_row_container")
+        if classContainer then
+            ui.box.ReplaceChildren(classContainer, createClassRow())
+        end
+
+        local infoContainer = ui.box.GetUIEByID(registry, state.panelEntity, "info_zone_container")
+        if infoContainer then
+            ui.box.ReplaceChildren(infoContainer, createInfoZone())
+        end
+
+        local buttonContainer = ui.box.GetUIEByID(registry, state.panelEntity, "button_row_container")
+        if buttonContainer then
+            ui.box.ReplaceChildren(buttonContainer, createButtonRow())
+        end
+
+        if ui.box.AddStateTagToUIBox then
+            ui.box.AddStateTagToUIBox(registry, state.panelEntity, "default_state")
+        end
+
+        if ui.box.RenewAlignment then
+            ui.box.RenewAlignment(registry, state.panelEntity)
+        end
+
+        return
+    end
 
     local wasVisible = state.isVisible
     dsl.remove(state.panelEntity)

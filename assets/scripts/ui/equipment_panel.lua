@@ -239,6 +239,40 @@ local function createPanelDefinition()
     }
 end
 
+local function getCardData(entity)
+    if not entity or not registry:valid(entity) then return nil end
+    local script = getScriptTableFromEntityID and getScriptTableFromEntityID(entity)
+    return script and (script.equipmentDef or script.cardData)
+end
+
+local function highlightCompatibleSlot(slotId)
+    local slotEntity = state.slotEntities[slotId]
+    if slotEntity and registry:valid(slotEntity) then
+        local slotCfg = SLOT_CONFIG[slotId]
+        if not slotCfg or not slotCfg.enabled then
+            return  -- Don't highlight disabled slots
+        end
+        
+        local uiCfg = component_cache.get(slotEntity, UIConfig)
+        if uiCfg and _G.util then
+            uiCfg.color = _G.util.getColor("jade_green")
+        end
+    end
+end
+
+local function clearAllSlotHighlights()
+    for slotId, slotEntity in pairs(state.slotEntities) do
+        if slotEntity and registry:valid(slotEntity) then
+            local slotCfg = SLOT_CONFIG[slotId]
+            local uiCfg = component_cache.get(slotEntity, UIConfig)
+            if uiCfg and _G.util then
+                local defaultColor = (slotCfg and slotCfg.enabled) and "purple_slate" or "gray"
+                uiCfg.color = _G.util.getColor(defaultColor)
+            end
+        end
+    end
+end
+
 local function setupSignalHandlers()
     local function registerHandler(eventName, handler)
         signal.register(eventName, handler)
@@ -250,6 +284,25 @@ local function setupSignalHandlers()
         if playSoundEffect then
             playSoundEffect("effects", "button-click")
         end
+    end)
+end
+
+local function setupDragFeedback()
+    local function registerHandler(eventName, handler)
+        signal.register(eventName, handler)
+        table.insert(state.signalHandlers, { event = eventName, handler = handler })
+    end
+    
+    registerHandler("drag_started", function(itemEntity)
+        local cardData = getCardData(itemEntity)
+        if cardData and cardData.equipmentDef then
+            local targetSlot = cardData.equipmentDef.slot
+            highlightCompatibleSlot(targetSlot)
+        end
+    end)
+    
+    registerHandler("drag_ended", function(itemEntity)
+        clearAllSlotHighlights()
     end)
 end
 
@@ -323,6 +376,7 @@ function EquipmentPanel.create()
      
      setupSlotInteractions()
      setupRenderTimer()
+     setupDragFeedback()
      
      log_debug("[EquipmentPanel] Created")
  end

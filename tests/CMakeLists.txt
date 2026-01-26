@@ -3,6 +3,8 @@ add_executable(unit_tests
     unit/test_engine_context.cpp
     unit/test_registry_consolidation.cpp
     unit/test_blackboard.cpp
+    unit/test_ai_bb_bindings.cpp
+    unit/test_ai_sense_bindings.cpp
     unit/test_goap_utils.cpp
     unit/test_color_utils.cpp
     unit/test_component_cache.cpp
@@ -73,6 +75,9 @@ add_executable(unit_tests
     ${CMAKE_SOURCE_DIR}/src/systems/input/input_focus.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/input/input_polling.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/entity_gamestate_management/entity_gamestate_management.cpp
+    ${CMAKE_SOURCE_DIR}/src/systems/ai/ai_system.cpp
+    ${CMAKE_SOURCE_DIR}/src/systems/scripting/scripting_functions.cpp
+    ${CMAKE_SOURCE_DIR}/src/systems/event/event_system.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/physics/physics_world.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/input/controller_nav.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/ui/ui_data.cpp

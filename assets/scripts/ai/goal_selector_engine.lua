@@ -16,6 +16,32 @@ end
 
 local function clamp01(x) return (x < 0 and 0) or (x > 1 and 1) or x end
 
+local function is_goal_locked(e, goal_id)
+  local locked_until = ai.bb.get(e, "goal.locked_until", 0)
+  return GetTime() < locked_until
+end
+
+local function is_goal_on_cooldown(e, goal_id)
+  local cd_key = "goal.cooldown." .. goal_id
+  local cd_until = ai.bb.get(e, cd_key, 0)
+  return GetTime() < cd_until
+end
+
+local function apply_goal_lock(e, goal)
+  if goal.lock then
+    ai.bb.set(e, "goal.locked_until", GetTime() + goal.lock)
+  end
+end
+
+local function apply_goal_cooldown(e, old_goal_id, goals)
+  if not old_goal_id then return end
+  local goal = goals[old_goal_id]
+  if goal and goal.cooldown then
+    local cd_key = "goal.cooldown." .. old_goal_id
+    ai.bb.set(e, cd_key, GetTime() + goal.cooldown)
+  end
+end
+
 function M.select_and_apply(e)
   -- Pull this entity's ai-def (deep-copied table your C++ stored)
   local def = ai.get_entity_ai_def(e)
@@ -25,11 +51,11 @@ function M.select_and_apply(e)
   local policy = def.policy
   if not goals or not policy then return end
 
-  local now = os.clock()
+  local now = GetTime()
   local band_rank = policy.band_rank or { COMBAT=4, SURVIVAL=3, WORK=2, IDLE=1 }
 
   -- Current goal for hysteresis stickiness
-  local current = getBlackboardString(e, "current_goal")
+  local current = ai.bb.get(e, "current_goal", nil)
   dbg("Entity %s current_goal=%s", tostring(e), tostring(current))
 
   -- Build candidates
@@ -39,7 +65,7 @@ function M.select_and_apply(e)
     if G.desire then
       desire = G.desire(e, { time = now }) or 0.0
     end
-    if desire > 0.0 then
+    if desire > 0.0 and not is_goal_on_cooldown(e, id) then
       local veto = (G.veto and G.veto(e, { time = now })) or false
       if not veto then
         local hyst = (current == id) and (G.persist or 0.0) or 0.0
@@ -84,12 +110,18 @@ function M.select_and_apply(e)
 
   -- Apply only if goal changed
   if current ~= best.id then
+    if current and is_goal_locked(e, current) then
+      dbg("Goal locked: %s", tostring(current))
+      return
+    end
     dbg("Switching goal: %s -> %s", tostring(current), best.id)
-    setBlackboardString(e, "current_goal", best.id)
+    apply_goal_cooldown(e, current, goals)
+    ai.bb.set(e, "current_goal", best.id)
     local G = goals[best.id]
     if G and G.on_apply then
       dbg("Applying goal handler for %s", best.id)
       G.on_apply(e)
+      apply_goal_lock(e, G)
     end
   else
     dbg("Goal unchanged: %s", tostring(current))

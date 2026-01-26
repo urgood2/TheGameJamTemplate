@@ -1,6 +1,7 @@
 #include "ai_system.hpp"
 
 #include "../../components/components.hpp"
+#include "../transform/transform.hpp"
 
 #include "../../util/utilities.hpp"
 
@@ -26,6 +27,9 @@
 #include <unordered_map>
 #include <string>
 #include <any>
+#include <optional>
+#include <cmath>
+#include <limits>
 #include <filesystem>
 
 #include "../../util/common_headers.hpp"
@@ -33,6 +37,65 @@
 
 namespace ai_system
 {
+    namespace
+    {
+        std::optional<entt::entity> resolve_entity(sol::object obj)
+        {
+            if (obj.is<entt::entity>()) {
+                return obj.as<entt::entity>();
+            }
+            if (obj.is<int>()) {
+                return static_cast<entt::entity>(obj.as<int>());
+            }
+            if (obj.is<double>()) {
+                return static_cast<entt::entity>(static_cast<int>(obj.as<double>()));
+            }
+            return std::nullopt;
+        }
+
+        std::optional<Vector2> extract_position(entt::registry &registry, sol::object obj)
+        {
+            if (auto maybeEntity = resolve_entity(obj)) {
+                entt::entity e = *maybeEntity;
+                if (!registry.valid(e)) {
+                    return std::nullopt;
+                }
+
+                if (registry.any_of<transform::Transform>(e)) {
+                    auto &t = registry.get<transform::Transform>(e);
+                    float x = t.getActualX() + 0.5f * t.getActualW();
+                    float y = t.getActualY() + 0.5f * t.getActualH();
+
+                    if (auto *go = registry.try_get<transform::GameObject>(e)) {
+                        if (registry.valid(go->container) && registry.any_of<transform::Transform>(go->container)) {
+                            auto &ct = registry.get<transform::Transform>(go->container);
+                            x += ct.getActualX();
+                            y += ct.getActualY();
+                        }
+                    }
+
+                    return Vector2{x, y};
+                }
+
+                if (registry.any_of<LocationComponent>(e)) {
+                    auto &loc = registry.get<LocationComponent>(e);
+                    return Vector2{loc.x, loc.y};
+                }
+
+                return std::nullopt;
+            }
+
+            if (obj.is<sol::table>()) {
+                auto t = obj.as<sol::table>();
+                if (t["x"].valid() && t["y"].valid()) {
+                    return Vector2{t.get_or("x", 0.0f), t.get_or("y", 0.0f)};
+                }
+            }
+
+            return std::nullopt;
+        }
+    } // namespace
+
     bool ai_system_paused = false; // global flag to pause the AI system, from lua
     
     sol::state masterStateLua; // stores all scripts in one state
@@ -1050,6 +1113,414 @@ namespace ai_system
                 goap_worldstate_set(&goap.ap, &goap.goal, key.c_str(), val);
             } });
 
+        sol::table bb = ai["bb"].get_or_create<sol::table>();
+        bb.set_function("set", [](sol::object entityObj, const std::string &key, sol::object v) {
+            auto &registry = globals::getRegistry();
+            auto maybeEntity = resolve_entity(entityObj);
+            if (!maybeEntity) {
+                return;
+            }
+            entt::entity e = *maybeEntity;
+            if (!registry.valid(e) || !registry.any_of<GOAPComponent>(e)) {
+                return;
+            }
+
+            auto &blackboard = registry.get<GOAPComponent>(e).blackboard;
+            if (v.is<bool>()) {
+                blackboard.set(key, v.as<bool>());
+                return;
+            }
+            if (v.is<std::string>()) {
+                blackboard.set(key, v.as<std::string>());
+                return;
+            }
+            if (v.get_type() == sol::type::number) {
+                double num = v.as<double>();
+                double intPart = 0.0;
+                if (std::modf(num, &intPart) == 0.0 &&
+                    num >= static_cast<double>(std::numeric_limits<int>::min()) &&
+                    num <= static_cast<double>(std::numeric_limits<int>::max())) {
+                    blackboard.set(key, static_cast<int>(num));
+                } else {
+                    blackboard.set(key, static_cast<float>(num));
+                }
+                return;
+            }
+            if (v.is<entt::entity>()) {
+                blackboard.set(key, v.as<entt::entity>());
+                return;
+            }
+            if (v.is<sol::table>()) {
+                auto t = v.as<sol::table>();
+                if (t["x"].valid() && t["y"].valid()) {
+                    Vector2 pos{t.get_or("x", 0.0f), t.get_or("y", 0.0f)};
+                    blackboard.set(key, pos);
+                    return;
+                }
+            }
+            SPDLOG_WARN("ai.bb.set: unsupported type for key '{}'", key);
+        });
+
+        bb.set_function("get", [](sol::this_state L, sol::object entityObj,
+                                  const std::string &key, sol::object def) -> sol::object {
+            auto &registry = globals::getRegistry();
+            auto maybeEntity = resolve_entity(entityObj);
+            if (!maybeEntity) {
+                return sol::make_object(L, sol::lua_nil);
+            }
+            entt::entity e = *maybeEntity;
+            if (!registry.valid(e) || !registry.any_of<GOAPComponent>(e)) {
+                return sol::make_object(L, sol::lua_nil);
+            }
+
+            auto &blackboard = registry.get<GOAPComponent>(e).blackboard;
+            if (!blackboard.contains(key)) {
+                return def.valid() ? def : sol::make_object(L, sol::lua_nil);
+            }
+
+            if (!def.valid()) {
+                try { return sol::make_object(L, blackboard.get<bool>(key)); } catch (...) {}
+                try { return sol::make_object(L, blackboard.get<int>(key)); } catch (...) {}
+                try { return sol::make_object(L, static_cast<double>(blackboard.get<float>(key))); } catch (...) {}
+                try { return sol::make_object(L, blackboard.get<double>(key)); } catch (...) {}
+                try { return sol::make_object(L, blackboard.get<std::string>(key)); } catch (...) {}
+                try { return sol::make_object(L, blackboard.get<entt::entity>(key)); } catch (...) {}
+                try {
+                    auto p = blackboard.get<Vector2>(key);
+                    sol::state_view sv(L);
+                    sol::table out = sv.create_table();
+                    out["x"] = p.x;
+                    out["y"] = p.y;
+                    return sol::make_object(L, out);
+                } catch (...) {}
+                return sol::make_object(L, sol::lua_nil);
+            }
+
+            try {
+                if (def.is<bool>()) {
+                    return sol::make_object(L, blackboard.get<bool>(key));
+                }
+                if (def.is<int>()) {
+                    try { return sol::make_object(L, blackboard.get<int>(key)); } catch (...) {}
+                    try { return sol::make_object(L, static_cast<double>(blackboard.get<float>(key))); } catch (...) {}
+                    try { return sol::make_object(L, blackboard.get<double>(key)); } catch (...) {}
+                    return def;
+                }
+                if (def.is<double>()) {
+                    try { return sol::make_object(L, static_cast<double>(blackboard.get<float>(key))); } catch (...) {}
+                    try { return sol::make_object(L, blackboard.get<double>(key)); } catch (...) {}
+                    try { return sol::make_object(L, static_cast<double>(blackboard.get<int>(key))); } catch (...) {}
+                    return def;
+                }
+                if (def.is<std::string>()) {
+                    return sol::make_object(L, blackboard.get<std::string>(key));
+                }
+                if (def.is<entt::entity>()) {
+                    try { return sol::make_object(L, blackboard.get<entt::entity>(key)); } catch (...) {}
+                    try { return sol::make_object(L, static_cast<entt::entity>(blackboard.get<int>(key))); } catch (...) {}
+                    return def;
+                }
+                if (def.is<sol::table>()) {
+                    auto p = blackboard.get<Vector2>(key);
+                    sol::state_view sv(L);
+                    sol::table out = sv.create_table();
+                    out["x"] = p.x;
+                    out["y"] = p.y;
+                    return sol::make_object(L, out);
+                }
+            } catch (...) {
+                return def;
+            }
+
+            return def;
+        });
+
+        bb.set_function("has", [](sol::object entityObj, const std::string &key) -> bool {
+            auto &registry = globals::getRegistry();
+            auto maybeEntity = resolve_entity(entityObj);
+            if (!maybeEntity) {
+                return false;
+            }
+            entt::entity e = *maybeEntity;
+            if (!registry.valid(e) || !registry.any_of<GOAPComponent>(e)) {
+                return false;
+            }
+            return registry.get<GOAPComponent>(e).blackboard.contains(key);
+        });
+
+        bb.set_function("clear", [](sol::object entityObj) {
+            auto &registry = globals::getRegistry();
+            auto maybeEntity = resolve_entity(entityObj);
+            if (!maybeEntity) {
+                return;
+            }
+            entt::entity e = *maybeEntity;
+            if (!registry.valid(e) || !registry.any_of<GOAPComponent>(e)) {
+                return;
+            }
+            registry.get<GOAPComponent>(e).blackboard.clear();
+        });
+
+        bb.set_function("set_vec2", [](sol::object entityObj, const std::string &key, sol::table pos) {
+            auto &registry = globals::getRegistry();
+            auto maybeEntity = resolve_entity(entityObj);
+            if (!maybeEntity) {
+                return;
+            }
+            entt::entity e = *maybeEntity;
+            if (!registry.valid(e) || !registry.any_of<GOAPComponent>(e)) {
+                return;
+            }
+            Vector2 p{pos.get_or("x", 0.0f), pos.get_or("y", 0.0f)};
+            registry.get<GOAPComponent>(e).blackboard.set(key, p);
+        });
+
+        bb.set_function("get_vec2", [](sol::this_state L, sol::object entityObj, const std::string &key) -> sol::object {
+            auto &registry = globals::getRegistry();
+            auto maybeEntity = resolve_entity(entityObj);
+            if (!maybeEntity) {
+                return sol::make_object(L, sol::lua_nil);
+            }
+            entt::entity e = *maybeEntity;
+            if (!registry.valid(e) || !registry.any_of<GOAPComponent>(e)) {
+                return sol::make_object(L, sol::lua_nil);
+            }
+            auto &blackboard = registry.get<GOAPComponent>(e).blackboard;
+            if (!blackboard.contains(key)) {
+                return sol::make_object(L, sol::lua_nil);
+            }
+            try {
+                auto p = blackboard.get<Vector2>(key);
+                sol::state_view sv(L);
+                sol::table out = sv.create_table();
+                out["x"] = p.x;
+                out["y"] = p.y;
+                return sol::make_object(L, out);
+            } catch (...) {
+                return sol::make_object(L, sol::lua_nil);
+            }
+        });
+
+        bb.set_function("inc", [](sol::object entityObj, const std::string &key,
+                                  float delta, sol::optional<float> def) -> float {
+            auto &registry = globals::getRegistry();
+            auto maybeEntity = resolve_entity(entityObj);
+            if (!maybeEntity) {
+                return 0.0f;
+            }
+            entt::entity e = *maybeEntity;
+            if (!registry.valid(e) || !registry.any_of<GOAPComponent>(e)) {
+                return 0.0f;
+            }
+            auto &blackboard = registry.get<GOAPComponent>(e).blackboard;
+
+            auto read_number = [&](float fallback) -> float {
+                if (!blackboard.contains(key)) {
+                    return fallback;
+                }
+                try { return blackboard.get<float>(key); } catch (...) {}
+                try { return static_cast<float>(blackboard.get<double>(key)); } catch (...) {}
+                try { return static_cast<float>(blackboard.get<int>(key)); } catch (...) {}
+                return fallback;
+            };
+
+            float current = read_number(def.value_or(0.0f));
+            float newVal = current + delta;
+            blackboard.set(key, newVal);
+            return newVal;
+        });
+
+        bb.set_function("decay", [](sol::object entityObj, const std::string &key,
+                                    float rate, float dt, sol::optional<float> def) -> float {
+            auto &registry = globals::getRegistry();
+            auto maybeEntity = resolve_entity(entityObj);
+            if (!maybeEntity) {
+                return 0.0f;
+            }
+            entt::entity e = *maybeEntity;
+            if (!registry.valid(e) || !registry.any_of<GOAPComponent>(e)) {
+                return 0.0f;
+            }
+            auto &blackboard = registry.get<GOAPComponent>(e).blackboard;
+
+            auto read_number = [&](float fallback) -> float {
+                if (!blackboard.contains(key)) {
+                    return fallback;
+                }
+                try { return blackboard.get<float>(key); } catch (...) {}
+                try { return static_cast<float>(blackboard.get<double>(key)); } catch (...) {}
+                try { return static_cast<float>(blackboard.get<int>(key)); } catch (...) {}
+                return fallback;
+            };
+
+            float current = read_number(def.value_or(0.0f));
+            float newVal = current * std::exp(-rate * dt);
+            blackboard.set(key, newVal);
+            return newVal;
+        });
+
+        sol::table sense = ai["sense"].get_or_create<sol::table>();
+        sense.set_function("position", [](sol::this_state L, sol::object entityObj) -> sol::object {
+            auto &registry = globals::getRegistry();
+            auto pos = extract_position(registry, entityObj);
+            if (!pos) {
+                return sol::make_object(L, sol::lua_nil);
+            }
+            sol::state_view sv(L);
+            sol::table out = sv.create_table();
+            out["x"] = pos->x;
+            out["y"] = pos->y;
+            return sol::make_object(L, out);
+        });
+
+        sense.set_function("distance", [](sol::this_state L, sol::object a, sol::object b) -> float {
+            auto &registry = globals::getRegistry();
+            auto pa = extract_position(registry, a);
+            auto pb = extract_position(registry, b);
+            if (!pa || !pb) {
+                return std::numeric_limits<float>::infinity();
+            }
+            float dx = pb->x - pa->x;
+            float dy = pb->y - pa->y;
+            return std::sqrt(dx * dx + dy * dy);
+        });
+
+        sense.set_function("nearest", [](sol::this_state L, sol::object selfObj, float radius,
+                                         sol::optional<sol::table> opts) -> sol::variadic_results {
+            sol::variadic_results results;
+            auto &registry = globals::getRegistry();
+
+            auto maybeSelf = resolve_entity(selfObj);
+            if (!maybeSelf) {
+                results.push_back(sol::make_object(L, sol::lua_nil));
+                return results;
+            }
+            entt::entity self = *maybeSelf;
+
+            auto selfPos = extract_position(registry, selfObj);
+            if (!selfPos) {
+                results.push_back(sol::make_object(L, sol::lua_nil));
+                return results;
+            }
+
+            sol::optional<sol::function> filter;
+            if (opts && opts->valid()) {
+                filter = opts->get<sol::function>("filter");
+            }
+            int scanLimit = opts ? opts->get_or("scan_limit", std::numeric_limits<int>::max()) : std::numeric_limits<int>::max();
+
+            float bestDistSq = radius * radius;
+            entt::entity bestEntity = entt::null;
+
+            int considered = 0;
+            auto consider = [&](entt::entity e) {
+                if (e == self) return;
+                if (++considered > scanLimit) return;
+
+                auto otherPos = extract_position(registry, sol::make_object(L, e));
+                if (!otherPos) return;
+
+                float dx = otherPos->x - selfPos->x;
+                float dy = otherPos->y - selfPos->y;
+                float distSq = dx * dx + dy * dy;
+                if (distSq >= bestDistSq) return;
+
+                if (filter && filter->valid()) {
+                    sol::protected_function pf = *filter;
+                    auto res = pf(e);
+                    if (!res.valid() || !res.get<bool>()) {
+                        return;
+                    }
+                }
+
+                bestDistSq = distSq;
+                bestEntity = e;
+            };
+
+            auto viewTransform = registry.view<transform::Transform>();
+            for (auto e : viewTransform) {
+                if (considered >= scanLimit) break;
+                consider(e);
+            }
+
+            auto viewLocation = registry.view<LocationComponent>(entt::exclude<transform::Transform>);
+            for (auto e : viewLocation) {
+                if (considered >= scanLimit) break;
+                consider(e);
+            }
+
+            if (bestEntity != entt::null) {
+                results.push_back(sol::make_object(L, bestEntity));
+                results.push_back(sol::make_object(L, std::sqrt(bestDistSq)));
+            } else {
+                results.push_back(sol::make_object(L, sol::lua_nil));
+            }
+            return results;
+        });
+
+        sense.set_function("all_in_range", [](sol::this_state L, sol::object selfObj, float radius,
+                                              sol::optional<sol::table> opts) -> sol::table {
+            auto &registry = globals::getRegistry();
+            sol::state_view sv(L);
+            sol::table out = sv.create_table();
+
+            auto maybeSelf = resolve_entity(selfObj);
+            if (!maybeSelf) return out;
+            entt::entity self = *maybeSelf;
+
+            auto selfPos = extract_position(registry, selfObj);
+            if (!selfPos) return out;
+
+            sol::optional<sol::function> filter;
+            if (opts && opts->valid()) {
+                filter = opts->get<sol::function>("filter");
+            }
+            int maxReturn = opts ? opts->get_or("max", 32) : 32;
+            int scanLimit = opts ? opts->get_or("scan_limit", std::numeric_limits<int>::max()) : std::numeric_limits<int>::max();
+
+            float r2 = radius * radius;
+            int considered = 0;
+            int added = 0;
+
+            auto consider = [&](entt::entity e) {
+                if (e == self) return;
+                if (++considered > scanLimit) return;
+                if (added >= maxReturn) return;
+
+                auto otherPos = extract_position(registry, sol::make_object(L, e));
+                if (!otherPos) return;
+
+                float dx = otherPos->x - selfPos->x;
+                float dy = otherPos->y - selfPos->y;
+                float distSq = dx * dx + dy * dy;
+                if (distSq > r2) return;
+
+                if (filter && filter->valid()) {
+                    sol::protected_function pf = *filter;
+                    auto res = pf(e);
+                    if (!res.valid() || !res.get<bool>()) {
+                        return;
+                    }
+                }
+
+                out[++added] = e;
+            };
+
+            auto viewTransform = registry.view<transform::Transform>();
+            for (auto e : viewTransform) {
+                if (considered >= scanLimit || added >= maxReturn) break;
+                consider(e);
+            }
+
+            auto viewLocation = registry.view<LocationComponent>(entt::exclude<transform::Transform>);
+            for (auto e : viewLocation) {
+                if (considered >= scanLimit || added >= maxReturn) break;
+                consider(e);
+            }
+
+            return out;
+        });
+
         // 3) Register the Blackboard usertype under ai:
         lua.new_usertype<Blackboard>("Blackboard",
                                      "set_bool", &Blackboard::set<bool>,
@@ -1183,6 +1654,76 @@ namespace ai_system
                                  "---@param tbl table<string,boolean>\n"
                                  "---@return nil",
                                  "Patches multiple goal flags without clearing the current goal."});
+
+        rec.record_method("ai.bb", {"set",
+                                    "---@param e Entity\n"
+                                    "---@param key string\n"
+                                    "---@param value any\n"
+                                    "---@return nil",
+                                    "Sets a blackboard value with basic type inference."});
+        rec.record_method("ai.bb", {"get",
+                                    "---@param e Entity\n"
+                                    "---@param key string\n"
+                                    "---@param default? any\n"
+                                    "---@return any|nil",
+                                    "Gets a blackboard value; uses default for type selection and fallback."});
+        rec.record_method("ai.bb", {"has",
+                                    "---@param e Entity\n"
+                                    "---@param key string\n"
+                                    "---@return boolean",
+                                    "Returns true if the blackboard contains the key."});
+        rec.record_method("ai.bb", {"clear",
+                                    "---@param e Entity\n"
+                                    "---@return nil",
+                                    "Clears all blackboard entries for the entity."});
+        rec.record_method("ai.bb", {"set_vec2",
+                                    "---@param e Entity\n"
+                                    "---@param key string\n"
+                                    "---@param pos table{x:number,y:number}\n"
+                                    "---@return nil",
+                                    "Stores a Vector2-like position in the blackboard."});
+        rec.record_method("ai.bb", {"get_vec2",
+                                    "---@param e Entity\n"
+                                    "---@param key string\n"
+                                    "---@return table{x:number,y:number}|nil",
+                                    "Reads a Vector2-like position from the blackboard."});
+        rec.record_method("ai.bb", {"inc",
+                                    "---@param e Entity\n"
+                                    "---@param key string\n"
+                                    "---@param delta number\n"
+                                    "---@param default? number\n"
+                                    "---@return number",
+                                    "Increments a numeric blackboard value and returns the new value."});
+        rec.record_method("ai.bb", {"decay",
+                                    "---@param e Entity\n"
+                                    "---@param key string\n"
+                                    "---@param rate number\n"
+                                    "---@param dt number\n"
+                                    "---@param default? number\n"
+                                    "---@return number",
+                                    "Decays a numeric blackboard value toward zero."});
+
+        rec.record_method("ai.sense", {"position",
+                                       "---@param e Entity\n"
+                                       "---@return table{x:number,y:number}|nil",
+                                       "Returns the entity position as a table with x/y, or nil if unavailable."});
+        rec.record_method("ai.sense", {"distance",
+                                       "---@param a Entity|table{x:number,y:number}\n"
+                                       "---@param b Entity|table{x:number,y:number}\n"
+                                       "---@return number",
+                                       "Returns the distance between two entities or positions."});
+        rec.record_method("ai.sense", {"nearest",
+                                       "---@param e Entity\n"
+                                       "---@param radius number\n"
+                                       "---@param opts? table\n"
+                                       "---@return Entity|nil, number|nil",
+                                       "Finds the nearest entity within radius and returns it with distance."});
+        rec.record_method("ai.sense", {"all_in_range",
+                                       "---@param e Entity\n"
+                                       "---@param radius number\n"
+                                       "---@param opts? table\n"
+                                       "---@return Entity[]",
+                                       "Returns all entities within radius (bounded by opts.max if provided)."});
 
         rec.record_method("ai", {"get_blackboard",
                                  "---@param e Entity\n"

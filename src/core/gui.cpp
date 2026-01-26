@@ -101,10 +101,10 @@ static ImU32 LerpColor(ImU32 c1, ImU32 c2, float t) {
         // Set the log level (optional)
         spdlog::set_level(spdlog::level::trace); // Log everything
 
-        // Log messages
-        spdlog::info("This is an info message.");
-        spdlog::warn("This is a warning message.");
-        spdlog::error("This is an error message.");
+        // Log messages (commented out - were test messages)
+        // spdlog::info("This is an info message.");
+        // spdlog::warn("This is a warning message.");
+        // spdlog::error("This is an error message.");
 
         // ------------------------------
         // Register console commands

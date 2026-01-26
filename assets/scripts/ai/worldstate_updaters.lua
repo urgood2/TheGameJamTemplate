@@ -109,5 +109,11 @@ return {
             -- save in blackboard
             setBlackboardInt(entity, "duplicator_available", -1) -- -1 indicates no duplicator available
         end
+    end,
+
+    perception_tick = function(entity, dt)
+        if ai.perception and ai.perception.tick then
+            ai.perception.tick(entity, dt)
+        end
     end
 }

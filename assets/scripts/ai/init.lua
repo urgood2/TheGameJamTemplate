@@ -6,6 +6,17 @@ ai.goal_selectors = ai.goal_selectors or {} -- Goal selectors are functions that
 ai.blackboard_init = ai.blackboard_init or {} -- Blackboard initialization functions for each entity type
 ai.entity_types = ai.entity_types or {} -- Entity types are presets for worldstate, e.g. kobold, goblin, etc.
 ai.worldstate_updaters = ai.worldstate_updaters or {} -- Worldstate updaters are functions that update worldstate from blackboard/sensory data
+ai.bb = ai.bb or {}
+
+require("ai.bb_compat")
+ai.sense = require("ai.sense")
+ai.memory = require("ai.memory")
+ai.perception = require("ai.perception")
+ai.nav = require("ai.nav")
+ai.debug = require("ai.debug")
+ai.action = require("ai.action")
+ai.thresholds = require("ai.thresholds")
+ai.stuck = require("ai.stuck")
 
 local function load_directory(dir, outTable, assignByReturnName)
     local list_fn = ai.list_lua_files

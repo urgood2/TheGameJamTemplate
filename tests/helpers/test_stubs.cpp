@@ -92,11 +92,6 @@ namespace NavMesh {
     std::vector<NavMesh::Point> PathFinder::GetPath(const Point&, const Point&) { return {}; }
 }
 
-// Stub master Lua state used by scripting_system to avoid pulling the full AI system into unit tests.
-namespace ai_system {
-    sol::state masterStateLua{};
-}
-
 // Stub GC pause tracking used by misc_fuctions.hpp ShowDebugUI.
 namespace game {
     double g_maxGcPauseMs{0.0};

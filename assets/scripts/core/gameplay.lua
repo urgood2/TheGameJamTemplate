@@ -715,7 +715,7 @@ local function reloadTooltipFontForLanguage()
         return
     end
     -- Reload fonts.json to pick up the correct language variant
-    localization.loadFontData("localization/fonts.json")
+    localization.loadFontData(util.getRawAssetPathNoUUID("localization/fonts.json"))
     TOOLTIP_FONT_VERSION = TOOLTIP_FONT_VERSION + 1
 end
 

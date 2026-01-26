@@ -4,7 +4,7 @@
 
 class GOAPUtilsTest : public ::testing::Test {
 protected:
-    actionplanner_t ap;
+    actionplanner_t ap{};
 
     void SetUp() override {
         goap_actionplanner_clear(&ap);
@@ -85,7 +85,7 @@ TEST_F(GOAPUtilsTest, MaskFromNamesAllAtoms) {
 
 class GOAPWatchMaskTest : public ::testing::Test {
 protected:
-    actionplanner_t ap;
+    actionplanner_t ap{};
     sol::state lua;
 
     void SetUp() override {

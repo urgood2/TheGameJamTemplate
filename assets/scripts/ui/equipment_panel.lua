@@ -32,6 +32,7 @@ local component_cache = require("core.component_cache")
 local signal = require("external.hump.signal")
 local timer = require("core.timer")
 local ui_scale = require("ui.ui_scale")
+local combat_system = require("combat.combat_system")
 
 local UI = ui_scale.ui
 
@@ -385,42 +386,206 @@ function EquipmentPanel.destroy()
     log_debug("[EquipmentPanel] Destroyed")
 end
 
-function EquipmentPanel.equipItem(slotName, itemEntity, itemData)
-    if not SLOT_CONFIG[slotName] then
-        log_warn("[EquipmentPanel] Invalid slot: " .. tostring(slotName))
+local function getPlayerEntity()
+    if globals and globals.playerScript then
+        return globals.playerScript.e
+    end
+    
+    if globals and globals.playerEntity then
+        return globals.playerEntity
+    end
+    
+    if registry and type(registry.valid) == "function" then
+        local survivorEntity = globals.survivorEntity
+        if survivorEntity and registry:valid(survivorEntity) then
+            return survivorEntity
+        end
+    end
+    
+    log_warn("[EquipmentPanel] Could not get player entity")
+    return nil
+end
+
+local function getCombatContext()
+    if globals and globals.combat_context then
+        return globals.combat_context
+    end
+    
+    if combat_system and combat_system.Game then
+        return { game = combat_system.Game }
+    end
+    
+    log_warn("[EquipmentPanel] Could not get combat context")
+    return nil
+end
+
+local function centerItemOnSlot(itemEntity, slotEntity)
+    if not registry:valid(itemEntity) or not registry:valid(slotEntity) then
+        log_warn("[EquipmentPanel] Invalid entity in centerItemOnSlot")
         return false
     end
 
-    if not SLOT_CONFIG[slotName].enabled then
-        log_warn("[EquipmentPanel] Slot is disabled: " .. tostring(slotName))
+    local slotTransform = component_cache.get(slotEntity, Transform)
+    local itemTransform = component_cache.get(itemEntity, Transform)
+
+    if not slotTransform or not itemTransform then
+        log_warn("[EquipmentPanel] Missing Transform components")
         return false
     end
 
-    state.equippedItems[slotName] = {
-        entity = itemEntity,
-        data = itemData,
-    }
+    local slotRole = component_cache.get(slotEntity, InheritedProperties)
+    local slotOffsetX = slotRole and slotRole.offset and slotRole.offset.x or 0
+    local slotOffsetY = slotRole and slotRole.offset and slotRole.offset.y or 0
 
-    signal.emit("equipment_item_equipped", slotName, itemEntity, itemData)
-    log_debug("[EquipmentPanel] Equipped " .. (itemData and itemData.name or "item") .. " to " .. slotName)
+    local gridEntity = slotRole and slotRole.master
+    local gridTransform = gridEntity and component_cache.get(gridEntity, Transform)
+
+    local slotX, slotY
+    if gridTransform then
+        slotX = (gridTransform.actualX or 0) + slotOffsetX
+        slotY = (gridTransform.actualY or 0) + slotOffsetY
+    else
+        slotX = slotTransform.visualX or slotTransform.actualX or 0
+        slotY = slotTransform.visualY or slotTransform.actualY or 0
+    end
+
+    local slotW = slotTransform.actualW or 48
+    local slotH = slotTransform.actualH or 48
+    local itemW = itemTransform.actualW or 48
+    local itemH = itemTransform.actualH or 48
+
+    local centerX = slotX + (slotW - itemW) / 2
+    local centerY = slotY + (slotH - itemH) / 2
+
+    itemTransform.actualX = centerX
+    itemTransform.actualY = centerY
+    itemTransform.visualX = centerX
+    itemTransform.visualY = centerY
+
+    log_debug(string.format("[EquipmentPanel] Centered item at (%.1f, %.1f) in slot", centerX, centerY))
     return true
 end
 
-function EquipmentPanel.unequipItem(slotName)
-    if not SLOT_CONFIG[slotName] then
-        log_warn("[EquipmentPanel] Invalid slot: " .. tostring(slotName))
+function EquipmentPanel.canSlotAccept(slotId, equipmentDef)
+    if not SLOT_CONFIG[slotId] then
+        return false, "Invalid slot: " .. tostring(slotId)
+    end
+
+    if not SLOT_CONFIG[slotId].enabled then
+        return false, "Slot is disabled"
+    end
+
+    if not equipmentDef then
+        return false, "No equipment definition provided"
+    end
+
+    if equipmentDef.slot ~= slotId then
+        return false, string.format("Equipment slot mismatch: expected %s, got %s", slotId, equipmentDef.slot or "none")
+    end
+
+    return true, nil
+end
+
+function EquipmentPanel.equipItem(entity, equipDef)
+    local slotId = equipDef and equipDef.slot
+    
+    if not slotId then
+        log_warn("[EquipmentPanel] No slot specified in equipment definition")
         return false
     end
 
-    local oldItem = state.equippedItems[slotName]
-    state.equippedItems[slotName] = nil
-
-    if oldItem then
-        signal.emit("equipment_item_unequipped", slotName, oldItem.entity, oldItem.data)
-        log_debug("[EquipmentPanel] Unequipped item from " .. slotName)
+    local canAccept, reason = EquipmentPanel.canSlotAccept(slotId, equipDef)
+    if not canAccept then
+        log_warn("[EquipmentPanel] Cannot equip to " .. slotId .. ": " .. (reason or "unknown reason"))
+        return false
     end
 
+    local playerEntity = getPlayerEntity()
+    local ctx = getCombatContext()
+    
+    if not playerEntity then
+        log_warn("[EquipmentPanel] Cannot equip - no player entity found")
+        return false
+    end
+
+    if not ctx then
+        log_warn("[EquipmentPanel] Cannot equip - no combat context found")
+        return false
+    end
+
+    local existingItem = state.equippedItems[slotId]
+    if existingItem then
+        EquipmentPanel.unequipSlot(slotId)
+    end
+
+    local playerScript = getScriptTableFromEntityID and getScriptTableFromEntityID(playerEntity)
+    local playerCombatTable = playerScript and playerScript.combatTable
+    
+    if playerCombatTable then
+        local ok, err = combat_system.Game.ItemSystem.equip(ctx, playerCombatTable, equipDef)
+        if not ok then
+            log_warn("[EquipmentPanel] ItemSystem.equip failed: " .. (err or "unknown error"))
+            return false
+        end
+    else
+        log_warn("[EquipmentPanel] No combat table found on player")
+        return false
+    end
+
+    state.equippedItems[slotId] = {
+        entity = entity,
+        equipDef = equipDef,
+    }
+
+    local slotEntity = state.slotEntities[slotId]
+    if slotEntity and entity and registry:valid(entity) then
+        centerItemOnSlot(entity, slotEntity)
+    end
+
+    signal.emit("equipment_equipped", slotId, equipDef, entity)
+    log_debug("[EquipmentPanel] Equipped " .. (equipDef.id or "item") .. " to " .. slotId)
     return true
+end
+
+function EquipmentPanel.unequipSlot(slotId)
+    if not SLOT_CONFIG[slotId] then
+        log_warn("[EquipmentPanel] Invalid slot: " .. tostring(slotId))
+        return nil, nil
+    end
+
+    local oldItem = state.equippedItems[slotId]
+    if not oldItem then
+        return nil, nil
+    end
+
+    state.equippedItems[slotId] = nil
+
+    local playerEntity = getPlayerEntity()
+    local ctx = getCombatContext()
+    
+    if playerEntity and ctx then
+        local playerScript = getScriptTableFromEntityID and getScriptTableFromEntityID(playerEntity)
+        local playerCombatTable = playerScript and playerScript.combatTable
+        
+        if playerCombatTable and oldItem.equipDef then
+            local ok, err = combat_system.Game.ItemSystem.unequip(ctx, playerCombatTable, slotId)
+            if not ok then
+                log_warn("[EquipmentPanel] ItemSystem.unequip failed: " .. (err or "unknown error"))
+            end
+        end
+    end
+
+    signal.emit("equipment_unequipped", slotId, oldItem.equipDef, oldItem.entity)
+    log_debug("[EquipmentPanel] Unequipped item from " .. slotId)
+
+    return oldItem.entity, oldItem.equipDef
+end
+
+function EquipmentPanel.getEquipped(slotId)
+    if not SLOT_CONFIG[slotId] then
+        return nil
+    end
+    return state.equippedItems[slotId]
 end
 
 function EquipmentPanel.getEquippedItem(slotName)

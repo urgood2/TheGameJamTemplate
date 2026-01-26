@@ -348,6 +348,9 @@ function CharacterSelect.destroy()
     state.focusSection = 1
     state.focusIndex = 1
     state.onConfirm = nil
+    -- Also clear persistence state for full reset (important for test isolation)
+    state.lastGod = nil
+    state.lastClass = nil
 end
 
 function CharacterSelect.getPanelEntity()
@@ -532,6 +535,58 @@ function CharacterSelect.applyLastSelection()
             state.selectedClass = state.lastClass
         end
     end
+end
+
+--------------------------------------------------------------------------------
+-- SAVE SYSTEM INTEGRATION
+--------------------------------------------------------------------------------
+
+-- The save collector object (created once, reused)
+local saveCollector = {
+    --- Collect data for saving
+    --- @return table Data to persist
+    collect = function()
+        return {
+            lastGod = state.lastGod,
+            lastClass = state.lastClass,
+        }
+    end,
+
+    --- Distribute loaded data
+    --- @param data table|nil Loaded data (may be nil or empty)
+    distribute = function(data)
+        if not data then
+            CharacterSelect.setLastSelection(nil, nil)
+            return
+        end
+        CharacterSelect.setLastSelection(data.lastGod, data.lastClass)
+    end,
+}
+
+--- Get the save collector for testing or manual registration
+--- @return table The collector object with collect() and distribute()
+function CharacterSelect.getSaveCollector()
+    return saveCollector
+end
+
+--- Register with SaveManager if available
+--- @return boolean True if registration succeeded, false otherwise
+function CharacterSelect.registerWithSaveManager()
+    -- Try to get SaveManager (may not exist in standalone mode)
+    local success, SaveManager = pcall(function()
+        return _G.SaveManager or require("core.save_manager")
+    end)
+
+    if not success or not SaveManager then
+        return false
+    end
+
+    if not SaveManager.register then
+        return false
+    end
+
+    SaveManager.register("character_select", saveCollector)
+    return true
 end
 
 --------------------------------------------------------------------------------

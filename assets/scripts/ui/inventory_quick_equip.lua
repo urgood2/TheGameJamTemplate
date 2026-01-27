@@ -49,6 +49,7 @@ local state = {
     playerInventoryModule = nil,  -- Will be lazy-loaded to avoid circular deps
     wandLoadoutModule = nil,      -- Will be lazy-loaded
     wandPanelModule = nil,        -- Optional new WandPanel UI
+    equipmentPanelModule = nil,   -- Lazy-loaded equipment panel
     signalHandlers = {},
     lastHandledFrame = nil,
 }
@@ -85,6 +86,16 @@ local function getWandPanel()
         end
     end
     return state.wandPanelModule
+end
+
+local function getEquipmentPanel()
+    if not state.equipmentPanelModule then
+        local ok, mod = pcall(require, "ui.equipment_panel")
+        if ok then
+            state.equipmentPanelModule = mod
+        end
+    end
+    return state.equipmentPanelModule
 end
 
 --------------------------------------------------------------------------------
@@ -198,6 +209,19 @@ local function isTriggerCard(cardEntity)
     end
 
     return false
+end
+
+local function getEquipmentDef(cardEntity)
+    local script = getScriptTableFromEntityID(cardEntity)
+    if not script then return nil end
+    if script.equipmentDef then
+        return script.equipmentDef
+    end
+    local data = script.cardData or script
+    if data and data.slot then
+        return data
+    end
+    return nil
 end
 
 --- Map card entity to inventory tab category
@@ -362,6 +386,42 @@ function QuickEquip.equipToWand(cardEntity)
     })
 
     return result.success, result.reason
+end
+
+function QuickEquip.equipToEquipment(cardEntity)
+    if not cardEntity or not registry:valid(cardEntity) then
+        return false, "invalid_card"
+    end
+
+    local equipDef = getEquipmentDef(cardEntity)
+    if not equipDef then
+        return false, "not_equipment"
+    end
+
+    local panel = getEquipmentPanel()
+    if not panel or not panel.canSlotAccept or not panel.equipItem then
+        return false, "no_equipment_panel"
+    end
+
+    local canAccept, reason = panel.canSlotAccept(equipDef.slot, equipDef)
+    if not canAccept then
+        return false, reason or "cannot_equip"
+    end
+
+    local location = itemRegistry.getLocation(cardEntity)
+    if location and location.grid and location.slot then
+        grid.removeItem(location.grid, location.slot)
+    end
+
+    local success = panel.equipItem(cardEntity, equipDef)
+    if not success then
+        if location and location.grid and location.slot then
+            grid.addItem(location.grid, cardEntity, location.slot)
+        end
+        return false, "equip_failed"
+    end
+
+    return true, nil
 end
 
 --- Attempt to return a wand card back to inventory
@@ -570,12 +630,13 @@ local function handleRightClick(cardEntity)
         return
     end
 
-    local script = getScriptTableFromEntityID and getScriptTableFromEntityID(cardEntity)
-    if script and (script.equipmentDef or script.category == "equipment") then
-        return
+    local equipDef = getEquipmentDef(cardEntity)
+    local success, reason
+    if equipDef then
+        success, reason = QuickEquip.equipToEquipment(cardEntity)
+    else
+        success, reason = QuickEquip.equipToWand(cardEntity)
     end
-
-    local success, reason = QuickEquip.equipToWand(cardEntity)
     if not success then
         showEquipFeedback(cardEntity, reason)
     end

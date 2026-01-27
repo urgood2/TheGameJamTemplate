@@ -28,6 +28,9 @@ STRUCTURE:
 local EquipmentPanel = {}
 
 local dsl = require("ui.ui_syntax_sugar")
+local grid = require("core.inventory_grid")
+local itemRegistry = require("core.item_location_registry")
+local InventoryGridInit = require("ui.inventory_grid_init")
 local component_cache = require("core.component_cache")
 local signal = require("external.hump.signal")
 local timer = require("core.timer")
@@ -250,6 +253,17 @@ local function getCardData(entity)
     if not entity or not registry:valid(entity) then return nil end
     local script = getScriptTableFromEntityID and getScriptTableFromEntityID(entity)
     return script and (script.equipmentDef or script.cardData)
+end
+
+local function resolveEquipmentDef(itemEntity)
+    local data = getCardData(itemEntity)
+    if data and data.equipmentDef then
+        return data.equipmentDef
+    end
+    if data and data.slot then
+        return data
+    end
+    return nil
 end
 
 local function normalizeEquipmentDef(equipDef)
@@ -614,6 +628,37 @@ local function returnEquippedItemFromSlot(slotName)
     return false
 end
 
+local function tryEquipDraggedItem(slotName, draggedEntity)
+    if not draggedEntity or not registry:valid(draggedEntity) then
+        return false
+    end
+
+    local equipDef = resolveEquipmentDef(draggedEntity)
+    if not equipDef then
+        return false
+    end
+
+    local canAccept, reason = EquipmentPanel.canSlotAccept(slotName, equipDef)
+    if not canAccept then
+        log_debug("[EquipmentPanel] Drop rejected for " .. slotName .. ": " .. tostring(reason))
+        return false
+    end
+
+    local location = itemRegistry.getLocation(draggedEntity)
+    if location and location.grid and location.slot then
+        grid.removeItem(location.grid, location.slot)
+    end
+
+    local success = EquipmentPanel.equipItem(draggedEntity, equipDef)
+    if success and InventoryGridInit and InventoryGridInit.markValidDrop then
+        InventoryGridInit.markValidDrop(draggedEntity)
+    elseif not success and location and location.grid and location.slot then
+        grid.addItem(location.grid, draggedEntity, location.slot)
+    end
+
+    return success
+end
+
 setupSlotInteractions = function()
     for slotName, slotEntity in pairs(state.slotEntities) do
         if not registry:valid(slotEntity) then
@@ -630,7 +675,10 @@ setupSlotInteractions = function()
             goto continue
         end
 
+        go.state.collisionEnabled = true
+        go.state.hoverEnabled = true
         go.state.rightClickEnabled = true
+        go.state.triggerOnReleaseEnabled = true
 
         go.methods.onClick = function(reg, entity)
             returnEquippedItemFromSlot(slotName)
@@ -638,6 +686,10 @@ setupSlotInteractions = function()
 
         go.methods.onRightClick = function(reg, entity)
             returnEquippedItemFromSlot(slotName)
+        end
+
+        go.methods.onRelease = function(reg, releasedOn, dragged)
+            tryEquipDraggedItem(slotName, dragged)
         end
         
         go.methods.onHover = function(reg, hoveredOn, hovered)

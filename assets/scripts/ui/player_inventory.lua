@@ -580,7 +580,7 @@ local function createGridDefinition(tabId)
             local leftButton = MouseButton and MouseButton.MOUSE_BUTTON_LEFT or 0
             local rightButton = MouseButton and MouseButton.MOUSE_BUTTON_RIGHT or 1
             
-            if (button == leftButton or button == rightButton) and tabId == "equipment" then
+            if button == leftButton and tabId == "equipment" then
                 local item = grid.getItemAtIndex(gridEntity, slotIndex)
                 if item and registry:valid(item) then
                     local cardData = getCardData(item)
@@ -609,6 +609,9 @@ local function createGridDefinition(tabId)
                     end
                 end
             elseif button == rightButton then
+                if tabId == "equipment" then
+                    return
+                end
                 local item = grid.getItemAtIndex(gridEntity, slotIndex)
                 if item and registry:valid(item) then
                     local isLocked = state.lockedCards[item]

@@ -186,16 +186,16 @@ CharacterSelect.LAYOUT = {
     SCREEN_MARGIN = 20,
     OFFSCREEN_Y_OFFSET = 120,
     PANEL_MIN_WIDTH = 660,
-    PANEL_MIN_HEIGHT = 760,
-    INFO_PANEL_MIN_HEIGHT = 320,
+    PANEL_MIN_HEIGHT = 820,
+    INFO_PANEL_MIN_HEIGHT = 380,
 }
 
 CharacterSelect.FONT = {
     TITLE = 34,          -- snaps to 44px
     SECTION = 24,        -- snaps to 32px
-    INFO_TITLE = 44,     -- snaps to 44px (god/class name titles - large)
-    LABEL = 17,          -- snaps to 22px
-    BODY = 22,           -- snaps to 28px
+    INFO_TITLE = 44,     -- God/class name titles (44px is largest baked size)
+    LABEL = 22,          -- snaps to 22px (increased from 17 for better readability)
+    BODY = 28,           -- snaps to 28px (increased from 22 for better readability)
     PORTRAIT_LABEL = 14, -- snaps to 22px
     BUTTON = 22,         -- snaps to 28px
 }
@@ -1166,6 +1166,7 @@ local function createGodInfoPanel()
     local titleText = hasInfo and L(info.name_key, info.id) or L("character_select.select_god", "Select a God")
     local labelFontSize = UIFont(CharacterSelect.FONT.LABEL)
     local bodyFontSize = UIFont(CharacterSelect.FONT.BODY)
+    local titleFontSize = UIFont(CharacterSelect.FONT.INFO_TITLE)
     local loreText = hasInfo and wrapTextToWidth(L(info.lore_key, ""), textMaxWidth, bodyFontSize) or ""
     local blessingText = hasInfo and wrapTextToWidth(L(info.blessing_key, ""), textMaxWidth, bodyFontSize) or ""
     local passiveText = hasInfo and wrapTextToWidth(L(info.passive_key, ""), textMaxWidth, bodyFontSize) or ""
@@ -1176,20 +1177,22 @@ local function createGodInfoPanel()
         config = {
             id = "god_info",
             padding = infoPadding,
-            spacing = UI(4),
+            spacing = UI(6),
             color = "charcoal",
             minWidth = metrics.godInfoWidth,
             minHeight = UI(CharacterSelect.LAYOUT.INFO_PANEL_MIN_HEIGHT),
             maxWidth = metrics.godInfoWidth,
+            align = "left",
+            valign = "top",
         },
         children = {
-            -- God name
+            -- God name (use INFO_TITLE which snaps to 44px - largest baked font size)
             strict.text(titleText, {
                 id = "god_info_title",
-                fontSize = UIFont(CharacterSelect.FONT.INFO_TITLE),
+                fontSize = titleFontSize,
                 color = hasInfo and "gold" or "gray",
-                align = TEXT_ALIGN_LEFT,
                 shadow = true,
+                align = TEXT_ALIGN_LEFT,
             }),
             -- Lore/description
             strict.text(loreText, {
@@ -1198,7 +1201,6 @@ local function createGodInfoPanel()
                 color = "white",
                 align = TEXT_ALIGN_LEFT,
             }),
-            strict.divider("horizontal", { color = "slate" }),
             -- Blessing label
             strict.text(blessingLabel, {
                 id = "god_info_blessing_label",
@@ -1242,6 +1244,7 @@ local function createClassInfoPanel()
     local titleText = hasInfo and L(info.name_key, info.id) or L("character_select.select_class", "Select a Class")
     local labelFontSize = UIFont(CharacterSelect.FONT.LABEL)
     local bodyFontSize = UIFont(CharacterSelect.FONT.BODY)
+    local titleFontSize = UIFont(CharacterSelect.FONT.INFO_TITLE)
     local loreText = hasInfo and wrapTextToWidth(L(info.lore_key, ""), textMaxWidth, bodyFontSize) or ""
     local passiveText = hasInfo and wrapTextToWidth(L(info.passive_key, ""), textMaxWidth, bodyFontSize) or ""
     local triggeredText = hasInfo and wrapTextToWidth(L(info.triggered_key, ""), textMaxWidth, bodyFontSize) or ""
@@ -1252,20 +1255,22 @@ local function createClassInfoPanel()
         config = {
             id = "class_info",
             padding = infoPadding,
-            spacing = UI(4),
+            spacing = UI(6),
             color = "charcoal",
             minWidth = metrics.classInfoWidth,
             minHeight = UI(CharacterSelect.LAYOUT.INFO_PANEL_MIN_HEIGHT),
             maxWidth = metrics.classInfoWidth,
+            align = "left",
+            valign = "top",
         },
         children = {
-            -- Class name
+            -- Class name (use INFO_TITLE which snaps to 44px - largest baked font size)
             strict.text(titleText, {
                 id = "class_info_title",
-                fontSize = UIFont(CharacterSelect.FONT.INFO_TITLE),
+                fontSize = titleFontSize,
                 color = hasInfo and "gold" or "gray",
-                align = TEXT_ALIGN_LEFT,
                 shadow = true,
+                align = TEXT_ALIGN_LEFT,
             }),
             -- Lore/description
             strict.text(loreText, {
@@ -1274,7 +1279,6 @@ local function createClassInfoPanel()
                 color = "white",
                 align = TEXT_ALIGN_LEFT,
             }),
-            strict.divider("horizontal", { color = "slate" }),
             -- Passive label
             strict.text(passiveLabel, {
                 id = "class_info_passive_label",

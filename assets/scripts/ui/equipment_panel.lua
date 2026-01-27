@@ -71,6 +71,10 @@ local state = {
     signalHandlers = {},
 }
 
+-- Forward declarations for functions used before their definition
+local setupSlotInteractions
+local setupRenderTimer
+
 local function getLocalizedText(key, fallback)
     if localization and localization.get then
         local text = localization.get(key)
@@ -164,7 +168,9 @@ local function createHeader()
                 minWidth = UI(24),
                 minHeight = UI(24),
                 onClick = function()
-                    EquipmentPanel.hide()
+                    -- Close entire inventory (which will also hide equipment panel)
+                    local PlayerInventory = require("ui.player_inventory")
+                    PlayerInventory.close()
                 end,
             }),
         },
@@ -243,6 +249,51 @@ local function getCardData(entity)
     if not entity or not registry:valid(entity) then return nil end
     local script = getScriptTableFromEntityID and getScriptTableFromEntityID(entity)
     return script and (script.equipmentDef or script.cardData)
+end
+
+local function normalizeEquipmentDef(equipDef)
+    if not equipDef or equipDef._normalized_for_item_system then
+        return equipDef
+    end
+
+    -- Shallow copy to avoid mutating shared data tables
+    local normalized = {}
+    for k, v in pairs(equipDef) do
+        normalized[k] = v
+    end
+
+    -- Convert stats map -> ItemSystem mods array if needed
+    if normalized.stats and not normalized.mods then
+        normalized.mods = {}
+        for stat, value in pairs(normalized.stats) do
+            if value ~= nil and value ~= 0 then
+                local mod = { stat = stat }
+                if type(value) == "table" then
+                    if value.base then mod.base = value.base end
+                    if value.add_pct then mod.add_pct = value.add_pct end
+                    if value.mul_pct then mod.mul_pct = value.mul_pct end
+                else
+                    mod.base = value
+                end
+                table.insert(normalized.mods, mod)
+            end
+        end
+    end
+
+    -- Convert proc.effect -> proc.effects with event preservation
+    if normalized.procs then
+        for _, proc in ipairs(normalized.procs) do
+            if proc.effect and not proc.effects then
+                local effectFn = proc.effect
+                proc.effects = function(ctx, src, _tgt, ev)
+                    return effectFn(ctx, src, ev)
+                end
+            end
+        end
+    end
+
+    normalized._normalized_for_item_system = true
+    return normalized
 end
 
 local function highlightCompatibleSlot(slotId)
@@ -413,6 +464,19 @@ function EquipmentPanel.isVisible()
     return state.isVisible
 end
 
+function EquipmentPanel.setPosition(x, y)
+    if type(x) == "number" then
+        state.panelX = x
+    end
+    if type(y) == "number" then
+        state.panelY = y
+    end
+
+    if state.panelEntity and registry:valid(state.panelEntity) then
+        setEntityVisible(state.panelEntity, state.isVisible, state.panelX, state.panelY)
+    end
+end
+
 function EquipmentPanel.toggle()
     if state.isVisible then
         EquipmentPanel.hide()
@@ -491,20 +555,25 @@ local function centerItemOnSlot(itemEntity, slotEntity)
          return false
      end
 
-     local slotRole = component_cache.get(slotEntity, InheritedProperties)
-     local slotOffsetX = slotRole and slotRole.offset and slotRole.offset.x or 0
-     local slotOffsetY = slotRole and slotRole.offset and slotRole.offset.y or 0
-
-     local gridEntity = slotRole and slotRole.master
-     local gridTransform = gridEntity and component_cache.get(gridEntity, Transform)
-
      local slotX, slotY
-     if gridTransform then
-         slotX = (gridTransform.actualX or 0) + slotOffsetX
-         slotY = (gridTransform.actualY or 0) + slotOffsetY
+     if slotTransform.visualX ~= nil and slotTransform.visualY ~= nil then
+         slotX = slotTransform.visualX
+         slotY = slotTransform.visualY
      else
-         slotX = slotTransform.visualX or slotTransform.actualX or 0
-         slotY = slotTransform.visualY or slotTransform.actualY or 0
+         local slotRole = component_cache.get(slotEntity, InheritedProperties)
+         local slotOffsetX = slotRole and slotRole.offset and slotRole.offset.x or 0
+         local slotOffsetY = slotRole and slotRole.offset and slotRole.offset.y or 0
+
+         local gridEntity = slotRole and slotRole.master
+         local gridTransform = gridEntity and component_cache.get(gridEntity, Transform)
+
+         if gridTransform then
+             slotX = (gridTransform.actualX or 0) + slotOffsetX
+             slotY = (gridTransform.actualY or 0) + slotOffsetY
+         else
+             slotX = slotTransform.actualX or 0
+             slotY = slotTransform.actualY or 0
+         end
      end
 
      local slotW = slotTransform.actualW or 48
@@ -524,9 +593,27 @@ local function centerItemOnSlot(itemEntity, slotEntity)
      return true
  end
 
-local function setupSlotInteractions()
-    local leftButton = MouseButton and MouseButton.MOUSE_BUTTON_LEFT or 0
-    
+local function returnEquippedItemFromSlot(slotName)
+    local equippedItem = state.equippedItems[slotName]
+    if not equippedItem then
+        return false
+    end
+
+    local itemEntity = equippedItem.entity
+    local itemDef = equippedItem.equipDef
+
+    EquipmentPanel.unequipSlot(slotName)
+
+    if itemEntity and registry:valid(itemEntity) then
+        signal.emit("equipment_item_returned_to_inventory", slotName, itemEntity, itemDef)
+        log_debug("[EquipmentPanel] Emitted item return signal for " .. slotName)
+        return true
+    end
+
+    return false
+end
+
+setupSlotInteractions = function()
     for slotName, slotEntity in pairs(state.slotEntities) do
         if not registry:valid(slotEntity) then
             goto continue
@@ -541,31 +628,26 @@ local function setupSlotInteractions()
         if not go then
             goto continue
         end
-        
+
+        go.state.rightClickEnabled = true
+
         go.methods.onClick = function(reg, entity)
-            local equippedItem = state.equippedItems[slotName]
-            if equippedItem then
-                local itemEntity = equippedItem.entity
-                local itemDef = equippedItem.equipDef
-                
-                EquipmentPanel.unequipSlot(slotName)
-                
-                if itemEntity and registry:valid(itemEntity) then
-                    signal.emit("equipment_item_returned_to_inventory", slotName, itemEntity, itemDef)
-                    log_debug("[EquipmentPanel] Emitted item return signal for " .. slotName)
-                end
-            end
+            returnEquippedItemFromSlot(slotName)
+        end
+
+        go.methods.onRightClick = function(reg, entity)
+            returnEquippedItemFromSlot(slotName)
         end
         
-        go.methods.onHoverStart = function(reg, entity)
-            local uiCfg = component_cache.get(entity, UIConfig)
+        go.methods.onHover = function(reg, hoveredOn, hovered)
+            local uiCfg = component_cache.get(hoveredOn, UIConfig)
             if uiCfg and _G.util then
                 uiCfg.color = _G.util.getColor("steel_blue")
             end
         end
-        
-        go.methods.onHoverEnd = function(reg, entity)
-            local uiCfg = component_cache.get(entity, UIConfig)
+
+        go.methods.onStopHover = function()
+            local uiCfg = component_cache.get(slotEntity, UIConfig)
             if uiCfg and _G.util then
                 uiCfg.color = _G.util.getColor("purple_slate")
             end
@@ -577,7 +659,7 @@ local function setupSlotInteractions()
     log_debug("[EquipmentPanel] Slot interactions setup complete")
 end
 
-local function setupRenderTimer()
+setupRenderTimer = function()
     local ITEM_Z = 1000
     
     timer.run_every_render_frame(function()
@@ -673,7 +755,8 @@ function EquipmentPanel.equipItem(entity, equipDef)
     local playerCombatTable = playerScript and playerScript.combatTable
     
     if playerCombatTable then
-        local ok, err = combat_system.Game.ItemSystem.equip(ctx, playerCombatTable, equipDef)
+        local normalizedDef = normalizeEquipmentDef(equipDef)
+        local ok, err = combat_system.Game.ItemSystem.equip(ctx, playerCombatTable, normalizedDef)
         if not ok then
             log_warn("[EquipmentPanel] ItemSystem.equip failed: " .. (err or "unknown error"))
             return false
@@ -691,6 +774,20 @@ function EquipmentPanel.equipItem(entity, equipDef)
     local slotEntity = state.slotEntities[slotId]
     if slotEntity and entity and registry:valid(entity) then
         centerItemOnSlot(entity, slotEntity)
+    end
+
+    if add_state_tag then
+        add_state_tag(entity, "default_state")
+    end
+
+    local go = component_cache.get(entity, GameObject)
+    if go then
+        go.state.rightClickEnabled = true
+        go.methods.onRightClick = function(reg, clickedEntity)
+            if state.equippedItems[slotId] and state.equippedItems[slotId].entity == clickedEntity then
+                returnEquippedItemFromSlot(slotId)
+            end
+        end
     end
 
     signal.emit("equipment_equipped", slotId, equipDef, entity)

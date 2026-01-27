@@ -182,6 +182,86 @@ local function getCardData(entity)
     return nil
 end
 
+local function formatStatLabel(statKey)
+    if localization and localization.get then
+        local locKey = "stats." .. tostring(statKey)
+        local label = localization.get(locKey)
+        if label and label ~= locKey then
+            return label
+        end
+    end
+    local label = tostring(statKey):gsub("_pct$", " %"):gsub("_", " ")
+    label = label:gsub("^%l", string.upper)
+    return label
+end
+
+local function formatStatValue(statKey, value)
+    if type(value) == "number" then
+        local sign = value >= 0 and "+" or ""
+        if tostring(statKey):match("_pct$") then
+            return sign .. tostring(value) .. "%"
+        end
+        return sign .. tostring(value)
+    end
+    return tostring(value)
+end
+
+local function attachEquipmentTooltip(entity, equipmentDef)
+    if not entity or not registry:valid(entity) or not equipmentDef then return end
+
+    local tooltip_registry_ok, tooltip_registry = pcall(require, "core.tooltip_registry")
+    if not tooltip_registry_ok or not tooltip_registry then return end
+
+    local script = getScriptTableFromEntityID and getScriptTableFromEntityID(entity)
+    if script and script._equipmentTooltipAttached then
+        return
+    end
+
+    local name = equipmentDef.name or equipmentDef.id or "Equipment"
+    local tooltipName = "equipment_" .. tostring(equipmentDef.id or name)
+
+    local tags = {}
+    if equipmentDef.rarity then
+        tags[#tags + 1] = tostring(equipmentDef.rarity)
+    end
+    if equipmentDef.slot then
+        tags[#tags + 1] = tostring(equipmentDef.slot)
+    end
+
+    local stats = {}
+    if equipmentDef.stats then
+        for statKey, value in pairs(equipmentDef.stats) do
+            if value ~= nil and value ~= 0 then
+                stats[#stats + 1] = {
+                    label = formatStatLabel(statKey),
+                    value = formatStatValue(statKey, value),
+                }
+            end
+        end
+        table.sort(stats, function(a, b) return tostring(a.label) < tostring(b.label) end)
+    end
+
+    local bodyLines = {}
+    if equipmentDef.slot then
+        bodyLines[#bodyLines + 1] = "Slot: " .. tostring(equipmentDef.slot)
+    end
+    if equipmentDef.rarity then
+        bodyLines[#bodyLines + 1] = "Rarity: " .. tostring(equipmentDef.rarity)
+    end
+    local body = table.concat(bodyLines, "\n")
+
+    tooltip_registry.register(tooltipName, {
+        title = name,
+        body = body,
+        info = { stats = stats, tags = tags },
+    })
+    tooltip_registry.attachToEntity(entity, tooltipName, {})
+
+    if script then
+        script._equipmentTooltipAttached = true
+    end
+end
+
 local function isCardLocked(entity)
     return state.lockedCards[entity] == true
 end
@@ -456,6 +536,8 @@ local function createEquipmentCard(equipmentDef)
     
     -- Setup for screen-space rendering
     CardUIPolicy.setupForScreenSpace(entity)
+
+    attachEquipmentTooltip(entity, equipmentDef)
     
     return entity
 end
@@ -492,12 +574,17 @@ local function createGridDefinition(tabId)
             local leftButton = MouseButton and MouseButton.MOUSE_BUTTON_LEFT or 0
             local rightButton = MouseButton and MouseButton.MOUSE_BUTTON_RIGHT or 1
             
-            if button == leftButton and tabId == "equipment" then
+            if (button == leftButton or button == rightButton) and tabId == "equipment" then
                 local item = grid.getItemAtIndex(gridEntity, slotIndex)
                 if item and registry:valid(item) then
                     local cardData = getCardData(item)
+                    local equipDef = nil
                     if cardData and cardData.equipmentDef then
-                        local equipDef = cardData.equipmentDef
+                        equipDef = cardData.equipmentDef
+                    elseif cardData and cardData.slot then
+                        equipDef = cardData
+                    end
+                    if equipDef then
                         local canEquip, reason = EquipmentPanel.canSlotAccept(equipDef.slot, equipDef)
                         if canEquip then
                             grid.removeItem(gridEntity, slotIndex)
@@ -1212,8 +1299,10 @@ local function initializeInventory()
     
     EquipmentPanel.create()
     state.equipmentPanelEntity = EquipmentPanel.getPanelEntity()
-    if state.equipmentPanelEntity then
-        -- Position equipment panel
+    if EquipmentPanel.setPosition then
+        EquipmentPanel.setPosition(state.equipmentPanelX, state.panelY)
+    elseif state.equipmentPanelEntity then
+        -- Fallback: position equipment panel via transform
         local t = component_cache.get(state.equipmentPanelEntity, Transform)
         if t then
             t.actualX = state.equipmentPanelX
@@ -1313,6 +1402,11 @@ local function initializeInventory()
 
     state.initialized = true
     log_debug("[PlayerInventory] Initialized (hidden)")
+
+    if not state.starterEquipmentSpawned then
+        state.starterEquipmentSpawned = true
+        PlayerInventory.spawnStarterEquipment()
+    end
 end
 
 function PlayerInventory.open()
@@ -1327,6 +1421,11 @@ function PlayerInventory.open()
 
     state.isVisible = true
 
+    -- Show equipment panel if on equipment tab
+    if state.activeTab == "equipment" then
+        EquipmentPanel.show()
+    end
+
     -- Ensure active grid exists for current tab
     if not state.activeGrid then
         state.activeGrid = injectGridForTab(state.activeTab)
@@ -1334,6 +1433,11 @@ function PlayerInventory.open()
             state.grids[state.activeTab] = state.activeGrid
             restoreGridItems(state.activeTab, state.activeGrid)
         end
+    end
+
+    if not state.starterEquipmentSpawned then
+        state.starterEquipmentSpawned = true
+        PlayerInventory.spawnStarterEquipment()
     end
 
     updateSlotCount(state.activeGrid)
@@ -1361,6 +1465,9 @@ function PlayerInventory.close()
 
     -- Hide the panel
     setEntityVisible(state.panelEntity, false, state.panelX, state.panelY, "panel")
+
+    -- Hide equipment panel (always, regardless of active tab)
+    EquipmentPanel.hide()
 
     state.isVisible = false
 
@@ -1478,6 +1585,23 @@ function PlayerInventory.addCard(cardEntity, category, cardData)
     
     if cardData then
         state.cardRegistry[cardEntity] = cardData
+    end
+
+    if category == "equipment" then
+        local equipDef = nil
+        if cardData and cardData.equipmentDef then
+            equipDef = cardData.equipmentDef
+        elseif cardData and cardData.slot then
+            equipDef = cardData
+        else
+            local script = getScriptTableFromEntityID and getScriptTableFromEntityID(cardEntity)
+            if script and script.equipmentDef then
+                equipDef = script.equipmentDef
+            end
+        end
+        if equipDef then
+            attachEquipmentTooltip(cardEntity, equipDef)
+        end
     end
 
     -- NOTE: Do NOT add ObjectAttachedToUITag - it excludes entities from shader rendering pipeline!

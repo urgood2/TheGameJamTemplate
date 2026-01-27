@@ -570,6 +570,11 @@ local function handleRightClick(cardEntity)
         return
     end
 
+    local script = getScriptTableFromEntityID and getScriptTableFromEntityID(cardEntity)
+    if script and (script.equipmentDef or script.category == "equipment") then
+        return
+    end
+
     local success, reason = QuickEquip.equipToWand(cardEntity)
     if not success then
         showEquipFeedback(cardEntity, reason)

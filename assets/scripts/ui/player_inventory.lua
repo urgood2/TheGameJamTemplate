@@ -156,6 +156,7 @@ local state = {
     slotCountEntity = nil,
     equipmentPanelEntity = nil,
     equipmentPanelX = 0,
+    equipmentTooltips = {},
 }
 
 local function getLocalizedText(key, fallback)
@@ -212,6 +213,10 @@ local function attachEquipmentTooltip(entity, equipmentDef)
     local tooltip_registry_ok, tooltip_registry = pcall(require, "core.tooltip_registry")
     if not tooltip_registry_ok or not tooltip_registry then return end
 
+    if state.equipmentTooltips[entity] then
+        return
+    end
+
     local script = getScriptTableFromEntityID and getScriptTableFromEntityID(entity)
     if script and script._equipmentTooltipAttached then
         return
@@ -260,6 +265,7 @@ local function attachEquipmentTooltip(entity, equipmentDef)
     if script then
         script._equipmentTooltipAttached = true
     end
+    state.equipmentTooltips[entity] = true
 end
 
 local function isCardLocked(entity)

@@ -136,6 +136,14 @@ function tooltips.attachToEntity(entity, tooltipName, params)
     local go = component_cache.get(entity, GameObject)
     if not go then return end
 
+    local existing = entity_attachments[entity]
+    if existing then
+        if existing.name == tooltipName then
+            return
+        end
+        tooltips.detachFromEntity(entity)
+    end
+
     -- Store attachment info
     entity_attachments[entity] = {
         name = tooltipName,

@@ -33,6 +33,7 @@ local signal = require("external.hump.signal")
 local timer = require("core.timer")
 local ui_scale = require("ui.ui_scale")
 local combat_system = require("combat.combat_system")
+local shader_pipeline = _G.shader_pipeline
 
 local UI = ui_scale.ui
 
@@ -683,7 +684,16 @@ setupRenderTimer = function()
         local equippedItemsList = {}
         for slotName, item in pairs(state.equippedItems) do
             if item and item.entity and registry:valid(item.entity) then
-                table.insert(equippedItemsList, item.entity)
+                local animComp = component_cache.get(item.entity, AnimationQueueComponent)
+                if animComp then
+                    animComp.drawWithLegacyPipeline = true
+                end
+                local hasPipeline = shader_pipeline and shader_pipeline.ShaderPipelineComponent
+                    and registry:has(item.entity, shader_pipeline.ShaderPipelineComponent)
+                if hasPipeline and animComp and not animComp.noDraw then
+                    table.insert(equippedItemsList, item.entity)
+                    animComp.drawWithLegacyPipeline = false
+                end
             end
         end
         

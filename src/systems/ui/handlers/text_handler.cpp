@@ -2,6 +2,7 @@
 #include "../element.hpp"
 #include "core/globals.hpp"
 #include "systems/layer/layer_command_buffer.hpp"
+#include <cmath>
 #include <spdlog/spdlog.h>
 
 namespace ui {
@@ -65,6 +66,8 @@ void TextHandler::draw(
     // Get style values from UIStyleConfig (split component)
     const auto& styleColor = style.color;
     const auto styleShadow = style.shadow;
+    const bool snapToPixels = (ctx.config == nullptr) ? true : ctx.config->pixelatedRectangle;
+    auto snapPixel = [](float v) -> float { return std::round(v); };
 
     const bool shadowsOn = globals::getSettings().shadowsOn;
     const float scale = layoutScale.value_or(1.0f) * fontData.fontScale * globals::getGlobalUIScaleFactor();
@@ -93,9 +96,14 @@ void TextHandler::draw(
         layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
 
         Vector2 layerDisplacement = {node->layerDisplacement->x, node->layerDisplacement->y};
+        float shadowTranslateX = ctx.actualX + layerDisplacement.x + shadowOffsetX;
+        float shadowTranslateY = ctx.actualY + layerDisplacement.y + shadowOffsetY;
+        if (snapToPixels) {
+            shadowTranslateX = snapPixel(shadowTranslateX);
+            shadowTranslateY = snapPixel(shadowTranslateY);
+        }
         layer::QueueCommand<layer::CmdTranslate>(layerPtr,
-            [x = ctx.actualX + layerDisplacement.x + shadowOffsetX,
-             y = ctx.actualY + layerDisplacement.y + shadowOffsetY](layer::CmdTranslate *cmd) {
+            [x = shadowTranslateX, y = shadowTranslateY](layer::CmdTranslate *cmd) {
             cmd->x = x;
             cmd->y = y;
         }, zIndex);
@@ -115,6 +123,10 @@ void TextHandler::draw(
 
             float textX = fontData.fontRenderOffset.x;
             float textY = fontData.fontRenderOffset.y;
+            if (snapToPixels) {
+                textX = snapPixel(textX);
+                textY = snapPixel(textY);
+            }
 
             if (needsGpuScaling) {
                 layer::QueueCommand<layer::CmdScale>(layerPtr, [fontScaleRatio](layer::CmdScale *cmd) {
@@ -145,8 +157,14 @@ void TextHandler::draw(
     layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
 
     Vector2 layerDisplacement = {node->layerDisplacement->x, node->layerDisplacement->y};
+    float translateX = ctx.actualX + layerDisplacement.x;
+    float translateY = ctx.actualY + layerDisplacement.y;
+    if (snapToPixels) {
+        translateX = snapPixel(translateX);
+        translateY = snapPixel(translateY);
+    }
     layer::QueueCommand<layer::CmdTranslate>(layerPtr,
-        [x = ctx.actualX + layerDisplacement.x, y = ctx.actualY + layerDisplacement.y](layer::CmdTranslate *cmd) {
+        [x = translateX, y = translateY](layer::CmdTranslate *cmd) {
         cmd->x = x;
         cmd->y = y;
     }, zIndex);
@@ -168,6 +186,10 @@ void TextHandler::draw(
 
     float textX = fontData.fontRenderOffset.x;
     float textY = fontData.fontRenderOffset.y;
+    if (snapToPixels) {
+        textX = snapPixel(textX);
+        textY = snapPixel(textY);
+    }
 
     if (needsGpuScaling) {
         layer::QueueCommand<layer::CmdScale>(layerPtr, [fontScaleRatio](layer::CmdScale *cmd) {

@@ -509,10 +509,10 @@ function createTabDemo()
                             return dsl.strict.vbox {
                                 config = { padding = 4 },
                                 children = {
-                                    dsl.strict.text("Game Settings", { fontSize = 16, color = "white", shadow = true }),
+                                    dsl.strict.text("Game Settings", { fontSize = 22, color = "white", shadow = true }),
                                     dsl.strict.spacer(8),
-                                    dsl.strict.text("Speed: Normal", { fontSize = 12, color = "gray_light" }),
-                                    dsl.strict.text("Difficulty: Medium", { fontSize = 12, color = "gray_light" }),
+                                    dsl.strict.text("Speed: Normal", { fontSize = 16, color = "gray_light" }),
+                                    dsl.strict.text("Difficulty: Medium", { fontSize = 16, color = "gray_light" }),
                                 }
                             }
                         end
@@ -524,10 +524,10 @@ function createTabDemo()
                             return dsl.strict.vbox {
                                 config = { padding = 4 },
                                 children = {
-                                    dsl.strict.text("Graphics Settings", { fontSize = 16, color = "white", shadow = true }),
+                                    dsl.strict.text("Graphics Settings", { fontSize = 22, color = "white", shadow = true }),
                                     dsl.strict.spacer(8),
-                                    dsl.strict.text("Fullscreen: Off", { fontSize = 12, color = "gray_light" }),
-                                    dsl.strict.text("VSync: On", { fontSize = 12, color = "gray_light" }),
+                                    dsl.strict.text("Fullscreen: Off", { fontSize = 16, color = "gray_light" }),
+                                    dsl.strict.text("VSync: On", { fontSize = 16, color = "gray_light" }),
                                 }
                             }
                         end
@@ -539,11 +539,11 @@ function createTabDemo()
                             return dsl.strict.vbox {
                                 config = { padding = 4 },
                                 children = {
-                                    dsl.strict.text("Audio Settings", { fontSize = 16, color = "white", shadow = true }),
+                                    dsl.strict.text("Audio Settings", { fontSize = 22, color = "white", shadow = true }),
                                     dsl.strict.spacer(8),
-                                    dsl.strict.text("Master: 100%", { fontSize = 12, color = "gray_light" }),
-                                    dsl.strict.text("Music: 80%", { fontSize = 12, color = "gray_light" }),
-                                    dsl.strict.text("SFX: 100%", { fontSize = 12, color = "gray_light" }),
+                                    dsl.strict.text("Master: 100%", { fontSize = 16, color = "gray_light" }),
+                                    dsl.strict.text("Music: 80%", { fontSize = 16, color = "gray_light" }),
+                                    dsl.strict.text("SFX: 100%", { fontSize = 16, color = "gray_light" }),
                                 }
                             }
                         end
@@ -564,12 +564,12 @@ function createTabDemo()
                             return dsl.strict.vbox {
                                 config = { padding = 8 },
                                 children = {
-                                    dsl.strict.text("Player Inventory Test", { fontSize = 16, color = "white", shadow = true }),
+                                    dsl.strict.text("Player Inventory Test", { fontSize = 22, color = "white", shadow = true }),
                                     dsl.strict.spacer(8),
-                                    dsl.strict.text("Status: " .. (PlayerInventory.isOpen() and "OPEN" or "CLOSED"), { fontSize = 12, color = "gray_light" }),
+                                    dsl.strict.text("Status: " .. (PlayerInventory.isOpen() and "OPEN" or "CLOSED"), { fontSize = 16, color = "gray_light" }),
                                     dsl.strict.spacer(12),
                                     dsl.strict.button("Open Inventory", {
-                                        fontSize = 14,
+                                        fontSize = 16,
                                         color = "green_jade",
                                         textColor = "white",
                                         minWidth = 140,
@@ -581,7 +581,7 @@ function createTabDemo()
                                     }),
                                     dsl.strict.spacer(4),
                                     dsl.strict.button("Close Inventory", {
-                                        fontSize = 14,
+                                        fontSize = 16,
                                         color = "indian_red",
                                         textColor = "white",
                                         minWidth = 140,
@@ -593,7 +593,7 @@ function createTabDemo()
                                     }),
                                     dsl.strict.spacer(4),
                                     dsl.strict.button("Toggle Inventory", {
-                                        fontSize = 14,
+                                        fontSize = 16,
                                         color = "blue_steel",
                                         textColor = "white",
                                         minWidth = 140,
@@ -615,13 +615,13 @@ function createTabDemo()
                             return dsl.strict.vbox {
                                 config = { padding = 8 },
                                 children = {
-                                    dsl.strict.text("UI Showcase Gallery", { fontSize = 16, color = "white", shadow = true }),
+                                    dsl.strict.text("UI Showcase Gallery", { fontSize = 22, color = "white", shadow = true }),
                                     dsl.strict.spacer(8),
-                                    dsl.strict.text("Browse UI component examples", { fontSize = 12, color = "gray_light" }),
-                                    dsl.strict.text("with live previews and code.", { fontSize = 12, color = "gray_light" }),
+                                    dsl.strict.text("Browse UI component examples", { fontSize = 16, color = "gray_light" }),
+                                    dsl.strict.text("with live previews and code.", { fontSize = 16, color = "gray_light" }),
                                     dsl.strict.spacer(12),
                                     dsl.strict.button("Open Gallery", {
-                                        fontSize = 14,
+                                        fontSize = 16,
                                         color = "green_jade",
                                         textColor = "white",
                                         minWidth = 140,
@@ -634,7 +634,7 @@ function createTabDemo()
                                     }),
                                     dsl.strict.spacer(4),
                                     dsl.strict.button("Close Gallery", {
-                                        fontSize = 14,
+                                        fontSize = 16,
                                         color = "indian_red",
                                         textColor = "white",
                                         minWidth = 140,
@@ -656,13 +656,13 @@ function createTabDemo()
                             return dsl.strict.vbox {
                                 config = { padding = 8 },
                                 children = {
-                                    dsl.strict.text("Feature Showcase", { fontSize = 16, color = "white", shadow = true }),
+                                    dsl.strict.text("Feature Showcase", { fontSize = 22, color = "white", shadow = true }),
                                     dsl.strict.spacer(8),
-                                    dsl.strict.text("View all Phase 1-6 features", { fontSize = 12, color = "gray_light" }),
-                                    dsl.strict.text("with automated validation.", { fontSize = 12, color = "gray_light" }),
+                                    dsl.strict.text("View all Phase 1-6 features", { fontSize = 16, color = "gray_light" }),
+                                    dsl.strict.text("with automated validation.", { fontSize = 16, color = "gray_light" }),
                                     dsl.strict.spacer(12),
                                     dsl.strict.button("Open Showcase", {
-                                        fontSize = 14,
+                                        fontSize = 16,
                                         color = "green_jade",
                                         textColor = "white",
                                         minWidth = 140,
@@ -674,7 +674,7 @@ function createTabDemo()
                                     }),
                                     dsl.strict.spacer(4),
                                     dsl.strict.button("Close Showcase", {
-                                        fontSize = 14,
+                                        fontSize = 16,
                                         color = "indian_red",
                                         textColor = "white",
                                         minWidth = 140,

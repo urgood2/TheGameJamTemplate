@@ -193,7 +193,7 @@ CharacterSelect.LAYOUT = {
 CharacterSelect.FONT = {
     TITLE = 34,          -- snaps to 44px
     SECTION = 24,        -- snaps to 32px
-    INFO_TITLE = 24,     -- snaps to 32px
+    INFO_TITLE = 44,     -- snaps to 44px (god/class name titles - large)
     LABEL = 17,          -- snaps to 22px
     BODY = 22,           -- snaps to 28px
     PORTRAIT_LABEL = 14, -- snaps to 22px
@@ -1165,7 +1165,6 @@ local function createGodInfoPanel()
     local textMaxWidth = math.max(0, metrics.godInfoWidth - (infoPadding * 2))
     local titleText = hasInfo and L(info.name_key, info.id) or L("character_select.select_god", "Select a God")
     local labelFontSize = UIFont(CharacterSelect.FONT.LABEL)
-    local labelFontSize = UIFont(CharacterSelect.FONT.LABEL)
     local bodyFontSize = UIFont(CharacterSelect.FONT.BODY)
     local loreText = hasInfo and wrapTextToWidth(L(info.lore_key, ""), textMaxWidth, bodyFontSize) or ""
     local blessingText = hasInfo and wrapTextToWidth(L(info.blessing_key, ""), textMaxWidth, bodyFontSize) or ""
@@ -1241,6 +1240,7 @@ local function createClassInfoPanel()
     local infoPadding = UI(10)
     local textMaxWidth = math.max(0, metrics.classInfoWidth - (infoPadding * 2))
     local titleText = hasInfo and L(info.name_key, info.id) or L("character_select.select_class", "Select a Class")
+    local labelFontSize = UIFont(CharacterSelect.FONT.LABEL)
     local bodyFontSize = UIFont(CharacterSelect.FONT.BODY)
     local loreText = hasInfo and wrapTextToWidth(L(info.lore_key, ""), textMaxWidth, bodyFontSize) or ""
     local passiveText = hasInfo and wrapTextToWidth(L(info.passive_key, ""), textMaxWidth, bodyFontSize) or ""

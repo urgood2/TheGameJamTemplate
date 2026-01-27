@@ -186,17 +186,18 @@ CharacterSelect.LAYOUT = {
     SCREEN_MARGIN = 20,
     OFFSCREEN_Y_OFFSET = 120,
     PANEL_MIN_WIDTH = 660,
-    PANEL_MIN_HEIGHT = 680,
-    INFO_PANEL_MIN_HEIGHT = 260,
+    PANEL_MIN_HEIGHT = 760,
+    INFO_PANEL_MIN_HEIGHT = 320,
 }
 
 CharacterSelect.FONT = {
-    TITLE = 35,          -- ~44px after UI scale + snap
-    SECTION = 26,        -- ~32px after UI scale + snap
-    INFO_TITLE = 26,     -- ~32px after UI scale + snap
-    BODY = 18,           -- ~22px after UI scale + snap
-    PORTRAIT_LABEL = 13, -- ~16px after UI scale + snap
-    BUTTON = 18,         -- ~22px after UI scale + snap
+    TITLE = 34,          -- snaps to 44px
+    SECTION = 24,        -- snaps to 32px
+    INFO_TITLE = 24,     -- snaps to 32px
+    LABEL = 17,          -- snaps to 22px
+    BODY = 22,           -- snaps to 28px
+    PORTRAIT_LABEL = 14, -- snaps to 22px
+    BUTTON = 22,         -- snaps to 28px
 }
 
 local AURA_COLORS = {
@@ -537,6 +538,10 @@ function CharacterSelect.open()
 
     -- Spawn the UI panel if game engine available
     if dsl then
+        if state.panelEntity then
+            dsl.remove(state.panelEntity)
+            state.panelEntity = nil
+        end
         CharacterSelect.spawnPanel()
         updatePanelLayout()
         setPanelVisible(true, true)
@@ -1159,6 +1164,8 @@ local function createGodInfoPanel()
     local infoPadding = UI(10)
     local textMaxWidth = math.max(0, metrics.godInfoWidth - (infoPadding * 2))
     local titleText = hasInfo and L(info.name_key, info.id) or L("character_select.select_god", "Select a God")
+    local labelFontSize = UIFont(CharacterSelect.FONT.LABEL)
+    local labelFontSize = UIFont(CharacterSelect.FONT.LABEL)
     local bodyFontSize = UIFont(CharacterSelect.FONT.BODY)
     local loreText = hasInfo and wrapTextToWidth(L(info.lore_key, ""), textMaxWidth, bodyFontSize) or ""
     local blessingText = hasInfo and wrapTextToWidth(L(info.blessing_key, ""), textMaxWidth, bodyFontSize) or ""
@@ -1196,7 +1203,7 @@ local function createGodInfoPanel()
             -- Blessing label
             strict.text(blessingLabel, {
                 id = "god_info_blessing_label",
-                fontSize = bodyFontSize,
+                fontSize = labelFontSize,
                 color = hasInfo and "cyan" or "gray",
                 align = TEXT_ALIGN_LEFT,
             }),
@@ -1209,7 +1216,7 @@ local function createGodInfoPanel()
             -- Passive label
             strict.text(passiveLabel, {
                 id = "god_info_passive_label",
-                fontSize = bodyFontSize,
+                fontSize = labelFontSize,
                 color = hasInfo and "green" or "gray",
                 align = TEXT_ALIGN_LEFT,
             }),
@@ -1271,7 +1278,7 @@ local function createClassInfoPanel()
             -- Passive label
             strict.text(passiveLabel, {
                 id = "class_info_passive_label",
-                fontSize = bodyFontSize,
+                fontSize = labelFontSize,
                 color = hasInfo and "green" or "gray",
                 align = TEXT_ALIGN_LEFT,
             }),
@@ -1284,7 +1291,7 @@ local function createClassInfoPanel()
             -- Triggered ability
             strict.text(triggeredLabel, {
                 id = "class_info_triggered_label",
-                fontSize = bodyFontSize,
+                fontSize = labelFontSize,
                 color = hasInfo and "orange" or "gray",
                 align = TEXT_ALIGN_LEFT,
             }),
@@ -1528,6 +1535,14 @@ local function updateUIConfigColor(entity, colorName)
     end
 end
 
+local function updateUIButtonEnabled(entity, enabled)
+    if not entity or not component_cache or not UIConfig then return end
+    local cfg = component_cache.get(entity, UIConfig)
+    if cfg then
+        cfg.disable_button = not enabled
+    end
+end
+
 local function updateUIText(entity, text, colorName)
     if not entity or not component_cache then return end
 
@@ -1699,6 +1714,7 @@ function CharacterSelect.refreshUI()
     if confirmEntity then
         local enabled = CharacterSelect.isConfirmEnabled()
         updateUIConfigColor(confirmEntity, enabled and "green" or "charcoal")
+        updateUIButtonEnabled(confirmEntity, enabled)
     end
 
     if textChanged and ui and ui.box and ui.box.RenewAlignment then

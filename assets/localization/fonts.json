@@ -1,7 +1,7 @@
 {
   "en_us": {
     "file": "fonts/en/Tomorrow_Night.ttf",
-    "sizes": [13, 16, 22, 32, 44],
+    "sizes": [13, 16, 22, 28, 32, 44],
     "defaultSize": 13,
     "scale": 1.0,
     "spacing": 1.0,
@@ -14,7 +14,7 @@
 
   "ko_kr": {
     "file": "fonts/ko/Galmuri11-Bold.ttf",
-    "sizes": [11, 22, 33, 44],
+    "sizes": [11, 22, 28, 33, 44],
     "defaultSize": 22,
     "scale": 1.0,
     "spacing": 1.2,

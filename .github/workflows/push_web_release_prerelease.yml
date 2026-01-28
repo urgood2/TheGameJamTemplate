@@ -125,10 +125,10 @@ jobs:
       - name: Package Web build
         run: |
           mkdir -p dist/web
-          cp build-web/index.html dist/web/
+          cp build-web/*.html dist/web/
           cp build-web/*.wasm dist/web/
           cp build-web/*.js dist/web/
-          cp -R assets dist/web/
+          cp build-web/*.data dist/web/ 2>/dev/null || true
           cd dist && zip -r web-build.zip web/
 
       - name: Upload web build (v4)

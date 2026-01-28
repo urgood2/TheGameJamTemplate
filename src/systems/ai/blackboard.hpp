@@ -4,6 +4,7 @@
 #include <string>
 #include <unordered_map>
 #include <stdexcept>
+#include <vector>
 
 namespace ai {
 
@@ -36,6 +37,15 @@ public:
 
     void clear() {
         data_.clear();
+    }
+
+    std::vector<std::string> getKeys() const {
+        std::vector<std::string> keys;
+        keys.reserve(data_.size());
+        for (const auto& [key, _] : data_) {
+            keys.push_back(key);
+        }
+        return keys;
     }
 
 private:

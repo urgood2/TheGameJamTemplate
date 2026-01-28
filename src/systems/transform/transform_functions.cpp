@@ -3077,7 +3077,7 @@ auto exposeToLua(sol::state &lua, EngineContext* /*ctx*/) -> void {
             std::optional<InheritedProperties::Sync> whSync = wh.value_or(InheritedProperties::Sync::Strong);
             std::optional<InheritedProperties::Sync> rotationSync = rotation.value_or(InheritedProperties::Sync::Strong);
             std::optional<InheritedProperties::Sync> scaleSync = scale.value_or(InheritedProperties::Sync::Strong);
-            std::optional<Vector2> offsetValue = offset.value_or(Vector2(0.0f, 0.0f));
+            std::optional<Vector2> offsetValue = offset.value_or(Vector2{0.0f, 0.0f});
             transform::AssignRole(registry, e, roleType, parent, xySync, whSync, rotationSync, scaleSync, offsetValue);
         }
     );

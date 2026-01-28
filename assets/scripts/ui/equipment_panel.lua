@@ -556,7 +556,7 @@ local function getCombatContext()
     return nil
 end
 
-local function centerItemOnSlot(itemEntity, slotEntity)
+local function centerItemOnSlot(itemEntity, slotEntity, setVisual)
      if not registry:valid(itemEntity) or not registry:valid(slotEntity) then
          log_warn("[EquipmentPanel] Invalid entity in centerItemOnSlot")
          return false
@@ -570,25 +570,23 @@ local function centerItemOnSlot(itemEntity, slotEntity)
          return false
      end
 
+     -- FIX: Use actualX + offset for position calculation (more reliable than visualX)
+     -- visualX may be stale when panel just became visible; actualX is always the target
+     local slotRole = component_cache.get(slotEntity, InheritedProperties)
+     local slotOffsetX = slotRole and slotRole.offset and slotRole.offset.x or 0
+     local slotOffsetY = slotRole and slotRole.offset and slotRole.offset.y or 0
+
+     local parentEntity = slotRole and slotRole.master
+     local parentTransform = parentEntity and component_cache.get(parentEntity, Transform)
+
      local slotX, slotY
-     if slotTransform.visualX ~= nil and slotTransform.visualY ~= nil then
-         slotX = slotTransform.visualX
-         slotY = slotTransform.visualY
+     if parentTransform then
+         slotX = (parentTransform.actualX or 0) + slotOffsetX
+         slotY = (parentTransform.actualY or 0) + slotOffsetY
      else
-         local slotRole = component_cache.get(slotEntity, InheritedProperties)
-         local slotOffsetX = slotRole and slotRole.offset and slotRole.offset.x or 0
-         local slotOffsetY = slotRole and slotRole.offset and slotRole.offset.y or 0
-
-         local gridEntity = slotRole and slotRole.master
-         local gridTransform = gridEntity and component_cache.get(gridEntity, Transform)
-
-         if gridTransform then
-             slotX = (gridTransform.actualX or 0) + slotOffsetX
-             slotY = (gridTransform.actualY or 0) + slotOffsetY
-         else
-             slotX = slotTransform.actualX or 0
-             slotY = slotTransform.actualY or 0
-         end
+         -- Fallback to slot's own actualX/Y
+         slotX = slotTransform.actualX or 0
+         slotY = slotTransform.actualY or 0
      end
 
      local slotW = slotTransform.actualW or 48
@@ -599,12 +597,19 @@ local function centerItemOnSlot(itemEntity, slotEntity)
      local centerX = slotX + (slotW - itemW) / 2
      local centerY = slotY + (slotH - itemH) / 2
 
+     -- Set actual (target) position
      itemTransform.actualX = centerX
      itemTransform.actualY = centerY
-     itemTransform.visualX = centerX
-     itemTransform.visualY = centerY
 
-     log_debug(string.format("[EquipmentPanel] Centered item at (%.1f, %.1f) in slot", centerX, centerY))
+     -- FIX: Only set visual position if explicitly requested (setVisual ~= false)
+     -- This allows the spring system to tween the visual position smoothly
+     -- Default to false to enable tween animation (matching InventoryGridInit behavior)
+     if setVisual == true then
+         itemTransform.visualX = centerX
+         itemTransform.visualY = centerY
+     end
+
+     log_debug(string.format("[EquipmentPanel] Centered item at (%.1f, %.1f) in slot, setVisual=%s", centerX, centerY, tostring(setVisual)))
      return true
  end
 
@@ -635,6 +640,7 @@ local function tryEquipDraggedItem(slotName, draggedEntity)
 
     local equipDef = resolveEquipmentDef(draggedEntity)
     if not equipDef then
+        log_debug("[EquipmentPanel] No equipment def for dropped item")
         return false
     end
 
@@ -647,13 +653,18 @@ local function tryEquipDraggedItem(slotName, draggedEntity)
     local location = itemRegistry.getLocation(draggedEntity)
     if location and location.grid and location.slot then
         grid.removeItem(location.grid, location.slot)
+        itemRegistry.unregister(draggedEntity)  -- Clear old location registry
     end
 
     local success = EquipmentPanel.equipItem(draggedEntity, equipDef)
     if success and InventoryGridInit and InventoryGridInit.markValidDrop then
         InventoryGridInit.markValidDrop(draggedEntity)
+        log_debug("[EquipmentPanel] Successfully equipped dragged item to " .. slotName)
     elseif not success and location and location.grid and location.slot then
+        -- Restore to original slot on failure
         grid.addItem(location.grid, draggedEntity, location.slot)
+        itemRegistry.register(draggedEntity, location.grid, location.slot)
+        log_debug("[EquipmentPanel] Failed to equip, restored to original slot")
     end
 
     return success
@@ -714,25 +725,25 @@ end
 
 setupRenderTimer = function()
     local ITEM_Z = 1000
-    
+
     timer.run_every_render_frame(function()
         if not state.isVisible then return end
-        
-        -- Center each equipped item in its slot
+
+        -- Center each equipped item in its slot (setVisual=false to let spring system tween visual position)
         for slotName, item in pairs(state.equippedItems) do
             if item and item.entity and registry:valid(item.entity) then
                 local slotEntity = state.slotEntities[slotName]
                 if slotEntity and registry:valid(slotEntity) then
-                    centerItemOnSlot(item.entity, slotEntity)
+                    centerItemOnSlot(item.entity, slotEntity, false)
                 end
             end
         end
-        
+
         -- Batch render equipped items
         if not (command_buffer and command_buffer.queueDrawBatchedEntities and layers and layers.sprites) then
             return
         end
-        
+
         local equippedItemsList = {}
         for slotName, item in pairs(state.equippedItems) do
             if item and item.entity and registry:valid(item.entity) then
@@ -742,13 +753,14 @@ setupRenderTimer = function()
                 end
                 local hasPipeline = shader_pipeline and shader_pipeline.ShaderPipelineComponent
                     and registry:has(item.entity, shader_pipeline.ShaderPipelineComponent)
+
                 if hasPipeline and animComp and not animComp.noDraw then
                     table.insert(equippedItemsList, item.entity)
                     animComp.drawWithLegacyPipeline = false
                 end
             end
         end
-        
+
         if #equippedItemsList > 0 then
             command_buffer.queueDrawBatchedEntities(layers.sprites, function(cmd)
                 cmd.registry = registry
@@ -757,7 +769,7 @@ setupRenderTimer = function()
             end, ITEM_Z, layer.DrawCommandSpace.Screen)
         end
     end, nil, "equipment_render_timer", TIMER_GROUP)
-    
+
     log_debug("[EquipmentPanel] Render timer setup complete")
 end
 
@@ -783,7 +795,7 @@ end
 
 function EquipmentPanel.equipItem(entity, equipDef)
     local slotId = equipDef and equipDef.slot
-    
+
     if not slotId then
         log_warn("[EquipmentPanel] No slot specified in equipment definition")
         return false
@@ -795,37 +807,27 @@ function EquipmentPanel.equipItem(entity, equipDef)
         return false
     end
 
-    local playerEntity = getPlayerEntity()
-    local ctx = getCombatContext()
-    
-    if not playerEntity then
-        log_warn("[EquipmentPanel] Cannot equip - no player entity found")
-        return false
-    end
-
-    if not ctx then
-        log_warn("[EquipmentPanel] Cannot equip - no combat context found")
-        return false
-    end
-
     local existingItem = state.equippedItems[slotId]
     if existingItem then
         EquipmentPanel.unequipSlot(slotId)
     end
 
-    local playerScript = getScriptTableFromEntityID and getScriptTableFromEntityID(playerEntity)
-    local playerCombatTable = playerScript and playerScript.combatTable
-    
-    if playerCombatTable then
-        local normalizedDef = normalizeEquipmentDef(equipDef)
-        local ok, err = combat_system.Game.ItemSystem.equip(ctx, playerCombatTable, normalizedDef)
-        if not ok then
-            log_warn("[EquipmentPanel] ItemSystem.equip failed: " .. (err or "unknown error"))
-            return false
+    -- Try to integrate with combat system if available (optional - visual equip works without it)
+    local playerEntity = getPlayerEntity()
+    local ctx = getCombatContext()
+
+    if playerEntity and ctx then
+        local playerScript = getScriptTableFromEntityID and getScriptTableFromEntityID(playerEntity)
+        local playerCombatTable = playerScript and playerScript.combatTable
+
+        if playerCombatTable then
+            local normalizedDef = normalizeEquipmentDef(equipDef)
+            local ok, err = combat_system.Game.ItemSystem.equip(ctx, playerCombatTable, normalizedDef)
+            if not ok then
+                log_warn("[EquipmentPanel] ItemSystem.equip failed (stats won't apply): " .. (err or "unknown error"))
+                -- Continue anyway - visual equip still works
+            end
         end
-    else
-        log_warn("[EquipmentPanel] No combat table found on player")
-        return false
     end
 
     state.equippedItems[slotId] = {
@@ -845,9 +847,55 @@ function EquipmentPanel.equipItem(entity, equipDef)
     local go = component_cache.get(entity, GameObject)
     if go then
         go.state.rightClickEnabled = true
+        go.state.dragEnabled = true
+        go.state.collisionEnabled = true
+        go.state.hoverEnabled = true
+
         go.methods.onRightClick = function(reg, clickedEntity)
             if state.equippedItems[slotId] and state.equippedItems[slotId].entity == clickedEntity then
                 returnEquippedItemFromSlot(slotId)
+            end
+        end
+
+        -- Store original slot for drag-back behavior
+        local originalSlot = slotId
+        local originalSlotEntity = slotEntity
+
+        go.methods.onDrag = function(reg, draggedEntity)
+            -- Raise z-order during drag
+            if layer_order_system and layer_order_system.assignZIndexToEntity then
+                local DRAG_Z = 1400  -- Above all other UI
+                layer_order_system.assignZIndexToEntity(draggedEntity, DRAG_Z)
+            end
+            signal.emit("drag_started", draggedEntity)
+        end
+
+        go.methods.onStopDrag = function(reg, draggedEntity)
+            -- Reset z-order after drag
+            if layer_order_system and layer_order_system.assignZIndexToEntity then
+                local CARD_Z = 1000  -- Normal card z-order
+                layer_order_system.assignZIndexToEntity(draggedEntity, CARD_Z)
+            end
+            signal.emit("drag_ended", draggedEntity)
+
+            -- Check if item was dropped on a valid inventory target
+            local dragState = InventoryGridInit.getDragState and InventoryGridInit.getDragState(draggedEntity)
+            local droppedOnValidTarget = dragState and dragState.wasDroppedOnValidSlot
+
+            if droppedOnValidTarget then
+                -- Item was dropped on valid inventory slot - unequip it
+                if state.equippedItems[originalSlot] and state.equippedItems[originalSlot].entity == draggedEntity then
+                    EquipmentPanel.unequipSlot(originalSlot)
+                    log_debug("[EquipmentPanel] Item dragged out of " .. originalSlot .. " to inventory")
+                end
+            else
+                -- Check if item was dropped on a valid target (handled by slot onRelease)
+                -- If still equipped, snap back to slot (setVisual=true for immediate snap)
+                if state.equippedItems[originalSlot] and state.equippedItems[originalSlot].entity == draggedEntity then
+                    if originalSlotEntity and registry:valid(originalSlotEntity) then
+                        centerItemOnSlot(draggedEntity, originalSlotEntity, true)
+                    end
+                end
             end
         end
     end

@@ -212,8 +212,22 @@ local function isTriggerCard(cardEntity)
 end
 
 local function getEquipmentDef(cardEntity)
-    local script = getScriptTableFromEntityID(cardEntity)
-    if not script then return nil end
+    -- Try getScriptTableFromEntityID first (standard approach)
+    local script = getScriptTableFromEntityID and getScriptTableFromEntityID(cardEntity)
+
+    -- Fallback: check PlayerInventory's card registry (needed when setScriptTableForEntityID unavailable)
+    if not script then
+        local PlayerInventory = getPlayerInventory()
+        if PlayerInventory and PlayerInventory.getCardRegistry then
+            local cardRegistry = PlayerInventory.getCardRegistry()
+            script = cardRegistry and cardRegistry[cardEntity]
+        end
+    end
+
+    if not script then
+        return nil
+    end
+
     if script.equipmentDef then
         return script.equipmentDef
     end
@@ -415,12 +429,14 @@ function QuickEquip.equipToEquipment(cardEntity)
 
     local success = panel.equipItem(cardEntity, equipDef)
     if not success then
+        -- Restore to original slot on failure
         if location and location.grid and location.slot then
             grid.addItem(location.grid, cardEntity, location.slot)
         end
         return false, "equip_failed"
     end
 
+    log_debug("[QuickEquip] Equipped to equipment slot: " .. tostring(equipDef.slot))
     return true, nil
 end
 

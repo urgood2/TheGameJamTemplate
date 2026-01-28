@@ -106,53 +106,41 @@ jobs:
         run: |
           cmake --build build --config Release -j
 
-      - name: Copy assets
-        shell: bash
-        run: |
-          python scripts/copy_assets.py
-
-      - name: Package (Linux/macOS)
-        if: runner.os != 'Windows'
+      - name: Package (Linux)
+        if: matrix.os == 'ubuntu-latest'
         shell: bash
         run: |
           mkdir -p dist
           cp build/raylib-cpp-cmake-template dist/
-          cp -R assets dist/
-          cd dist && tar -czf ../raylib-cpp-cmake-template-${{ matrix.os }}.tar.gz . && cd ..
+          python scripts/copy_assets.py assets dist/assets
+          cd dist && zip -r ../raylib-cpp-cmake-template-linux.zip .
 
-      - name: Copy Windows DLLs
-        if: runner.os == 'Windows'
-        shell: pwsh
+      - name: Package (macOS)
+        if: matrix.os == 'macos-14'
+        shell: bash
         run: |
-          mkdir -Force dist
-          Copy-Item build/raylib-cpp-cmake-template.exe dist/
-          Copy-Item C:/msys64/mingw64/bin/libstdc++-6.dll dist/
-          Copy-Item C:/msys64/mingw64/bin/libgcc_s_seh-1.dll dist/
-          Copy-Item C:/msys64/mingw64/bin/libwinpthread-1.dll dist/
-          Copy-Item -Recurse assets dist/
+          mkdir -p dist
+          cp build/raylib-cpp-cmake-template dist/
+          python scripts/copy_assets.py assets dist/assets
+          cd dist && zip -r ../raylib-cpp-cmake-template-macos.zip .
 
       - name: Package (Windows)
-        if: runner.os == 'Windows'
+        if: matrix.os == 'windows-latest'
         shell: pwsh
         run: |
-          cd dist
-          & 'C:/Program Files/7-Zip/7z.exe' a -r ../raylib-cpp-cmake-template-windows-latest.zip .
-          cd ..
+          mkdir dist
+          copy build\raylib-cpp-cmake-template.exe dist\
+          copy C:\msys64\mingw64\bin\libstdc++-6.dll dist\
+          copy C:\msys64\mingw64\bin\libgcc_s_seh-1.dll dist\
+          copy C:\msys64\mingw64\bin\libwinpthread-1.dll dist\
+          python scripts/copy_assets.py assets dist/assets
+          Compress-Archive -Path dist\* -DestinationPath raylib-cpp-cmake-template-windows.zip
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: raylib-cpp-cmake-template-${{ matrix.os }}
-          path: raylib-cpp-cmake-template-*.tar.gz
-          if-no-files-found: ignore
-
-      - name: Upload artifact (Windows)
-        if: runner.os == 'Windows'
-        uses: actions/upload-artifact@v4
-        with:
-          name: raylib-cpp-cmake-template-windows-latest
-          path: raylib-cpp-cmake-template-windows-latest.zip
-          if-no-files-found: ignore
+          name: raylib-cpp-cmake-template-${{ matrix.os == 'ubuntu-latest' && 'linux' || matrix.os == 'macos-14' && 'macos' || 'windows' }}
+          path: raylib-cpp-cmake-template-*.zip
 
   release:
     name: Create GitHub Release

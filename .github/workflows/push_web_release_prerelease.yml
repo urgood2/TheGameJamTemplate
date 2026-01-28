@@ -83,7 +83,7 @@ jobs:
           emcmake cmake -S . -B build-web \
             -DPLATFORM=Web \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF
+            -DENABLE_LTO=OFF
 
       - name: Copy assets to build directory
         run: |

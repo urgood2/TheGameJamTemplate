@@ -89,19 +89,29 @@ jobs:
         run: |
           mkdir -p build-web/assets
           rsync -av --exclude='auto_export_assets.aseprite' \
+                    --exclude='auto_export_assets-test.png' \
                     --exclude='graphics/atlas/' \
                     --exclude='graphics/ascii_tilesets/' \
                     --exclude='graphics/auto-exported-sprites-from-aseprite/' \
+                    --exclude='graphics/pre-packing-files_globbed/' \
                     --exclude='localization/localization.babel' \
                     --exclude='scripts/AI_TABLE_CONTENT_EXAMPLE.lua' \
+                    --exclude='scripts_archived/' \
                     --exclude='shaders/archived/' \
+                    --exclude='siralim_data/' \
                     --exclude='test_features.ldtk' \
                     --exclude='test_translation_project.babel' \
                     --exclude='test.png' \
                     --exclude='Title.png' \
                     --exclude='Typical_2D_platformer_example.ldtk' \
                     --exclude='Typical_TopDown_example.ldtk' \
+                    --exclude='*.babel' \
+                    --exclude='*.ldtk' \
+                    --exclude='*.tps' \
+                    --exclude='*.aseprite' \
                     assets/ build-web/assets/
+          echo "Assets size after exclusions:"
+          du -sh build-web/assets/
 
       - name: Build Web
         timeout-minutes: 90

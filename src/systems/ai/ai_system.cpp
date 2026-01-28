@@ -2009,6 +2009,146 @@ namespace ai_system
                                  "---@param e Entity\n"
                                  "---@return table|nil\n",
                                  "Returns a table with GOAP state info for debugging, or nil if entity has no GOAPComponent."});
+
+        // 1) ai.dump_worldstate(entity) -> returns table of {atom_name = bool_value}
+        ai.set_function("dump_worldstate", [&](sol::this_state L, entt::entity e) -> sol::object {
+            auto &registry = globals::getRegistry();
+            if (!registry.valid(e) || !registry.all_of<GOAPComponent>(e)) {
+                return sol::make_object(L, sol::lua_nil);
+            }
+            auto &goap = registry.get<GOAPComponent>(e);
+            auto result_map = goap_worldstate_to_map(&goap.ap, &goap.current_state);
+            return sol::make_object(L, result_map);
+        });
+
+        rec.record_method("ai", {"dump_worldstate",
+                                 "---@param e Entity\n"
+                                 "---@return table<string,boolean>|nil",
+                                 "Returns a table of all worldstate atoms and their boolean values for the entity; nil if entity invalid."});
+
+        // 2) ai.dump_plan(entity) -> returns array-table of action names {[1]="action1", [2]="action2"}
+        ai.set_function("dump_plan", [&](sol::this_state L, entt::entity e) -> sol::object {
+            auto &registry = globals::getRegistry();
+            if (!registry.valid(e) || !registry.all_of<GOAPComponent>(e)) {
+                return sol::make_object(L, sol::lua_nil);
+            }
+            auto &goap = registry.get<GOAPComponent>(e);
+            sol::table result = lua.create_table();
+            for (int i = 0; i < goap.planSize; ++i) {
+                result[i + 1] = goap.plan[i]; // Lua uses 1-based indexing
+            }
+            return result;
+        });
+
+        rec.record_method("ai", {"dump_plan",
+                                 "---@param e Entity\n"
+                                 "---@return string[]|nil",
+                                 "Returns a 1-based array table of action names in the entity's current plan; nil if entity invalid."});
+
+        // 3) ai.get_all_atoms(entity) -> returns array-table of all registered atom names
+        ai.set_function("get_all_atoms", [&](sol::this_state L, entt::entity e) -> sol::object {
+            auto &registry = globals::getRegistry();
+            if (!registry.valid(e) || !registry.all_of<GOAPComponent>(e)) {
+                return sol::make_object(L, sol::lua_nil);
+            }
+            auto &goap = registry.get<GOAPComponent>(e);
+            sol::table result = lua.create_table();
+            for (int i = 0; i < goap.ap.numatoms; ++i) {
+                if (goap.ap.atm_names[i] != nullptr) {
+                    result[i + 1] = goap.ap.atm_names[i]; // Lua uses 1-based indexing
+                }
+            }
+            return result;
+        });
+
+        rec.record_method("ai", {"get_all_atoms",
+                                 "---@param e Entity\n"
+                                 "---@return string[]|nil",
+                                 "Returns a 1-based array table of all registered atom names from the entity's planner; nil if entity invalid."});
+
+        // 4) ai.has_plan(entity) -> returns bool (planSize > 0 && dirty == false)
+        ai.set_function("has_plan", [&](sol::this_state L, entt::entity e) -> sol::object {
+            auto &registry = globals::getRegistry();
+            if (!registry.valid(e) || !registry.all_of<GOAPComponent>(e)) {
+                return sol::make_object(L, sol::lua_nil);
+            }
+            auto &goap = registry.get<GOAPComponent>(e);
+            bool has_valid_plan = (goap.planSize > 0) && (!goap.dirty);
+            return sol::make_object(L, has_valid_plan);
+        });
+
+        rec.record_method("ai", {"has_plan",
+                                 "---@param e Entity\n"
+                                 "---@return boolean|nil",
+                                 "Returns true if the entity has a valid (non-dirty) plan with at least one action; nil if entity invalid."});
+
+        // 5) ai.dump_blackboard(entity) -> returns table {key1={type="bool", value=true}, ...}
+        ai.set_function("dump_blackboard", [&](sol::this_state L, entt::entity e) -> sol::object {
+            auto &registry = globals::getRegistry();
+            if (!registry.valid(e) || !registry.all_of<GOAPComponent>(e)) {
+                return sol::make_object(L, sol::lua_nil);
+            }
+            auto &goap = registry.get<GOAPComponent>(e);
+            sol::table result = lua.create_table();
+            
+            auto keys = goap.blackboard.getKeys();
+            for (const auto& key : keys) {
+                sol::table entry = lua.create_table();
+                
+                // Try to cast to each known type
+                try {
+                    bool val = goap.blackboard.get<bool>(key);
+                    entry["type"] = "bool";
+                    entry["value"] = val;
+                    result[key] = entry;
+                    continue;
+                } catch (const std::bad_any_cast&) {}
+                
+                try {
+                    int val = goap.blackboard.get<int>(key);
+                    entry["type"] = "int";
+                    entry["value"] = val;
+                    result[key] = entry;
+                    continue;
+                } catch (const std::bad_any_cast&) {}
+                
+                try {
+                    double val = goap.blackboard.get<double>(key);
+                    entry["type"] = "double";
+                    entry["value"] = val;
+                    result[key] = entry;
+                    continue;
+                } catch (const std::bad_any_cast&) {}
+                
+                try {
+                    float val = goap.blackboard.get<float>(key);
+                    entry["type"] = "float";
+                    entry["value"] = val;
+                    result[key] = entry;
+                    continue;
+                } catch (const std::bad_any_cast&) {}
+                
+                try {
+                    std::string val = goap.blackboard.get<std::string>(key);
+                    entry["type"] = "string";
+                    entry["value"] = val;
+                    result[key] = entry;
+                    continue;
+                } catch (const std::bad_any_cast&) {}
+                
+                // If all casts failed, mark as unknown
+                entry["type"] = "unknown";
+                entry["value"] = "<unsupported>";
+                result[key] = entry;
+            }
+            
+            return result;
+        });
+
+        rec.record_method("ai", {"dump_blackboard",
+                                 "---@param e Entity\n"
+                                 "---@return table<string,{type:string, value:any}>|nil",
+                                 "Returns a table of all blackboard entries with their type and value; nil if entity invalid."});
     }
 
     // Update the GOAP logic within the game loop

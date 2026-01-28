@@ -194,9 +194,12 @@ namespace random_utils {
         rec.record_property("random_utils.Vector2", { "x", "0", "X coordinate" });
         rec.record_property("random_utils.Vector2", { "y", "0", "Y coordinate" });
 
-        // 3) Vector3
+        // 3) Vector3 (use factories for C aggregate compatibility)
         ru.new_usertype<Vector3>("Vector3",
-            sol::constructors<Vector3(), Vector3(float, float, float)>(),
+            sol::call_constructor, sol::factories(
+                []() { return Vector3{0.0f, 0.0f, 0.0f}; },
+                [](float x, float y, float z) { return Vector3{x, y, z}; }
+            ),
             "x", &Vector3::x,
             "y", &Vector3::y,
             "z", &Vector3::z

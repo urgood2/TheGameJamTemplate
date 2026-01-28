@@ -207,6 +207,12 @@ endif()
 ##########################################################################################
 option(ENABLE_LTO "Enable Link-Time Optimization for Release builds" ON)
 
+# Disable LTO on MinGW by default (CI runners often lack proper LTO linker plugin)
+if(MINGW AND NOT DEFINED ENV{ENABLE_MINGW_LTO})
+    set(ENABLE_LTO OFF)
+    message(STATUS "LTO disabled on MinGW (set ENABLE_MINGW_LTO env var to override)")
+endif()
+
 if(ENABLE_LTO AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
     include(CheckIPOSupported)
     check_ipo_supported(RESULT lto_supported OUTPUT lto_output)
@@ -391,6 +397,8 @@ if (WIN32)
     else()
         # MinGW/GCC flag (passes through to assembler)
         add_compile_options(-Wa,-mbig-obj)
+        # Force console subsystem to use main() instead of WinMain()
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -mconsole")
     endif()
 endif()
 

@@ -6,6 +6,10 @@ on:
       - "**"   # build on all branches
   workflow_dispatch:  # Allow manual trigger
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   ITCH_PROJECT: chugget/testing
 
@@ -19,7 +23,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Install system dependencies
         run: |
@@ -67,7 +73,10 @@ jobs:
       contains(github.event.head_commit.message, '#build')
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Setup Emscripten
         uses: mymindstorm/setup-emsdk@v14
@@ -75,8 +84,13 @@ jobs:
           version: 3.1.67
           actions-cache-folder: "emsdk-cache"
 
-      - name: Clean FetchContent deps
-        run: rm -rf build-web/_deps
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: build-web/_deps
+          key: web-deps-${{ hashFiles('CMakeLists.txt') }}
+          restore-keys: |
+            web-deps-
 
       - name: Configure CMake (Web)
         run: |
@@ -120,7 +134,8 @@ jobs:
           NODE_OPTIONS: "--max-old-space-size=2048"
         run: |
           # Build with single thread to minimize memory usage during linking
-          emmake make -C build-web -j1 VERBOSE=1
+          # Use cmake --build for generator-agnostic builds
+          cmake --build build-web -j1 --verbose
 
       - name: Package Web build
         run: |
@@ -148,7 +163,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       # Native disabled → skip download
       # - name: Download native build

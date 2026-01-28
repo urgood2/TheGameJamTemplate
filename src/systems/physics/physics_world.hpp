@@ -396,7 +396,9 @@ struct TankController {
 */
 constexpr float PIXELS_PER_PIXEL_UNIT = 1.0f;
 
-constexpr std::string DEFAULT_COLLISION_TAG = "WORLD";
+// Use const char* instead of constexpr std::string for older clang compatibility
+// (std::string is not constexpr until C++20 with full library support)
+inline constexpr const char* DEFAULT_COLLISION_TAG = "WORLD";
 
 /**
  * @brief Convert a Raylib world‐space point (pixels, Y‐down) to Chipmunk

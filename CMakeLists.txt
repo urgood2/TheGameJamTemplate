@@ -350,6 +350,9 @@ if (TRACY_ENABLE AND NOT EMSCRIPTEN)
         TRACY_ENABLED=1
         TRACY_NO_CRASH_HANDLER
     )
+    if (WIN32 AND MINGW)
+        add_compile_definitions(TRACY_UWP)
+    endif()
 else()
     message(STATUS "Tracy DISABLED for this build")
     add_compile_definitions(TRACY_ENABLED=0)

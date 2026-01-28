@@ -145,8 +145,8 @@ inline entt::entity CreateParticle(
     SPDLOG_DEBUG("Particle velocity is zero");
   }
   particleComp.velocity = particleData.velocity.value_or(
-      Vector2(Random::get<float>(-defaultSpeed, defaultSpeed),
-              Random::get<float>(-defaultSpeed, defaultSpeed)));
+      Vector2{Random::get<float>(-defaultSpeed, defaultSpeed),
+              Random::get<float>(-defaultSpeed, defaultSpeed)});
   particleComp.rotation = particleData.rotation.value_or(defaultRotation);
   particleComp.rotationSpeed =
       particleData.rotationSpeed.value_or(defaultRotationSpeed);
@@ -256,8 +256,8 @@ void EmitParticleHelper(entt::entity emitterEntity, entt::registry &registry) {
   float emissionAngle = baseAngle + angleOffset;
 
   Particle p{};
-  p.velocity = Vector2(cos(emissionAngle * DEG2RAD) * emitter.particleSpeed,
-                       sin(emissionAngle * DEG2RAD) * emitter.particleSpeed);
+  p.velocity = Vector2{cos(emissionAngle * DEG2RAD) * emitter.particleSpeed,
+                       sin(emissionAngle * DEG2RAD) * emitter.particleSpeed};
   p.rotation = GetRandomValue(0, 360);
   p.rotationSpeed = GetRandomValue(-10, 10) / 10.0f * 0.2f;
   p.scale = GetRandomValue(1, 5) / 10.0f * 2.0f;

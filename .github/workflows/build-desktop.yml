@@ -1,0 +1,179 @@
+name: Build Desktop
+
+on:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "v*"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    fail-fast: false
+    if: |
+      startsWith(github.ref, 'refs/tags/v') ||
+      (github.event.head_commit != null && (
+        contains(github.event.head_commit.message, '[build]') ||
+        contains(github.event.head_commit.message, '#build')
+      ))
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-14, windows-latest]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libasound2-dev libpulse-dev libx11-dev libxext-dev libxrandr-dev \
+            libxi-dev libxinerama-dev libxcursor-dev libglu1-mesa-dev libgl1-mesa-dev \
+            libdrm-dev libgbm-dev libxkbcommon-dev
+
+      - name: Setup MSYS2 (Windows)
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-make
+
+      - name: Add MSYS2 to PATH (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          echo "C:/msys64/mingw64/bin" | Out-File -FilePath $env:GITHUB_PATH -Append
+
+      - name: Verify macOS architecture
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          echo "Architecture: $(uname -m)"
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: build/_deps
+          key: ${{ runner.os }}-deps-${{ hashFiles('CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-deps-
+
+      - name: Configure CMake (Linux/macOS)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DENABLE_UNIT_TESTS=OFF \
+            -DUSE_LUAJIT=OFF
+
+      - name: Configure CMake (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cmake -B build `
+            -G "MinGW Makefiles" `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DENABLE_UNIT_TESTS=OFF `
+            -DUSE_LUAJIT=OFF
+
+      - name: Build (Linux/macOS)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          cmake --build build --config Release -j
+
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cmake --build build --config Release -j
+
+      - name: Copy assets
+        shell: bash
+        run: |
+          python scripts/copy_assets.py
+
+      - name: Package (Linux/macOS)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp build/raylib-cpp-cmake-template dist/
+          cp -R assets dist/
+          cd dist && tar -czf ../raylib-cpp-cmake-template-${{ matrix.os }}.tar.gz . && cd ..
+
+      - name: Copy Windows DLLs
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          mkdir -Force dist
+          Copy-Item build/raylib-cpp-cmake-template.exe dist/
+          Copy-Item C:/msys64/mingw64/bin/libstdc++-6.dll dist/
+          Copy-Item C:/msys64/mingw64/bin/libgcc_s_seh-1.dll dist/
+          Copy-Item C:/msys64/mingw64/bin/libwinpthread-1.dll dist/
+          Copy-Item -Recurse assets dist/
+
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cd dist
+          & 'C:/Program Files/7-Zip/7z.exe' a -r ../raylib-cpp-cmake-template-windows-latest.zip .
+          cd ..
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: raylib-cpp-cmake-template-${{ matrix.os }}
+          path: raylib-cpp-cmake-template-*.tar.gz
+          if-no-files-found: ignore
+
+      - name: Upload artifact (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: raylib-cpp-cmake-template-windows-latest
+          path: raylib-cpp-cmake-template-windows-latest.zip
+          if-no-files-found: ignore
+
+  release:
+    name: Create GitHub Release
+    needs: [build]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: release-assets
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release-assets/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

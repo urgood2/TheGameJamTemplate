@@ -1374,16 +1374,20 @@ if (EMSCRIPTEN)
 
     # Files/directories to exclude from web build
     set(WEB_EXCLUDE_FILES
-        # Source/editor files
+        # Source/editor files (large, not needed at runtime)
         "assets/auto_export_assets.aseprite"
+        "assets/auto_export_assets-test.png"
         "assets/graphics/atlas/"
         "assets/graphics/ascii_tilesets/"
         "assets/graphics/auto-exported-sprites-from-aseprite/"
+        "assets/graphics/pre-packing-files_globbed/"
         # Localization source files
         "assets/localization/localization.babel"
-        # Test/example files
+        # Test/example/archived files
         "assets/scripts/AI_TABLE_CONTENT_EXAMPLE.lua"
+        "assets/scripts_archived/"
         "assets/shaders/archived/"
+        "assets/siralim_data/"
         "assets/test_features.ldtk"
         "assets/test_translation_project.babel"
         "assets/test.png"

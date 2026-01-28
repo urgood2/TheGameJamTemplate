@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - "**"   # build on all branches
+  workflow_dispatch:  # Allow manual trigger
 
 env:
   ITCH_PROJECT: chugget/testing
@@ -83,7 +84,8 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release
 
       - name: Build Web
-        run: emmake make -C build-web -j
+        timeout-minutes: 60
+        run: emmake make -C build-web -j$(nproc)
 
       - name: Package Web build
         run: |

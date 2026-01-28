@@ -1004,7 +1004,7 @@ rec.bind_function(lua, path, "set_arrive_radius",
 
             physics::PhysicsCreateInfo ci;
             ci.shape   = shape;
-            ci.tag     = get_string("tag", physics::DEFAULT_COLLISION_TAG.c_str());
+            ci.tag     = get_string("tag", physics::DEFAULT_COLLISION_TAG);
             ci.sensor  = get_bool  ("sensor", false);
             ci.density = get_num   ("density", 1.0f);
             physics::CreatePhysicsForTransform(R, PM, e, ci);
@@ -1186,7 +1186,7 @@ rec.bind_function(lua, path, "set_arrive_radius",
 
             physics::PhysicsCreateInfo ci;
             ci.shape   = shape;
-            ci.tag     = get_string("tag", physics::DEFAULT_COLLISION_TAG.c_str());
+            ci.tag     = get_string("tag", physics::DEFAULT_COLLISION_TAG);
             ci.sensor  = get_bool  ("sensor", false);
             ci.density = get_num   ("density", 1.0f);
 

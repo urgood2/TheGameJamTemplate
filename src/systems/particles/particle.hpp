@@ -2065,11 +2065,14 @@ inline void exposeToLua(sol::state &lua) {
       "tinting, and tag.");
 
   // 1) Create a new usertype for Vector2
+  // Use factory functions instead of sol::constructors for C aggregate structs
+  // (older clang versions don't support construct_at for aggregates)
   lua.new_usertype<Vector2>(
       "Vector2",
-      // allow `Vector2()` → (0,0) and `Vector2(x,y)`
-      sol::constructors<Vector2(), Vector2(float, float)>(),
-      // expose fields
+      sol::call_constructor, sol::factories(
+          []() { return Vector2{0.0f, 0.0f}; },
+          [](float x, float y) { return Vector2{x, y}; }
+      ),
       "x", &Vector2::x, "y", &Vector2::y);
 
   // 2) (Optional) make it easier to construct
@@ -2080,14 +2083,15 @@ inline void exposeToLua(sol::state &lua) {
   rec.record_property("Vector2", {"x", "number", "X component"});
   rec.record_property("Vector2", {"y", "number", "Y component"});
 
-  // 1) Bind the Color struct
+  // 1) Bind the Color struct (use factories for C aggregate compatibility)
   lua.new_usertype<Color>(
       "Color",
-      // ctors: default (white {255,255,255,255}) and full RGBA
-      sol::constructors<Color(), Color(unsigned char, unsigned char,
-                                       unsigned char, unsigned char)>(),
-
-      // setAlpha method that changes alpha and returns self
+      sol::call_constructor, sol::factories(
+          []() { return Color{255, 255, 255, 255}; },
+          [](unsigned char r, unsigned char g, unsigned char b, unsigned char a) {
+            return Color{r, g, b, a};
+          }
+      ),
       "setAlpha",
       [](Color &c, unsigned char a) {
         c.a = a;

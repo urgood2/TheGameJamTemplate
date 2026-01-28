@@ -343,6 +343,11 @@ if (EMSCRIPTEN)
     set(TRACY_ENABLE OFF CACHE BOOL "Tracy disabled on Web" FORCE)
 endif()
 
+# Force Tracy off on MinGW builds (known compatibility issues with Windows SDK headers)
+if (WIN32 AND MINGW)
+    set(TRACY_ENABLE OFF CACHE BOOL "Tracy disabled on MinGW" FORCE)
+endif()
+
 if (TRACY_ENABLE AND NOT EMSCRIPTEN)
     message(STATUS "Tracy ENABLED for this build")
     add_compile_definitions(
@@ -350,9 +355,6 @@ if (TRACY_ENABLE AND NOT EMSCRIPTEN)
         TRACY_ENABLED=1
         TRACY_NO_CRASH_HANDLER
     )
-    if (WIN32 AND MINGW)
-        add_compile_definitions(TRACY_UWP)
-    endif()
 else()
     message(STATUS "Tracy DISABLED for this build")
     add_compile_definitions(TRACY_ENABLED=0)

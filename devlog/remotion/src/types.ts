@@ -69,6 +69,14 @@ export interface Segment {
   // SFX start offset in seconds (default: 0, plays at segment start)
   sfxOffset?: number;
 
+  // Additional SFX layers (for typing sounds, emphasis hits, etc.)
+  sfxLayers?: Array<{
+    src: string;
+    volume?: number;  // 0-1, default: 0.3
+    offset?: number;  // seconds from segment start
+    loop?: boolean;   // loop the sound for duration of segment
+  }>;
+
   // === NEW: Animation/Transition Options ===
 
   // How this segment transitions IN (default: 'fade')
@@ -88,6 +96,12 @@ export interface DevlogVideoProps {
 
   // Segments in order
   segments: Segment[];
+
+  // Background music (plays for entire video, loops if needed)
+  music?: {
+    src: string;
+    volume?: number;  // 0-1, default: 0.15 (subtle background)
+  };
 
   // Style options
   style?: {

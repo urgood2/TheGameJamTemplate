@@ -1,0 +1,33 @@
+#!/bin/sh
+command -v git-lfs >/dev/null 2>&1 || { printf >&2 "\n%s\n\n" "This repository is configured for Git LFS but 'git-lfs' was not found on your path. If you no longer wish to use Git LFS, remove this hook by deleting the 'post-checkout' file in the hooks directory (set by 'core.hookspath'; usually '.git/hooks')."; exit 2; }
+git lfs post-checkout "$@"
+
+# === Worktree setup ===
+# Symlink configs from main repo into worktrees
+COMMON_DIR="$(git rev-parse --git-common-dir 2>/dev/null)"
+GIT_DIR="$(git rev-parse --git-dir 2>/dev/null)"
+WORKTREE_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
+
+if [ -n "$COMMON_DIR" ] && [ -n "$GIT_DIR" ] && [ "$COMMON_DIR" != "$GIT_DIR" ]; then
+  # We're in a worktree (git-dir differs from common-dir)
+
+  # Get main repo's working directory (parent of .git)
+  MAIN_REPO_ROOT="$(dirname "$COMMON_DIR")"
+
+  # --- Opencode fix ---
+  # Symlink .git/opencode from main repo
+  if [ -f "$COMMON_DIR/opencode" ] && [ ! -e "$GIT_DIR/opencode" ]; then
+    ln -sf "$COMMON_DIR/opencode" "$GIT_DIR/opencode" 2>/dev/null
+  fi
+
+  # --- Claude Code fix ---
+  # Symlink .claude/settings.local.json from main repo
+  MAIN_CLAUDE_LOCAL="$MAIN_REPO_ROOT/.claude/settings.local.json"
+  WORKTREE_CLAUDE_DIR="$WORKTREE_ROOT/.claude"
+  WORKTREE_CLAUDE_LOCAL="$WORKTREE_CLAUDE_DIR/settings.local.json"
+
+  if [ -f "$MAIN_CLAUDE_LOCAL" ] && [ ! -e "$WORKTREE_CLAUDE_LOCAL" ]; then
+    mkdir -p "$WORKTREE_CLAUDE_DIR" 2>/dev/null
+    ln -sf "$MAIN_CLAUDE_LOCAL" "$WORKTREE_CLAUDE_LOCAL" 2>/dev/null
+  fi
+fi

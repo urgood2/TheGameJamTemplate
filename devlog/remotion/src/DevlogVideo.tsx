@@ -455,6 +455,7 @@ const VignetteOverlay: React.FC = () => {
 export const DevlogVideo: React.FC<DevlogVideoProps> = ({
   fps,
   segments,
+  music,
   style = {},
 }) => {
   const {
@@ -505,6 +506,15 @@ export const DevlogVideo: React.FC<DevlogVideoProps> = ({
       {/* Vignette for cinematic feel */}
       <VignetteOverlay />
 
+      {/* Background music (loops for entire video) */}
+      {music && (
+        <Audio
+          src={staticFile(music.src)}
+          volume={music.volume ?? 0.15}
+          loop
+        />
+      )}
+
       {/* Voice audio layers */}
       {segmentsWithTiming.map((data, index) =>
         data.segment.voice ? (
@@ -532,6 +542,23 @@ export const DevlogVideo: React.FC<DevlogVideoProps> = ({
             />
           </Sequence>
         ) : null
+      )}
+
+      {/* Additional SFX layers (typing sounds, emphasis, etc.) */}
+      {segmentsWithTiming.map((data, segIndex) =>
+        data.segment.sfxLayers?.map((layer, layerIndex) => (
+          <Sequence
+            key={`sfx-layer-${segIndex}-${layerIndex}`}
+            from={data.startFrame + Math.floor((layer.offset || 0) * fps)}
+            durationInFrames={layer.loop ? data.durationInFrames : undefined}
+          >
+            <Audio
+              src={staticFile(layer.src)}
+              volume={layer.volume ?? 0.3}
+              loop={layer.loop}
+            />
+          </Sequence>
+        ))
       )}
 
       {/* Animated subtitles */}

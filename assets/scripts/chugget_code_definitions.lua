@@ -1988,6 +1988,22 @@ shader_pipeline.ShaderPipelineComponent = {
 
 
 ---
+--- Per-UI-element render context for shader pipeline isolation.
+---
+---@class shader_pipeline.UIShaderRenderContext
+shader_pipeline.UIShaderRenderContext = {
+    ---@type int
+    width = nil,  -- Render texture width
+    ---@type int
+    height = nil,  -- Render texture height
+    ---@type int
+    swapCount = nil,  -- Number of swaps in current render pass
+    ---@type bool
+    initialized = nil  -- Whether textures are initialized
+}
+
+
+---
 --- Random number generation utilities and helper functions
 ---
 ---@class random_utils
@@ -11767,6 +11783,60 @@ function shader_pipeline.ShaderPipelineComponent.toggleOverlay(...) end
 ---@param self ShaderPipelineComponent
 ---@return nil
 function shader_pipeline.ShaderPipelineComponent.clearAll(...) end
+
+---
+--- Initialize render textures with given dimensions
+---
+---@param self UIShaderRenderContext
+---@param w integer
+---@param h integer
+---@return nil
+function shader_pipeline.UIShaderRenderContext.init(...) end
+
+---
+--- Resize render textures if dimensions changed
+---
+---@param self UIShaderRenderContext
+---@param w integer
+---@param h integer
+---@return nil
+function shader_pipeline.UIShaderRenderContext.resize(...) end
+
+---
+--- Unload all render textures
+---
+---@param self UIShaderRenderContext
+---@return nil
+function shader_pipeline.UIShaderRenderContext.unload(...) end
+
+---
+--- Swap ping/pong and increment swap count
+---
+---@param self UIShaderRenderContext
+---@return nil
+function shader_pipeline.UIShaderRenderContext.swap(...) end
+
+---
+--- Reset swap count to 0
+---
+---@param self UIShaderRenderContext
+---@return nil
+function shader_pipeline.UIShaderRenderContext.resetSwapCount(...) end
+
+---
+--- Check if Y-flip is needed based on swap count parity
+---
+---@param self UIShaderRenderContext
+---@return boolean
+function shader_pipeline.UIShaderRenderContext.needsYFlip(...) end
+
+---
+--- Clear all textures to a color
+---
+---@param self UIShaderRenderContext
+---@param color? Color
+---@return nil
+function shader_pipeline.UIShaderRenderContext.clearTextures(...) end
 
 ---
 --- Applies a set of uniforms to a specific shader instance.

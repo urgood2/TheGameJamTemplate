@@ -59,7 +59,7 @@ jobs:
   # ───────────────────────────────
   build-web:
     name: Build Web (Emscripten WASM)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     if: |
       github.event_name == 'workflow_dispatch' ||
       contains(github.event.head_commit.message, '[build]') ||
@@ -82,7 +82,8 @@ jobs:
         run: |
           emcmake cmake -S . -B build-web \
             -DPLATFORM=Web \
-            -DCMAKE_BUILD_TYPE=Release
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF
 
       - name: Copy assets to build directory
         run: |

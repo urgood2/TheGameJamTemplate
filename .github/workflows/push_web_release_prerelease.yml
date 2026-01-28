@@ -61,6 +61,7 @@ jobs:
     name: Build Web (Emscripten WASM)
     runs-on: ubuntu-latest
     if: |
+      github.event_name == 'workflow_dispatch' ||
       contains(github.event.head_commit.message, '[build]') ||
       contains(github.event.head_commit.message, '[web]') ||
       contains(github.event.head_commit.message, '#build')

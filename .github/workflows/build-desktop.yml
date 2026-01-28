@@ -130,9 +130,9 @@ jobs:
         run: |
           mkdir dist
           copy build\raylib-cpp-cmake-template.exe dist\
-          copy C:\msys64\mingw64\bin\libstdc++-6.dll dist\
-          copy C:\msys64\mingw64\bin\libgcc_s_seh-1.dll dist\
-          copy C:\msys64\mingw64\bin\libwinpthread-1.dll dist\
+          copy C:\mingw64\bin\libstdc++-6.dll dist\
+          copy C:\mingw64\bin\libgcc_s_seh-1.dll dist\
+          copy C:\mingw64\bin\libwinpthread-1.dll dist\
           python scripts/copy_assets.py assets dist/assets
           Compress-Archive -Path dist\* -DestinationPath raylib-cpp-cmake-template-windows.zip
 

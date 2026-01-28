@@ -930,25 +930,26 @@ namespace shaders
                             SPDLOG_INFO("Uniforms for shader '{}':", shaderName);
                             for (const auto &[uniformName, uniformValue] : uniformSet.uniforms)
                             {
-                                std::visit([&](const auto &value)
+                                const auto& name = uniformName;
+                                std::visit([&name](const auto &value)
                                            {
                                 using T = std::decay_t<decltype(value)>;
                                 if constexpr (std::is_same_v<T, float>) {
-                                    SPDLOG_INFO("  {}: float = {}", uniformName, value);
+                                    SPDLOG_INFO("  {}: float = {}", name, value);
                                 } else if constexpr (std::is_same_v<T, Vector2>) {
-                                    SPDLOG_INFO("  {}: Vector2 = ({}, {})", uniformName, value.x, value.y);
+                                    SPDLOG_INFO("  {}: Vector2 = ({}, {})", name, value.x, value.y);
                                 } else if constexpr (std::is_same_v<T, Vector3>) {
-                                    SPDLOG_INFO("  {}: Vector3 = ({}, {}, {})", uniformName, value.x, value.y, value.z);
+                                    SPDLOG_INFO("  {}: Vector3 = ({}, {}, {})", name, value.x, value.y, value.z);
                                 } else if constexpr (std::is_same_v<T, Vector4>) {
-                                    SPDLOG_INFO("  {}: Vector4 = ({}, {}, {}, {})", uniformName, value.x, value.y, value.z, value.w);
+                                    SPDLOG_INFO("  {}: Vector4 = ({}, {}, {}, {})", name, value.x, value.y, value.z, value.w);
                                 } else if constexpr (std::is_same_v<T, Texture2D>) {
-                                    ImGui::Text("%s (Texture ID: %d, %dx%d)", uniformName.c_str(), value.id, value.width, value.height);
+                                    ImGui::Text("%s (Texture ID: %d, %dx%d)", name.c_str(), value.id, value.width, value.height);
                                 }
                                 else if constexpr (std::is_same_v<T, bool>) {
-                                    SPDLOG_INFO("  {}: bool = {}", uniformName, value ? "true" : "false");
+                                    SPDLOG_INFO("  {}: bool = {}", name, value ? "true" : "false");
                                 }
                                 else {
-                                    SPDLOG_WARN("  {}: Unknown uniform type", uniformName);
+                                    SPDLOG_WARN("  {}: Unknown uniform type", name);
                                 } }, uniformValue);
                             }
                         }
@@ -958,27 +959,28 @@ namespace shaders
                         // Live-edit uniforms
                         for (auto &[uniformName, uniformValue] : uniformSet.uniforms)
                         {
-                            ImGui::PushID(uniformName.c_str());
+                            const auto& name = uniformName;
+                            ImGui::PushID(name.c_str());
 
-                            std::visit([&](auto &value)
+                            std::visit([&name](auto &value)
                                        {
                             using T = std::decay_t<decltype(value)>;
                             if constexpr (std::is_same_v<T, float>) {
-                                ImGui::DragFloat(uniformName.c_str(), &value, 0.01f);
+                                ImGui::DragFloat(name.c_str(), &value, 0.01f);
                             } else if constexpr (std::is_same_v<T, Vector2>) {
-                                ImGui::DragFloat2(uniformName.c_str(), &value.x, 0.01f);
+                                ImGui::DragFloat2(name.c_str(), &value.x, 0.01f);
                             } else if constexpr (std::is_same_v<T, Vector3>) {
-                                ImGui::DragFloat3(uniformName.c_str(), &value.x, 0.01f);
+                                ImGui::DragFloat3(name.c_str(), &value.x, 0.01f);
                             } else if constexpr (std::is_same_v<T, Vector4>) {
-                                ImGui::ColorEdit4(uniformName.c_str(), &value.x);
+                                ImGui::ColorEdit4(name.c_str(), &value.x);
                             } else if constexpr (std::is_same_v<T, bool>) {
-                                ImGui::Checkbox(uniformName.c_str(), &value);
+                                ImGui::Checkbox(name.c_str(), &value);
                             }                 
                             else if constexpr (std::is_same_v<T, int>) {
-                                ImGui::DragInt(uniformName.c_str(), &value, 1);
+                                ImGui::DragInt(name.c_str(), &value, 1);
                             }
                             else if constexpr (std::is_same_v<T, Texture2D>) {
-                                ImGui::Text("%s: Texture2D (id: %d, size: %dx%d)", uniformName.c_str(), value.id, value.width, value.height);
+                                ImGui::Text("%s: Texture2D (id: %d, size: %dx%d)", name.c_str(), value.id, value.width, value.height);
                                 // Optional preview
                                 // ImGui::Image((ImTextureID)(intptr_t)value.id, ImVec2(64, 64));
                             } else {

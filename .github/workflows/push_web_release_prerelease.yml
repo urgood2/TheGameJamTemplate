@@ -83,6 +83,24 @@ jobs:
             -DPLATFORM=Web \
             -DCMAKE_BUILD_TYPE=Release
 
+      - name: Copy assets to build directory
+        run: |
+          mkdir -p build-web/assets
+          rsync -av --exclude='auto_export_assets.aseprite' \
+                    --exclude='graphics/atlas/' \
+                    --exclude='graphics/ascii_tilesets/' \
+                    --exclude='graphics/auto-exported-sprites-from-aseprite/' \
+                    --exclude='localization/localization.babel' \
+                    --exclude='scripts/AI_TABLE_CONTENT_EXAMPLE.lua' \
+                    --exclude='shaders/archived/' \
+                    --exclude='test_features.ldtk' \
+                    --exclude='test_translation_project.babel' \
+                    --exclude='test.png' \
+                    --exclude='Title.png' \
+                    --exclude='Typical_2D_platformer_example.ldtk' \
+                    --exclude='Typical_TopDown_example.ldtk' \
+                    assets/ build-web/assets/
+
       - name: Build Web
         timeout-minutes: 60
         run: emmake make -C build-web -j$(nproc)

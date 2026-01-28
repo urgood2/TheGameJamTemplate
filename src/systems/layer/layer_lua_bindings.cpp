@@ -41,6 +41,26 @@
 #include "entt/entt.hpp"
 #include "rlgl.h"
 #include "snowhouse/snowhouse.h"
+
+// OpenGL constants not always defined in GLES2/Emscripten
+#ifndef GL_KEEP
+#define GL_KEEP 0x1E00
+#endif
+#ifndef GL_ZERO
+#define GL_ZERO 0
+#endif
+#ifndef GL_REPLACE
+#define GL_REPLACE 0x1E01
+#endif
+#ifndef GL_ALWAYS
+#define GL_ALWAYS 0x0207
+#endif
+#ifndef GL_EQUAL
+#define GL_EQUAL 0x0202
+#endif
+#ifndef GL_FALSE
+#define GL_FALSE 0
+#endif
 #include "util/common_headers.hpp"
 #include "layer_command_buffer.hpp"
 #include "systems/scripting/binding_recorder.hpp"

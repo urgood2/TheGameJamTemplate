@@ -105,10 +105,12 @@ jobs:
 
       - name: Build Web
         timeout-minutes: 90
+        env:
+          # Limit Node.js memory to leave room for linker
+          NODE_OPTIONS: "--max-old-space-size=2048"
         run: |
-          # Use single-threaded build to avoid OOM during linking
-          # The Emscripten linker + WASM generation is memory-intensive
-          emmake make -C build-web -j2 VERBOSE=1
+          # Build with single thread to minimize memory usage during linking
+          emmake make -C build-web -j1 VERBOSE=1
 
       - name: Package Web build
         run: |

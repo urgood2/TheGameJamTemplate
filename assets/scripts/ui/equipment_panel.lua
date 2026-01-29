@@ -844,6 +844,11 @@ function EquipmentPanel.equipItem(entity, equipDef)
         add_state_tag(entity, "default_state")
     end
 
+    -- Set to screen space for proper UI click detection (adds ScreenSpaceCollisionMarker)
+    if transform and transform.set_space then
+        transform.set_space(entity, "screen")
+    end
+
     local go = component_cache.get(entity, GameObject)
     if go then
         go.state.rightClickEnabled = true

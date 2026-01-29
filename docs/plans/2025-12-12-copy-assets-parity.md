@@ -520,3 +520,5 @@ After completion:
 - `just build-web` uses same exclusions as CMake
 - `just build-web-release` / `just build-web-dist` strips Lua comments
 - Single source of truth for exclusion patterns in `scripts/copy_assets.py`
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

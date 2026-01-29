@@ -32,3 +32,5 @@
 - [ ] 1. Add a magnifiying glass tool that can select and then clicks stuff like the whale or grav wave thingy and it will give a descriotion of what it does and how to use it. (edited)
     The first idea would be a lot to add. So i would say the magnifying glass would work well if you just want to get it working.
     SOme fixes/improvments: -make grid appear only when placing. -notify user when a building is unlocked, otherwise they have no idea
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

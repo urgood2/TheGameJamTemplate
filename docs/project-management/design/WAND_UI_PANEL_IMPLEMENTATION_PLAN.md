@@ -2066,3 +2066,5 @@ Panel at screen top naturally separates from bottom inventory.
 - `assets/scripts/core/card_eval_order_test.lua` - Wand and card definitions
 - `assets/scripts/core/gameplay.lua:5554` - Current world board implementation
 - `assets/scripts/wand/wand_executor.lua` - Combat execution system
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

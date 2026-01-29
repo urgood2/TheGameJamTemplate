@@ -191,3 +191,5 @@ end, z_orders.ui_tooltips + 500, layer.DrawCommandSpace.World)
 2. Find each referenced section
 3. Add the new entries at appropriate locations
 4. Verify no duplicate content
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

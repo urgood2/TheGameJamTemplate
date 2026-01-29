@@ -680,3 +680,5 @@ end
 - RemoveEntity: `transform_functions.cpp:2421-2444`
 - Entity destruction callback: `transform.hpp:858-887`
 - Existing attachTo patterns: `lighting.lua:841`, `particles.lua:1012`
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

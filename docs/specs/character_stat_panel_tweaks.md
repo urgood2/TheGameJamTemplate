@@ -208,3 +208,5 @@ end
 - New stat categories
 - Stats panel repositioning/dragging
 - Mutual exclusion with other panels
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

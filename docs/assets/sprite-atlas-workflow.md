@@ -134,3 +134,5 @@ ls -la assets/graphics/auto-exported-sprites-from-aseprite/
 - **Aseprite**: Any recent version (tested with 1.3.16.1)
 - **TexturePacker**: Version 7.x with Pro license (CLI requires Pro)
 - **fswatch** (optional): For auto-rebuild on save (`brew install fswatch`)
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

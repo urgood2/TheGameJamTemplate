@@ -74,3 +74,5 @@ Verify that the *existing* loop works before adding ANY new content.
         - Projectiles fire.
         - `CastFeedUI` shows "TWIN CAST" (Cyan).
         - If `Echo Chamber` artifact is owned, verify double execution (4 projectiles).
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

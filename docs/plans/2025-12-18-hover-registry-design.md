@@ -69,3 +69,5 @@ HoverRegistry.clear()
 1. **CREATE**: `assets/scripts/ui/hover_registry.lua`
 2. **MODIFY**: `assets/scripts/ui/tag_synergy_panel.lua` - integrate HoverRegistry
 3. **MODIFY**: `assets/scripts/core/gameplay.lua` - add HoverRegistry.update() call
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

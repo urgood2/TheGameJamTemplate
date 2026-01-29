@@ -175,3 +175,5 @@ assets/
 - [ ] Engine plays animation with correct timing
 - [ ] Engine respects aseDirection (pingpong, reverse)
 - [ ] watch-animations triggers on file changes
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

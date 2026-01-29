@@ -2032,3 +2032,5 @@ After completing all 10 tasks, you will have:
 - Task 11-15: Debug overlay implementation
 - Task 16-18: Auto-validation hook in dsl.spawn()
 - Task 19-20: Integration with card_inventory_panel.lua
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -115,3 +115,5 @@ Detection occurs after tooltip positioning. If overflow detected, rebuild with n
 - [ ] Detailed stats: 3-column layout
 - [ ] Tooltips never overflow screen bounds
 - [ ] Graceful size reduction when space is limited
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

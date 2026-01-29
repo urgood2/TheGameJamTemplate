@@ -1243,3 +1243,5 @@ These can be addressed in future iterations:
 3. **Visual button updates** - Change button color on selection?
 4. **Tab overflow** - Scrollable tab bar for many tabs?
 5. **Nested tabs** - Tabs within tabs?
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -513,3 +513,5 @@ Production Files (15 total, ~435 DSL calls):
 2. Create migration helper script
 3. Start with Phase 1, file 1 (`tooltip_v2.lua`)
 4. Document any issues encountered for future files
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -3304,3 +3304,5 @@ Actual: false
     <anonymous> https://html-classic.itch.zone/html/14013104-1293667/raylib-cpp-cmake-template.js:245
     <anonymous> https://html-classic.itch.zone/html/14013104-1293667/raylib-cpp-cmake-template.js:247
 raylib-cpp-cmake-template.js:890:1
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

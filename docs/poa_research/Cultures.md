@@ -301,3 +301,5 @@ Cultures focus more on passive bonuses and resistances compared to Classes which
 3. **Risk-Reward**: Vulnerabilities paired with powerful abilities
 4. **Build Diversity**: Some cultures force specific playstyles (naked, heavy armor)
 5. **Trigger Variety**: Different cultures use different trigger conditions
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

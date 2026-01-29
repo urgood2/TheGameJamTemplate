@@ -78,3 +78,4 @@ All files in this research collection follow consistent formatting:
 ---
 
 *This research collection represents the most comprehensive DCSS reference available, compiled with attention to accuracy, completeness, and usability.*
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

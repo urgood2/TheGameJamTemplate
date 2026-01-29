@@ -1258,3 +1258,5 @@ After completing all tasks, you'll have:
    - Manual integration tests
 
 **Total new code:** ~400 lines as estimated.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

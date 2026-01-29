@@ -36,3 +36,5 @@ Instead of "Mana", the wand has **Flux Capacity**. Casting generates **Flux** (c
 
 ## Recommendation
 **Option 1 (Overheat)** aligns best with the request for "slow casting" and is easiest to implement with the current `WandExecutor` structure. We simply invert the "insufficient mana" check to a "penalty application" step.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

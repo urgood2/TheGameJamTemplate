@@ -624,3 +624,5 @@
   - Added documentation plans for inventory sprite background and right-click context menu fixes.
   - Expanded inventory plan with drag-drop sorting and auto-categorize task specifications.
   - Added tool call chunking rules to prevent AI implementation hanging on large files.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

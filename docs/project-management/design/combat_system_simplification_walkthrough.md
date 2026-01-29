@@ -280,3 +280,5 @@ If you need access to advanced features not exposed in the wrapper, you can stil
 ## Files Unchanged
 
 - [combat_system.lua](file:///Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/combat/combat_system.lua) - Kept intact as powerful core
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -757,3 +757,5 @@ For more technical details, see:
 - **Design Document:** `docs/plans/2025-06-09-game-stealing-prevention-design.md`
 - **Implementation Plan:** `docs/plans/2025-06-09-game-stealing-prevention-impl.md`
 - **Example Lua Module:** `assets/scripts/ui/ownership_display.lua`
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

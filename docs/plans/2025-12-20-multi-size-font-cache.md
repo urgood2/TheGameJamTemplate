@@ -558,3 +558,5 @@ gh pr create --title "feat: multi-size font cache for crisp text rendering" --bo
 | 8 | Fix tooltip font size | `assets/scripts/core/gameplay.lua` |
 | 9 | Build and test | - |
 | 10 | Merge or PR | - |
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -431,3 +431,5 @@ git commit -m "feat(ui): complete wand resource prediction bar"
 - The UI DSL may need adjustment based on how dynamic width boxes behave
 - Position (CONFIG.x, CONFIG.y) may need tuning based on actual planning UI layout
 - If deck_changed signal doesn't exist, you may need to emit it from card add/remove handlers
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

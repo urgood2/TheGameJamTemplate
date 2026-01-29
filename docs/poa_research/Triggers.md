@@ -430,3 +430,5 @@ end
 - **Per hit**: +X stacks, consumed for burst
 - **Per tick**: Regeneration, DoT application
 - **Per wave**: Permanent upgrades
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

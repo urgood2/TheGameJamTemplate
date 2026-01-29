@@ -622,3 +622,5 @@ Equipment transformation religions:
 2. **Item Transformation** - Oros, Mardok
 3. **Silent Prayers** - Eris passive-only system
 4. **Teleport Chaos** - Fawdaa random positioning
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

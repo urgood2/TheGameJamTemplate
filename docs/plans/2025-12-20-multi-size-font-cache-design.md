@@ -175,3 +175,5 @@ end, z)
 - Korean: 4 sizes × ~2.5MB ≈ 10MB (vs 2.5MB before)
 - English: 4 sizes × ~50KB ≈ 200KB (vs 50KB before)
 - Acceptable trade-off for crisp text
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

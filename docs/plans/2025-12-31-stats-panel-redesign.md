@@ -264,3 +264,5 @@ Reuse existing game sprites for stat icons:
 3. **Polish**: Smooth animations, satisfying hover feedback
 4. **Usability**: Keyboard accessible, can stay open during combat
 5. **Consistency**: Visual style matches game's existing UI aesthetic
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

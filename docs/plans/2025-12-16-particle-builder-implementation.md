@@ -2380,3 +2380,5 @@ git commit -m "docs: add Particle Builder documentation to CLAUDE.md"
 - Visual test scene for final verification
 
 **After completing all tasks:** Run full test suite and visual tests to verify compatibility with existing C++ bindings.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

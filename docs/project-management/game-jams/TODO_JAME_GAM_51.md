@@ -151,3 +151,4 @@
 - performance optimizations for ai system, namely blackboard access
 
 - how to do progress indicators or overlays for ui/icon?
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

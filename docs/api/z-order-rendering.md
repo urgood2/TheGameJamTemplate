@@ -93,3 +93,5 @@ When UI doesn't respond to clicks:
    ```lua
    draw.debug_bounds(entity, "red")
    ```
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -572,3 +572,5 @@ SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Oz")  # Changed from -Os
 - +5-30% performance improvement (depending on optimization choices)
 - Slightly larger WASM file (acceptable for performance gains)
 - Better developer experience (single source of truth for flags)
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

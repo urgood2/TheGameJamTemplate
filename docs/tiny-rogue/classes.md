@@ -1292,3 +1292,5 @@ Play in December OR use console command `toggle-xmas`
 **Source**: [Official Tiny Rogues Wiki (Roguepedia)](https://roguepedia.net/w/Classes)
 
 **Note**: Tiny Rogues is in Early Access. Additional classes may be added in future updates.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

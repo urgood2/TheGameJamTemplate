@@ -1494,3 +1494,5 @@ Expected output should show 6 commits:
 - Physics setup: 10-15 lines → 3-5 lines
 - Timer calls: 7 positional params → named options
 - Entity validation: manual checks → single helper call
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

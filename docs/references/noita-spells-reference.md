@@ -7416,3 +7416,5 @@ Materials have durability ratings. Higher digging strength = better excavation:
 - [Noita Fandom Wiki - Spells](https://noita.fandom.com/wiki/Spells)
 - [Noita Fandom Wiki - Spell Information Table](https://noita.fandom.com/wiki/Spell_Information_Table)
 - [Noita Fandom Wiki - Damage Types](https://noita.fandom.com/wiki/Damage_Types)
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

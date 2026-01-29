@@ -104,3 +104,5 @@ AUTO_START_MAIN_GAME=1 RUN_REAL_INVENTORY_TEST=1 AUTO_EXIT_AFTER_TEST=1 ./build/
 | `AUTO_START_MAIN_GAME=1` | Skip main menu |
 | `RUN_REAL_INVENTORY_TEST=1` | Run inventory test |
 | `AUTO_EXIT_AFTER_TEST=1` | Exit after test |
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -318,3 +318,5 @@ PrayerSystem.cast(ctx, player, player.prayer)
 🔄 **Ready to integrate** into your existing wand/shop/combat systems
 
 📋 **Design questions answered** in Q&A section above
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

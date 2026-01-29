@@ -757,3 +757,5 @@ just test && ./build/tests/unit_tests --gtest_filter="UILayoutTest.*"
 # Build and run game for visual verification
 just build-debug && ./build/raylib-cpp-cmake-template
 ```
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

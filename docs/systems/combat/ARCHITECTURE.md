@@ -533,3 +533,5 @@ test_waves = {
 - Mini-boss sub-waves
 - Environmental hazards during waves
 - Player choice of next wave (risk/reward)
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

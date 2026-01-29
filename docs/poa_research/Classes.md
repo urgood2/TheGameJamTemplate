@@ -297,3 +297,5 @@ Classes use the following trigger types for their abilities:
 | On Glory rising | 1 class |
 | On ally death | 1 class |
 | On divine intervention | 1 class |
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -181,3 +181,5 @@ Committed: abc1234
 - **Build fails**: Report error, do not commit partial changes
 - **API removed entirely**: Comment out recipe with `<!-- DEPRECATED -->`, don't delete
 - **Ambiguous chapter placement**: Default to Appendix A (Function Index)
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

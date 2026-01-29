@@ -74,3 +74,5 @@ Invoke with `/demo-mentor` and subcommands:
 - `playtest` — enter fake playtester mode
 - `audit` — full checklist review
 - `scope-check` — is feature in/out for demo
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

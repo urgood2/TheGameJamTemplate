@@ -2251,3 +2251,5 @@ git commit -m "docs: finalize Lua API Cookbook PDF"
 | 12 | Chapter 10: Utilities & External |
 | 13 | Back matter (index, cheat sheet) |
 | 14 | Final review and polish |
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

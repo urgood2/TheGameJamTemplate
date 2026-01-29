@@ -354,3 +354,5 @@ These items from the original TODO are gameplay design details, not systems work
 - Focus is on **systems infrastructure**, not game design
 - All tasks assume the robust existing foundation (UI, physics, rendering, etc.)
 - Bug fixes should be addressed before or alongside new feature work
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -580,3 +580,5 @@ end
 ---
 
 **Ready to integrate!** See `projectile_examples.lua` for more working code samples.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

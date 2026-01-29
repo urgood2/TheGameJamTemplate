@@ -628,3 +628,5 @@ public:
 | game.cpp includes | 95 | < 30 |
 | Files using globals:: | 25 | 0 |
 | Layer system LOC | 6,871 | < 2,000 (facade) |
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

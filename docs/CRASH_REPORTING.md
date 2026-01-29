@@ -9,3 +9,5 @@ This project now ships a lightweight crash reporter that works in both desktop a
 - Manual capture: press `F10` in-game to save/download a report without crashing. The console log will print the saved path on desktop.
 - Fatal capture: unhandled exceptions and common fatal signals are intercepted; a report is written before exit.
 - Tweaks: see `src/main.cpp` for the `crash_reporter::Config` setup (log buffer size, output dir, build id, file vs. browser download).
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

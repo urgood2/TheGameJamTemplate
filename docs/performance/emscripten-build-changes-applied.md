@@ -211,3 +211,5 @@ After applying these changes, all three build methods now use:
 ```
 
 **Result**: ✅ All build paths are now consistent and correct
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

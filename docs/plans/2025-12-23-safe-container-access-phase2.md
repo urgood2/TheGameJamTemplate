@@ -540,3 +540,5 @@ Expected: Only safe uses remain (inside try-catch or after contains() checks)
 **Total estimated time:** 1-2 hours
 
 **Risk assessment:** LOW - All changes are additive guards. No control flow changes except early returns on error conditions. Existing behavior preserved for valid data.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

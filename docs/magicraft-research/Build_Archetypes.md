@@ -45,3 +45,5 @@ Format per build: **Core Loop**, **Key Components**, **Stat Priorities**, **Weak
 - **Key Components**: Area Boost + Mimicry Cube + Meteor/Nova; volley-capable wand preferred.
 - **Stat Priorities**: MP pool, regen, modifiers adjacency.
 - **Weaknesses**: Setup time; costs if no sustain.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

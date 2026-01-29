@@ -588,3 +588,5 @@ Before merging:
 - [ ] `fx.camera_shake(10, 0.3)` works?
 - [ ] `EntityBuilder.simple()` returns both entity and script?
 - [ ] Existing code using old APIs still works?
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

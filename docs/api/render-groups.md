@@ -273,3 +273,5 @@ These get automatic uniform setup for tilt, rotation, and UV mapping:
 | Dynamic shader changes | Easy | Requires component update |
 | Local draw commands | No | Yes |
 | Best for | Many entities, same effects | Complex per-entity pipelines |
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

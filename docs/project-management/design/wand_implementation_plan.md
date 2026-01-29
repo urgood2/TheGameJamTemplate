@@ -50,3 +50,5 @@ Implement the requirements from `wand_cumulative_state_plan.md` to track cumulat
     - Base damage vs. Resolved damage (with player stats).
     - Cast delay modifications.
     - Cumulative counters.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

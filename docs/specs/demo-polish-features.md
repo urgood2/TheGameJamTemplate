@@ -131,3 +131,5 @@ Suggested order based on dependencies and complexity:
 | Gold Display | HUD/UI files, asset reference |
 | Demo Overlay | HUD/UI overlay system |
 | Feedback | HUD/UI, system browser call |
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

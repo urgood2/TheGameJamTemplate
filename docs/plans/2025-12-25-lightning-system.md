@@ -1676,3 +1676,5 @@ git commit -m "feat: complete lightning system with status effects, marks, and c
 | 12 | Integration test | 10 min |
 
 **Total: ~70 minutes**
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

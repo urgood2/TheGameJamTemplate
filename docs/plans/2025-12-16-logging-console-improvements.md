@@ -986,3 +986,5 @@ git commit -m "feat(console): complete logging improvements implementation"
 | 11 | Add bookmarks | imgui_console.cpp/h |
 | 12 | Highlight entity IDs | imgui_console.cpp |
 | 13 | Integration test | - |
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

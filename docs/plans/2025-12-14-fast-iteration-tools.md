@@ -1597,3 +1597,5 @@ After all tasks:
 - [ ] Tags tab: +/- buttons change counts, bonuses update
 - [ ] Wand tab: Deck editor can add/remove/reorder cards
 - [ ] Status tab: HP/energy bars, buff/debuff/DoT management
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

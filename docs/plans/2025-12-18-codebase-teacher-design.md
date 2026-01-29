@@ -103,3 +103,5 @@ Always-on via skill description. Triggers on:
 > User: "Why is my script table nil?"
 >
 > Claude checks attach_ecs implementation, lists common causes, shows correct pattern from codebase.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

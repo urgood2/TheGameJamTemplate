@@ -325,3 +325,5 @@ local WEAPON_TEMPLATE = {
 | 3 | Fire Wand | Spinach | Hellfire |
 | 4 | Santa Water | Attractorb | La Borra |
 | 5 | Garlic | Pummarola | Soul Eater |
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

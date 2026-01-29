@@ -221,3 +221,5 @@ SPDLOG_DEBUG("Entity {}: BaseSprite cache after copy, pixels={}",
 - Debug logs only compile in debug builds (should be guarded by NDEBUG)
 - Minimal impact: ~1-2% FPS drop when logging is active
 - Can be disabled at runtime: `spdlog::set_level(spdlog::level::info);`
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

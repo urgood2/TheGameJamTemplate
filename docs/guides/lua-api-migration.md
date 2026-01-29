@@ -456,3 +456,5 @@ This reads `chugget_code_definitions.lua` and generates type stubs for component
 | No steering visualization | `steering_debug` module | See force vectors |
 
 **All changes are backwards compatible.** Existing code continues to work unchanged.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

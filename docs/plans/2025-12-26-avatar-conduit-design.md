@@ -205,3 +205,5 @@ Ensure `player_damaged` signal is emitted with damage type. Check if this alread
 - The Conduit Charge status uses no intrinsic timer (`until_time = nil`), which is valid per combat_system.lua patterns for equipment/aura effects
 - Decay is linear (1 per 5s) not per-stack-timer, matching the spec "decays at a rate of 1 per 5 seconds"
 - Stack tracking lives on `player.conduit_stacks` for simplicity; could migrate to formal status system later if needed
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

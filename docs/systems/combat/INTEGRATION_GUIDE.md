@@ -569,3 +569,5 @@ For questions or issues, check the implementation files:
 - `enemy_spawner.lua` - Spawning logic
 - `loot_system.lua` - Loot drops
 - `entity_cleanup.lua` - Cleanup system
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

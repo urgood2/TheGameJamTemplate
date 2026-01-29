@@ -138,3 +138,5 @@ modal.show({
 7. Clicking backdrop closes modal (for alert/info, not confirm)
 8. Opening new modal closes previous
 9. `modal.isOpen()` returns correct state
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

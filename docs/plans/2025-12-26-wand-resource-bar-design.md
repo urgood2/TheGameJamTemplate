@@ -104,3 +104,5 @@ The goal is resource prediction, not execution visualization.
 
 - Use "Overuse Penalty" (not "overheat")
 - Format: `+2.4s Overuse Penalty`
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

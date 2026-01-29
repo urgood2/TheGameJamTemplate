@@ -532,3 +532,5 @@ Shader and texture batching is **feasible and beneficial** for the layer system:
 ---
 
 **Next:** Proceed with implementation following the steps outlined above, or hand off to next session with this documentation.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

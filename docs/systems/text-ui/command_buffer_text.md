@@ -59,3 +59,5 @@ t:set_width(260)
   ```
   lua assets/scripts/tests/rich_text_command_buffer_test.lua
   ```
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

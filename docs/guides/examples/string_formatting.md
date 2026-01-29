@@ -9,3 +9,4 @@ Strings can be color formatted as follows and used with UI or announcements:
 ```
 
 Where the color values or names can be found in colors.json
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

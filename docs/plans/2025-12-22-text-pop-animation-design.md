@@ -167,3 +167,5 @@ local draw_rotation = (ch.rotation or 0) + (self.base_rotation or 0)
 - Text Builder: `assets/scripts/core/text.lua`
 - CommandBufferText: `assets/scripts/ui/command_buffer_text.lua`
 - Wave visuals: `assets/scripts/combat/wave_visuals.lua`
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -778,3 +778,5 @@ The system is:
 | **Total** | **4,072** | **8 files** |
 
 The combat loop framework is ready for production use and provides a solid foundation for autobattle gameplay mechanics.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

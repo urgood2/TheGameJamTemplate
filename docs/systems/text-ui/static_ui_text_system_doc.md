@@ -154,3 +154,5 @@ end
 * `debugDumpIds(parsed)` logs segment and wrapper IDs
 
 That’s it. Build once, index
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

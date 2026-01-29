@@ -1209,3 +1209,5 @@ StatusEffects.static_charge = {
 - [Equipment Data](../../assets/scripts/data/equipment.lua) - All equipment definitions
 - [Triggers Data](../../assets/scripts/data/triggers.lua) - All trigger constants
 - [Signal System](signal_system.md) - Event system and signal_group cleanup
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -224,3 +224,5 @@ The system emits the following events for monitoring:
 1. Use shader at least once to trigger compilation
 2. Hot-reload will work after first use
 3. Consider preloading shaders during development
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

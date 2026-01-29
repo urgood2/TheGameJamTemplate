@@ -68,3 +68,5 @@ This document provides fast-access tables and master reference data for Dungeon 
 | **Scroll of Blinking** | Rare | Emergency Escape |
 | **Potion of Haste** | Rare | Boss Fights |
 | **Scroll of Acquirement** | Very Rare | Power Spike |
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

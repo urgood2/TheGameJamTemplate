@@ -62,3 +62,5 @@ The "Cooldown" prevents the wand from being used again. It is applied **once aft
 - **Cast Delay**: Accumulated per-block with cast speed and overheat penalties applied to each block.
 - **Recharge Time**: Applied once at the end after all blocks are exhausted.
 - **Cooldown**: A single global timer = (Total Cast Delay) + (Recharge Time).
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

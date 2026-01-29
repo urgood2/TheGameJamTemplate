@@ -322,3 +322,5 @@ The majority of systems infrastructure is complete. Remaining work focuses on co
 | Cards Data | `assets/scripts/data/cards.lua` | 963 |
 | Projectiles Data | `assets/scripts/data/projectiles.lua` | 177 |
 | Main Gameplay | `assets/scripts/core/gameplay.lua` | 8860 |
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

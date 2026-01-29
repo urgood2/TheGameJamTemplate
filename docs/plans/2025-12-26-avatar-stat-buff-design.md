@@ -91,3 +91,5 @@ AvatarSystem.unequip(player)
 
 - **Phase 2:** `proc` effects (signal handlers for on_kill, on_cast_4th, etc.)
 - **Phase 3:** `rule_change` effects (use `has_rule()` in wand execution for conditional behavior)
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -45,3 +45,5 @@ ProjectileSystem.spawn({
 ## Practical Tips
 - If collisions fail: confirm physics world exists, target tags include `"projectile"` ↔ target tag, and `collideWithWorld` as needed.
 - For bespoke collision logic, keep `collisionBehavior="pass_through"` or `pierce` and implement effects in `onHit`/signal listeners.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

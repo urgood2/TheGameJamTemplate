@@ -29,3 +29,5 @@
 - Fire on low-damage spam (wasted source-based burn).
 - Volley without homing (wasted discount + mana).
 - All offense, no control (poor survival in dense rooms).
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

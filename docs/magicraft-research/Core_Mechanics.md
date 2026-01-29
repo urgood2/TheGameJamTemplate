@@ -54,3 +54,5 @@ end
 - Simultaneous fire respects scatter and cost multipliers.
 - Post-slot triggers respond to correct events (cast/hit/move/kill/damage).
 - Volley discount applied once per parallel batch.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

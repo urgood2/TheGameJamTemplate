@@ -259,3 +259,5 @@ Once the projectile test passes:
 ---
 
 Ready to test? Add the require line to your `initMainGame()` and run the game!
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

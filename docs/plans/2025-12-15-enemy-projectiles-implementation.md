@@ -1059,3 +1059,5 @@ git commit -m "docs: mark enemy projectiles design as implemented"
 2. Build and run game
 3. Spawn a ranged enemy and verify it shoots at player
 4. Verify projectile collision damages player
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

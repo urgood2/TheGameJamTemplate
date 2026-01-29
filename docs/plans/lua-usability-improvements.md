@@ -490,3 +490,5 @@ enemyFSM:attach(entity)
 3. **Debug Module**: Should debug overlays be always available or conditionally compiled out for release?
 
 4. **Priority Adjustment**: Are there specific pain points to elevate in priority?
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

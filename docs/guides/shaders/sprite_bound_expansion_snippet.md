@@ -60,3 +60,5 @@ void main() {
 - This technique enables accurate center-based sprite scaling in the vertex shader.
 - It supports both regular and inflated scaling (e.g., for drop shadows or highlights).
 - Easy to plug into existing shader pipelines.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -468,3 +468,5 @@ git status
 | 8 | Final verification | - |
 
 **Total estimated time:** 20-30 minutes
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

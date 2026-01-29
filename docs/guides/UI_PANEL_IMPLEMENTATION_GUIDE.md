@@ -1085,3 +1085,5 @@ This guide was derived from analyzing these source files:
 ---
 
 This guide covers **every pattern, caveat, and implementation detail** from `assets/scripts/ui/player_inventory.lua`. Follow it exactly, and your skill tree, equipment window, or any other grid-based panel will work correctly on the first try.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

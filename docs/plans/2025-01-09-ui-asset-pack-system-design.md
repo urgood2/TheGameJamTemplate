@@ -376,3 +376,5 @@ assets/ui_packs/
 4. **Lua bindings** - `register_pack`, `use_pack`, `PackHandle` userdata
 5. **Rendering support** - Add `SPRITE` styling type, scale mode rendering
 6. **ImGui editor** - Atlas viewport, region selection, 9-patch guides, export
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -307,3 +307,5 @@ end
 | `core/inventory_grid.lua` | Grid data management API |
 | `ui/inventory_grid_init.lua` | Grid initialization |
 | `docs/api/sprite-panels.md` | Full sprite panel docs |
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

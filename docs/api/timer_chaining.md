@@ -156,3 +156,5 @@ Parallel steps: spawn off to the side, offset keeps moving
                   ╲
                    every → tick → tick → tick
 ```
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

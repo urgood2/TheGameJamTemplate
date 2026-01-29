@@ -263,3 +263,5 @@ Easing.inOutSine = {
 * **Kill**: `particle.WipeTagged(tag)` / `particle.WipeAll()`
 
 Happy bursting. Keep the API ergonomic: enums for speed, strings for convenience, `nil` to clear. If anything feels off during use, it probably is—tighten the binding or fix the docs here to match reality.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

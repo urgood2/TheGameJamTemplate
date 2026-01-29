@@ -95,3 +95,5 @@
 2. Capture web build metrics for comparison
 3. Identify optimization targets based on profiling data
 4. Document hardware specifications for reproducibility
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

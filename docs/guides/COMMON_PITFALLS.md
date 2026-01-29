@@ -217,3 +217,5 @@ When something doesn't work, check in this order:
 **Total Pitfalls Documented**: 183  
 **Categories**: 8  
 **Sources**: 156 documentation files
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

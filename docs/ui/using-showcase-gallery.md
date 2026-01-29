@@ -386,3 +386,5 @@ The gallery is excellent for onboarding new team members or explaining UI patter
 - [Writing UI Tests](./writing-ui-tests.md) - Test your UI components
 - [Adding Components to Strict](./adding-components-to-strict.md) - Extend the system
 - [UI DSL Reference](../api/ui-dsl-reference.md) - Full API documentation
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

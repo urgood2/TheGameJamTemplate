@@ -630,3 +630,5 @@ HP = Base_HP × 0.6 (Mage) × 0.9 (Nuker) = 0.54× Base_HP
 
 - [SNKRX Source Code - player.lua](https://github.com/a327ex/SNKRX/blob/master/player.lua)
 - [SNKRX Source Code - main.lua](https://github.com/a327ex/SNKRX/blob/master/main.lua)
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

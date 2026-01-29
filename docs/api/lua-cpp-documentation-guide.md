@@ -467,3 +467,5 @@ local EntityBuilder = require("core.entity_builder")
 - [C++ Documentation Standards](../guides/DOCUMENTATION_STANDARDS.md)
 - [UI Helper Reference](ui_helper_reference.md)
 - [Entity State Management](../systems/core/entity_state_management_doc.md)
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

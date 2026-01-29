@@ -270,3 +270,5 @@ clear_state_tags(entity)
 remove_default_state_tag(entity)
 is_state_active(stateString)  -- Checks global game state
 ```
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

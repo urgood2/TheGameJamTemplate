@@ -227,3 +227,5 @@ Corner icons (separate from main menu list):
 - [ ] Click and hover sounds play appropriately
 - [ ] Corner icons scale on hover
 - [ ] Tab demo panel remains functional
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

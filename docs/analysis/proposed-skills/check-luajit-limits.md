@@ -130,3 +130,5 @@ After refactoring:
 grep -c "^local " assets/scripts/gameplay.lua
 # Should be significantly lower
 ```
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

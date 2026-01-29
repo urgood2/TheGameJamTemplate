@@ -112,3 +112,5 @@ local entity = createSprite(j, j.sprite or AvatarJokerStrip.layout.jokerSprite, 
 
 - Build-time validation script for CI
 - Runtime sprite existence check (requires animation_system access)
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

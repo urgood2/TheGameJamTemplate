@@ -340,3 +340,5 @@ Floor 1, Room 4: Combat (3/3 rooms) → ATTUNED
 | Attunement | ✅ Complete | Fully documented |
 
 **Last Updated**: 2026-01-08
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

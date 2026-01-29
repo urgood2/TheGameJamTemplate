@@ -561,3 +561,5 @@ Cards.DIVIDE_BY_2 = {
 5. Field/Zone system (6 cards) - 1 week
 
 **Demo Target:** 35+ playable cards showcasing mechanical variety
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

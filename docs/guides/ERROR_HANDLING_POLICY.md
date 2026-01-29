@@ -141,3 +141,5 @@ Error occurs
 | Exception-throwing code | Wrap with `tryWithLog()` |
 | Asset that might not exist | Use `loadWithRetry()` or guard with fallback |
 | Lambda in Sol2 binding | Use `LUA_BINDING_TRY`/`CATCH` macros |
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

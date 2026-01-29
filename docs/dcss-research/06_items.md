@@ -101,3 +101,5 @@ Brands add special effects to weapons and armor.
 - **Speed**: Faster attacks.
 - **Protection (Armor)**: Extra AC.
 - **Resistance (Armor)**: Elemental resistance.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

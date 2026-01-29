@@ -91,3 +91,5 @@ Rollout steps
 3) Wire shader-system failure paths and crash reporter to emit events.
 4) Add web bridge + `fetch` sink; test on a hosted endpoint (or local dev tunnel).
 5) Turn on for a small internal build; validate payloads and size limits; document how to opt out.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

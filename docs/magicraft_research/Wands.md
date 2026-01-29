@@ -319,3 +319,4 @@ Magicraft's staff system provides deep customization and build definition throug
 ---
 
 *This document is part of the comprehensive Magicraft research project and will be updated as additional information becomes available.*
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

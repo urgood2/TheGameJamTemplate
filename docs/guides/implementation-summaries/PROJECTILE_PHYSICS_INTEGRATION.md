@@ -373,3 +373,5 @@ local projectileId = ProjectileSystem.spawn({
 ✅ **Ready for testing** (after bug fixes applied)
 
 The projectile system is now fully integrated with your physics-transform sync architecture and should work smoothly without conflicts!
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

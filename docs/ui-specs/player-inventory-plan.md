@@ -1844,3 +1844,5 @@ assets/sprites/ui/
 - Verify cards have `name` or `manaCost` in their script table
 - Check `state.sortField` is being set
 - Ensure locked cards are being skipped
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

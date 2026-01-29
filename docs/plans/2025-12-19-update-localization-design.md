@@ -61,3 +61,5 @@ A hands-off slash command `/update_localization` that automatically syncs locali
 ## File Location
 
 `.claude/commands/update_localization.md`
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

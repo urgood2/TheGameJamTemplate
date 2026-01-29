@@ -238,3 +238,5 @@ inline bool ShouldRender(entt::registry& R, PhysicsManager& PM, entt::entity e) 
 ✅ **Ready for testing**
 
 These fixes improve the stability and rendering behavior of your game, especially for systems that create entities dynamically (like projectiles and enemies).
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

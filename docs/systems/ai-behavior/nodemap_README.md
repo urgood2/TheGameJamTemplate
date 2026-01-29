@@ -291,3 +291,5 @@ end
 ---
 
 That’s it — plug in your renderer and you’re live. If you want, I can add a ready-to-run raylib or LÖVE demo that mirrors your project style.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

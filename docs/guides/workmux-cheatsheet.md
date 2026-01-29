@@ -225,3 +225,5 @@ pre_merge:
 - **Repo**: https://github.com/raine/workmux
 - **Docs**: https://workmux.raine.dev/
 - **Blog**: https://raine.dev/blog/introduction-to-workmux/
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

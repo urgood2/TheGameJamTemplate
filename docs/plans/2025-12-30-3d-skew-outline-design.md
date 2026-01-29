@@ -61,3 +61,5 @@ setShaderUniform(registry, cardEntity, "3d_skew", "outline_enabled", 1.0)
 setShaderUniform(registry, cardEntity, "3d_skew", "outline_thickness", 2.0)
 setShaderUniform(registry, cardEntity, "3d_skew", "outline_color", {1, 0.84, 0, 1}) -- gold
 ```
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

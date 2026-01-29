@@ -1008,3 +1008,5 @@ This layering ensures:
 - Objective tags (BPM, duration) are never overwritten
 - Context tags (fantasy, combat) add semantic meaning
 - Duplicate tags are handled gracefully by Eagle
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

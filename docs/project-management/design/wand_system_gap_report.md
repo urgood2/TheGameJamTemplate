@@ -29,3 +29,5 @@ Quick snapshot of what's not yet wired in the current scripts (`assets/scripts/w
 
 # Final goal
 Make it easy (less hassle, all things in place) to implement the actual behavior of the projectiles, jokers, artifacts, etc.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

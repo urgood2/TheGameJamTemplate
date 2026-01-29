@@ -270,3 +270,5 @@ Multiple systems create **tension** between safety and power, forcing player age
 **Document Version**: 1.0  
 **Last Updated**: 2026-01-08  
 **Purpose**: Design reference for inspired roguelike development
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

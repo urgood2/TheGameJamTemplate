@@ -339,3 +339,5 @@ category = category or detectCardCategory(cardEntity, cardData)
 If the sprite panel causes layout issues:
 - Revert `createPanelDefinition()` to `dsl.strict.root` with color/emboss
 - Keep Ctrl+Click and sort fixes (low risk)
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

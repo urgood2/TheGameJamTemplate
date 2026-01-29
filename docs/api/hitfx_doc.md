@@ -86,3 +86,5 @@ Stop any active flash on an entity.
 
 - [Shader Pipeline](shader_draw_commands_doc.md) - Shader system overview
 - [popup.lua](../../CLAUDE.md#popup-helpers) - Damage/heal number popups
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

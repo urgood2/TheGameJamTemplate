@@ -442,3 +442,5 @@ radial_emit(8 + current_new_game_plus*2, function(r)
   EnemyProjectile{group = main.current.main, x = self.x, y = self.y, r = r, v = 140 + 3.5*self.level}
 end)
 ```
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

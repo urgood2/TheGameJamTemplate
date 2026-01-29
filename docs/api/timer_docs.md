@@ -522,3 +522,5 @@ local sinIO   = function(t) return 0.5 * (1 + math.sin(3.1415926 * (t - 0.5))) e
 **Changelog**
 
 * v1.0 — Initial reference covering `timer` + `EventQueueSystem` bindings and examples.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

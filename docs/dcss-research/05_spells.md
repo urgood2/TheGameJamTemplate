@@ -106,3 +106,5 @@ Allow the use of magical effects without spending MP or knowing spells. Power sc
 - **Silence**: Prevents all spellcasting in an area.
 - **Antimagic Brand**: Weapons that drain MP and increase spell failure on hit.
 - **Elemental Resistances**: Reduce damage from Fire, Cold, Electricity, etc.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

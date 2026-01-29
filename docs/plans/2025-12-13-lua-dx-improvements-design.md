@@ -95,3 +95,5 @@ end
 - `debug.getinfo` called once at registration, not per-frame
 - pcall wrapper adds ~nanoseconds per callback execution
 - Acceptable tradeoff: debugging time saved >> runtime cost
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

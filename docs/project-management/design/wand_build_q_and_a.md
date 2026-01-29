@@ -789,3 +789,5 @@ return {
 2. Want me to investigate/fix the mask movement issue?
 3. Which build example (Ember Nomad, Plague Scribe, etc.) interests you most for prototyping first?
 4. Do you prefer session-based (Option A) or meta-progression (Option B) for avatar unlocks?
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

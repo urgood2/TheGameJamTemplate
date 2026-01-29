@@ -244,3 +244,5 @@ Before shipping:
 - [ ] Lua memory stable over time (no unbounded growth)
 - [ ] No GC spikes visible in frame graph
 - [ ] Tracy shows no unexpected hotspots
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

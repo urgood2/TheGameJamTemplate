@@ -1369,3 +1369,5 @@ Each phase can be rolled back independently:
 [[deprecated("Use transform_core::setPosition")]]
 inline void SetPosition(...) { transform_core::setPosition(...); }
 ```
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

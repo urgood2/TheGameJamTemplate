@@ -120,3 +120,5 @@ Unit tests and coverage reports are provided. The test suite requires
 To run the tests use
 
     luarocks --lua-version=5.1 test
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

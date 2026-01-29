@@ -119,3 +119,5 @@ After fix, verify:
 1. Effect appears at correct position
 2. Orientation matches expected direction
 3. Works on both desktop and web builds
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

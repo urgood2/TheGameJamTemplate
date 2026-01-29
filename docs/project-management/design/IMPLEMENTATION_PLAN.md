@@ -151,3 +151,5 @@ File: `assets/scripts/ui/death_screen.lua`
 - Inventory sort: indicator matches active field and direction.
 - Quick-equip: success toast appears with cooldown; failure feedback unchanged.
 - Death screen: button, Enter/Space, and gamepad confirm all restart; repeated show/hide has no leaks.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

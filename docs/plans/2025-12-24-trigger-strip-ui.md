@@ -1151,3 +1151,5 @@ If there are many small fix commits, consider squashing or leaving as-is for tra
 | 15 | Add trigger_activated signal | `wand_triggers.lua` |
 | 16 | Integrate with gameplay | `gameplay.lua` |
 | 17-18 | Test and polish | — |
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

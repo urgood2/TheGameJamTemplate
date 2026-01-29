@@ -428,3 +428,5 @@ local SECTION_ICONS = {
 "burn_duration_pct", "frostburn_duration_pct", "electrocute_duration_pct",
 "poison_duration_pct", "vitality_decay_duration_pct", "bleed_duration_pct", "trauma_duration_pct"
 ```
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

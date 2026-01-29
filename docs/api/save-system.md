@@ -259,3 +259,5 @@ return Statistics
 ### Data missing after load
 - Verify collector is registered before `SaveManager.init()`
 - Check `distribute()` handles missing fields with defaults
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

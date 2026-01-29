@@ -1506,3 +1506,5 @@ dofile("assets/scripts/tests/test_ui_pack.lua")()
 - `src/systems/ui/element.cpp` - Add sprite rendering
 - CMakeLists.txt - Add new source files
 - Debug menu file - Wire in editor
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

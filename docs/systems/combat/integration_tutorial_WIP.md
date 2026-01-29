@@ -866,3 +866,4 @@ end
 run_custom_example()
 
 ```
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

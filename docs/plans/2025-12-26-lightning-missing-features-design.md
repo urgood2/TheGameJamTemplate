@@ -152,3 +152,5 @@ end
 - Shader effects require shaders to exist (electric_crackle, static_buildup, etc.)
 - Missing icon sprites will use colored circle fallback
 - No hover tooltips for status bar (future enhancement)
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

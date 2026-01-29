@@ -491,3 +491,5 @@ function GameCamera:GetMouseWorld() return {x=0,y=0} end
 ---
 
 **Done.** Plug the kernel in, skim the quick-start, and you’re good to ship. If you want me to tailor the examples to your exact `layer::Layer` API or emit the full generated `.lua_defs` file from your current `BindingRecorder`, say the word.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

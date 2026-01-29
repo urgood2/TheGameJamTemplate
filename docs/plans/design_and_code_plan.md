@@ -72,3 +72,5 @@
      - Add (or confirm) a Lua smoke script to call `telemetry.record` in native and web; ensure web debug overlay toggles still work.
      - Add a small test for disabled-path behavior if not already present.
    - Prompt: “Document the current telemetry configuration precedence (env vs config vs defaults) and propose a minimal test to ensure disabled mode remains a no-op.”
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

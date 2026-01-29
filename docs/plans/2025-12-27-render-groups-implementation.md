@@ -855,3 +855,5 @@ git commit -m "feat(render_groups): complete implementation of batched shader re
 | 11 | Expose at startup | `init.cpp` |
 | 12 | Create integration test | `test_render_groups.lua` |
 | 13 | Final build & test | - |
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

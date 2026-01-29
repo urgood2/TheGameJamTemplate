@@ -241,3 +241,5 @@ At load time:
 | Overrides | Top-level (all passes) + per-pass nested |
 | Atlas uniforms | Flag in preset, auto-true for `3d_skew_*` |
 | Render path | Uses existing batched pipeline via `ShaderPipelineComponent` |
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

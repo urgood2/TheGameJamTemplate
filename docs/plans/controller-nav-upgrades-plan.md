@@ -212,3 +212,5 @@ The `controller_nav` system is a solid foundation that already implements many i
 - The `push_focus_group/pop_focus_group` API is confirmed to be used, so we need to split stacks rather than remove
 - Right stick scroll should integrate with existing `activeScrollPane` tracking in `InputState`
 - Character pane confirmed to have scroll UI that would benefit from scroll-into-view
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

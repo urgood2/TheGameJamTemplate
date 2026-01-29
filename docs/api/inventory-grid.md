@@ -229,3 +229,5 @@ local inventoryBox = dsl.spawn({ x = 50, y = 100 }, cardInventory)
 local card = createCardEntity("FIREBALL")
 grid.addItem(inventoryBox, card)
 ```
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

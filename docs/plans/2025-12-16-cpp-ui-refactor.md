@@ -1075,3 +1075,5 @@ After each phase:
 | `src/systems/ui/ui.cpp` | MODIFY - Expose new components to Lua |
 | `tests/unit/test_ui_components.cpp` | NEW - Unit tests |
 | `CMakeLists.txt` | MODIFY - Add new source files |
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

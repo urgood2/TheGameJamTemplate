@@ -444,3 +444,5 @@ print("Damage mult:", effects.damage_mult)  -- Should be 1.2
 4. **Missing nil check in joker** - Always check `context.tags and context.tags.Fire`
 5. **Joker not returning** - Forgot `return` statement in calculate function
 6. **Effect not in schema** - Custom effects need schema entry or auto-convert via snake_case
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

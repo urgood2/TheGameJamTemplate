@@ -209,3 +209,5 @@ Tracks all release builds for traceability:
 
 ### Design Philosophy
 This is **deterrence + attribution**, not DRM. The warning makes stolen copies look obviously stolen, and build signatures provide DMCA evidence. Most game thieves are lazy and won't bother with binary patching.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

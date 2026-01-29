@@ -891,3 +891,5 @@ git commit -m "feat(ownership): complete game stealing prevention implementation
 | 10 | Integration test | Verify end-to-end |
 
 **Total estimated tasks:** 10 tasks, ~30-40 bite-sized steps
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -65,3 +65,5 @@ shader_draw_commands.add_local_command(
 - `DrawCommandBatch` methods: `beginRecording`, `endRecording`, `recording`, `addBeginShader`, `addEndShader`, `addDrawTexture`, `addDrawText`, `addSetUniforms`, `addCustomCommand`, `execute`, `optimize`, `clear`, `size`.
 - Module helpers: `shader_draw_commands.globalBatch`, `shader_draw_commands.add_local_command`, `shader_draw_commands.executeEntityPipelineWithCommands`.
 - More batch optimization notes live in `DRAW_COMMAND_OPTIMIZATION.md`; batching inside the layer queue is covered in `BATCHED_ENTITY_RENDERING.md`.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -102,7 +102,7 @@ Files:
 - `assets/scripts/ai/goal_selector_engine.lua`
 - `src/systems/ai/ai_system.cpp`
 
-### 1.3 Inspector UI
+### 1.3 Inspector UI ✅ IMPLEMENTED
 
 Expose trace data and key state for debugging.
 Minimum viable panel:
@@ -110,8 +110,12 @@ Minimum viable panel:
 - plan steps and current action
 - worldstate bits (names + values)
 - recent trace events
+- **"Why" tab** showing action selection reasoning (current action, cost, preconditions, competing actions)
+- **Planning failure diagnostics** in Plan tab showing rejected actions with reasons
 
-File location depends on current debug UI system.
+Implementation:
+- `assets/scripts/ui/ai_inspector.lua` - ImGui-based debug panel with 5 tabs (State, Plan, Atoms, Trace, Why)
+- `assets/scripts/core/goap_debug.lua` - Debug data storage and API
 
 ## Phase 2: Performance
 
@@ -180,27 +184,82 @@ On startup, count atoms and warn when near cap.
 
 ## Phase 4: Usability Improvements
 
-### 4.1 Action helpers
+### 4.1 Action helpers ✅ IMPLEMENTED
 
 Add `assets/scripts/ai/action_helpers.lua` with:
-- `instant()`
-- `timed()`
-- `moveTo()` (if movement helpers exist)
+- `move_toward(ctx, target, speed)` - Move entity toward position, returns SUCCESS on arrival
+- `wait_seconds(ctx, duration)` - Wait for duration using blackboard timer
+- `find_nearest(ctx, filter_fn)` - Find nearest entity matching filter
 
-### 4.2 Safe defaults
+Implementation:
+- `assets/scripts/ai/action_helpers.lua` - Behavior template functions
+- `assets/scripts/tests/test_action_helpers.lua` - Unit tests
+
+### 4.2 ActionContext ✅ IMPLEMENTED
+
+Wrapper object for cleaner action code:
+- `ctx.entity` - Entity ID
+- `ctx.blackboard` - Blackboard access
+- `ctx.dt` - Delta time
+- `ctx:get_target()` - Get target entity from blackboard
+
+Implementation:
+- `assets/scripts/ai/action_context.lua`
+- `assets/scripts/tests/test_action_context.lua`
+
+### 4.3 Fluent Action Builder ✅ IMPLEMENTED
+
+DSL for ergonomic action definition:
+```lua
+local Action = require("ai.action_builder")
+
+local action = Action.new("attack")
+    :cost(1.5)
+    :pre("has_weapon", true)
+    :post("enemy_damaged", true)
+    :on_update(function(ctx, dt) return ActionResult.SUCCESS end)
+    :build()
+```
+
+Features:
+- Method chaining for all properties
+- Auto-watch preconditions when no explicit `:watch()`
+- Wraps callbacks to provide ActionContext
+
+Implementation:
+- `assets/scripts/ai/action_builder.lua`
+- `assets/scripts/tests/test_action_builder.lua`
+- `assets/scripts/ai/actions/wander_v2.lua` - Demo action using new helpers
+
+### 4.4 Graceful Blackboard Access ✅ IMPLEMENTED
+
+C++ `Blackboard::get_or<T>()` method and Lua bindings for safe access:
+- `bb:get_or_bool(key, default)`
+- `bb:get_or_int(key, default)`
+- `bb:get_or_float(key, default)`
+- `bb:get_or_double(key, default)`
+- `bb:get_or_string(key, default)`
+
+Implementation:
+- `src/systems/ai/blackboard.hpp` - C++ template method
+- `src/systems/ai/ai_system.cpp` - Sol2 bindings
+- `tests/unit/test_blackboard.cpp` - Unit tests
+
+### 4.5 Safe defaults (Original 4.2)
 
 If action table is missing:
 - `start` or `finish`: no-op
 - `update`: instant success
 
-### 4.3 Auto-watch defaults
+### 4.6 Auto-watch defaults (Original 4.3) ✅ IMPLEMENTED
 
 If `watch` not provided:
-- default to precondition keys
+- default to precondition keys (implemented in ActionBuilder)
 - allow explicit overrides
 
 Files:
 - `src/systems/ai/goap_utils.hpp`
+- `assets/scripts/ai/action_builder.lua`
 
 ## Phase 5: Hierarchical GOAP (Optional)
 
@@ -238,13 +297,19 @@ Use:
 New:
 - `docs/systems/ai-behavior/GOAP_IMPROVEMENT_PLAN.md`
 - `assets/scripts/ai/numeric_thresholds.lua`
-- `assets/scripts/ai/action_helpers.lua`
+- `assets/scripts/ai/action_helpers.lua` ✅
+- `assets/scripts/ai/action_context.lua` ✅
+- `assets/scripts/ai/action_builder.lua` ✅
+- `assets/scripts/ai/actions/wander_v2.lua` ✅
+- `assets/scripts/ui/ai_inspector.lua` ✅
+- `assets/scripts/core/goap_debug.lua` ✅
 
 Modify:
-- `src/systems/ai/ai_system.cpp`
+- `src/systems/ai/ai_system.cpp` ✅ (debug emission, get_or bindings)
 - `src/systems/ai/ai_system.hpp`
 - `src/components/components.hpp`
 - `src/systems/ai/goap_utils.hpp`
+- `src/systems/ai/blackboard.hpp` ✅ (get_or<T>() template)
 - `assets/scripts/ai/goal_selector_engine.lua`
 - `assets/scripts/ai/worldstate_updaters.lua`
 

@@ -29,7 +29,7 @@ local entity_cache = require("core.entity_cache")
 AIInspector.target_entity = nil
 AIInspector.is_open = false
 AIInspector.auto_refresh = true
-AIInspector.current_tab = 1  -- 1=State, 2=Plan, 3=Atoms, 4=Trace
+AIInspector.current_tab = 1  -- 1=State, 2=Plan, 3=Atoms, 4=Trace, 5=Why
 
 -- Trace buffer state
 AIInspector.trace_filter = ""
@@ -171,6 +171,21 @@ local function render_plan_tab()
 
         if plan_size == 0 then
             imgui.TextColored(0.5, 0.5, 0.5, 1, "(empty plan)")
+            
+            local goap_debug_ok, goap_debug = pcall(require, "core.goap_debug")
+            if goap_debug_ok and goap_debug then
+                local info = goap_debug.get_entity_debug_info(AIInspector.target_entity)
+                if info and info.rejected_actions and #info.rejected_actions > 0 then
+                    imgui.Separator()
+                    imgui.TextColored(1, 0.5, 0, 1, "Planning Failed - Rejected Actions:")
+                    for _, rejected in ipairs(info.rejected_actions) do
+                        imgui.TextColored(1, 0.3, 0.3, 1, string.format("  %s:", rejected.action))
+                        imgui.Indent()
+                        imgui.TextColored(0.7, 0.7, 0.7, 1, rejected.reason or "(no reason)")
+                        imgui.Unindent()
+                    end
+                end
+            end
         else
             imgui.Text(string.format("Plan Size: %d, Current Index: %d", plan_size, current_idx))
             imgui.Separator()
@@ -343,6 +358,93 @@ local function render_trace_tab()
 end
 
 --===========================================================================
+-- TAB 5: WHY (Action Selection Reasoning)
+--===========================================================================
+
+local function render_why_tab()
+    local eid = AIInspector.target_entity
+    if not eid then
+        imgui.TextColored(0.5, 0.5, 0.5, 1, "No entity selected")
+        return
+    end
+
+    local goap_debug_ok, goap_debug = pcall(require, "core.goap_debug")
+    if not goap_debug_ok or not goap_debug then
+        imgui.TextColored(0.5, 0.5, 0.5, 1, "goap_debug module not available")
+        return
+    end
+    
+    local info = goap_debug.get_entity_debug_info(eid)
+    if not info then
+        imgui.TextColored(0.5, 0.5, 0.5, 1, "No debug data available")
+        imgui.Text("Enable goap_debug to see action reasoning")
+        return
+    end
+
+    if imgui.CollapsingHeader("Current Action", true) then
+        imgui.Indent()
+        if info.current_action then
+            imgui.TextColored(0, 1, 0, 1, info.current_action)
+        else
+            imgui.TextColored(0.5, 0.5, 0.5, 1, "(no action)")
+        end
+        imgui.Unindent()
+    end
+
+    if imgui.CollapsingHeader("Cost", true) then
+        imgui.Indent()
+        local cost = info.action_cost
+        if cost then
+            imgui.Text(string.format("Total: %.2f", cost.total or 0))
+            if cost.breakdown and #cost.breakdown > 0 then
+                imgui.Separator()
+                for _, comp in ipairs(cost.breakdown) do
+                    imgui.Text(string.format("  %s: %.2f", comp.name, comp.value))
+                end
+            end
+        else
+            imgui.TextColored(0.5, 0.5, 0.5, 1, "(no cost data)")
+        end
+        imgui.Unindent()
+    end
+
+    if imgui.CollapsingHeader("Preconditions", true) then
+        imgui.Indent()
+        local preconds = info.action_preconditions
+        if preconds and preconds.conditions and #preconds.conditions > 0 then
+            for _, cond in ipairs(preconds.conditions) do
+                if cond.met then
+                    imgui.TextColored(0, 1, 0, 1, string.format("[OK] %s", cond.name))
+                else
+                    imgui.TextColored(1, 0.3, 0.3, 1, string.format("[X] %s (need: %s, have: %s)", 
+                        cond.name, tostring(cond.required), tostring(cond.actual)))
+                end
+            end
+        else
+            imgui.TextColored(0.5, 0.5, 0.5, 1, "(no precondition data)")
+        end
+        imgui.Unindent()
+    end
+
+    if imgui.CollapsingHeader("Competing Actions", false) then
+        imgui.Indent()
+        local competing = info.competing_actions
+        if competing and #competing > 0 then
+            for _, comp in ipairs(competing) do
+                local cost_str = comp.cost and string.format("(cost: %.1f)", comp.cost) or "(precondition failed)"
+                imgui.TextColored(0.7, 0.7, 0.7, 1, string.format("%s %s", comp.action, cost_str))
+                imgui.Indent()
+                imgui.TextColored(0.5, 0.5, 0.5, 1, comp.reason or "")
+                imgui.Unindent()
+            end
+        else
+            imgui.TextColored(0.5, 0.5, 0.5, 1, "(no competing actions)")
+        end
+        imgui.Unindent()
+    end
+end
+
+--===========================================================================
 -- MAIN RENDER
 --===========================================================================
 
@@ -379,7 +481,7 @@ function AIInspector.render()
     end
 
     -- Tab bar
-    local tab_names = {"State", "Plan", "Atoms", "Trace"}
+    local tab_names = {"State", "Plan", "Atoms", "Trace", "Why"}
     for i, name in ipairs(tab_names) do
         if i > 1 then imgui.SameLine() end
         local is_selected = (AIInspector.current_tab == i)
@@ -414,6 +516,8 @@ function AIInspector.render()
             render_atoms_tab()
         elseif AIInspector.current_tab == 4 then
             render_trace_tab()
+        elseif AIInspector.current_tab == 5 then
+            render_why_tab()
         end
     end
 

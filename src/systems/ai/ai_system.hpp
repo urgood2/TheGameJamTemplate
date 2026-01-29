@@ -40,6 +40,7 @@ namespace ai_system
     extern auto updateHumanAI(float deltaTime) -> void;
 
     extern void replan(entt::entity entity);
+    extern void on_interrupt(entt::entity entity);
 
     /**
      * Replan for an explicit goal without invoking goal selectors.

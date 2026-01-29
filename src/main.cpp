@@ -509,6 +509,7 @@ void RunGameLoop() {
         EndDrawing();
     }
     
+    init::waitForInitAsync();
     loading_screen::shutdownExecutor();
     loading_screen::shutdown();
 #else

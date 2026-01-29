@@ -24,6 +24,8 @@ extern auto startInit() -> void;
 #ifndef __EMSCRIPTEN__
 /// Async initialization with loading screen progress updates (desktop only).
 extern auto startInitAsync(int loadingThreads) -> void;
+/// Wait for async initialization to complete (desktop only).
+extern auto waitForInitAsync() -> void;
 #endif
 /// Configure ImGui fonts/styles; should run after window creation.
 extern auto initGUI() -> void;

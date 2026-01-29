@@ -1,6 +1,8 @@
 {
-  "active_plan": "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/.sisyphus/plans/ui-shader-refactor.md",
-  "started_at": "2026-01-26T10:07:04.095Z",
-  "session_ids": ["ses_4063a9284ffeikZaHRtkL0Qv63"],
-  "plan_name": "ui-shader-refactor"
+  "active_plan": "/Users/joshuashin/Projects/TheGameJamTemplate/goap-refinement/.sisyphus/plans/goap-lua-testing-demo.md",
+  "started_at": "2026-01-28T22:23:48.658Z",
+  "session_ids": [
+    "ses_3fb2c0afeffeGs64M8vc6FkO1k"
+  ],
+  "plan_name": "goap-lua-testing-demo"
 }

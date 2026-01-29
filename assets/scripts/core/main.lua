@@ -1241,7 +1241,25 @@ function main.init()
         end
     end
 
-    -- Run real PlayerInventory validation (set RUN_REAL_INVENTORY_TEST=1 to enable)
+    local runGOAPTests = os.getenv("RUN_GOAP_TESTS") == "1"
+    if runGOAPTests then
+        local ok, test_module = pcall(require, "tests.test_goap_api")
+        if ok and test_module and test_module.run then
+            log_debug("[GOAP Tests] Running GOAP API tests...")
+            local success = test_module.run()
+            if success then
+                log_debug("[GOAP Tests] All tests passed!")
+                os.exit(0)
+            else
+                log_warn("[GOAP Tests] Some tests FAILED - check console output")
+                os.exit(1)
+            end
+        else
+            log_warn("[GOAP Tests] Could not load test module: " .. tostring(test_module))
+            os.exit(1)
+        end
+    end
+
     local runRealInventoryTest = os.getenv("RUN_REAL_INVENTORY_TEST") == "1"
     if runRealInventoryTest then
         local ok, test_module = pcall(require, "tests.test_real_player_inventory")

@@ -626,7 +626,7 @@ local function returnEquippedItemFromSlot(slotName)
 
     if itemEntity and registry:valid(itemEntity) then
         signal.emit("equipment_item_returned_to_inventory", slotName, itemEntity, itemDef)
-        log_debug("[EquipmentPanel] Emitted item return signal for " .. slotName)
+        log_debug("[EquipmentPanel] Returned item from " .. slotName .. " to inventory")
         return true
     end
 

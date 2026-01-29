@@ -789,8 +789,20 @@ local function checkRightClick()
 
     if rightClick or altClick or ctrlClick or cmdClick then
         if hoveredSource == "inventory" then
-            log_debug("[QuickEquip] Quick equip from inventory: " .. tostring(hoveredCard))
-            handleRightClick(hoveredCard)
+            -- For equipment items in inventory, only handle modifier clicks (not native right-click)
+            -- This matches wand_panel behavior and prevents re-equip when returning items from equipment panel
+            local equipDef = getEquipmentDef(hoveredCard)
+            if equipDef then
+                -- Equipment items: require modifier key (like wand panel)
+                if altClick or ctrlClick or cmdClick or modifierRightClick then
+                    log_debug("[QuickEquip] Quick equip equipment from inventory: " .. tostring(hoveredCard))
+                    handleRightClick(hoveredCard)
+                end
+            else
+                -- Non-equipment items: handle all right-clicks
+                log_debug("[QuickEquip] Quick equip from inventory: " .. tostring(hoveredCard))
+                handleRightClick(hoveredCard)
+            end
         elseif hoveredSource == "wand_panel" then
             -- WandPanel handles native right-click via onSlotClick; only handle modifier clicks here.
             if altClick or ctrlClick or cmdClick or modifierRightClick then
@@ -847,7 +859,15 @@ function QuickEquip.init()
 
         if button == "right" then
             if isPlayerInventoryGrid(gridEntity) then
-                handleRightClick(item)
+                -- For equipment items, require modifier key (matches checkRightClick behavior)
+                local equipDef = getEquipmentDef(item)
+                if equipDef then
+                    if isModifierHeld() then
+                        handleRightClick(item)
+                    end
+                else
+                    handleRightClick(item)
+                end
                 return
             end
 

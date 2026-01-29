@@ -611,18 +611,9 @@ local function createGridDefinition(tabId)
             elseif button == rightButton then
                 local item = grid.getItemAtIndex(gridEntity, slotIndex)
                 if tabId == "equipment" then
-                    -- Right-click on equipment items in equipment tab triggers quick equip
-                    if item and registry:valid(item) then
-                        local success, reason = QuickEquip.equipToEquipment(item)
-                        if success then
-                            updateSlotCount(gridEntity)
-                            if playSoundEffect then
-                                playSoundEffect("effects", "button-click")
-                            end
-                        else
-                            log_debug("[PlayerInventory] Quick equip failed: " .. tostring(reason))
-                        end
-                    end
+                    -- Right-click on equipment items in equipment tab: do nothing
+                    -- Left-click already handles equipping, and right-click is used for
+                    -- returning items FROM the equipment panel TO inventory
                     return
                 end
                 item = grid.getItemAtIndex(gridEntity, slotIndex)

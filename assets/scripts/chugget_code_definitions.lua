@@ -1039,43 +1039,39 @@ function ai:force_interrupt(...) end
 function ai:list_lua_files(...) end
 
 ---
---- Reports a goal selection to the AI trace buffer for debugging.
+--- Returns a table of all worldstate atoms and their boolean values for the entity; nil if entity invalid.
 ---
 ---@param e Entity
----@param goal_name string
----@param band string
----@param score integer?
----@param candidates table?
----@return nil
-function ai:report_goal_selection(...) end
+---@return table<string,boolean>|nil
+function ai:dump_worldstate(...) end
 
 ---
---- Returns the most recent trace events for the entity (default 10).
+--- Returns a 1-based array table of action names in the entity's current plan; nil if entity invalid.
 ---
 ---@param e Entity
----@param count integer?
----@return table[]|nil
-function ai:get_trace_events(...) end
+---@return string[]|nil
+function ai:dump_plan(...) end
 
 ---
---- Clears the entity's AI trace buffer.
+--- Returns a 1-based array table of all registered atom names from the entity's planner; nil if entity invalid.
 ---
 ---@param e Entity
----@return nil
-function ai:clear_trace(...) end
+---@return string[]|nil
+function ai:get_all_atoms(...) end
 
 ---
---- Returns a list of all entities with GOAPComponent.
----
----@return Entity[]
-function ai:list_goap_entities(...) end
-
----
---- Returns a table with GOAP state info for debugging, or nil if entity has no GOAPComponent.
+--- Returns true if the entity has a valid (non-dirty) plan with at least one action; nil if entity invalid.
 ---
 ---@param e Entity
----@return table|nil
-function ai:get_goap_state(...) end
+---@return boolean|nil
+function ai:has_plan(...) end
+
+---
+--- Returns a table of all blackboard entries with their type and value; nil if entity invalid.
+---
+---@param e Entity
+---@return table<string,{type:string, value:any}>|nil
+function ai:dump_blackboard(...) end
 
 ---
 --- Sets a single world-state flag on the entity's current state.

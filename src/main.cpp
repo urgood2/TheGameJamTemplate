@@ -49,6 +49,7 @@
 
 #include "util/utilities.hpp" // global utilty methods
 #include "util/perf_overlay.hpp"
+#include "systems/ai/goap_debug_window.hpp"
 
 #define JSON_DIAGNOSTICS 1
 #include <nlohmann/json.hpp> // nlohmann JSON parsing
@@ -313,6 +314,10 @@ void RunGameLoop() {
       }
     }
 
+    if (IsKeyPressed(KEY_F9)) {
+      goap_debug::toggle();
+    }
+
     if (crash_reporter::IsEnabled() && IsKeyPressed(KEY_F10)) {
       auto report = crash_reporter::CaptureReport("Manual capture (F10)");
       auto path = crash_reporter::PersistReport(report);
@@ -413,6 +418,9 @@ void RunGameLoop() {
 
     // Render performance overlay (uses ImGui)
     perf_overlay::render();
+
+    // Render GOAP debug window (uses ImGui)
+    goap_debug::render();
 
 #ifndef __EMSCRIPTEN__
     // Draw ImGui console (toggle with ` backtick key)

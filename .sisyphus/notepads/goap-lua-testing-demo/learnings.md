@@ -202,3 +202,97 @@ rec.record_method("ai", {"dump_worldstate",
 - `dump_blackboard` type detection limited to 5 types (bool/int/double/float/string)
 - Consider adding entity type support if needed in future
 
+
+## Task 4: GOAP Debug Window Implementation
+
+### ImGui Debug Window Patterns
+
+#### Toggle + Render Pattern (from perf_overlay)
+```cpp
+// Header (goap_debug_window.hpp)
+namespace goap_debug {
+    void render();  // Call every frame within ImGui context
+    void toggle();  // Toggle visibility
+    bool is_visible();
+}
+
+// Implementation (goap_debug_window.cpp)
+static bool show_window = false;
+
+void toggle() { show_window = !show_window; }
+bool is_visible() { return show_window; }
+
+void render() {
+    if (!show_window) return;
+    // Window content...
+}
+```
+
+#### F-key Handler Pattern (main.cpp)
+```cpp
+// Add after other F-key handlers (around line 315)
+if (IsKeyPressed(KEY_F9)) {
+    goap_debug::toggle();
+}
+```
+
+#### Render Call Pattern (main.cpp)
+```cpp
+// After perf_overlay::render(), before rlImGuiEnd()
+goap_debug::render();
+```
+
+#### TabBar Pattern (from shader_system.cpp)
+```cpp
+if (ImGui::BeginTabBar("##tabs", ImGuiTabBarFlags_None)) {
+    if (ImGui::BeginTabItem("Tab1")) {
+        // Tab content
+        ImGui::EndTabItem();
+    }
+    if (ImGui::BeginTabItem("Tab2")) {
+        // Tab content
+        ImGui::EndTabItem();
+    }
+    ImGui::EndTabBar();
+}
+```
+
+#### Entity Selection in List
+```cpp
+static entt::entity selected_entity = entt::null;
+
+auto view = globals::getRegistry().view<GOAPComponent>();
+for (auto entity : view) {
+    bool is_selected = (selected_entity == entity);
+    char label[64];
+    snprintf(label, sizeof(label), "Entity %u", static_cast<uint32_t>(entity));
+    if (ImGui::Selectable(label, is_selected)) {
+        selected_entity = entity;
+    }
+}
+```
+
+#### Empty State Handling
+```cpp
+if (view.size_hint() == 0) {
+    ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.2f, 1.0f), "No GOAP entities");
+    ImGui::End();
+    return;
+}
+```
+
+### Files Created
+- `src/systems/ai/goap_debug_window.hpp` - Public API
+- `src/systems/ai/goap_debug_window.cpp` - Implementation with TabBar, entity list
+
+### Key Includes for ImGui Debug Windows
+```cpp
+#include "imgui.h"
+#include "core/globals.hpp"
+#include "components/components.hpp"
+#include <entt/entt.hpp>
+```
+
+### CMake Note
+CMake auto-discovers .cpp files via CONFIGURE_DEPENDS globs - no CMakeLists.txt edits needed.
+

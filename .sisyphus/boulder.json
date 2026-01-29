@@ -1,8 +1,6 @@
 {
-  "active_plan": "/Users/joshuashin/Projects/TheGameJamTemplate/goap-refinement/.sisyphus/plans/goap-lua-testing-demo.md",
-  "started_at": "2026-01-28T22:23:48.658Z",
-  "session_ids": [
-    "ses_3fb2c0afeffeGs64M8vc6FkO1k"
-  ],
-  "plan_name": "goap-lua-testing-demo"
+  "active_plan": "/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/.sisyphus/plans/documentation-foundation.md",
+  "started_at": "2026-01-29T22:18:10.615Z",
+  "session_ids": ["ses_3f42a2561ffeQS6D5xUv31OKrJ"],
+  "plan_name": "documentation-foundation"
 }

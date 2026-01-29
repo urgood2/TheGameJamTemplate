@@ -10,9 +10,9 @@
 > - Updated API documentation with new patterns
 > - Test suite verifying backward compatibility
 > 
-> **Estimated Effort**: Medium (5-8 tasks across ~15 files)
-> **Parallel Execution**: YES - 3 waves
-> **Critical Path**: Task 1 (audit) → Tasks 2-5 (wrappers) → Task 6 (aliases) → Tasks 7-8 (docs/tests)
+> **Estimated Effort**: Medium (8 tasks across ~15 files)
+> **Parallel Execution**: YES - 4 waves (including Wave 2b sub-wave)
+> **Critical Path**: Task 1 (audit) → Task 2 (skeleton) → Task 3 (particle wrappers) → Task 7 (docs)
 
 ---
 
@@ -127,21 +127,23 @@ end
 
 ```
 Wave 1 (Start Immediately):
-├── Task 1: Usage frequency audit (grep counts for all 51 functions)
-└── Task 2: Create particle_helpers.lua skeleton with type annotations
+└── Task 1: Usage frequency audit (grep counts for all 51 functions)
 
-Wave 2 (After Wave 1):
-├── Task 3: Implement particle wrapper functions
-├── Task 4: Create sound_helpers.lua with wrappers
-└── Task 5: Create combat/projectile helpers (if in top 10)
+Wave 2 (After Task 1 completes):
+├── Task 2: Create particle_helpers.lua skeleton (blocks Task 3)
+├── Task 4: Create sound_helpers.lua with wrappers (parallel with 2)
+├── Task 5: Create combat/projectile helpers (parallel with 2)
+└── Task 6: Create api_aliases.lua for naming consistency (parallel with 2)
 
-Wave 3 (After Wave 2):
-├── Task 6: Create api_aliases.lua for naming consistency
-├── Task 7: Update documentation
-└── Task 8: Create comprehensive test suite
+Wave 2b (After Task 2 completes):
+└── Task 3: Implement particle wrapper functions (depends on Task 2 skeleton)
 
-Critical Path: Task 1 → Task 3 → Task 7
-Parallel Speedup: ~40% faster than sequential
+Wave 3 (After Tasks 3, 4, 5, 6 complete):
+├── Task 7: Update documentation (parallel with 8)
+└── Task 8: Create comprehensive test suite (parallel with 7)
+
+Critical Path: Task 1 → Task 2 → Task 3 → Task 7
+Parallel Speedup: ~35% faster than sequential
 ```
 
 ### Dependency Matrix
@@ -226,8 +228,8 @@ Parallel Speedup: ~40% faster than sequential
   - **Skills**: None needed
 
   **Parallelization**:
-  - **Can Run In Parallel**: YES
-  - **Parallel Group**: Wave 2 (with Tasks 4, 5, 6)
+  - **Can Run In Parallel**: YES (with Tasks 4, 5, 6 - but Task 3 waits for this)
+  - **Parallel Group**: Wave 2 (must complete before Task 3 can start)
   - **Blocks**: Task 3
   - **Blocked By**: Task 1
 

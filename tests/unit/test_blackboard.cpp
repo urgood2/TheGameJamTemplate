@@ -71,3 +71,23 @@ TEST_F(BlackboardTest, IsEmptyReturnsTrueWhenEmpty) {
     blackboard.set("x", 1);
     EXPECT_FALSE(blackboard.isEmpty());
 }
+
+TEST_F(BlackboardTest, GetOrReturnsDefaultForMissingKey) {
+    EXPECT_EQ(blackboard.get_or<int>("missing", 42), 42);
+    EXPECT_FLOAT_EQ(blackboard.get_or<float>("missing", 3.14f), 3.14f);
+    EXPECT_EQ(blackboard.get_or<std::string>("missing", "default"), "default");
+}
+
+TEST_F(BlackboardTest, GetOrReturnsExistingValue) {
+    blackboard.set("existing_int", 100);
+    blackboard.set("existing_float", 2.5f);
+    blackboard.set<std::string>("existing_string", "hello");
+    
+    EXPECT_EQ(blackboard.get_or<int>("existing_int", 42), 100);
+    EXPECT_FLOAT_EQ(blackboard.get_or<float>("existing_float", 0.0f), 2.5f);
+    EXPECT_EQ(blackboard.get_or<std::string>("existing_string", "default"), "hello");
+}
+
+TEST_F(BlackboardTest, GetOrDoesNotAffectGetBehavior) {
+    EXPECT_THROW(blackboard.get<int>("nonexistent"), std::runtime_error);
+}

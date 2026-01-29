@@ -23,6 +23,15 @@ public:
         throw std::runtime_error("Key not found");
     }
 
+    template<typename T>
+    T get_or(const std::string& key, const T& default_value) const {
+        auto it = data_.find(key);
+        if (it != data_.end()) {
+            return std::any_cast<T>(it->second);
+        }
+        return default_value;
+    }
+
     bool contains(const std::string& key) const {
         return data_.find(key) != data_.end();
     }

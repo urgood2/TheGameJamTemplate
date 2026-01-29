@@ -41,19 +41,31 @@ return Action.new("wander_v2")
     end)
     
     :on_update(function(ctx, dt)
-        local result = helpers.wait_seconds(ctx, 1.0)
-        if result ~= ActionResult.SUCCESS then
-            return result
+        local bb = ctx.blackboard
+        local has_target = bb:contains("_wander_target_x") and bb:contains("_wander_target_y")
+        
+        if not has_target then
+            local target_x = random_utils.random_float(0, globals.screenWidth())
+            local target_y = random_utils.random_float(0, globals.screenHeight())
+            bb:set_float("_wander_target_x", target_x)
+            bb:set_float("_wander_target_y", target_y)
+            startEntityWalkMotion(ctx.entity)
         end
         
         local goalLoc = Vec2(
-            random_utils.random_float(0, globals.screenWidth()), 
-            random_utils.random_float(0, globals.screenHeight())
+            bb:get_float("_wander_target_x"),
+            bb:get_float("_wander_target_y")
         )
         
-        startEntityWalkMotion(ctx.entity)
+        local move_result = helpers.move_toward(ctx, goalLoc, 100)
         
-        return helpers.move_toward(ctx, goalLoc, 100)
+        if move_result == ActionResult.SUCCESS then
+            bb:remove("_wander_target_x")
+            bb:remove("_wander_target_y")
+            return helpers.wait_seconds(ctx, 1.0, "_wander")
+        end
+        
+        return move_result
     end)
     
     :on_finish(function(ctx)

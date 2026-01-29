@@ -95,19 +95,20 @@ function action_helpers.move_toward(ctx, target, speed)
 end
 
 --------------------------------------------------------------------------------
--- wait_seconds(ctx, duration)
+-- wait_seconds(ctx, duration, key_suffix)
 --------------------------------------------------------------------------------
 --- Wait for a specified duration using blackboard timer.
 --- @param ctx table ActionContext with ctx.entity, ctx.blackboard
 --- @param duration number Duration to wait in seconds
+--- @param key_suffix string|nil Optional suffix to allow multiple concurrent waits (e.g., "phase1", "cooldown")
 --- @return string ActionResult.SUCCESS after duration, ActionResult.RUNNING before
-function action_helpers.wait_seconds(ctx, duration)
+function action_helpers.wait_seconds(ctx, duration, key_suffix)
     if not ctx or not ctx.blackboard then
         return ActionResult.FAILURE
     end
     
     local bb = ctx.blackboard
-    local key = "_wait_start_time"
+    local key = "_wait_start_time" .. (key_suffix or "")
     
     -- Get current time
     local current_time = GetTime and GetTime() or os.clock()

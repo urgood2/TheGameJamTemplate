@@ -241,6 +241,80 @@ globalShaderUniforms.set("crt", "intensity", 0.5)
 - Random: `random_utils.set_seed/random_bool/random_float/random_int/random_normal/random_sign/random_uid/random_angle/random_biased/random_delay`.
 - More: `docs/api/particles_doc.md` for detailed particle examples.
 
+### Particle Helpers (Ergonomic API)
+The `particle_helpers` module provides options-table wrappers for verbose particle functions:
+
+```lua
+local particles = require("core.particle_helpers")
+
+-- Options table (new ergonomic API):
+particles.burst({
+    x = 100, y = 200,
+    count = 10,
+    duration = 1.0,
+    startColor = Col(255, 0, 0),
+    endColor = Col(0, 0, 255),
+    easing = "cubic",
+    space = "world"
+})
+
+-- Positional signature still works (backward compat):
+particles.burst(100, 200, 10, 1.0, RED, BLUE, "cubic", "world")
+
+-- Swirl emitter:
+particles.swirl({
+    x = 320, y = 180,
+    radius = 120,
+    colors = { Col(0, 255, 255), Col(255, 0, 255) },
+    emitDuration = 1.0,
+    totalLifetime = 2.0
+})
+```
+
+### API Aliases (Snake Case Naming)
+The `api_aliases` module provides snake_case aliases for camelCase engine globals, following the [LuaRocks style guide](https://github.com/luarocks/lua-style-guide) convention:
+
+```lua
+require("core.api_aliases")
+
+-- Now you can use snake_case:
+local player = get_entity_by_alias("player")  -- same as getEntityByAlias
+set_entity_alias("npc", npc_entity)           -- same as setEntityAlias
+
+-- Sound functions:
+play_sound_effect("fx", "explosion")          -- same as playSoundEffect
+play_music("battle_theme", true)              -- same as playMusic
+stop_all_music()                              -- same as stopAllMusic
+
+-- Game state:
+pause_game()                                  -- same as pauseGame
+unpause_game()                                -- same as unpauseGame
+is_key_pressed("space")                       -- same as isKeyPressed
+```
+
+**Full alias list:**
+| Snake Case | Original |
+|------------|----------|
+| `get_entity_by_alias` | `getEntityByAlias` |
+| `set_entity_alias` | `setEntityAlias` |
+| `play_sound_effect` | `playSoundEffect` |
+| `play_music` | `playMusic` |
+| `play_playlist` | `playPlaylist` |
+| `stop_all_music` | `stopAllMusic` |
+| `clear_playlist` | `clearPlaylist` |
+| `reset_sound_system` | `resetSoundSystem` |
+| `set_sound_pitch` | `setSoundPitch` |
+| `toggle_low_pass_filter` | `toggleLowPassFilter` |
+| `toggle_delay_effect` | `toggleDelayEffect` |
+| `set_low_pass_target` | `setLowPassTarget` |
+| `set_low_pass_speed` | `setLowPassSpeed` |
+| `pause_game` | `pauseGame` |
+| `unpause_game` | `unpauseGame` |
+| `is_key_pressed` | `isKeyPressed` |
+| `propagate_state_effects_to_ui_box` | `propagateStateEffectsToUIBox` |
+
+**Note:** Both camelCase and snake_case work simultaneously - this is purely additive.
+
 **Example: burst emitter**
 ```lua
 local em = particle.CreateParticleEmitter("smoke", {x=0,y=0})

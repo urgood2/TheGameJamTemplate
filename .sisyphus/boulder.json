@@ -1,8 +1,6 @@
 {
-  "active_plan": "/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/e9c6-teset/TheGameJamTemplate/.sisyphus/plans/loading-screen-system.md",
-  "started_at": "2026-01-29T02:23:33.705Z",
-  "session_ids": [
-    "ses_3f86fd931ffe04OA7hKRxfmGm9"
-  ],
-  "plan_name": "loading-screen-system"
+  "active_plan": "/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/6c38-any-improvements/TheGameJamTemplate/.sisyphus/plans/lua-api-usability.md",
+  "started_at": "2026-01-29T22:07:00.000Z",
+  "session_ids": ["ses_3f434d145ffeZjAn0Uq2JApgGU"],
+  "plan_name": "lua-api-usability"
 }

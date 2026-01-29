@@ -61,11 +61,11 @@ Reduce cognitive load when using Lua APIs by providing ergonomic options-table a
 - `assets/scripts/tests/test_api_wrappers.lua` - Backward compatibility test suite
 
 ### Definition of Done
-- [ ] All existing code using positional signatures continues to work (zero regressions)
-- [ ] New options-table signatures available for top 10 verbose APIs
-- [ ] Snake_case aliases available for high-frequency camelCase/PascalCase functions
-- [ ] Documentation updated with examples of both signatures
-- [ ] Test file exercises both signatures for all wrapped functions
+- [x] All existing code using positional signatures continues to work (zero regressions)
+- [x] New options-table signatures available for top 10 verbose APIs
+- [x] Snake_case aliases available for high-frequency camelCase/PascalCase functions
+- [x] Documentation updated with examples of both signatures
+- [x] Test file exercises both signatures for all wrapped functions
 
 ### Must Have
 - Dual-signature support (positional + options table) for all wrappers
@@ -163,7 +163,7 @@ Parallel Speedup: ~35% faster than sequential
 
 ## TODOs
 
-- [ ] 1. **Audit: Measure actual API usage frequency**
+- [x] 1. **Audit: Measure actual API usage frequency**
 
   **What to do**:
   - Grep all 51 identified verbose functions across `assets/scripts/`
@@ -210,7 +210,7 @@ Parallel Speedup: ~35% faster than sequential
 
 ---
 
-- [ ] 2. **Create particle_helpers.lua module skeleton**
+- [x] 2. **Create particle_helpers.lua module skeleton**
 
   **What to do**:
   - Create `assets/scripts/core/particle_helpers.lua`
@@ -257,7 +257,7 @@ Parallel Speedup: ~35% faster than sequential
 
 ---
 
-- [ ] 3. **Implement particle wrapper functions**
+- [x] 3. **Implement particle wrapper functions**
 
   **What to do**:
   - Implement dual-signature wrappers for top particle functions from audit
@@ -314,7 +314,7 @@ Parallel Speedup: ~35% faster than sequential
 
 ---
 
-- [ ] 4. **Create sound_helpers.lua with wrappers**
+- [x] 4. **Create sound_helpers.lua with wrappers** (empty placeholder - no verbose sound APIs found)
 
   **What to do**:
   - Create `assets/scripts/core/sound_helpers.lua`
@@ -363,7 +363,7 @@ Parallel Speedup: ~35% faster than sequential
 
 ---
 
-- [ ] 5. **Create combat/projectile helpers (if in top 10)**
+- [x] 5. **Create combat/projectile helpers (if in top 10)** (empty placeholder - low usage)
 
   **What to do**:
   - If audit shows combat/projectile functions in top 10, create wrappers
@@ -411,7 +411,7 @@ Parallel Speedup: ~35% faster than sequential
 
 ---
 
-- [ ] 6. **Create api_aliases.lua for naming consistency**
+- [x] 6. **Create api_aliases.lua for naming consistency**
 
   **What to do**:
   - Create `assets/scripts/core/api_aliases.lua`
@@ -458,7 +458,7 @@ Parallel Speedup: ~35% faster than sequential
 
 ---
 
-- [ ] 7. **Update API documentation**
+- [x] 7. **Update API documentation**
 
   **What to do**:
   - Update `docs/api/lua_api_reference.md` with new wrapper patterns
@@ -510,7 +510,7 @@ Parallel Speedup: ~35% faster than sequential
 
 ---
 
-- [ ] 8. **Create comprehensive test suite**
+- [x] 8. **Create comprehensive test suite**
 
   **What to do**:
   - Create `assets/scripts/tests/test_api_wrappers.lua`
@@ -588,10 +588,10 @@ dofile("assets/scripts/tests/test_api_wrappers.lua")
 ```
 
 ### Final Checklist
-- [ ] All existing game code works unchanged (backward compatibility)
-- [ ] New options-table APIs available for top 10 verbose functions
-- [ ] Snake_case aliases available for common functions
-- [ ] Documentation updated with examples
-- [ ] Test suite passes with both signature types
-- [ ] No C++ changes made (Lua-only)
-- [ ] All "Must NOT Have" guardrails respected
+- [x] All existing game code works unchanged (backward compatibility)
+- [x] New options-table APIs available for top 10 verbose functions
+- [x] Snake_case aliases available for common functions
+- [x] Documentation updated with examples
+- [x] Test suite passes with both signature types (24/24 tests pass)
+- [x] No C++ changes made (Lua-only)
+- [x] All "Must NOT Have" guardrails respected

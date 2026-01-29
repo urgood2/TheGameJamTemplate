@@ -1039,6 +1039,45 @@ function ai:force_interrupt(...) end
 function ai:list_lua_files(...) end
 
 ---
+--- Reports a goal selection to the AI trace buffer for debugging.
+---
+---@param e Entity
+---@param goal_name string
+---@param band string
+---@param score integer?
+---@param candidates table?
+---@return nil
+function ai:report_goal_selection(...) end
+
+---
+--- Returns the most recent trace events for the entity (default 10).
+---
+---@param e Entity
+---@param count integer?
+---@return table[]|nil
+function ai:get_trace_events(...) end
+
+---
+--- Clears the entity's AI trace buffer.
+---
+---@param e Entity
+---@return nil
+function ai:clear_trace(...) end
+
+---
+--- Returns a list of all entities with GOAPComponent.
+---
+---@return Entity[]
+function ai:list_goap_entities(...) end
+
+---
+--- Returns a table with GOAP state info for debugging, or nil if entity has no GOAPComponent.
+---
+---@param e Entity
+---@return table|nil
+function ai:get_goap_state(...) end
+
+---
 --- Returns a table of all worldstate atoms and their boolean values for the entity; nil if entity invalid.
 ---
 ---@param e Entity

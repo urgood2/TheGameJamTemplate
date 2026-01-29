@@ -279,7 +279,7 @@ Wave 3 (After Wave 2):
 
 ---
 
-- [ ] 3. Create Comprehensive Lua Test Suite (IN-GAME)
+- [x] 3. Create Comprehensive Lua Test Suite (IN-GAME)
 
   **What to do**:
   - Create `assets/scripts/tests/test_goap_api.lua` - test file using test_runner.lua framework
@@ -379,7 +379,7 @@ Wave 3 (After Wave 2):
 
 ---
 
-- [ ] 4. Build ImGui Debug Window Structure
+- [x] 4. Build ImGui Debug Window Structure
 
   **What to do**:
   - Create `src/systems/ai/goap_debug_window.hpp/cpp`
@@ -429,7 +429,7 @@ Wave 3 (After Wave 2):
 
 ---
 
-- [ ] 5. Implement ImGui Tab Content
+- [x] 5. Implement ImGui Tab Content
 
   **What to do**:
   
@@ -497,7 +497,7 @@ Wave 3 (After Wave 2):
 
 ---
 
-- [ ] 6. Integration Testing and Polish
+- [x] 6. Integration Testing and Polish
 
   **What to do**:
   - Run full test suite and fix any failures

@@ -46,6 +46,8 @@
 #include "third_party/imgui_console/imgui_console.h"
 #include "core/init.hpp"
 #include "core/ownership.hpp"
+#include "systems/loading_screen/loading_screen.hpp"
+#include "systems/loading_screen/loading_progress.hpp"
 
 #include "util/utilities.hpp" // global utilty methods
 #include "util/perf_overlay.hpp"
@@ -170,10 +172,14 @@ bool mainMenuFirstFrame{
 auto mainMenuStateGameLoop() -> void {}
 
 auto loadingScreenStateGameLoopRender(float dt) -> void {
-  // show loading screen
-
+#ifndef __EMSCRIPTEN__
+  // Desktop: Use new loading screen system with progress bar
+  loading_screen::render(dt);
+#else
+  // Web: Simple loading text (async loading not supported)
   ClearBackground(RAYWHITE);
   DrawText("Loading...", 20, 20, 40, LIGHTGRAY);
+#endif
 }
 
 auto gameOverScreenGameLoopRender(float dt) -> void {
@@ -485,14 +491,36 @@ void RunGameLoop() {
 
     SetExitKey(-1);
 
+#ifndef __EMSCRIPTEN__
+    globals::setCurrentGameState(GameState::LOADING_SCREEN);
+    loading_screen::init();
+    
+    int loadingThreads = 0;
+    if (globals::configJSON.contains("performance") && 
+        globals::configJSON["performance"].contains("loading_threads")) {
+        loadingThreads = globals::configJSON["performance"]["loading_threads"].get<int>();
+    }
+    
+    init::startInitAsync(loadingThreads);
+    
+    while (!loading_screen::getProgress().isComplete && !WindowShouldClose()) {
+        BeginDrawing();
+        loading_screen::render(GetFrameTime());
+        EndDrawing();
+    }
+    
+    init::waitForInitAsync();
+    loading_screen::shutdownExecutor();
+    loading_screen::shutdown();
+#else
     init::startInit();
+#endif
 
     input::Init(globals::getInputState(), globals::getRegistry(),
                 globals::g_ctx);
 
     game::init();
 
-    // Initialize performance overlay (F3 toggle)
     perf_overlay::init();
 
 #ifdef __EMSCRIPTEN__

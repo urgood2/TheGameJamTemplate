@@ -692,7 +692,14 @@ setupSlotInteractions = function()
         go.state.triggerOnReleaseEnabled = true
 
         go.methods.onClick = function(reg, entity)
-            returnEquippedItemFromSlot(slotName)
+            -- Command+click returns item to inventory (same as right-click)
+            local cmdHeld = input and input.isKeyDown and (
+                input.isKeyDown(KeyboardKey.KEY_LEFT_SUPER) or
+                input.isKeyDown(KeyboardKey.KEY_RIGHT_SUPER)
+            )
+            if cmdHeld then
+                returnEquippedItemFromSlot(slotName)
+            end
         end
 
         go.methods.onRightClick = function(reg, entity)
@@ -813,21 +820,50 @@ function EquipmentPanel.equipItem(entity, equipDef)
     end
 
     -- Try to integrate with combat system if available (optional - visual equip works without it)
-    local playerEntity = getPlayerEntity()
-    local ctx = getCombatContext()
+    -- Use _G.combat_context directly (set by gameplay.lua's initCombatSystem)
+    local ctx = _G.combat_context
+    local playerCombatTable = ctx and ctx.side1 and ctx.side1[1]
 
-    if playerEntity and ctx then
-        local playerScript = getScriptTableFromEntityID and getScriptTableFromEntityID(playerEntity)
-        local playerCombatTable = playerScript and playerScript.combatTable
+    log_debug(string.format("[EquipmentPanel] equipItem: combat_context=%s, player=%s, has_stats=%s",
+        tostring(ctx ~= nil),
+        tostring(playerCombatTable ~= nil),
+        tostring(playerCombatTable and playerCombatTable.stats ~= nil)))
 
-        if playerCombatTable then
-            local normalizedDef = normalizeEquipmentDef(equipDef)
-            local ok, err = combat_system.Game.ItemSystem.equip(ctx, playerCombatTable, normalizedDef)
-            if not ok then
-                log_warn("[EquipmentPanel] ItemSystem.equip failed (stats won't apply): " .. (err or "unknown error"))
-                -- Continue anyway - visual equip still works
+    if playerCombatTable and playerCombatTable.stats then
+        local normalizedDef = normalizeEquipmentDef(equipDef)
+
+        -- Debug: show what mods will be applied
+        local modsStr = "none"
+        if normalizedDef.mods and #normalizedDef.mods > 0 then
+            local parts = {}
+            for _, mod in ipairs(normalizedDef.mods) do
+                local modDesc = mod.stat
+                if mod.base then modDesc = modDesc .. ".base=" .. mod.base end
+                if mod.add_pct then modDesc = modDesc .. ".add_pct=" .. mod.add_pct end
+                if mod.mul_pct then modDesc = modDesc .. ".mul_pct=" .. mod.mul_pct end
+                table.insert(parts, modDesc)
+            end
+            modsStr = table.concat(parts, ", ")
+        end
+        log_debug("[EquipmentPanel] Equipping: " .. tostring(normalizedDef.id or normalizedDef.name or "?") ..
+            " slot=" .. tostring(normalizedDef.slot) .. " mods=[" .. modsStr .. "]")
+
+        local ok, err = combat_system.Game.ItemSystem.equip(ctx, playerCombatTable, normalizedDef)
+        if not ok then
+            log_warn("[EquipmentPanel] ItemSystem.equip failed (stats won't apply): " .. (err or "unknown error"))
+        else
+            log_debug("[EquipmentPanel] Applied equipment stats via ItemSystem")
+            -- Force stats recompute to see changes
+            if playerCombatTable.stats.recompute then
+                playerCombatTable.stats:recompute()
+            end
+            -- Emit signal so stats panel updates
+            if signal then
+                signal.emit("stats_recomputed", { source = "equipment_equip" })
             end
         end
+    else
+        log_debug("[EquipmentPanel] Skipping ItemSystem.equip - no player combat table or stats available")
     end
 
     state.equippedItems[slotId] = {
@@ -858,6 +894,17 @@ function EquipmentPanel.equipItem(entity, equipDef)
 
         go.methods.onRightClick = function(reg, clickedEntity)
             if state.equippedItems[slotId] and state.equippedItems[slotId].entity == clickedEntity then
+                returnEquippedItemFromSlot(slotId)
+            end
+        end
+
+        -- Command+click (Mac) also returns item to inventory
+        go.methods.onClick = function(reg, clickedEntity)
+            local cmdHeld = input and input.isKeyDown and (
+                input.isKeyDown(KeyboardKey.KEY_LEFT_SUPER) or
+                input.isKeyDown(KeyboardKey.KEY_RIGHT_SUPER)
+            )
+            if cmdHeld and state.equippedItems[slotId] and state.equippedItems[slotId].entity == clickedEntity then
                 returnEquippedItemFromSlot(slotId)
             end
         end
@@ -923,17 +970,20 @@ function EquipmentPanel.unequipSlot(slotId)
 
     state.equippedItems[slotId] = nil
 
-    local playerEntity = getPlayerEntity()
-    local ctx = getCombatContext()
-    
-    if playerEntity and ctx then
-        local playerScript = getScriptTableFromEntityID and getScriptTableFromEntityID(playerEntity)
-        local playerCombatTable = playerScript and playerScript.combatTable
-        
-        if playerCombatTable and oldItem.equipDef then
-            local ok, err = combat_system.Game.ItemSystem.unequip(ctx, playerCombatTable, slotId)
-            if not ok then
-                log_warn("[EquipmentPanel] ItemSystem.unequip failed: " .. (err or "unknown error"))
+    -- Use _G.combat_context directly (set by gameplay.lua's initCombatSystem)
+    local ctx = _G.combat_context
+    local playerCombatTable = ctx and ctx.side1 and ctx.side1[1]
+
+    if playerCombatTable and playerCombatTable.stats and oldItem.equipDef then
+        log_debug("[EquipmentPanel] Calling ItemSystem.unequip for slot: " .. slotId)
+        local ok, err = combat_system.Game.ItemSystem.unequip(ctx, playerCombatTable, slotId)
+        if not ok then
+            log_warn("[EquipmentPanel] ItemSystem.unequip failed: " .. (err or "unknown error"))
+        else
+            log_debug("[EquipmentPanel] Removed equipment stats via ItemSystem")
+            -- Emit signal so stats panel updates
+            if signal then
+                signal.emit("stats_recomputed", { source = "equipment_unequip" })
             end
         end
     end

@@ -26,6 +26,10 @@
 #include "../systems/sound/sound_system.hpp"
 #include "../systems/telemetry/telemetry.hpp"
 
+#ifndef __EMSCRIPTEN__
+#include "../systems/loading_screen/loading_screen.hpp"
+#endif
+
 #include <algorithm>
 #include <cctype>
 #include <chrono>
@@ -1084,5 +1088,64 @@ auto loadConfigFileValues() -> void {
   globals::screenWidth = widthField.value()->get<int>();
   globals::screenHeight = heightField.value()->get<int>();
 }
+
+#ifndef __EMSCRIPTEN__
+auto startInitAsync(int loadingThreads) -> void {
+  startup_timer::ScopedPhase total_start_init("total_start_init_async");
+  
+  constexpr int TOTAL_STAGES = 6;
+  int currentStage = 0;
+  
+  auto updateStage = [&](const std::string& name) {
+    currentStage++;
+    loading_screen::setStage(currentStage, TOTAL_STAGES, name);
+  };
+  
+  loading_screen::initExecutor(loadingThreads);
+  
+  updateStage("Scanning assets...");
+  {
+    startup_timer::ScopedPhase phase("scan_assets_async");
+    scanAssetsFolderAndAddAllPaths();
+  }
+  
+  updateStage("Loading JSON data...");
+  {
+    startup_timer::ScopedPhase phase("load_json_async");
+    loadJSONData();
+  }
+  
+  updateStage("Initializing systems...");
+  {
+    startup_timer::ScopedPhase phase("systems_init_async");
+    initSystems();
+  }
+  
+  updateStage("Initializing ECS...");
+  {
+    startup_timer::ScopedPhase phase("ecs_init_async");
+    initECS();
+  }
+  
+  updateStage("Loading localization...");
+  {
+    startup_timer::ScopedPhase phase("localization_init_async");
+    localization::setFallbackLanguage("en_us");
+    localization::loadLanguage("en_us", util::getRawAssetPathNoUUID("localization/"));
+    localization::loadLanguage("ko_kr", util::getRawAssetPathNoUUID("localization/"));
+    localization::setCurrentLanguage("en_us");
+    localization::loadFontData(util::getRawAssetPathNoUUID("localization/fonts.json"));
+  }
+  
+  updateStage("Finalizing...");
+  Random::seed(globals::getConfigJson().at("seed").get<unsigned>());
+  
+  loading_screen::waitForCompletion();
+  loading_screen::setComplete();
+  
+  SPDLOG_DEBUG("Async loading finished.");
+  startup_timer::print_summary();
+}
+#endif
 
 } // namespace init

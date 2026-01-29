@@ -175,7 +175,7 @@ local function makeConfigFromTable(tbl)
     end
 
     local b = UIConfigBuilder.create()
-
+    
     -- Process sprite panel/button fields first (they set up stylingType etc.)
     local isSprite = processSpritePanelFields(tbl, b)
     if not isSprite then

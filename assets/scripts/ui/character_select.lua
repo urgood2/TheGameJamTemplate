@@ -186,16 +186,16 @@ CharacterSelect.LAYOUT = {
     SCREEN_MARGIN = 20,
     OFFSCREEN_Y_OFFSET = 120,
     PANEL_MIN_WIDTH = 660,
-    PANEL_MIN_HEIGHT = 900,
-    INFO_PANEL_MIN_HEIGHT = 440,
+    PANEL_MIN_HEIGHT = 820,
+    INFO_PANEL_MIN_HEIGHT = 380,
 }
 
 CharacterSelect.FONT = {
     TITLE = 34,          -- snaps to 44px
     SECTION = 24,        -- snaps to 32px
-    INFO_TITLE = 36,     -- snaps to 44px (keeps titles at previous size)
-    LABEL = 28,          -- snaps to 32px (section headers like "Blessing:", "Passive:")
-    BODY = 44,           -- snaps to 56px (lore and description text)
+    INFO_TITLE = 44,     -- God/class name titles (44px is largest baked size)
+    LABEL = 22,          -- snaps to 22px (increased from 17 for better readability)
+    BODY = 28,           -- snaps to 28px (increased from 22 for better readability)
     PORTRAIT_LABEL = 14, -- snaps to 22px
     BUTTON = 22,         -- snaps to 28px
 }
@@ -388,50 +388,11 @@ local state = {
 
     -- Callbacks
     onConfirm = nil,
-
-    -- Cached info panel font sizes
-    infoFontSizes = nil,
-    infoFontSignature = nil,
 }
 
 --------------------------------------------------------------------------------
 -- POSITIONING HELPERS
 --------------------------------------------------------------------------------
-
-local function getInfoFontSignature()
-    local scale = (_G.UI_SCALE or (ui_scale and ui_scale.UI_SCALE) or 1)
-    return table.concat({
-        tostring(CharacterSelect.FONT.INFO_TITLE),
-        tostring(CharacterSelect.FONT.LABEL),
-        tostring(CharacterSelect.FONT.BODY),
-        tostring(scale),
-    }, ":")
-end
-
-local function ensureInfoFontSizes()
-    local signature = getInfoFontSignature()
-    if state.infoFontSignature ~= signature or not state.infoFontSizes then
-        state.infoFontSignature = signature
-        state.infoFontSizes = {
-            title = UIFont(CharacterSelect.FONT.INFO_TITLE),
-            label = UIFont(CharacterSelect.FONT.LABEL),
-            body = UIFont(CharacterSelect.FONT.BODY),
-        }
-        return true
-    end
-    return false
-end
-
-local function getInfoFontSizes()
-    if not state.infoFontSizes then
-        ensureInfoFontSizes()
-    end
-    return state.infoFontSizes or {
-        title = UIFont(CharacterSelect.FONT.INFO_TITLE),
-        label = UIFont(CharacterSelect.FONT.LABEL),
-        body = UIFont(CharacterSelect.FONT.BODY),
-    }
-end
 
 local function getScreenDimensions()
     local screenWidth = globals and globals.screenWidth and globals.screenWidth() or 800
@@ -633,8 +594,6 @@ function CharacterSelect.destroy()
     state.focusSection = 1
     state.focusIndex = 1
     state.onConfirm = nil
-    state.infoFontSizes = nil
-    state.infoFontSignature = nil
     -- Also clear persistence state for full reset (important for test isolation)
     state.lastGod = nil
     state.lastClass = nil
@@ -1205,23 +1164,20 @@ local function createGodInfoPanel()
     local infoPadding = UI(10)
     local textMaxWidth = math.max(0, metrics.godInfoWidth - (infoPadding * 2))
     local titleText = hasInfo and L(info.name_key, info.id) or L("character_select.select_god", "Select a God")
-    local fontSizes = getInfoFontSizes()
-    local labelFontSize = fontSizes.label
-    local bodyFontSize = fontSizes.body
-    local titleFontSize = fontSizes.title
+    local labelFontSize = UIFont(CharacterSelect.FONT.LABEL)
+    local bodyFontSize = UIFont(CharacterSelect.FONT.BODY)
+    local titleFontSize = UIFont(CharacterSelect.FONT.INFO_TITLE)
     local loreText = hasInfo and wrapTextToWidth(L(info.lore_key, ""), textMaxWidth, bodyFontSize) or ""
     local blessingText = hasInfo and wrapTextToWidth(L(info.blessing_key, ""), textMaxWidth, bodyFontSize) or ""
     local passiveText = hasInfo and wrapTextToWidth(L(info.passive_key, ""), textMaxWidth, bodyFontSize) or ""
     local blessingLabel = hasInfo and L("character_select.blessing", "Blessing:") or ""
     local passiveLabel = hasInfo and L("character_select.passive", "Passive:") or ""
-    local dividerLength = math.max(0, textMaxWidth)
-    local sectionGap = UI(6)
 
     return strict.vbox {
         config = {
             id = "god_info",
             padding = infoPadding,
-            spacing = UI(4),
+            spacing = UI(6),
             color = "charcoal",
             minWidth = metrics.godInfoWidth,
             minHeight = UI(CharacterSelect.LAYOUT.INFO_PANEL_MIN_HEIGHT),
@@ -1238,15 +1194,13 @@ local function createGodInfoPanel()
                 shadow = true,
                 align = TEXT_ALIGN_LEFT,
             }),
-            strict.divider("horizontal", { color = "slate", thickness = UI(1), length = dividerLength }),
             -- Lore/description
             strict.text(loreText, {
                 id = "god_info_lore",
                 fontSize = bodyFontSize,
-                color = hasInfo and "light_gray" or "gray",
+                color = "white",
                 align = TEXT_ALIGN_LEFT,
             }),
-            strict.spacer(sectionGap),
             -- Blessing label
             strict.text(blessingLabel, {
                 id = "god_info_blessing_label",
@@ -1260,7 +1214,6 @@ local function createGodInfoPanel()
                 color = "white",
                 align = TEXT_ALIGN_LEFT,
             }),
-            strict.spacer(sectionGap),
             -- Passive label
             strict.text(passiveLabel, {
                 id = "god_info_passive_label",
@@ -1289,23 +1242,20 @@ local function createClassInfoPanel()
     local infoPadding = UI(10)
     local textMaxWidth = math.max(0, metrics.classInfoWidth - (infoPadding * 2))
     local titleText = hasInfo and L(info.name_key, info.id) or L("character_select.select_class", "Select a Class")
-    local fontSizes = getInfoFontSizes()
-    local labelFontSize = fontSizes.label
-    local bodyFontSize = fontSizes.body
-    local titleFontSize = fontSizes.title
+    local labelFontSize = UIFont(CharacterSelect.FONT.LABEL)
+    local bodyFontSize = UIFont(CharacterSelect.FONT.BODY)
+    local titleFontSize = UIFont(CharacterSelect.FONT.INFO_TITLE)
     local loreText = hasInfo and wrapTextToWidth(L(info.lore_key, ""), textMaxWidth, bodyFontSize) or ""
     local passiveText = hasInfo and wrapTextToWidth(L(info.passive_key, ""), textMaxWidth, bodyFontSize) or ""
     local triggeredText = hasInfo and wrapTextToWidth(L(info.triggered_key, ""), textMaxWidth, bodyFontSize) or ""
     local passiveLabel = hasInfo and L("character_select.passive", "Passive:") or ""
     local triggeredLabel = hasInfo and L("character_select.triggered", "Triggered:") or ""
-    local dividerLength = math.max(0, textMaxWidth)
-    local sectionGap = UI(6)
 
     return strict.vbox {
         config = {
             id = "class_info",
             padding = infoPadding,
-            spacing = UI(4),
+            spacing = UI(6),
             color = "charcoal",
             minWidth = metrics.classInfoWidth,
             minHeight = UI(CharacterSelect.LAYOUT.INFO_PANEL_MIN_HEIGHT),
@@ -1322,15 +1272,13 @@ local function createClassInfoPanel()
                 shadow = true,
                 align = TEXT_ALIGN_LEFT,
             }),
-            strict.divider("horizontal", { color = "slate", thickness = UI(1), length = dividerLength }),
             -- Lore/description
             strict.text(loreText, {
                 id = "class_info_lore",
                 fontSize = bodyFontSize,
-                color = hasInfo and "light_gray" or "gray",
+                color = "white",
                 align = TEXT_ALIGN_LEFT,
             }),
-            strict.spacer(sectionGap),
             -- Passive label
             strict.text(passiveLabel, {
                 id = "class_info_passive_label",
@@ -1344,7 +1292,6 @@ local function createClassInfoPanel()
                 color = "white",
                 align = TEXT_ALIGN_LEFT,
             }),
-            strict.spacer(sectionGap),
             -- Triggered ability
             strict.text(triggeredLabel, {
                 id = "class_info_triggered_label",
@@ -1698,94 +1645,74 @@ function CharacterSelect.refreshUI()
     local godTextWidth = getInfoTextWidth(godInfoPanel, metrics.godInfoWidth, infoPadding)
     local classTextWidth = getInfoTextWidth(classInfoPanel, metrics.classInfoWidth, infoPadding)
     local textChanged = false
-    local fontsChanged = ensureInfoFontSizes()
 
     local godInfo = CharacterSelect.getGodInfo()
     local hasGod = godInfo ~= nil
-    local infoRebuilt = false
-    local infoZoneContainer = ui.box.GetUIEByID(registry, state.panelEntity, "info_zone_container")
-    if fontsChanged and infoZoneContainer and ui and ui.box and ui.box.ReplaceChildren then
-        local newInfoZone = createInfoZone()
-        if newInfoZone then
-            infoRebuilt = ui.box.ReplaceChildren(infoZoneContainer, newInfoZone)
-            if infoRebuilt and ui.box.AddStateTagToUIBox then
-                ui.box.AddStateTagToUIBox(registry, state.panelEntity, "default_state")
-            end
-            if infoRebuilt and ui.box.RenewAlignment then
-                ui.box.RenewAlignment(registry, state.panelEntity)
-            end
-        end
-    end
+    textChanged = updateUIText(
+        ui.box.GetUIEByID(registry, state.panelEntity, "god_info_title"),
+        hasGod and L(godInfo.name_key, godInfo.id) or L("character_select.select_god", "Select a God"),
+        hasGod and "gold" or "gray"
+    ) or textChanged
+    local bodyFontSize = UIFont(CharacterSelect.FONT.BODY)
 
-    if not infoRebuilt then
-        local fontSizes = getInfoFontSizes()
-        local bodyFontSize = fontSizes.body
+    textChanged = updateUIText(
+        ui.box.GetUIEByID(registry, state.panelEntity, "god_info_lore"),
+        hasGod and wrapTextToWidth(L(godInfo.lore_key, ""), godTextWidth, bodyFontSize) or "",
+        "white"
+    ) or textChanged
+    textChanged = updateUIText(
+        ui.box.GetUIEByID(registry, state.panelEntity, "god_info_blessing_label"),
+        hasGod and L("character_select.blessing", "Blessing:") or "",
+        hasGod and "cyan" or "gray"
+    ) or textChanged
+    textChanged = updateUIText(
+        ui.box.GetUIEByID(registry, state.panelEntity, "god_info_blessing"),
+        hasGod and wrapTextToWidth(L(godInfo.blessing_key, ""), godTextWidth, bodyFontSize) or "",
+        "white"
+    ) or textChanged
+    textChanged = updateUIText(
+        ui.box.GetUIEByID(registry, state.panelEntity, "god_info_passive_label"),
+        hasGod and L("character_select.passive", "Passive:") or "",
+        hasGod and "green" or "gray"
+    ) or textChanged
+    textChanged = updateUIText(
+        ui.box.GetUIEByID(registry, state.panelEntity, "god_info_passive"),
+        hasGod and wrapTextToWidth(L(godInfo.passive_key, ""), godTextWidth, bodyFontSize) or "",
+        "white"
+    ) or textChanged
 
-        textChanged = updateUIText(
-            ui.box.GetUIEByID(registry, state.panelEntity, "god_info_title"),
-            hasGod and L(godInfo.name_key, godInfo.id) or L("character_select.select_god", "Select a God"),
-            hasGod and "gold" or "gray"
-        ) or textChanged
-
-        textChanged = updateUIText(
-            ui.box.GetUIEByID(registry, state.panelEntity, "god_info_lore"),
-            hasGod and wrapTextToWidth(L(godInfo.lore_key, ""), godTextWidth, bodyFontSize) or "",
-            hasGod and "light_gray" or "gray"
-        ) or textChanged
-        textChanged = updateUIText(
-            ui.box.GetUIEByID(registry, state.panelEntity, "god_info_blessing_label"),
-            hasGod and L("character_select.blessing", "Blessing:") or "",
-            hasGod and "cyan" or "gray"
-        ) or textChanged
-        textChanged = updateUIText(
-            ui.box.GetUIEByID(registry, state.panelEntity, "god_info_blessing"),
-            hasGod and wrapTextToWidth(L(godInfo.blessing_key, ""), godTextWidth, bodyFontSize) or "",
-            "white"
-        ) or textChanged
-        textChanged = updateUIText(
-            ui.box.GetUIEByID(registry, state.panelEntity, "god_info_passive_label"),
-            hasGod and L("character_select.passive", "Passive:") or "",
-            hasGod and "green" or "gray"
-        ) or textChanged
-        textChanged = updateUIText(
-            ui.box.GetUIEByID(registry, state.panelEntity, "god_info_passive"),
-            hasGod and wrapTextToWidth(L(godInfo.passive_key, ""), godTextWidth, bodyFontSize) or "",
-            "white"
-        ) or textChanged
-
-        local classInfo = CharacterSelect.getClassInfo()
-        local hasClass = classInfo ~= nil
-        textChanged = updateUIText(
-            ui.box.GetUIEByID(registry, state.panelEntity, "class_info_title"),
-            hasClass and L(classInfo.name_key, classInfo.id) or L("character_select.select_class", "Select a Class"),
-            hasClass and "gold" or "gray"
-        ) or textChanged
-        textChanged = updateUIText(
-            ui.box.GetUIEByID(registry, state.panelEntity, "class_info_lore"),
-            hasClass and wrapTextToWidth(L(classInfo.lore_key, ""), classTextWidth, bodyFontSize) or "",
-            hasClass and "light_gray" or "gray"
-        ) or textChanged
-        textChanged = updateUIText(
-            ui.box.GetUIEByID(registry, state.panelEntity, "class_info_passive_label"),
-            hasClass and L("character_select.passive", "Passive:") or "",
-            hasClass and "green" or "gray"
-        ) or textChanged
-        textChanged = updateUIText(
-            ui.box.GetUIEByID(registry, state.panelEntity, "class_info_passive"),
-            hasClass and wrapTextToWidth(L(classInfo.passive_key, ""), classTextWidth, bodyFontSize) or "",
-            "white"
-        ) or textChanged
-        textChanged = updateUIText(
-            ui.box.GetUIEByID(registry, state.panelEntity, "class_info_triggered_label"),
-            hasClass and L("character_select.triggered", "Triggered:") or "",
-            hasClass and "orange" or "gray"
-        ) or textChanged
-        textChanged = updateUIText(
-            ui.box.GetUIEByID(registry, state.panelEntity, "class_info_triggered"),
-            hasClass and wrapTextToWidth(L(classInfo.triggered_key, ""), classTextWidth, bodyFontSize) or "",
-            "white"
-        ) or textChanged
-    end
+    local classInfo = CharacterSelect.getClassInfo()
+    local hasClass = classInfo ~= nil
+    textChanged = updateUIText(
+        ui.box.GetUIEByID(registry, state.panelEntity, "class_info_title"),
+        hasClass and L(classInfo.name_key, classInfo.id) or L("character_select.select_class", "Select a Class"),
+        hasClass and "gold" or "gray"
+    ) or textChanged
+    textChanged = updateUIText(
+        ui.box.GetUIEByID(registry, state.panelEntity, "class_info_lore"),
+        hasClass and wrapTextToWidth(L(classInfo.lore_key, ""), classTextWidth, bodyFontSize) or "",
+        "white"
+    ) or textChanged
+    textChanged = updateUIText(
+        ui.box.GetUIEByID(registry, state.panelEntity, "class_info_passive_label"),
+        hasClass and L("character_select.passive", "Passive:") or "",
+        hasClass and "green" or "gray"
+    ) or textChanged
+    textChanged = updateUIText(
+        ui.box.GetUIEByID(registry, state.panelEntity, "class_info_passive"),
+        hasClass and wrapTextToWidth(L(classInfo.passive_key, ""), classTextWidth, bodyFontSize) or "",
+        "white"
+    ) or textChanged
+    textChanged = updateUIText(
+        ui.box.GetUIEByID(registry, state.panelEntity, "class_info_triggered_label"),
+        hasClass and L("character_select.triggered", "Triggered:") or "",
+        hasClass and "orange" or "gray"
+    ) or textChanged
+    textChanged = updateUIText(
+        ui.box.GetUIEByID(registry, state.panelEntity, "class_info_triggered"),
+        hasClass and wrapTextToWidth(L(classInfo.triggered_key, ""), classTextWidth, bodyFontSize) or "",
+        "white"
+    ) or textChanged
 
     local confirmEntity = ui.box.GetUIEByID(registry, state.panelEntity, "character_select_confirm_button")
     if confirmEntity then

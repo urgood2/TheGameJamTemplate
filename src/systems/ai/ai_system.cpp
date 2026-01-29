@@ -101,6 +101,9 @@ namespace ai_system
     
     sol::state masterStateLua; // stores all scripts in one state
 
+    // Global flag to enable/disable GOAP debug data emission to Lua goap_debug module
+    static bool g_goap_debug_enabled = false;
+
     std::map<std::string, std::map<std::string, bool>> allPostconditionsForEveryAction; // Contains all post-conditions for every action
 
     scheduler masterScheduler{}; // master scheduler for AI processes
@@ -925,6 +928,21 @@ namespace ai_system
             return std::nullopt;
         }
 
+        // Emit debug data to goap_debug.lua if enabled
+        if (g_goap_debug_enabled && goapComponent.current_action < goapComponent.planSize)
+        {
+            const char* actionName = goapComponent.plan[goapComponent.current_action];
+            sol::optional<sol::table> goap_debug = masterStateLua["goap_debug"];
+            if (goap_debug && actionName)
+            {
+                sol::function set_current_action = (*goap_debug)["set_current_action"];
+                if (set_current_action.valid())
+                {
+                    set_current_action(static_cast<int>(entity), std::string(actionName));
+                }
+            }
+        }
+
         // // turn into isolated coroutine
         // goapComponent.currentUpdateCoroutine = currentAction.update;
 
@@ -1581,6 +1599,11 @@ namespace ai_system
                                      "get_double", &Blackboard::get<double>,
                                      "get_float", &Blackboard::get<float>,
                                      "get_string", &Blackboard::get<std::string>,
+                                     "get_or_bool", &Blackboard::get_or<bool>,
+                                     "get_or_int", &Blackboard::get_or<int>,
+                                     "get_or_double", &Blackboard::get_or<double>,
+                                     "get_or_float", &Blackboard::get_or<float>,
+                                     "get_or_string", &Blackboard::get_or<std::string>,
 
                                      "contains", &Blackboard::contains,
                                      "clear", &Blackboard::clear,
@@ -1602,6 +1625,14 @@ namespace ai_system
             }
 
             return &registry.get<GOAPComponent>(e).blackboard;
+        });
+
+        ai.set_function("set_debug_enabled", [](bool enabled) {
+            g_goap_debug_enabled = enabled;
+        });
+
+        ai.set_function("is_debug_enabled", []() {
+            return g_goap_debug_enabled;
         });
 
         lua.set_function("create_ai_entity",

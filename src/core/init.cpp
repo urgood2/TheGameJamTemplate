@@ -1143,6 +1143,8 @@ auto startInitAsync(int loadingThreads) -> void {
   loading_screen::waitForCompletion();
   loading_screen::setComplete();
   
+  globals::setCurrentGameState(GameState::MAIN_MENU);
+  
   SPDLOG_DEBUG("Async loading finished.");
   startup_timer::print_summary();
 }

@@ -1,8 +1,8 @@
 # Common Pitfalls Reference
 
 **Last Verified**: 2026-01-30  
-**Purpose**: Consolidated reference for all documented pitfalls, gotchas, and warnings across the codebase  
-**Source**: Extracted from 183 pitfalls across 156 documentation files
+**Purpose**: Consolidated reference of the most critical pitfalls, gotchas, and warnings across the codebase  
+**Source**: Top 78 pitfalls consolidated from 183 documented across 156 files (full inventory: `.sisyphus/evidence/pitfalls-inventory.md`)
 
 ---
 
@@ -214,7 +214,8 @@ When something doesn't work, check in this order:
 
 ---
 
-**Total Pitfalls Documented**: 183  
+**Pitfalls in this Reference**: 78 (most critical)  
+**Total Pitfalls Inventoried**: 183  
 **Categories**: 8  
 **Sources**: 156 documentation files
 

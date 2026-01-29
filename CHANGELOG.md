@@ -3,6 +3,7 @@
 Generated from commit history (initial commit 2025-03-26 → latest 2025-11-23).
 
 ## 2025-11
+- Added GOAP debug features: five new Lua utility functions (`ai.dump_worldstate()`, `ai.dump_plan()`, `ai.get_all_atoms()`, `ai.has_plan()`, `ai.dump_blackboard()`); ImGui debug window with F9 toggle, entity/worldstate/plan/blackboard inspection tabs, and force-replan button; comprehensive Lua test suite for GOAP API verification (`assets/scripts/tests/test_goap_api.lua`).
 - Added draw-command/shader batching system with docs, test suite, and integration guides; expanded batched entity rendering in the layer queue.
 - Converted large shader set (Godot SCREEN_TEXTURE + Unity UIEffect) to Raylib, added download tool and documentation for shader workflows.
 - Fixed HP/EXP bar delayed indicators, EXP pickup physics (sensor-based), tooltip font-size trimming, TEXT element font-size application, and camera positioning edge cases.

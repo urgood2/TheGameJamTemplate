@@ -100,6 +100,26 @@ test-ui-sizing:
 	cmake --build build --target unit_tests
 	./build/tests/unit_tests --gtest_filter="UISizing*:UILayout*" --gtest_color=yes
 
+# Run Descent roguelike mode tests (requires build first)
+# Exit 0 = all tests passed, Exit 1 = tests failed/timeout/module error
+test-descent:
+	AUTO_EXIT_AFTER_TEST=1 RUN_DESCENT_TESTS=1 ./build/raylib-cpp-cmake-template
+
+# Run Descent tests with output capture
+test-descent-log:
+	AUTO_EXIT_AFTER_TEST=1 RUN_DESCENT_TESTS=1 ./build/raylib-cpp-cmake-template 2>&1 | tee /tmp/descent_tests.log
+	@echo "Exit code: $$?"
+
+# Run Descent tests headless on Linux (requires xvfb-run)
+test-descent-headless:
+	#!/usr/bin/env bash
+	if ! command -v xvfb-run &>/dev/null; then
+		echo "ERROR: xvfb-run not found. Install with: sudo apt install xvfb"
+		exit 1
+	fi
+	xvfb-run -a env AUTO_EXIT_AFTER_TEST=1 RUN_DESCENT_TESTS=1 ./build/raylib-cpp-cmake-template 2>&1 | tee /tmp/descent_tests.log
+	echo "Exit code: $?"
+
 # =============================================================================
 # UI Baseline Testing (Lua-based layout verification)
 # =============================================================================

@@ -44,13 +44,15 @@ PROFILE_ENABLED = false -- set to true to enable profiling
 -- Game state (used only in lua)
 GAMESTATE = {
     MAIN_MENU = 0,
-    IN_GAME = 1
+    IN_GAME = 1,
+    DESCENT = 2
 }
 
 shapeAnimationPhase = 0
 
 local currentGameState = GAMESTATE.MAIN_MENU -- Set the initial game state to IN_GAME
 local autoStartMainGameEnv = (os.getenv and ((os.getenv("AUTO_START_MAIN_GAME") == "1") or (os.getenv("AUTO_ACTION_PHASE") == "1"))) or false
+local autoStartDescentEnv = (os.getenv and (os.getenv("AUTO_START_DESCENT") == "1")) or false
 
 local telemetry_once_flags = {}
 local function record_telemetry(event, props)
@@ -266,7 +268,7 @@ function initMainMenu()
     end)
 
     -- NEW: Minimalist main menu buttons using MainMenuButtons module
-    MainMenuButtons.setButtons({
+    local menuButtons = {
         {
             label = localization.get("ui.start_game_button"),
             onClick = function()
@@ -276,34 +278,50 @@ function initMainMenu()
                 CharacterSelect.spawnPanel()
             end
         },
-        {
-            label = localization.get("ui.start_game_feedback"),  -- "Discord" text
+    }
+
+    -- Descent mode entry (only when ENABLE_DESCENT=1)
+    if os.getenv("ENABLE_DESCENT") == "1" then
+        table.insert(menuButtons, {
+            label = "Descent",
             onClick = function()
-                record_telemetry("discord_button_clicked", { scene = "main_menu" })
-                OpenURL("https://discord.gg/rp6yXxKu5z")
+                record_telemetry("descent_clicked", { scene = "main_menu" })
+                local descent = require("descent.init")
+                descent.start()
             end
-        },
-        {
-            label = localization.get("ui.start_game_follow"),  -- "Bluesky" text
-            onClick = function()
-                record_telemetry("follow_button_clicked", { scene = "main_menu", platform = "bluesky" })
-                OpenURL("https://bsky.app/profile/chugget.itch.io")
-            end
-        },
-        {
-            label = localization.get("ui.switch_language"),  -- "Language" text
-            onClick = function()
-                -- Switch the language
-                if (localization.getCurrentLanguage() == "en_us") then
-                    record_telemetry("language_changed", { from = "en_us", to = "ko_kr", session_id = telemetry_session_id() })
-                    localization.setCurrentLanguage("ko_kr")
-                else
-                    record_telemetry("language_changed", { from = "ko_kr", to = "en_us", session_id = telemetry_session_id() })
-                    localization.setCurrentLanguage("en_us")
-                end
-            end
-        },
+        })
+    end
+
+    -- Add remaining buttons
+    table.insert(menuButtons, {
+        label = localization.get("ui.start_game_feedback"),  -- "Discord" text
+        onClick = function()
+            record_telemetry("discord_button_clicked", { scene = "main_menu" })
+            OpenURL("https://discord.gg/rp6yXxKu5z")
+        end
     })
+    table.insert(menuButtons, {
+        label = localization.get("ui.start_game_follow"),  -- "Bluesky" text
+        onClick = function()
+            record_telemetry("follow_button_clicked", { scene = "main_menu", platform = "bluesky" })
+            OpenURL("https://bsky.app/profile/chugget.itch.io")
+        end
+    })
+    table.insert(menuButtons, {
+        label = localization.get("ui.switch_language"),  -- "Language" text
+        onClick = function()
+            -- Switch the language
+            if (localization.getCurrentLanguage() == "en_us") then
+                record_telemetry("language_changed", { from = "en_us", to = "ko_kr", session_id = telemetry_session_id() })
+                localization.setCurrentLanguage("ko_kr")
+            else
+                record_telemetry("language_changed", { from = "ko_kr", to = "en_us", session_id = telemetry_session_id() })
+                localization.setCurrentLanguage("en_us")
+            end
+        end
+    })
+
+    MainMenuButtons.setButtons(menuButtons)
     MainMenuButtons.init()
 
     -- Store reference for cleanup and for keyboard handling in main.update()
@@ -1088,6 +1106,48 @@ function initMainGame()
 
 end
 
+local function resolveDescentSeed()
+    if not os.getenv then
+        return nil
+    end
+    local raw = os.getenv("DESCENT_SEED")
+    if not raw or raw == "" then
+        return nil
+    end
+    local as_number = tonumber(raw)
+    if as_number ~= nil then
+        return as_number
+    end
+    return raw
+end
+
+function initDescent()
+    log_debug("[initDescent] Starting Descent mode...")
+    currentGameState = GAMESTATE.DESCENT
+    record_telemetry_once("scene_descent", "scene_enter", { scene = "descent" })
+
+    local ok, Descent = pcall(require, "descent.init")
+    if not ok then
+        log_warn("[initDescent] Failed to load descent.init: " .. tostring(Descent))
+        changeGameState(GAMESTATE.MAIN_MENU)
+        return
+    end
+
+    if Descent and Descent.start then
+        local seed = resolveDescentSeed()
+        local started_ok, err = pcall(Descent.start, { seed = seed })
+        if not started_ok then
+            log_warn("[initDescent] Descent.start failed: " .. tostring(err))
+            changeGameState(GAMESTATE.MAIN_MENU)
+            return
+        end
+    else
+        log_warn("[initDescent] descent.init missing start()")
+        changeGameState(GAMESTATE.MAIN_MENU)
+        return
+    end
+end
+
 function changeGameState(newState)
     -- Check if the new state is different from the current state
     if currentGameState == GAMESTATE.MAIN_MENU and newState ~= GAMESTATE.MAIN_MENU then
@@ -1098,6 +1158,8 @@ function changeGameState(newState)
         initMainMenu()
     elseif newState == GAMESTATE.IN_GAME then
         initMainGame()
+    elseif newState == GAMESTATE.DESCENT then
+        initDescent()
     else
         error("Invalid game state: " .. tostring(newState))
     end
@@ -1113,6 +1175,25 @@ ProjectileSystemTest = nil
 -- Main function to initialize the game. Called at the start of the game.
 function main.init()
     log_debug("Game initializing...") -- Debug message to indicate the game is initializing
+
+    -- Descent test runner hook (runs tests and exits; does not require ENABLE_DESCENT=1)
+    -- Must run early before any game state initialization
+    if os.getenv("RUN_DESCENT_TESTS") == "1" then
+        log_debug("[DESCENT_TESTS] Running Descent test suite...")
+        local ok, runner = pcall(require, "tests.run_descent_tests")
+        if not ok then
+            print("[DESCENT_TESTS] FATAL: Failed to load test runner: " .. tostring(runner))
+            os.exit(1)
+            return
+        end
+        runner.reset()
+        local success = runner.run_all()
+        local exit_code = success and 0 or 1
+        log_debug("[DESCENT_TESTS] Exiting with code " .. exit_code)
+        os.exit(exit_code)
+        return  -- Safety: ensure we don't continue initialization
+    end
+
     record_telemetry_once("session_start", "session_start", {
         session_id = telemetry_session_id(),
         scene = "boot"
@@ -1307,7 +1388,12 @@ function main.init()
     
     changeGameState(GAMESTATE.MAIN_MENU) -- Initialize the game in the IN_GAME state
 
-    if autoStartMainGameEnv then
+    if autoStartDescentEnv then
+        timer.after(0.25, function()
+            print("[DEBUG ACTION] AUTO_START_DESCENT triggering Descent mode")
+            changeGameState(GAMESTATE.DESCENT)
+        end, "auto_start_descent")
+    elseif autoStartMainGameEnv then
         timer.after(0.25, function()
             print("[DEBUG ACTION] AUTO_START_MAIN_GAME triggering startGameButtonCallback()")
             if startGameButtonCallback then

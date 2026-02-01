@@ -1,0 +1,17 @@
+# APR Workflow Configuration
+# Generated: 2026-02-01T02:46:22Z
+
+name: default
+description: "Iterative specification refinement"
+
+documents:
+  readme: "/data/projects/roguelike-1/README.md"
+  spec: "/data/projects/roguelike-1/planning/PLAN_v0.md"
+  implementation: ""
+
+oracle:
+  model: "5.2 Thinking"
+  thinking_time: heavy
+
+rounds:
+  output_dir: ".apr/rounds/default"

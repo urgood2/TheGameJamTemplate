@@ -1,0 +1,111 @@
+{
+  "version": "1.0",
+  "created_at": "2026-02-01T06:18:46.861741611+01:00",
+  "updated_at": "2026-02-01T06:33:27.551174541+01:00",
+  "events": [
+    {
+      "issue_id": "bd-2qf.36",
+      "action": "ignore",
+      "score": 0.27549663377294203,
+      "timestamp": "2026-02-01T06:18:46.872080279+01:00"
+    },
+    {
+      "issue_id": "bd-2qf.36",
+      "action": "ignore",
+      "score": 0,
+      "timestamp": "2026-02-01T06:20:15.183241748+01:00"
+    },
+    {
+      "issue_id": "bd-2qf.19",
+      "action": "ignore",
+      "score": 0,
+      "timestamp": "2026-02-01T06:26:36.846054787+01:00"
+    },
+    {
+      "issue_id": "bd-2qf.26",
+      "action": "ignore",
+      "score": 0.4036672712731509,
+      "timestamp": "2026-02-01T06:27:07.83946883+01:00"
+    },
+    {
+      "issue_id": "bd-2qf.26",
+      "action": "ignore",
+      "score": 0.40366822687491244,
+      "timestamp": "2026-02-01T06:27:18.268274717+01:00"
+    },
+    {
+      "issue_id": "bd-2qf.45",
+      "action": "ignore",
+      "score": 0,
+      "timestamp": "2026-02-01T06:29:25.716995726+01:00"
+    },
+    {
+      "issue_id": "bd-2qf.11",
+      "action": "ignore",
+      "score": 0.22304188610421172,
+      "timestamp": "2026-02-01T06:33:16.799927023+01:00"
+    },
+    {
+      "issue_id": "bd-2qf.11",
+      "action": "ignore",
+      "score": 0.22304297824180389,
+      "timestamp": "2026-02-01T06:33:27.551162078+01:00"
+    }
+  ],
+  "adjustments": [
+    {
+      "name": "PageRank",
+      "adjustment": 0.9876721219563855,
+      "samples": 8,
+      "last_updated": "2026-02-01T06:33:27.551169001+01:00"
+    },
+    {
+      "name": "Betweenness",
+      "adjustment": 0.9672698412698415,
+      "samples": 8,
+      "last_updated": "2026-02-01T06:33:27.551169432+01:00"
+    },
+    {
+      "name": "BlockerRatio",
+      "adjustment": 0.9475,
+      "samples": 8,
+      "last_updated": "2026-02-01T06:33:27.551169752+01:00"
+    },
+    {
+      "name": "Staleness",
+      "adjustment": 0.99999907480849,
+      "samples": 8,
+      "last_updated": "2026-02-01T06:33:27.551170764+01:00"
+    },
+    {
+      "name": "PriorityBoost",
+      "adjustment": 0.9250000000000003,
+      "samples": 8,
+      "last_updated": "2026-02-01T06:33:27.551171576+01:00"
+    },
+    {
+      "name": "TimeToImpact",
+      "adjustment": 0.9359500000000003,
+      "samples": 8,
+      "last_updated": "2026-02-01T06:33:27.551172748+01:00"
+    },
+    {
+      "name": "Urgency",
+      "adjustment": 0.9998033118559635,
+      "samples": 8,
+      "last_updated": "2026-02-01T06:33:27.551173008+01:00"
+    },
+    {
+      "name": "Risk",
+      "adjustment": 0.9942954006426581,
+      "samples": 8,
+      "last_updated": "2026-02-01T06:33:27.551173369+01:00"
+    }
+  ],
+  "stats": {
+    "total_accepted": 0,
+    "total_ignored": 8,
+    "avg_accept_score": 0,
+    "avg_ignore_score": 0.1911146245333776
+  }
+}

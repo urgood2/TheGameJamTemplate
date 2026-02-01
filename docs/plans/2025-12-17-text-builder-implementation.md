@@ -1767,3 +1767,5 @@ git commit -m "docs: add TextBuilder API to CLAUDE.md"
 - Full entity mode implementation (creating ECS entity, shader integration)
 - Rich effects mode in entity mode (per-character local commands)
 - Integration with real CommandBufferText (vs mock)
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

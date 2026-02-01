@@ -496,3 +496,5 @@ After all tasks complete:
 6. [ ] `unequip()` calls `cleanup_procs()` before stat buff removal
 7. [ ] Switching avatars cleans up old procs before registering new
 8. [ ] All tests pass
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

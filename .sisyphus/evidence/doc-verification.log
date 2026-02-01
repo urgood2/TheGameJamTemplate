@@ -1,0 +1,1661 @@
+Verifying all API documentation files...
+
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/behaviors.md
+==========================================
+
+Found 4 API references in code blocks:
+
+[0;31mMISMATCH[0m: behaviors.register - not found in bindings
+[0;31mMISMATCH[0m: helpers.teleport_random - not found in bindings
+[0;31mMISMATCH[0m: register - not found in bindings
+[0;31mMISMATCH[0m: teleport_random - not found in bindings
+
+==========================================
+Summary for: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/behaviors.md
+==========================================
+  [0;32mOK[0m:       0
+  [0;31mMISMATCH[0m: 4
+  [0;33mSKIPPED[0m:  0 (common patterns)
+
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/child-builder.md
+==========================================
+
+Found 15 API references in code blocks:
+
+[0;31mMISMATCH[0m: ChildBuilder.animateOffset - not found in bindings
+[0;31mMISMATCH[0m: ChildBuilder.for_entity - not found in bindings
+[0;31mMISMATCH[0m: ChildBuilder.orbit - not found in bindings
+[0;31mMISMATCH[0m: ChildBuilder.setOffset - not found in bindings
+[0;31mMISMATCH[0m: EntityBuilder.simple - not found in bindings
+[0;31mMISMATCH[0m: animateOffset - not found in bindings
+[0;31mMISMATCH[0m: apply - not found in bindings
+[0;31mMISMATCH[0m: attachTo - not found in bindings
+[0;31mMISMATCH[0m: for_entity - not found in bindings
+[0;31mMISMATCH[0m: named - not found in bindings
+[0;31mMISMATCH[0m: offset - not found in bindings
+[0;31mMISMATCH[0m: orbit - not found in bindings
+[0;31mMISMATCH[0m: rotateWith - not found in bindings
+[0;31mMISMATCH[0m: setOffset - not found in bindings
+[0;31mMISMATCH[0m: simple - not found in bindings
+
+==========================================
+Summary for: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/child-builder.md
+==========================================
+  [0;32mOK[0m:       0
+  [0;31mMISMATCH[0m: 15
+  [0;33mSKIPPED[0m:  0 (common patterns)
+
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/combat-systems.md
+==========================================
+
+Found 60 API references in code blocks:
+
+[0;31mMISMATCH[0m: combatHandlers:cleanup - not found in bindings
+[0;31mMISMATCH[0m: combatHandlers:on - not found in bindings
+[0;31mMISMATCH[0m: handlers:cleanup - not found in bindings
+[0;31mMISMATCH[0m: handlers:on - not found in bindings
+[0;31mMISMATCH[0m: ctx.get_enemies_of - not found in bindings
+[0;31mMISMATCH[0m: Effects.deal_damage - not found in bindings
+[0;31mMISMATCH[0m: Equipment.get - not found in bindings
+[0;31mMISMATCH[0m: Equipment.getAll - not found in bindings
+[0;31mMISMATCH[0m: Equipment.getByRarity - not found in bindings
+[0;31mMISMATCH[0m: Equipment.getBySlot - not found in bindings
+[0;31mMISMATCH[0m: Items.equip - not found in bindings
+[0;31mMISMATCH[0m: Items.get_equipped - not found in bindings
+[0;31mMISMATCH[0m: Items.unequip - not found in bindings
+[0;31mMISMATCH[0m: Particles.define - not found in bindings
+[0;31mMISMATCH[0m: Q.isInRange - not found in bindings
+[0;31mMISMATCH[0m: signal_group.new - not found in bindings
+[0;31mMISMATCH[0m: signal.register - not found in bindings
+[0;31mMISMATCH[0m: signal.unregister - not found in bindings
+[0;31mMISMATCH[0m: StatusEngine.apply - not found in bindings
+[0;31mMISMATCH[0m: StatusEngine.clearAll - not found in bindings
+[0;31mMISMATCH[0m: StatusEngine.getStacks - not found in bindings
+[0;31mMISMATCH[0m: StatusEngine.hasStatus - not found in bindings
+[0;31mMISMATCH[0m: StatusEngine.remove - not found in bindings
+[0;31mMISMATCH[0m: Triggers.getCategory - not found in bindings
+[0;31mMISMATCH[0m: Triggers.isValid - not found in bindings
+[0;31mMISMATCH[0m: apply - not found in bindings
+[0;31mMISMATCH[0m: applyEffects - not found in bindings
+[0;31mMISMATCH[0m: applyVFX - not found in bindings
+[0;31mMISMATCH[0m: checkSetBonuses - not found in bindings
+[0;31mMISMATCH[0m: cleanup - not found in bindings
+[0;31mMISMATCH[0m: clearAll - not found in bindings
+[0;31mMISMATCH[0m: color - not found in bindings
+[0;31mMISMATCH[0m: deal_damage - not found in bindings
+[0;31mMISMATCH[0m: define - not found in bindings
+[0;31mMISMATCH[0m: equip - not found in bindings
+[0;31mMISMATCH[0m: fade - not found in bindings
+[0;31mMISMATCH[0m: get - not found in bindings
+[0;31mMISMATCH[0m: get_enemies_of - not found in bindings
+[0;31mMISMATCH[0m: get_equipped - not found in bindings
+[0;31mMISMATCH[0m: getAll - not found in bindings
+[0;31mMISMATCH[0m: getByRarity - not found in bindings
+[0;31mMISMATCH[0m: getBySlot - not found in bindings
+[0;31mMISMATCH[0m: getCategory - not found in bindings
+[0;31mMISMATCH[0m: getStacks - not found in bindings
+[0;31mMISMATCH[0m: grantXP - not found in bindings
+[0;31mMISMATCH[0m: hasStatus - not found in bindings
+[0;31mMISMATCH[0m: isInRange - not found in bindings
+[0;31mMISMATCH[0m: isValid - not found in bindings
+[0;31mMISMATCH[0m: lifespan - not found in bindings
+[0;31mMISMATCH[0m: min - not found in bindings
+[0;31mMISMATCH[0m: new - not found in bindings
+[0;31mMISMATCH[0m: on - not found in bindings
+[0;31mMISMATCH[0m: originalEquip - not found in bindings
+[0;31mMISMATCH[0m: register - not found in bindings
+[0;31mMISMATCH[0m: remove - not found in bindings
+[0;31mMISMATCH[0m: shape - not found in bindings
+[0;31mMISMATCH[0m: unequip - not found in bindings
+[0;31mMISMATCH[0m: unregister - not found in bindings
+[0;31mMISMATCH[0m: velocity - not found in bindings
+
+==========================================
+Summary for: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/combat-systems.md
+==========================================
+  [0;32mOK[0m:       0
+  [0;31mMISMATCH[0m: 59
+  [0;33mSKIPPED[0m:  1 (common patterns)
+
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/entity-builder.md
+==========================================
+
+Found 11 API references in code blocks:
+
+[0;31mMISMATCH[0m: script:handle - not found in bindings
+[0;31mMISMATCH[0m: EntityBuilder.create - not found in bindings
+[0;31mMISMATCH[0m: EntityBuilder.simple - not found in bindings
+[0;31mMISMATCH[0m: EntityBuilder.validated - not found in bindings
+[0;31mMISMATCH[0m: Node.create - not found in bindings
+[0;31mMISMATCH[0m: Node.quick - not found in bindings
+[0;31mMISMATCH[0m: create - not found in bindings
+[0;31mMISMATCH[0m: handle - not found in bindings
+[0;31mMISMATCH[0m: quick - not found in bindings
+[0;31mMISMATCH[0m: simple - not found in bindings
+[0;31mMISMATCH[0m: validated - not found in bindings
+
+==========================================
+Summary for: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/entity-builder.md
+==========================================
+  [0;32mOK[0m:       0
+  [0;31mMISMATCH[0m: 11
+  [0;33mSKIPPED[0m:  0 (common patterns)
+
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/hitfx_doc.md
+==========================================
+
+Found 12 API references in code blocks:
+
+[0;31mMISMATCH[0m: hitfx.flash - not found in bindings
+[0;31mMISMATCH[0m: hitfx.flash_start - not found in bindings
+[0;31mMISMATCH[0m: popup.damage - not found in bindings
+[0;31mMISMATCH[0m: timer.after - not found in bindings
+[0;31mMISMATCH[0m: after - not found in bindings
+[0;31mMISMATCH[0m: cancel - not found in bindings
+[0;31mMISMATCH[0m: damage - not found in bindings
+[0;31mMISMATCH[0m: flash - not found in bindings
+[0;31mMISMATCH[0m: flash_start - not found in bindings
+[0;31mMISMATCH[0m: onEnemyHit - not found in bindings
+[0;31mMISMATCH[0m: releaseAttack - not found in bindings
+[0;31mMISMATCH[0m: stopFlash - not found in bindings
+
+==========================================
+Summary for: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/hitfx_doc.md
+==========================================
+  [0;32mOK[0m:       0
+  [0;31mMISMATCH[0m: 12
+  [0;33mSKIPPED[0m:  0 (common patterns)
+
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/inventory-grid-quick-reference.md
+==========================================
+
+Found 45 API references in code blocks:
+
+[0;31mMISMATCH[0m: registry:valid - not found in bindings
+[0;31mMISMATCH[0m: box.Remove - not found in bindings
+[0;31mMISMATCH[0m: dsl.cleanupGrid - not found in bindings
+[0;31mMISMATCH[0m: dsl.spawn - not found in bindings
+[0;31mMISMATCH[0m: dsl.text - not found in bindings
+[0;31mMISMATCH[0m: grid.addItem - not found in bindings
+[0;31mMISMATCH[0m: grid.cleanup - not found in bindings
+[0;31mMISMATCH[0m: grid.getCapacity - not found in bindings
+[0;31mMISMATCH[0m: grid.getItemAtIndex - not found in bindings
+[0;31mMISMATCH[0m: grid.getSlotEntity - not found in bindings
+[0;31mMISMATCH[0m: grid.getUsedSlotCount - not found in bindings
+[0;31mMISMATCH[0m: grid.removeItem - not found in bindings
+[0;31mMISMATCH[0m: input.getState - not found in bindings
+[0;31mMISMATCH[0m: timer.every_opts - not found in bindings
+[0;31mMISMATCH[0m: timer.kill_group - not found in bindings
+[0;32mOK[0m: UIDecorations.addBadge
+[0;32mOK[0m: UIDecorations.addOverlay
+[0;32mOK[0m: UIDecorations.cleanup
+[0;32mOK[0m: UIDecorations.draw
+[0;32mOK[0m: UIDecorations.setBadgeText
+[0;32mOK[0m: util.getColor
+[0;31mMISMATCH[0m: addBadge - not found in bindings
+[0;31mMISMATCH[0m: addItem - not found in bindings
+[0;31mMISMATCH[0m: addOverlay - not found in bindings
+[0;31mMISMATCH[0m: cleanup - not found in bindings
+[0;31mMISMATCH[0m: cleanupGrid - not found in bindings
+[0;31mMISMATCH[0m: createGridForTab - not found in bindings
+[0;31mMISMATCH[0m: draw - not found in bindings
+[0;31mMISMATCH[0m: every_opts - not found in bindings
+[0;31mMISMATCH[0m: getCapacity - not found in bindings
+[0;31mMISMATCH[0m: getColor - not found in bindings
+[0;31mMISMATCH[0m: getElement - not found in bindings
+[0;31mMISMATCH[0m: getItemAtIndex - not found in bindings
+[0;31mMISMATCH[0m: getSlotEntity - not found in bindings
+[0;31mMISMATCH[0m: getState - not found in bindings
+[0;31mMISMATCH[0m: getUsedSlotCount - not found in bindings
+[0;31mMISMATCH[0m: kill_group - not found in bindings
+[0;31mMISMATCH[0m: Remove - not found in bindings
+[0;31mMISMATCH[0m: removeItem - not found in bindings
+[0;31mMISMATCH[0m: setBadgeText - not found in bindings
+[0;31mMISMATCH[0m: setGridVisible - not found in bindings
+[0;31mMISMATCH[0m: spawn - not found in bindings
+[0;31mMISMATCH[0m: switchTab - not found in bindings
+[0;31mMISMATCH[0m: valid - not found in bindings
+
+==========================================
+Summary for: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/inventory-grid-quick-reference.md
+==========================================
+  [0;32mOK[0m:       6
+  [0;31mMISMATCH[0m: 38
+  [0;33mSKIPPED[0m:  1 (common patterns)
+
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/inventory-grid.md
+==========================================
+
+Found 13 API references in code blocks:
+
+[0;31mMISMATCH[0m: dsl.spawn - not found in bindings
+[0;31mMISMATCH[0m: grid.addItem - not found in bindings
+[0;31mMISMATCH[0m: signal.emit - not found in bindings
+[0;31mMISMATCH[0m: signal.register - not found in bindings
+[0;31mMISMATCH[0m: addItem - not found in bindings
+[0;31mMISMATCH[0m: createCardEntity - not found in bindings
+[0;31mMISMATCH[0m: emit - not found in bindings
+[0;31mMISMATCH[0m: getScriptTableFromEntityID - not found in bindings
+[0;31mMISMATCH[0m: playSound - not found in bindings
+[0;31mMISMATCH[0m: register - not found in bindings
+[0;31mMISMATCH[0m: showContextMenu - not found in bindings
+[0;31mMISMATCH[0m: spawn - not found in bindings
+[0;31mMISMATCH[0m: updateStackBadge - not found in bindings
+
+==========================================
+Summary for: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/inventory-grid.md
+==========================================
+  [0;32mOK[0m:       0
+  [0;31mMISMATCH[0m: 13
+  [0;33mSKIPPED[0m:  0 (common patterns)
+
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/localization.md
+==========================================
+
+Found 3 API references in code blocks:
+
+[0;32mOK[0m: localization.getStyled
+[0;31mMISMATCH[0m: getStyled - not found in bindings
+[0;31mMISMATCH[0m: makeLocalizedTooltip - not found in bindings
+
+==========================================
+Summary for: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/localization.md
+==========================================
+  [0;32mOK[0m:       1
+  [0;31mMISMATCH[0m: 2
+  [0;33mSKIPPED[0m:  0 (common patterns)
+
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/lua_api_reference.md
+==========================================
+
+Found 109 API references in code blocks:
+
+[0;31mMISMATCH[0m: g:apply - not found in bindings
+[0;31mMISMATCH[0m: g:set - not found in bindings
+[0;31mMISMATCH[0m: grid:get - not found in bindings
+[0;31mMISMATCH[0m: Node:extend - not found in bindings
+[0;32mOK[0m: quadtreeWorld:query
+[0;31mMISMATCH[0m: registry:create - not found in bindings
+[0;31mMISMATCH[0m: registry:emplace - not found in bindings
+[0;31mMISMATCH[0m: registry:get - not found in bindings
+[0;31mMISMATCH[0m: self:handle - not found in bindings
+[0;31mMISMATCH[0m: Spinner:init - not found in bindings
+[0;31mMISMATCH[0m: Spinner:update - not found in bindings
+[0;31mMISMATCH[0m: box.AssignLayerOrderComponents - not found in bindings
+[0;31mMISMATCH[0m: box.Initialize - not found in bindings
+[0;32mOK[0m: command_buffer.executeDrawRectangle
+[0;32mOK[0m: command_buffer.queueDrawGradientRectRoundedCentered
+[0;32mOK[0m: controller_nav.add_group_to_layer
+[0;32mOK[0m: controller_nav.create_group
+[0;32mOK[0m: controller_nav.create_layer
+[0;32mOK[0m: controller_nav.navigate
+[0;32mOK[0m: controller_nav.set_group_callbacks
+[0;31mMISMATCH[0m: globalShaderUniforms.set - not found in bindings
+[0;31mMISMATCH[0m: layer_order_system.assignZIndexToEntity - not found in bindings
+[0;32mOK[0m: localization.get
+[0;32mOK[0m: localization.loadLanguage
+[0;32mOK[0m: particle.CreateParticle
+[0;32mOK[0m: particle.CreateParticleEmitter
+[0;32mOK[0m: particle.EmitParticles
+[0;32mOK[0m: particle.spawnRing
+[0;32mOK[0m: physics.create_physics_for_transform
+[0;32mOK[0m: physics.enable_collision_between_many
+[0;32mOK[0m: physics.set_collision_tags
+[0;32mOK[0m: physics.SetBullet
+[0;32mOK[0m: quadtree.box
+[0;31mMISMATCH[0m: signal.addListener - not found in bindings
+[0;31mMISMATCH[0m: signal.emit - not found in bindings
+[0;31mMISMATCH[0m: signal.register - not found in bindings
+[0;32mOK[0m: steering.make_steerable
+[0;32mOK[0m: steering.seek_point
+[0;31mMISMATCH[0m: timer.after - not found in bindings
+[0;31mMISMATCH[0m: timer.tween_fields - not found in bindings
+[0;32mOK[0m: transform.install_local_callback
+[0;32mOK[0m: UIConfigBuilder.create
+[0;32mOK[0m: util.getColor
+[0;31mMISMATCH[0m: _init - not found in bindings
+[0;31mMISMATCH[0m: add_group_to_layer - not found in bindings
+[0;31mMISMATCH[0m: addButtonCallback - not found in bindings
+[0;31mMISMATCH[0m: addConfig - not found in bindings
+[0;31mMISMATCH[0m: addId - not found in bindings
+[0;31mMISMATCH[0m: addListener - not found in bindings
+[0;31mMISMATCH[0m: addPadding - not found in bindings
+[0;31mMISMATCH[0m: addText - not found in bindings
+[0;31mMISMATCH[0m: addType - not found in bindings
+[0;31mMISMATCH[0m: after - not found in bindings
+[0;31mMISMATCH[0m: apply - not found in bindings
+[0;31mMISMATCH[0m: AssignLayerOrderComponents - not found in bindings
+[0;31mMISMATCH[0m: assignZIndexToEntity - not found in bindings
+[0;31mMISMATCH[0m: attach_ecs - not found in bindings
+[0;31mMISMATCH[0m: box - not found in bindings
+[0;31mMISMATCH[0m: build - not found in bindings
+[0;31mMISMATCH[0m: camera_smooth_pan_to - not found in bindings
+[0;31mMISMATCH[0m: chain - not found in bindings
+[0;31mMISMATCH[0m: continue - not found in bindings
+[0;31mMISMATCH[0m: create - not found in bindings
+[0;31mMISMATCH[0m: create_group - not found in bindings
+[0;31mMISMATCH[0m: create_layer - not found in bindings
+[0;31mMISMATCH[0m: create_physics_for_transform - not found in bindings
+[0;31mMISMATCH[0m: CreateParticle - not found in bindings
+[0;31mMISMATCH[0m: CreateParticleEmitter - not found in bindings
+[0;31mMISMATCH[0m: emit - not found in bindings
+[0;31mMISMATCH[0m: EmitParticles - not found in bindings
+[0;31mMISMATCH[0m: emplace - not found in bindings
+[0;31mMISMATCH[0m: enable_collision_between_many - not found in bindings
+[0;31mMISMATCH[0m: executeDrawRectangle - not found in bindings
+[0;31mMISMATCH[0m: extend - not found in bindings
+[0;31mMISMATCH[0m: floor - not found in bindings
+[0;31mMISMATCH[0m: get - not found in bindings
+[0;31mMISMATCH[0m: getBlackboardFloat - not found in bindings
+[0;31mMISMATCH[0m: getColor - not found in bindings
+[0;32mOK[0m: getEntityByAlias
+[0;31mMISMATCH[0m: Grid - not found in bindings
+[0;31mMISMATCH[0m: handle - not found in bindings
+[0;31mMISMATCH[0m: init - not found in bindings
+[0;31mMISMATCH[0m: Initialize - not found in bindings
+[0;31mMISMATCH[0m: insert - not found in bindings
+[0;31mMISMATCH[0m: install_local_callback - not found in bindings
+[0;31mMISMATCH[0m: loadLanguage - not found in bindings
+[0;31mMISMATCH[0m: make_steerable - not found in bindings
+[0;31mMISMATCH[0m: makePulsingBeam - not found in bindings
+[0;31mMISMATCH[0m: navigate - not found in bindings
+[0;31mMISMATCH[0m: onLoot - not found in bindings
+[0;31mMISMATCH[0m: pipeline - not found in bindings
+[0;32mOK[0m: playPlaylist
+[0;32mOK[0m: publishLuaEvent
+[0;31mMISMATCH[0m: query - not found in bindings
+[0;31mMISMATCH[0m: queueDrawGradientRectRoundedCentered - not found in bindings
+[0;31mMISMATCH[0m: register - not found in bindings
+[0;32mOK[0m: resetListenersForLuaEvent
+[0;31mMISMATCH[0m: seek_point - not found in bindings
+[0;31mMISMATCH[0m: set - not found in bindings
+[0;31mMISMATCH[0m: set_collision_tags - not found in bindings
+[0;31mMISMATCH[0m: set_group_callbacks - not found in bindings
+[0;31mMISMATCH[0m: SetBullet - not found in bindings
+[0;31mMISMATCH[0m: setCurrentWorldStateValue - not found in bindings
+[0;32mOK[0m: setEntityAlias
+[0;32mOK[0m: setMusicVolume
+[0;31mMISMATCH[0m: spawnRing - not found in bindings
+[0;32mOK[0m: subscribeToLuaEvent
+[0;31mMISMATCH[0m: tween_fields - not found in bindings
+[0;31mMISMATCH[0m: update - not found in bindings
+
+==========================================
+Summary for: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/lua_api_reference.md
+==========================================
+  [0;32mOK[0m:       31
+  [0;31mMISMATCH[0m: 78
+  [0;33mSKIPPED[0m:  0 (common patterns)
+
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/lua_camera_docs.md
+==========================================
+
+Found 122 API references in code blocks:
+
+[0;32mOK[0m: cam:Fade
+[0;32mOK[0m: cam:Flash
+[0;32mOK[0m: cam:GetVisualTarget
+[0;32mOK[0m: cam:SetActualTarget
+[0;32mOK[0m: cam:SetFollowLead
+[0;32mOK[0m: cam:SetFollowLerp
+[0;32mOK[0m: cam:SetFollowStyle
+[0;32mOK[0m: cam:SetOffsetDampingEnabled
+[0;32mOK[0m: cam:SetStrafeTiltEnabled
+[0;32mOK[0m: cam:Shake
+[0;32mOK[0m: cam:SpringShake
+[0;32mOK[0m: cam:Update
+[0;32mOK[0m: GameCamera:Begin
+[0;32mOK[0m: GameCamera:End
+[0;32mOK[0m: GameCamera:Fade
+[0;32mOK[0m: GameCamera:Flash
+[0;32mOK[0m: GameCamera:Follow
+[0;32mOK[0m: GameCamera:GetActualOffset
+[0;32mOK[0m: GameCamera:GetActualRotation
+[0;32mOK[0m: GameCamera:GetActualTarget
+[0;32mOK[0m: GameCamera:GetActualZoom
+[0;32mOK[0m: GameCamera:GetMouseWorld
+[0;32mOK[0m: GameCamera:GetVisualOffset
+[0;32mOK[0m: GameCamera:GetVisualRotation
+[0;32mOK[0m: GameCamera:GetVisualTarget
+[0;32mOK[0m: GameCamera:GetVisualZoom
+[0;32mOK[0m: GameCamera:IsOffsetDampingEnabled
+[0;32mOK[0m: GameCamera:IsStrafeTiltEnabled
+[0;32mOK[0m: GameCamera:Move
+[0;32mOK[0m: GameCamera:SetActualOffset
+[0;32mOK[0m: GameCamera:SetActualRotation
+[0;32mOK[0m: GameCamera:SetActualTarget
+[0;32mOK[0m: GameCamera:SetActualZoom
+[0;32mOK[0m: GameCamera:SetBounds
+[0;32mOK[0m: GameCamera:SetDeadzone
+[0;32mOK[0m: GameCamera:SetFollowLead
+[0;32mOK[0m: GameCamera:SetFollowLerp
+[0;32mOK[0m: GameCamera:SetFollowStyle
+[0;32mOK[0m: GameCamera:SetOffsetDampingEnabled
+[0;32mOK[0m: GameCamera:SetStrafeTiltEnabled
+[0;32mOK[0m: GameCamera:SetVisualOffset
+[0;32mOK[0m: GameCamera:SetVisualRotation
+[0;32mOK[0m: GameCamera:SetVisualTarget
+[0;32mOK[0m: GameCamera:SetVisualZoom
+[0;32mOK[0m: GameCamera:Shake
+[0;32mOK[0m: GameCamera:SpringShake
+[0;32mOK[0m: GameCamera:Update
+[0;31mMISMATCH[0m: player:get_world_pos - not found in bindings
+[0;31mMISMATCH[0m: player:get_world_pos_v2 - not found in bindings
+[0;32mOK[0m: camera.Begin
+[0;32mOK[0m: camera.Create
+[0;32mOK[0m: camera.End
+[0;32mOK[0m: camera.Exists
+[0;32mOK[0m: camera.Get
+[0;32mOK[0m: camera.Remove
+[0;32mOK[0m: camera.Update
+[0;32mOK[0m: camera.UpdateAll
+[0;32mOK[0m: camera.with
+[0;31mMISMATCH[0m: Map.draw - not found in bindings
+[0;31mMISMATCH[0m: Player.world_pos - not found in bindings
+[0;31mMISMATCH[0m: Projectiles.draw - not found in bindings
+[0;31mMISMATCH[0m: Scene.load - not found in bindings
+[0;31mMISMATCH[0m: timer.every_frame - not found in bindings
+[0;31mMISMATCH[0m: Units.draw - not found in bindings
+[0;31mMISMATCH[0m: atan2 - not found in bindings
+[0;31mMISMATCH[0m: Begin - not found in bindings
+[0;31mMISMATCH[0m: Create - not found in bindings
+[0;31mMISMATCH[0m: draw - not found in bindings
+[0;31mMISMATCH[0m: draw_entities - not found in bindings
+[0;31mMISMATCH[0m: draw_tilemap - not found in bindings
+[0;31mMISMATCH[0m: draw_world - not found in bindings
+[0;31mMISMATCH[0m: End - not found in bindings
+[0;31mMISMATCH[0m: every_frame - not found in bindings
+[0;31mMISMATCH[0m: Exists - not found in bindings
+[0;31mMISMATCH[0m: Fade - not found in bindings
+[0;31mMISMATCH[0m: Flash - not found in bindings
+[0;31mMISMATCH[0m: Follow - not found in bindings
+[0;31mMISMATCH[0m: fun - not found in bindings
+[0;31mMISMATCH[0m: Get - not found in bindings
+[0;31mMISMATCH[0m: get_world_pos - not found in bindings
+[0;31mMISMATCH[0m: get_world_pos_v2 - not found in bindings
+[0;31mMISMATCH[0m: GetActualOffset - not found in bindings
+[0;31mMISMATCH[0m: GetActualRotation - not found in bindings
+[0;31mMISMATCH[0m: GetActualTarget - not found in bindings
+[0;31mMISMATCH[0m: GetActualZoom - not found in bindings
+[0;31mMISMATCH[0m: GetMouseWorld - not found in bindings
+[0;31mMISMATCH[0m: GetVisualOffset - not found in bindings
+[0;31mMISMATCH[0m: GetVisualRotation - not found in bindings
+[0;31mMISMATCH[0m: GetVisualTarget - not found in bindings
+[0;31mMISMATCH[0m: GetVisualZoom - not found in bindings
+[0;31mMISMATCH[0m: hit_confirm - not found in bindings
+[0;31mMISMATCH[0m: init_world_camera - not found in bindings
+[0;31mMISMATCH[0m: IsOffsetDampingEnabled - not found in bindings
+[0;31mMISMATCH[0m: IsStrafeTiltEnabled - not found in bindings
+[0;31mMISMATCH[0m: load - not found in bindings
+[0;31mMISMATCH[0m: load_next_scene - not found in bindings
+[0;31mMISMATCH[0m: Move - not found in bindings
+[0;31mMISMATCH[0m: on_render - not found in bindings
+[0;31mMISMATCH[0m: on_update - not found in bindings
+[0;31mMISMATCH[0m: rad - not found in bindings
+[0;31mMISMATCH[0m: Remove - not found in bindings
+[0;31mMISMATCH[0m: SetActualOffset - not found in bindings
+[0;31mMISMATCH[0m: SetActualRotation - not found in bindings
+[0;31mMISMATCH[0m: SetActualTarget - not found in bindings
+[0;31mMISMATCH[0m: SetActualZoom - not found in bindings
+[0;31mMISMATCH[0m: SetBounds - not found in bindings
+[0;31mMISMATCH[0m: SetDeadzone - not found in bindings
+[0;31mMISMATCH[0m: SetFollowLead - not found in bindings
+[0;31mMISMATCH[0m: SetFollowLerp - not found in bindings
+[0;31mMISMATCH[0m: SetFollowStyle - not found in bindings
+[0;31mMISMATCH[0m: SetOffsetDampingEnabled - not found in bindings
+[0;31mMISMATCH[0m: SetStrafeTiltEnabled - not found in bindings
+[0;31mMISMATCH[0m: SetVisualOffset - not found in bindings
+[0;31mMISMATCH[0m: SetVisualRotation - not found in bindings
+[0;31mMISMATCH[0m: SetVisualTarget - not found in bindings
+[0;31mMISMATCH[0m: SetVisualZoom - not found in bindings
+[0;31mMISMATCH[0m: Shake - not found in bindings
+[0;31mMISMATCH[0m: SpringShake - not found in bindings
+[0;31mMISMATCH[0m: Update - not found in bindings
+[0;31mMISMATCH[0m: UpdateAll - not found in bindings
+[0;31mMISMATCH[0m: with - not found in bindings
+[0;31mMISMATCH[0m: world_pos - not found in bindings
+
+==========================================
+Summary for: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/lua_camera_docs.md
+==========================================
+  [0;32mOK[0m:       56
+  [0;31mMISMATCH[0m: 66
+  [0;33mSKIPPED[0m:  0 (common patterns)
+
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/lua_quadtree_api.md
+==========================================
+
+Found 8 API references in code blocks:
+
+[0;32mOK[0m: quadtreeUI:clear
+[0;32mOK[0m: quadtreeUI:find_all_intersections
+[0;32mOK[0m: quadtreeWorld:query
+[0;32mOK[0m: quadtree.box
+[0;31mMISMATCH[0m: box - not found in bindings
+[0;31mMISMATCH[0m: clear - not found in bindings
+[0;31mMISMATCH[0m: find_all_intersections - not found in bindings
+[0;31mMISMATCH[0m: query - not found in bindings
+
+==========================================
+Summary for: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/lua_quadtree_api.md
+==========================================
+  [0;32mOK[0m:       4
+  [0;31mMISMATCH[0m: 4
+  [0;33mSKIPPED[0m:  0 (common patterns)
+
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/lua-cpp-documentation-guide.md
+==========================================
+
+Found 25 API references in code blocks:
+
+[0;31mMISMATCH[0m: registry:create - not found in bindings
+[0;31mMISMATCH[0m: registry:has - not found in bindings
+[0;31mMISMATCH[0m: registry:valid - not found in bindings
+[0;31mMISMATCH[0m: bit.bor - not found in bindings
+[0;32mOK[0m: Color.new
+[0;31mMISMATCH[0m: dsl.button - not found in bindings
+[0;31mMISMATCH[0m: dsl.spawn - not found in bindings
+[0;31mMISMATCH[0m: dsl.text - not found in bindings
+[0;31mMISMATCH[0m: EntityBuilder.create - not found in bindings
+[0;32mOK[0m: transform.setPosition
+[0;31mMISMATCH[0m: bor - not found in bindings
+[0;31mMISMATCH[0m: button - not found in bindings
+[0;31mMISMATCH[0m: create - not found in bindings
+[0;31mMISMATCH[0m: getScriptTableFromEntityID - not found in bindings
+[0;31mMISMATCH[0m: has - not found in bindings
+[0;32mOK[0m: log_error
+[0;32mOK[0m: log_warn
+[0;31mMISMATCH[0m: new - not found in bindings
+[0;31mMISMATCH[0m: safeSetMethod - not found in bindings
+[0;31mMISMATCH[0m: setPosition - not found in bindings
+[0;31mMISMATCH[0m: spawn - not found in bindings
+[0;31mMISMATCH[0m: valid - not found in bindings
+[0;31mMISMATCH[0m: validateComponent - not found in bindings
+[0;31mMISMATCH[0m: validateEntity - not found in bindings
+
+==========================================
+Summary for: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/lua-cpp-documentation-guide.md
+==========================================
+  [0;32mOK[0m:       4
+  [0;31mMISMATCH[0m: 20
+  [0;33mSKIPPED[0m:  1 (common patterns)
+
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/particles_doc.md
+==========================================
+
+Found 20 API references in code blocks:
+
+[0;31mMISMATCH[0m: easing.d - not found in bindings
+[0;31mMISMATCH[0m: easing.f - not found in bindings
+[0;32mOK[0m: particle.AttachEmitter
+[0;32mOK[0m: particle.CreateParticle
+[0;32mOK[0m: particle.CreateParticleEmitter
+[0;32mOK[0m: particle.EmitParticles
+[0;31mMISMATCH[0m: AttachEmitter - not found in bindings
+[0;31mMISMATCH[0m: Col - not found in bindings
+[0;31mMISMATCH[0m: cos - not found in bindings
+[0;31mMISMATCH[0m: CreateParticle - not found in bindings
+[0;31mMISMATCH[0m: CreateParticleEmitter - not found in bindings
+[0;31mMISMATCH[0m: d - not found in bindings
+[0;31mMISMATCH[0m: EmitParticles - not found in bindings
+[0;31mMISMATCH[0m: f - not found in bindings
+[0;31mMISMATCH[0m: max - not found in bindings
+[0;31mMISMATCH[0m: min - not found in bindings
+[0;31mMISMATCH[0m: random - not found in bindings
+[0;31mMISMATCH[0m: sin - not found in bindings
+[0;31mMISMATCH[0m: spawnCircularBurstParticles - not found in bindings
+[0;31mMISMATCH[0m: Vec2 - not found in bindings
+
+==========================================
+Summary for: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/particles_doc.md
+==========================================
+  [0;32mOK[0m:       4
+  [0;31mMISMATCH[0m: 16
+  [0;33mSKIPPED[0m:  0 (common patterns)
+
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/physics_docs.md
+==========================================
+
+Found 282 API references in code blocks:
+
+[0;31mMISMATCH[0m: arb:entities - not found in bindings
+[0;31mMISMATCH[0m: arb:is_first_contact - not found in bindings
+[0;31mMISMATCH[0m: arb:set_elasticity - not found in bindings
+[0;31mMISMATCH[0m: arb:set_friction - not found in bindings
+[0;31mMISMATCH[0m: arb:set_surface_velocity - not found in bindings
+[0;31mMISMATCH[0m: arb:tags - not found in bindings
+[0;31mMISMATCH[0m: arb:total_impulse_length - not found in bindings
+[0;31mMISMATCH[0m: world:PostUpdate - not found in bindings
+[0;31mMISMATCH[0m: world:PrintCollisionTags - not found in bindings
+[0;32mOK[0m: world:Update
+[0;32mOK[0m: physics.add_bar_segment
+[0;32mOK[0m: physics.add_fluid_sensor_aabb
+[0;32mOK[0m: physics.add_one_way_platform
+[0;32mOK[0m: physics.add_screen_bounds
+[0;32mOK[0m: physics.add_shape_to_entity
+[0;32mOK[0m: physics.add_slide_joint
+[0;32mOK[0m: physics.add_smooth_segment_chain
+[0;32mOK[0m: physics.AddCollider
+[0;32mOK[0m: physics.ApplyForce
+[0;32mOK[0m: physics.ApplyImpulse
+[0;32mOK[0m: physics.ApplyTorque
+[0;32mOK[0m: physics.arb_get_bool
+[0;32mOK[0m: physics.arb_get_number
+[0;32mOK[0m: physics.arb_get_ptr
+[0;32mOK[0m: physics.arb_set_bool
+[0;32mOK[0m: physics.arb_set_number
+[0;32mOK[0m: physics.arb_set_ptr
+[0;32mOK[0m: physics.clear_all_shapes
+[0;32mOK[0m: physics.clear_pair_handlers
+[0;32mOK[0m: physics.clear_wildcard_handlers
+[0;32mOK[0m: physics.command_tank_to
+[0;32mOK[0m: physics.create_physics_for_transform
+[0;32mOK[0m: physics.create_planet
+[0;32mOK[0m: physics.create_platformer_player
+[0;32mOK[0m: physics.create_tilemap_colliders
+[0;32mOK[0m: physics.create_topdown_controller
+[0;32mOK[0m: physics.crush_on
+[0;32mOK[0m: physics.disable_collision_between
+[0;32mOK[0m: physics.disable_collision_between_many
+[0;32mOK[0m: physics.disable_collision_grouping
+[0;32mOK[0m: physics.disable_custom_gravity
+[0;32mOK[0m: physics.disable_sticky_between
+[0;32mOK[0m: physics.disable_trigger_between
+[0;32mOK[0m: physics.disable_trigger_between_many
+[0;32mOK[0m: physics.enable_collision_between
+[0;32mOK[0m: physics.enable_collision_between_many
+[0;32mOK[0m: physics.enable_collision_grouping
+[0;32mOK[0m: physics.enable_inverse_square_gravity_to_body
+[0;32mOK[0m: physics.enable_inverse_square_gravity_to_point
+[0;32mOK[0m: physics.enable_sticky_between
+[0;32mOK[0m: physics.enable_tank_controller
+[0;32mOK[0m: physics.enable_trigger_between
+[0;32mOK[0m: physics.enable_trigger_between_many
+[0;32mOK[0m: physics.end_mouse_drag
+[0;32mOK[0m: physics.enforce_rotation_policy
+[0;32mOK[0m: physics.entity_from_ptr
+[0;32mOK[0m: physics.get_rotation_mode
+[0;32mOK[0m: physics.get_shape_bb
+[0;32mOK[0m: physics.get_shape_count
+[0;32mOK[0m: physics.get_sync_mode
+[0;32mOK[0m: physics.GetAngle
+[0;32mOK[0m: physics.GetCollisionEnter
+[0;32mOK[0m: physics.GetEntityFromBody
+[0;32mOK[0m: physics.GetMass
+[0;32mOK[0m: physics.GetObjectsInArea
+[0;32mOK[0m: physics.GetPosition
+[0;32mOK[0m: physics.GetTriggerEnter
+[0;32mOK[0m: physics.make_breakable_slide_joint
+[0;32mOK[0m: physics.make_constraint_breakable
+[0;32mOK[0m: physics.on_pair_begin
+[0;32mOK[0m: physics.on_pair_postsolve
+[0;32mOK[0m: physics.on_pair_presolve
+[0;32mOK[0m: physics.on_pair_separate
+[0;32mOK[0m: physics.on_wildcard_postsolve
+[0;32mOK[0m: physics.on_wildcard_presolve
+[0;32mOK[0m: physics.PhysicsWorld
+[0;32mOK[0m: physics.point_query_nearest
+[0;32mOK[0m: physics.Raycast
+[0;32mOK[0m: physics.register_fluid_volume
+[0;32mOK[0m: physics.remove_shape_at
+[0;32mOK[0m: physics.segment_query_first
+[0;32mOK[0m: physics.set_collision_tags
+[0;32mOK[0m: physics.set_constraint_limits
+[0;32mOK[0m: physics.set_platformer_input
+[0;32mOK[0m: physics.set_rotation_mode
+[0;32mOK[0m: physics.set_sync_mode
+[0;32mOK[0m: physics.SetAngle
+[0;32mOK[0m: physics.SetAngularVelocity
+[0;32mOK[0m: physics.SetAwake
+[0;32mOK[0m: physics.SetBodyType
+[0;32mOK[0m: physics.SetBullet
+[0;32mOK[0m: physics.SetDamping
+[0;32mOK[0m: physics.SetEntityToBody
+[0;32mOK[0m: physics.SetEntityToShape
+[0;32mOK[0m: physics.SetFixedRotation
+[0;32mOK[0m: physics.SetFriction
+[0;32mOK[0m: physics.SetGlobalDamping
+[0;32mOK[0m: physics.SetMass
+[0;32mOK[0m: physics.SetPosition
+[0;32mOK[0m: physics.SetRestitution
+[0;32mOK[0m: physics.SetVelocity
+[0;32mOK[0m: physics.shatter_nearest
+[0;32mOK[0m: physics.slice_first_hit
+[0;32mOK[0m: physics.spawn_orbiting_box
+[0;32mOK[0m: physics.start_mouse_drag
+[0;32mOK[0m: physics.total_force_on
+[0;32mOK[0m: physics.touching_entities
+[0;32mOK[0m: physics.update_collision_masks_for
+[0;32mOK[0m: physics.update_mouse_drag
+[0;32mOK[0m: physics.update_tanks
+[0;32mOK[0m: physics.use_physics_free_rotation
+[0;32mOK[0m: physics.use_transform_fixed_rotation
+[0;32mOK[0m: physics.weight_on
+[0;32mOK[0m: PhysicsManager.add_world
+[0;32mOK[0m: PhysicsManager.draw_all
+[0;32mOK[0m: PhysicsManager.enable_debug_draw
+[0;32mOK[0m: PhysicsManager.enable_step
+[0;32mOK[0m: PhysicsManager.find_path
+[0;32mOK[0m: PhysicsManager.get_nav_config
+[0;32mOK[0m: PhysicsManager.get_world
+[0;32mOK[0m: PhysicsManager.has_world
+[0;32mOK[0m: PhysicsManager.is_world_active
+[0;32mOK[0m: PhysicsManager.mark_navmesh_dirty
+[0;32mOK[0m: PhysicsManager.move_entity_to_world
+[0;32mOK[0m: PhysicsManager.rebuild_navmesh
+[0;32mOK[0m: PhysicsManager.set_nav_config
+[0;32mOK[0m: PhysicsManager.set_nav_obstacle
+[0;32mOK[0m: PhysicsManager.step_all
+[0;32mOK[0m: PhysicsManager.vision_fan
+[0;32mOK[0m: steering.apply_force
+[0;32mOK[0m: steering.flee_point
+[0;32mOK[0m: steering.make_steerable
+[0;32mOK[0m: steering.path_follow
+[0;32mOK[0m: steering.pursuit
+[0;32mOK[0m: steering.seek_point
+[0;32mOK[0m: steering.separate
+[0;32mOK[0m: steering.set_path
+[0;32mOK[0m: steering.wander
+[0;31mMISMATCH[0m: add_bar_segment - not found in bindings
+[0;31mMISMATCH[0m: add_fluid_sensor_aabb - not found in bindings
+[0;31mMISMATCH[0m: add_one_way_platform - not found in bindings
+[0;31mMISMATCH[0m: add_screen_bounds - not found in bindings
+[0;31mMISMATCH[0m: add_shape_to_entity - not found in bindings
+[0;31mMISMATCH[0m: add_slide_joint - not found in bindings
+[0;31mMISMATCH[0m: add_smooth_segment_chain - not found in bindings
+[0;31mMISMATCH[0m: add_world - not found in bindings
+[0;31mMISMATCH[0m: AddCollider - not found in bindings
+[0;31mMISMATCH[0m: apply_force - not found in bindings
+[0;31mMISMATCH[0m: ApplyForce - not found in bindings
+[0;31mMISMATCH[0m: ApplyImpulse - not found in bindings
+[0;31mMISMATCH[0m: ApplyTorque - not found in bindings
+[0;31mMISMATCH[0m: arb_get_bool - not found in bindings
+[0;31mMISMATCH[0m: arb_get_number - not found in bindings
+[0;31mMISMATCH[0m: arb_get_ptr - not found in bindings
+[0;31mMISMATCH[0m: arb_set_bool - not found in bindings
+[0;31mMISMATCH[0m: arb_set_number - not found in bindings
+[0;31mMISMATCH[0m: arb_set_ptr - not found in bindings
+[0;31mMISMATCH[0m: clear_all_shapes - not found in bindings
+[0;31mMISMATCH[0m: clear_pair_handlers - not found in bindings
+[0;31mMISMATCH[0m: clear_wildcard_handlers - not found in bindings
+[0;31mMISMATCH[0m: command_tank_to - not found in bindings
+[0;31mMISMATCH[0m: create_physics_for_transform - not found in bindings
+[0;31mMISMATCH[0m: create_planet - not found in bindings
+[0;31mMISMATCH[0m: create_platformer_player - not found in bindings
+[0;31mMISMATCH[0m: create_tilemap_colliders - not found in bindings
+[0;31mMISMATCH[0m: create_topdown_controller - not found in bindings
+[0;31mMISMATCH[0m: crush_on - not found in bindings
+[0;31mMISMATCH[0m: disable_collision_between - not found in bindings
+[0;31mMISMATCH[0m: disable_collision_between_many - not found in bindings
+[0;31mMISMATCH[0m: disable_collision_grouping - not found in bindings
+[0;31mMISMATCH[0m: disable_custom_gravity - not found in bindings
+[0;31mMISMATCH[0m: disable_sticky_between - not found in bindings
+[0;31mMISMATCH[0m: disable_trigger_between - not found in bindings
+[0;31mMISMATCH[0m: disable_trigger_between_many - not found in bindings
+[0;31mMISMATCH[0m: draw_all - not found in bindings
+[0;31mMISMATCH[0m: enable_collision_between - not found in bindings
+[0;31mMISMATCH[0m: enable_collision_between_many - not found in bindings
+[0;31mMISMATCH[0m: enable_collision_grouping - not found in bindings
+[0;31mMISMATCH[0m: enable_debug_draw - not found in bindings
+[0;31mMISMATCH[0m: enable_inverse_square_gravity_to_body - not found in bindings
+[0;31mMISMATCH[0m: enable_inverse_square_gravity_to_point - not found in bindings
+[0;31mMISMATCH[0m: enable_step - not found in bindings
+[0;31mMISMATCH[0m: enable_sticky_between - not found in bindings
+[0;31mMISMATCH[0m: enable_tank_controller - not found in bindings
+[0;31mMISMATCH[0m: enable_trigger_between - not found in bindings
+[0;31mMISMATCH[0m: enable_trigger_between_many - not found in bindings
+[0;31mMISMATCH[0m: end_mouse_drag - not found in bindings
+[0;31mMISMATCH[0m: enforce_rotation_policy - not found in bindings
+[0;31mMISMATCH[0m: entities - not found in bindings
+[0;31mMISMATCH[0m: entity_from_ptr - not found in bindings
+[0;31mMISMATCH[0m: find_path - not found in bindings
+[0;31mMISMATCH[0m: flee_point - not found in bindings
+[0;31mMISMATCH[0m: get_nav_config - not found in bindings
+[0;31mMISMATCH[0m: get_rotation_mode - not found in bindings
+[0;31mMISMATCH[0m: get_shape_bb - not found in bindings
+[0;31mMISMATCH[0m: get_shape_count - not found in bindings
+[0;31mMISMATCH[0m: get_sync_mode - not found in bindings
+[0;31mMISMATCH[0m: get_world - not found in bindings
+[0;31mMISMATCH[0m: GetAngle - not found in bindings
+[0;31mMISMATCH[0m: GetCollisionEnter - not found in bindings
+[0;31mMISMATCH[0m: GetEntityFromBody - not found in bindings
+[0;31mMISMATCH[0m: GetMass - not found in bindings
+[0;31mMISMATCH[0m: GetObjectsInArea - not found in bindings
+[0;31mMISMATCH[0m: GetPosition - not found in bindings
+[0;31mMISMATCH[0m: GetTriggerEnter - not found in bindings
+[0;31mMISMATCH[0m: has_world - not found in bindings
+[0;31mMISMATCH[0m: is_first_contact - not found in bindings
+[0;31mMISMATCH[0m: is_world_active - not found in bindings
+[0;31mMISMATCH[0m: make_breakable_slide_joint - not found in bindings
+[0;31mMISMATCH[0m: make_constraint_breakable - not found in bindings
+[0;31mMISMATCH[0m: make_steerable - not found in bindings
+[0;31mMISMATCH[0m: mark_for_cleanup - not found in bindings
+[0;31mMISMATCH[0m: mark_navmesh_dirty - not found in bindings
+[0;31mMISMATCH[0m: mark_visible - not found in bindings
+[0;31mMISMATCH[0m: move_entity_to_world - not found in bindings
+[0;31mMISMATCH[0m: on_pair_begin - not found in bindings
+[0;31mMISMATCH[0m: on_pair_postsolve - not found in bindings
+[0;31mMISMATCH[0m: on_pair_presolve - not found in bindings
+[0;31mMISMATCH[0m: on_pair_separate - not found in bindings
+[0;31mMISMATCH[0m: on_wildcard_postsolve - not found in bindings
+[0;31mMISMATCH[0m: on_wildcard_presolve - not found in bindings
+[0;31mMISMATCH[0m: pair_post - not found in bindings
+[0;31mMISMATCH[0m: pair_pre - not found in bindings
+[0;31mMISMATCH[0m: path_follow - not found in bindings
+[0;31mMISMATCH[0m: PhysicsWorld - not found in bindings
+[0;31mMISMATCH[0m: point_query_nearest - not found in bindings
+[0;31mMISMATCH[0m: PostUpdate - not found in bindings
+[0;31mMISMATCH[0m: PrintCollisionTags - not found in bindings
+[0;31mMISMATCH[0m: pursuit - not found in bindings
+[0;31mMISMATCH[0m: rad - not found in bindings
+[0;31mMISMATCH[0m: Raycast - not found in bindings
+[0;31mMISMATCH[0m: rebuild_navmesh - not found in bindings
+[0;31mMISMATCH[0m: register_fluid_volume - not found in bindings
+[0;31mMISMATCH[0m: remove_shape_at - not found in bindings
+[0;31mMISMATCH[0m: seek_point - not found in bindings
+[0;31mMISMATCH[0m: segment_query_first - not found in bindings
+[0;31mMISMATCH[0m: separate - not found in bindings
+[0;31mMISMATCH[0m: set_collision_tags - not found in bindings
+[0;31mMISMATCH[0m: set_constraint_limits - not found in bindings
+[0;31mMISMATCH[0m: set_elasticity - not found in bindings
+[0;31mMISMATCH[0m: set_friction - not found in bindings
+[0;31mMISMATCH[0m: set_nav_config - not found in bindings
+[0;31mMISMATCH[0m: set_nav_obstacle - not found in bindings
+[0;31mMISMATCH[0m: set_path - not found in bindings
+[0;31mMISMATCH[0m: set_platformer_input - not found in bindings
+[0;31mMISMATCH[0m: set_rotation_mode - not found in bindings
+[0;31mMISMATCH[0m: set_surface_velocity - not found in bindings
+[0;31mMISMATCH[0m: set_sync_mode - not found in bindings
+[0;31mMISMATCH[0m: SetAngle - not found in bindings
+[0;31mMISMATCH[0m: SetAngularVelocity - not found in bindings
+[0;31mMISMATCH[0m: SetAwake - not found in bindings
+[0;31mMISMATCH[0m: SetBodyType - not found in bindings
+[0;31mMISMATCH[0m: SetBullet - not found in bindings
+[0;31mMISMATCH[0m: SetDamping - not found in bindings
+[0;31mMISMATCH[0m: SetEntityToBody - not found in bindings
+[0;31mMISMATCH[0m: SetEntityToShape - not found in bindings
+[0;31mMISMATCH[0m: SetFixedRotation - not found in bindings
+[0;31mMISMATCH[0m: SetFriction - not found in bindings
+[0;31mMISMATCH[0m: SetGlobalDamping - not found in bindings
+[0;31mMISMATCH[0m: SetMass - not found in bindings
+[0;31mMISMATCH[0m: SetPosition - not found in bindings
+[0;31mMISMATCH[0m: SetRestitution - not found in bindings
+[0;31mMISMATCH[0m: SetVelocity - not found in bindings
+[0;31mMISMATCH[0m: shatter_nearest - not found in bindings
+[0;31mMISMATCH[0m: slice_first_hit - not found in bindings
+[0;31mMISMATCH[0m: spawn_orbiting_box - not found in bindings
+[0;31mMISMATCH[0m: start_mouse_drag - not found in bindings
+[0;31mMISMATCH[0m: step_all - not found in bindings
+[0;31mMISMATCH[0m: tags - not found in bindings
+[0;31mMISMATCH[0m: total_force_on - not found in bindings
+[0;31mMISMATCH[0m: total_impulse_length - not found in bindings
+[0;31mMISMATCH[0m: touching_entities - not found in bindings
+[0;31mMISMATCH[0m: update - not found in bindings
+[0;31mMISMATCH[0m: Update - not found in bindings
+[0;31mMISMATCH[0m: update_collision_masks_for - not found in bindings
+[0;31mMISMATCH[0m: update_mouse_drag - not found in bindings
+[0;31mMISMATCH[0m: update_tanks - not found in bindings
+[0;31mMISMATCH[0m: use_physics_free_rotation - not found in bindings
+[0;31mMISMATCH[0m: use_transform_fixed_rotation - not found in bindings
+[0;31mMISMATCH[0m: vision_fan - not found in bindings
+[0;31mMISMATCH[0m: wander - not found in bindings
+[0;31mMISMATCH[0m: weight_on - not found in bindings
+
+==========================================
+Summary for: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/physics_docs.md
+==========================================
+  [0;32mOK[0m:       129
+  [0;31mMISMATCH[0m: 153
+  [0;33mSKIPPED[0m:  0 (common patterns)
+
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/popup.md
+==========================================
+
+Found 16 API references in code blocks:
+
+[0;31mMISMATCH[0m: popup.above - not found in bindings
+[0;31mMISMATCH[0m: popup.damage - not found in bindings
+[0;31mMISMATCH[0m: popup.heal - not found in bindings
+[0;31mMISMATCH[0m: Q.visualCenter - not found in bindings
+[0;31mMISMATCH[0m: Text.define - not found in bindings
+[0;31mMISMATCH[0m: above - not found in bindings
+[0;31mMISMATCH[0m: at - not found in bindings
+[0;31mMISMATCH[0m: content - not found in bindings
+[0;31mMISMATCH[0m: damage - not found in bindings
+[0;31mMISMATCH[0m: define - not found in bindings
+[0;31mMISMATCH[0m: fade - not found in bindings
+[0;31mMISMATCH[0m: heal - not found in bindings
+[0;31mMISMATCH[0m: lifespan - not found in bindings
+[0;31mMISMATCH[0m: spawn - not found in bindings
+[0;31mMISMATCH[0m: visualCenter - not found in bindings
+
+==========================================
+Summary for: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/popup.md
+==========================================
+  [0;32mOK[0m:       0
+  [0;31mMISMATCH[0m: 15
+  [0;33mSKIPPED[0m:  1 (common patterns)
+
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/Q_reference.md
+==========================================
+
+Found 41 API references in code blocks:
+
+[0;31mMISMATCH[0m: component_cache.get - not found in bindings
+[0;32mOK[0m: particle.spawn
+[0;31mMISMATCH[0m: popup.damage - not found in bindings
+[0;31mMISMATCH[0m: Q.center - not found in bindings
+[0;31mMISMATCH[0m: Q.chase - not found in bindings
+[0;31mMISMATCH[0m: Q.direction - not found in bindings
+[0;31mMISMATCH[0m: Q.distance - not found in bindings
+[0;31mMISMATCH[0m: Q.ensure - not found in bindings
+[0;31mMISMATCH[0m: Q.flee - not found in bindings
+[0;31mMISMATCH[0m: Q.impulse - not found in bindings
+[0;31mMISMATCH[0m: Q.isInRange - not found in bindings
+[0;31mMISMATCH[0m: Q.isValid - not found in bindings
+[0;31mMISMATCH[0m: Q.move - not found in bindings
+[0;31mMISMATCH[0m: Q.offset - not found in bindings
+[0;31mMISMATCH[0m: Q.setRotation - not found in bindings
+[0;31mMISMATCH[0m: Q.setVelocity - not found in bindings
+[0;31mMISMATCH[0m: Q.visualCenter - not found in bindings
+[0;31mMISMATCH[0m: Q.withTransform - not found in bindings
+[0;31mMISMATCH[0m: atan2 - not found in bindings
+[0;31mMISMATCH[0m: attack - not found in bindings
+[0;31mMISMATCH[0m: center - not found in bindings
+[0;31mMISMATCH[0m: chase - not found in bindings
+[0;31mMISMATCH[0m: damage - not found in bindings
+[0;31mMISMATCH[0m: direction - not found in bindings
+[0;31mMISMATCH[0m: distance - not found in bindings
+[0;31mMISMATCH[0m: ensure - not found in bindings
+[0;31mMISMATCH[0m: flee - not found in bindings
+[0;31mMISMATCH[0m: get - not found in bindings
+[0;31mMISMATCH[0m: impulse - not found in bindings
+[0;31mMISMATCH[0m: isInRange - not found in bindings
+[0;31mMISMATCH[0m: isValid - not found in bindings
+[0;31mMISMATCH[0m: move - not found in bindings
+[0;31mMISMATCH[0m: offset - not found in bindings
+[0;31mMISMATCH[0m: onHit - not found in bindings
+[0;31mMISMATCH[0m: setRotation - not found in bindings
+[0;31mMISMATCH[0m: setVelocity - not found in bindings
+[0;31mMISMATCH[0m: spawn - not found in bindings
+[0;31mMISMATCH[0m: sqrt - not found in bindings
+[0;31mMISMATCH[0m: updateEnemy - not found in bindings
+[0;31mMISMATCH[0m: visualCenter - not found in bindings
+[0;31mMISMATCH[0m: withTransform - not found in bindings
+
+==========================================
+Summary for: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/Q_reference.md
+==========================================
+  [0;32mOK[0m:       1
+  [0;31mMISMATCH[0m: 40
+  [0;33mSKIPPED[0m:  0 (common patterns)
+
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/render-groups.md
+==========================================
+
+Found 39 API references in code blocks:
+
+[0;31mMISMATCH[0m: globalShaderUniforms:set - not found in bindings
+[0;31mMISMATCH[0m: registry:emplace - not found in bindings
+[0;31mMISMATCH[0m: uniformComp:setFloat - not found in bindings
+[0;31mMISMATCH[0m: uniformComp:setVec4 - not found in bindings
+[0;32mOK[0m: animation_system.createAnimatedObjectWithTransform
+[0;32mOK[0m: animation_system.resizeAnimationObjectsInEntityToFit
+[0;32mOK[0m: command_buffer.queueDrawRenderGroup
+[0;31mMISMATCH[0m: component_cache.get - not found in bindings
+[0;31mMISMATCH[0m: effects_demo.cleanup - not found in bindings
+[0;31mMISMATCH[0m: effects_demo.draw - not found in bindings
+[0;31mMISMATCH[0m: effects_demo.init - not found in bindings
+[0;31mMISMATCH[0m: effects_demo.update - not found in bindings
+[0;31mMISMATCH[0m: globals.getTime - not found in bindings
+[0;31mMISMATCH[0m: render_groups.add - not found in bindings
+[0;31mMISMATCH[0m: render_groups.addShader - not found in bindings
+[0;31mMISMATCH[0m: render_groups.clearGroup - not found in bindings
+[0;31mMISMATCH[0m: render_groups.create - not found in bindings
+[0;31mMISMATCH[0m: render_groups.setShaders - not found in bindings
+[0;31mMISMATCH[0m: add - not found in bindings
+[0;31mMISMATCH[0m: addShader - not found in bindings
+[0;31mMISMATCH[0m: cleanup - not found in bindings
+[0;31mMISMATCH[0m: clearGroup - not found in bindings
+[0;31mMISMATCH[0m: create - not found in bindings
+[0;31mMISMATCH[0m: create_sprite - not found in bindings
+[0;31mMISMATCH[0m: createAnimatedObjectWithTransform - not found in bindings
+[0;31mMISMATCH[0m: draw - not found in bindings
+[0;31mMISMATCH[0m: emplace - not found in bindings
+[0;31mMISMATCH[0m: get - not found in bindings
+[0;31mMISMATCH[0m: getTime - not found in bindings
+[0;31mMISMATCH[0m: init - not found in bindings
+[0;31mMISMATCH[0m: queueDrawRenderGroup - not found in bindings
+[0;31mMISMATCH[0m: resizeAnimationObjectsInEntityToFit - not found in bindings
+[0;31mMISMATCH[0m: set - not found in bindings
+[0;31mMISMATCH[0m: setFloat - not found in bindings
+[0;31mMISMATCH[0m: setShaders - not found in bindings
+[0;31mMISMATCH[0m: setVec4 - not found in bindings
+[0;31mMISMATCH[0m: shader - not found in bindings
+[0;31mMISMATCH[0m: sin - not found in bindings
+[0;31mMISMATCH[0m: update - not found in bindings
+
+==========================================
+Summary for: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/render-groups.md
+==========================================
+  [0;32mOK[0m:       3
+  [0;31mMISMATCH[0m: 36
+  [0;33mSKIPPED[0m:  0 (common patterns)
+
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/save-system.md
+==========================================
+
+Found 24 API references in code blocks:
+
+[0;31mMISMATCH[0m: save_io.delete_file - not found in bindings
+[0;31mMISMATCH[0m: save_io.file_exists - not found in bindings
+[0;31mMISMATCH[0m: save_io.init_filesystem - not found in bindings
+[0;31mMISMATCH[0m: save_io.load_file - not found in bindings
+[0;31mMISMATCH[0m: save_io.save_file_async - not found in bindings
+[0;31mMISMATCH[0m: SaveManager.delete_save - not found in bindings
+[0;31mMISMATCH[0m: SaveManager.has_save - not found in bindings
+[0;31mMISMATCH[0m: SaveManager.init - not found in bindings
+[0;31mMISMATCH[0m: SaveManager.load - not found in bindings
+[0;31mMISMATCH[0m: SaveManager.peek - not found in bindings
+[0;31mMISMATCH[0m: SaveManager.register - not found in bindings
+[0;31mMISMATCH[0m: SaveManager.save - not found in bindings
+[0;31mMISMATCH[0m: delete_file - not found in bindings
+[0;31mMISMATCH[0m: delete_save - not found in bindings
+[0;31mMISMATCH[0m: file_exists - not found in bindings
+[0;31mMISMATCH[0m: has_save - not found in bindings
+[0;31mMISMATCH[0m: init - not found in bindings
+[0;31mMISMATCH[0m: init_filesystem - not found in bindings
+[0;31mMISMATCH[0m: load - not found in bindings
+[0;31mMISMATCH[0m: load_file - not found in bindings
+[0;31mMISMATCH[0m: peek - not found in bindings
+[0;31mMISMATCH[0m: register - not found in bindings
+[0;31mMISMATCH[0m: save - not found in bindings
+[0;31mMISMATCH[0m: save_file_async - not found in bindings
+
+==========================================
+Summary for: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/save-system.md
+==========================================
+  [0;32mOK[0m:       0
+  [0;31mMISMATCH[0m: 24
+  [0;33mSKIPPED[0m:  0 (common patterns)
+
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/shader_draw_commands_doc.md
+==========================================
+
+Found 20 API references in code blocks:
+
+[0;31mMISMATCH[0m: batch:addBeginShader - not found in bindings
+[0;31mMISMATCH[0m: batch:addDrawTexture - not found in bindings
+[0;31mMISMATCH[0m: batch:addEndShader - not found in bindings
+[0;31mMISMATCH[0m: batch:beginRecording - not found in bindings
+[0;32mOK[0m: batch:clear
+[0;31mMISMATCH[0m: batch:endRecording - not found in bindings
+[0;31mMISMATCH[0m: batch:execute - not found in bindings
+[0;31mMISMATCH[0m: batch:optimize - not found in bindings
+[0;32mOK[0m: shader_draw_commands.add_local_command
+[0;32mOK[0m: shader_draw_commands.executeEntityPipelineWithCommands
+[0;31mMISMATCH[0m: add_local_command - not found in bindings
+[0;31mMISMATCH[0m: addBeginShader - not found in bindings
+[0;31mMISMATCH[0m: addDrawTexture - not found in bindings
+[0;31mMISMATCH[0m: addEndShader - not found in bindings
+[0;31mMISMATCH[0m: beginRecording - not found in bindings
+[0;31mMISMATCH[0m: clear - not found in bindings
+[0;31mMISMATCH[0m: endRecording - not found in bindings
+[0;31mMISMATCH[0m: execute - not found in bindings
+[0;31mMISMATCH[0m: executeEntityPipelineWithCommands - not found in bindings
+[0;31mMISMATCH[0m: optimize - not found in bindings
+
+==========================================
+Summary for: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/shader_draw_commands_doc.md
+==========================================
+  [0;32mOK[0m:       3
+  [0;31mMISMATCH[0m: 17
+  [0;33mSKIPPED[0m:  0 (common patterns)
+
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/shader-builder.md
+==========================================
+
+Found 4 API references in code blocks:
+
+[0;31mMISMATCH[0m: ShaderBuilder.for_entity - not found in bindings
+[0;31mMISMATCH[0m: add - not found in bindings
+[0;31mMISMATCH[0m: apply - not found in bindings
+[0;31mMISMATCH[0m: for_entity - not found in bindings
+
+==========================================
+Summary for: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/shader-builder.md
+==========================================
+  [0;32mOK[0m:       0
+  [0;31mMISMATCH[0m: 4
+  [0;33mSKIPPED[0m:  0 (common patterns)
+
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/signal_system.md
+==========================================
+
+Found 15 API references in code blocks:
+
+[0;31mMISMATCH[0m: bus:emit - not found in bindings
+[0;31mMISMATCH[0m: bus:on - not found in bindings
+[0;31mMISMATCH[0m: handlers:cleanup - not found in bindings
+[0;31mMISMATCH[0m: handlers:on - not found in bindings
+[0;31mMISMATCH[0m: signal_group.new - not found in bindings
+[0;31mMISMATCH[0m: signal.emit - not found in bindings
+[0;31mMISMATCH[0m: signal.register - not found in bindings
+[0;31mMISMATCH[0m: cleanup - not found in bindings
+[0;31mMISMATCH[0m: emit - not found in bindings
+[0;31mMISMATCH[0m: new - not found in bindings
+[0;31mMISMATCH[0m: on - not found in bindings
+[0;32mOK[0m: publishLuaEvent
+[0;31mMISMATCH[0m: register - not found in bindings
+[0;31mMISMATCH[0m: showDamageFlash - not found in bindings
+[0;31mMISMATCH[0m: updateKillCount - not found in bindings
+
+==========================================
+Summary for: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/signal_system.md
+==========================================
+  [0;32mOK[0m:       1
+  [0;31mMISMATCH[0m: 14
+  [0;33mSKIPPED[0m:  0 (common patterns)
+
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/sprite-panels.md
+==========================================
+
+Found 14 API references in code blocks:
+
+[0;32mOK[0m: Color.new
+[0;31mMISMATCH[0m: dsl.anim - not found in bindings
+[0;31mMISMATCH[0m: dsl.spacer - not found in bindings
+[0;31mMISMATCH[0m: dsl.text - not found in bindings
+[0;31mMISMATCH[0m: anim - not found in bindings
+[0;31mMISMATCH[0m: createButtonRow - not found in bindings
+[0;31mMISMATCH[0m: createOrnatePanel - not found in bindings
+[0;31mMISMATCH[0m: createPortraitFrame - not found in bindings
+[0;31mMISMATCH[0m: handleAccept - not found in bindings
+[0;31mMISMATCH[0m: handleCancel - not found in bindings
+[0;31mMISMATCH[0m: new - not found in bindings
+[0;31mMISMATCH[0m: spacer - not found in bindings
+[0;31mMISMATCH[0m: startGame - not found in bindings
+
+==========================================
+Summary for: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/sprite-panels.md
+==========================================
+  [0;32mOK[0m:       1
+  [0;31mMISMATCH[0m: 12
+  [0;33mSKIPPED[0m:  1 (common patterns)
+
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/text-builder.md
+==========================================
+
+Found 28 API references in code blocks:
+
+[0;31mMISMATCH[0m: combatRecipe:spawn - not found in bindings
+[0;31mMISMATCH[0m: damageRecipe:spawn - not found in bindings
+[0;31mMISMATCH[0m: handle:at - not found in bindings
+[0;31mMISMATCH[0m: hpHandle:setText - not found in bindings
+[0;31mMISMATCH[0m: hpRecipe:spawn - not found in bindings
+[0;31mMISMATCH[0m: recipe:spawn - not found in bindings
+[0;31mMISMATCH[0m: Text.define - not found in bindings
+[0;31mMISMATCH[0m: Text.stopByTag - not found in bindings
+[0;31mMISMATCH[0m: Text.update - not found in bindings
+[0;31mMISMATCH[0m: timer.after - not found in bindings
+[0;31mMISMATCH[0m: above - not found in bindings
+[0;31mMISMATCH[0m: after - not found in bindings
+[0;31mMISMATCH[0m: anchor - not found in bindings
+[0;31mMISMATCH[0m: at - not found in bindings
+[0;31mMISMATCH[0m: attachTo - not found in bindings
+[0;31mMISMATCH[0m: content - not found in bindings
+[0;31mMISMATCH[0m: define - not found in bindings
+[0;31mMISMATCH[0m: fade - not found in bindings
+[0;31mMISMATCH[0m: follow - not found in bindings
+[0;31mMISMATCH[0m: lifespan - not found in bindings
+[0;31mMISMATCH[0m: setText - not found in bindings
+[0;31mMISMATCH[0m: spawn - not found in bindings
+[0;31mMISMATCH[0m: stopByTag - not found in bindings
+[0;31mMISMATCH[0m: stream - not found in bindings
+[0;31mMISMATCH[0m: tag - not found in bindings
+[0;31mMISMATCH[0m: update - not found in bindings
+
+==========================================
+Summary for: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/text-builder.md
+==========================================
+  [0;32mOK[0m:       0
+  [0;31mMISMATCH[0m: 26
+  [0;33mSKIPPED[0m:  2 (common patterns)
+
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/timer_chaining.md
+==========================================
+
+Found 14 API references in code blocks:
+
+[0;31mMISMATCH[0m: timer.kill_group - not found in bindings
+[0;31mMISMATCH[0m: timer.pause_group - not found in bindings
+[0;31mMISMATCH[0m: timer.resume_group - not found in bindings
+[0;31mMISMATCH[0m: TimerChain.new - not found in bindings
+[0;31mMISMATCH[0m: after - not found in bindings
+[0;31mMISMATCH[0m: every - not found in bindings
+[0;31mMISMATCH[0m: fork - not found in bindings
+[0;31mMISMATCH[0m: kill_group - not found in bindings
+[0;31mMISMATCH[0m: new - not found in bindings
+[0;31mMISMATCH[0m: onComplete - not found in bindings
+[0;31mMISMATCH[0m: pause_group - not found in bindings
+[0;31mMISMATCH[0m: resume_group - not found in bindings
+[0;31mMISMATCH[0m: start - not found in bindings
+[0;31mMISMATCH[0m: wait - not found in bindings
+
+==========================================
+Summary for: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/timer_chaining.md
+==========================================
+  [0;32mOK[0m:       0
+  [0;31mMISMATCH[0m: 14
+  [0;33mSKIPPED[0m:  0 (common patterns)
+
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/timer_docs.md
+==========================================
+
+Found 86 API references in code blocks:
+
+[0;31mMISMATCH[0m: action:fun - not found in bindings
+[0;31mMISMATCH[0m: condition:fun - not found in bindings
+[0;31mMISMATCH[0m: door:open - not found in bindings
+[0;31mMISMATCH[0m: effect:pulse - not found in bindings
+[0;31mMISMATCH[0m: effect:stop - not found in bindings
+[0;31mMISMATCH[0m: get:fun - not found in bindings
+[0;31mMISMATCH[0m: getter:fun - not found in bindings
+[0;31mMISMATCH[0m: player:hasKey - not found in bindings
+[0;31mMISMATCH[0m: player:shoot - not found in bindings
+[0;31mMISMATCH[0m: set:fun - not found in bindings
+[0;31mMISMATCH[0m: setter:fun - not found in bindings
+[0;32mOK[0m: camera.getZoom
+[0;32mOK[0m: camera.setZoom
+[0;31mMISMATCH[0m: cutscene.play - not found in bindings
+[0;31mMISMATCH[0m: EventQueueSystem.add_event - not found in bindings
+[0;31mMISMATCH[0m: EventQueueSystem.EaseDataBuilder - not found in bindings
+[0;31mMISMATCH[0m: EventQueueSystem.EventBuilder - not found in bindings
+[0;31mMISMATCH[0m: sfx.play - not found in bindings
+[0;31mMISMATCH[0m: spawn.spark - not found in bindings
+[0;31mMISMATCH[0m: timer.after - not found in bindings
+[0;31mMISMATCH[0m: timer.cooldown - not found in bindings
+[0;31mMISMATCH[0m: timer.every - not found in bindings
+[0;31mMISMATCH[0m: timer.every_step - not found in bindings
+[0;31mMISMATCH[0m: timer.for_time - not found in bindings
+[0;31mMISMATCH[0m: timer.get_every_index - not found in bindings
+[0;31mMISMATCH[0m: timer.get_timer_and_delay - not found in bindings
+[0;31mMISMATCH[0m: timer.kill_group - not found in bindings
+[0;31mMISMATCH[0m: timer.pause - not found in bindings
+[0;31mMISMATCH[0m: timer.pause_group - not found in bindings
+[0;31mMISMATCH[0m: timer.resume - not found in bindings
+[0;31mMISMATCH[0m: timer.run - not found in bindings
+[0;31mMISMATCH[0m: timer.tween - not found in bindings
+[0;31mMISMATCH[0m: timer.update - not found in bindings
+[0;32mOK[0m: ui.flash
+[0;32mOK[0m: ui.hide_overlay
+[0;31mMISMATCH[0m: _update - not found in bindings
+[0;31mMISMATCH[0m: add_event - not found in bindings
+[0;31mMISMATCH[0m: AddToQueue - not found in bindings
+[0;31mMISMATCH[0m: after - not found in bindings
+[0;31mMISMATCH[0m: BlocksQueue - not found in bindings
+[0;31mMISMATCH[0m: Build - not found in bindings
+[0;31mMISMATCH[0m: Condition - not found in bindings
+[0;31mMISMATCH[0m: cooldown - not found in bindings
+[0;31mMISMATCH[0m: Delay - not found in bindings
+[0;31mMISMATCH[0m: Ease - not found in bindings
+[0;31mMISMATCH[0m: EaseDataBuilder - not found in bindings
+[0;31mMISMATCH[0m: EndTime - not found in bindings
+[0;31mMISMATCH[0m: EndValue - not found in bindings
+[0;31mMISMATCH[0m: EventBuilder - not found in bindings
+[0;31mMISMATCH[0m: every - not found in bindings
+[0;31mMISMATCH[0m: every_step - not found in bindings
+[0;31mMISMATCH[0m: flash - not found in bindings
+[0;31mMISMATCH[0m: for_time - not found in bindings
+[0;31mMISMATCH[0m: fun - not found in bindings
+[0;31mMISMATCH[0m: Func - not found in bindings
+[0;31mMISMATCH[0m: get_every_index - not found in bindings
+[0;31mMISMATCH[0m: get_timer_and_delay - not found in bindings
+[0;31mMISMATCH[0m: GetCallback - not found in bindings
+[0;31mMISMATCH[0m: getZoom - not found in bindings
+[0;31mMISMATCH[0m: hasKey - not found in bindings
+[0;31mMISMATCH[0m: hide_overlay - not found in bindings
+[0;31mMISMATCH[0m: kill_group - not found in bindings
+[0;31mMISMATCH[0m: lerp - not found in bindings
+[0;31mMISMATCH[0m: min - not found in bindings
+[0;31mMISMATCH[0m: open - not found in bindings
+[0;31mMISMATCH[0m: pause - not found in bindings
+[0;31mMISMATCH[0m: pause_group - not found in bindings
+[0;31mMISMATCH[0m: play - not found in bindings
+[0;31mMISMATCH[0m: pulse - not found in bindings
+[0;31mMISMATCH[0m: remap - not found in bindings
+[0;31mMISMATCH[0m: resume - not found in bindings
+[0;31mMISMATCH[0m: run - not found in bindings
+[0;31mMISMATCH[0m: SetCallback - not found in bindings
+[0;31mMISMATCH[0m: setZoom - not found in bindings
+[0;31mMISMATCH[0m: shoot - not found in bindings
+[0;31mMISMATCH[0m: sin - not found in bindings
+[0;31mMISMATCH[0m: spark - not found in bindings
+[0;31mMISMATCH[0m: spawn_enemy - not found in bindings
+[0;31mMISMATCH[0m: StartTime - not found in bindings
+[0;31mMISMATCH[0m: StartValue - not found in bindings
+[0;31mMISMATCH[0m: stop - not found in bindings
+[0;31mMISMATCH[0m: Tag - not found in bindings
+[0;31mMISMATCH[0m: Trigger - not found in bindings
+[0;31mMISMATCH[0m: tween - not found in bindings
+[0;31mMISMATCH[0m: Type - not found in bindings
+[0;31mMISMATCH[0m: update - not found in bindings
+
+==========================================
+Summary for: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/timer_docs.md
+==========================================
+  [0;32mOK[0m:       4
+  [0;31mMISMATCH[0m: 82
+  [0;33mSKIPPED[0m:  0 (common patterns)
+
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/tracy_with_lua.md
+==========================================
+[0;33mINFO: No Lua API calls found in code blocks[0m
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/transform_local_render_callback_doc.md
+==========================================
+
+Found 21 API references in code blocks:
+
+[0;32mOK[0m: layer.RectangleLinesPro
+[0;32mOK[0m: layer.RectanglePro
+[0;32mOK[0m: transform.get_local_callback_info
+[0;32mOK[0m: transform.has_local_callback
+[0;32mOK[0m: transform.install_local_callback
+[0;32mOK[0m: transform.remove_local_callback
+[0;32mOK[0m: transform.set_local_callback_after_pipeline
+[0;32mOK[0m: transform.set_local_callback_size
+[0;31mMISMATCH[0m: draw_healthbar - not found in bindings
+[0;31mMISMATCH[0m: draw_outline - not found in bindings
+[0;31mMISMATCH[0m: draw_silhouette - not found in bindings
+[0;31mMISMATCH[0m: get_local_callback_info - not found in bindings
+[0;31mMISMATCH[0m: has_local_callback - not found in bindings
+[0;31mMISMATCH[0m: install_local_callback - not found in bindings
+[0;31mMISMATCH[0m: max - not found in bindings
+[0;31mMISMATCH[0m: min - not found in bindings
+[0;31mMISMATCH[0m: RectangleLinesPro - not found in bindings
+[0;31mMISMATCH[0m: RectanglePro - not found in bindings
+[0;31mMISMATCH[0m: remove_local_callback - not found in bindings
+[0;31mMISMATCH[0m: set_local_callback_after_pipeline - not found in bindings
+[0;31mMISMATCH[0m: set_local_callback_size - not found in bindings
+
+==========================================
+Summary for: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/transform_local_render_callback_doc.md
+==========================================
+  [0;32mOK[0m:       8
+  [0;31mMISMATCH[0m: 13
+  [0;33mSKIPPED[0m:  0 (common patterns)
+
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/ui_helper_reference.md
+==========================================
+
+Found 64 API references in code blocks:
+
+[0;31mMISMATCH[0m: box.AddChild - not found in bindings
+[0;31mMISMATCH[0m: box.AssignLayerOrderComponents - not found in bindings
+[0;31mMISMATCH[0m: box.AssignTreeOrderComponents - not found in bindings
+[0;31mMISMATCH[0m: box.BuildUIElementTree - not found in bindings
+[0;31mMISMATCH[0m: box.DebugPrint - not found in bindings
+[0;31mMISMATCH[0m: box.Drag - not found in bindings
+[0;31mMISMATCH[0m: box.GetUIEByID - not found in bindings
+[0;31mMISMATCH[0m: box.Initialize - not found in bindings
+[0;31mMISMATCH[0m: box.Move - not found in bindings
+[0;31mMISMATCH[0m: box.Recalculate - not found in bindings
+[0;31mMISMATCH[0m: box.Remove - not found in bindings
+[0;31mMISMATCH[0m: box.RemoveGroup - not found in bindings
+[0;31mMISMATCH[0m: box.RenewAlignment - not found in bindings
+[0;31mMISMATCH[0m: dsl.anim - not found in bindings
+[0;31mMISMATCH[0m: dsl.grid - not found in bindings
+[0;31mMISMATCH[0m: dsl.spawn - not found in bindings
+[0;31mMISMATCH[0m: dsl.text - not found in bindings
+[0;31mMISMATCH[0m: element.ApplyAlignment - not found in bindings
+[0;31mMISMATCH[0m: element.ApplyHover - not found in bindings
+[0;31mMISMATCH[0m: element.Click - not found in bindings
+[0;31mMISMATCH[0m: element.DrawSelf - not found in bindings
+[0;31mMISMATCH[0m: element.Initialize - not found in bindings
+[0;31mMISMATCH[0m: element.JuiceUp - not found in bindings
+[0;31mMISMATCH[0m: element.Release - not found in bindings
+[0;31mMISMATCH[0m: element.StopHover - not found in bindings
+[0;31mMISMATCH[0m: element.Update - not found in bindings
+[0;32mOK[0m: UIConfigBuilder.create
+[0;32mOK[0m: UIElementTemplateNodeBuilder.create
+[0;31mMISMATCH[0m: addAlign - not found in bindings
+[0;31mMISMATCH[0m: addButtonCallback - not found in bindings
+[0;31mMISMATCH[0m: addChild - not found in bindings
+[0;31mMISMATCH[0m: AddChild - not found in bindings
+[0;31mMISMATCH[0m: addColor - not found in bindings
+[0;31mMISMATCH[0m: addConfig - not found in bindings
+[0;31mMISMATCH[0m: addId - not found in bindings
+[0;31mMISMATCH[0m: addType - not found in bindings
+[0;31mMISMATCH[0m: anim - not found in bindings
+[0;31mMISMATCH[0m: ApplyAlignment - not found in bindings
+[0;31mMISMATCH[0m: ApplyHover - not found in bindings
+[0;31mMISMATCH[0m: AssignLayerOrderComponents - not found in bindings
+[0;31mMISMATCH[0m: AssignTreeOrderComponents - not found in bindings
+[0;31mMISMATCH[0m: build - not found in bindings
+[0;31mMISMATCH[0m: BuildUIElementTree - not found in bindings
+[0;31mMISMATCH[0m: Click - not found in bindings
+[0;31mMISMATCH[0m: create - not found in bindings
+[0;31mMISMATCH[0m: DebugPrint - not found in bindings
+[0;31mMISMATCH[0m: Drag - not found in bindings
+[0;31mMISMATCH[0m: DrawSelf - not found in bindings
+[0;31mMISMATCH[0m: GetUIEByID - not found in bindings
+[0;31mMISMATCH[0m: grid - not found in bindings
+[0;31mMISMATCH[0m: Initialize - not found in bindings
+[0;31mMISMATCH[0m: JuiceUp - not found in bindings
+[0;32mOK[0m: log_debug
+[0;31mMISMATCH[0m: Move - not found in bindings
+[0;32mOK[0m: playSoundEffect
+[0;31mMISMATCH[0m: Recalculate - not found in bindings
+[0;31mMISMATCH[0m: Release - not found in bindings
+[0;31mMISMATCH[0m: Remove - not found in bindings
+[0;31mMISMATCH[0m: RemoveGroup - not found in bindings
+[0;31mMISMATCH[0m: RenewAlignment - not found in bindings
+[0;31mMISMATCH[0m: spawn - not found in bindings
+[0;31mMISMATCH[0m: StopHover - not found in bindings
+[0;31mMISMATCH[0m: Update - not found in bindings
+
+==========================================
+Summary for: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/ui_helper_reference.md
+==========================================
+  [0;32mOK[0m:       4
+  [0;31mMISMATCH[0m: 59
+  [0;33mSKIPPED[0m:  1 (common patterns)
+
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/ui-dsl-reference.md
+==========================================
+
+Found 41 API references in code blocks:
+
+[0;31mMISMATCH[0m: registry:emplace - not found in bindings
+[0;31mMISMATCH[0m: shaderPipelineComp:addPass - not found in bindings
+[0;32mOK[0m: animation_system.createAnimatedObjectWithTransform
+[0;32mOK[0m: Color.new
+[0;32mOK[0m: command_buffer.queueDrawBatchedEntities
+[0;32mOK[0m: command_buffer.queueDrawCircleFilled
+[0;31mMISMATCH[0m: component_cache.get - not found in bindings
+[0;31mMISMATCH[0m: dsl.button - not found in bindings
+[0;31mMISMATCH[0m: dsl.spawn - not found in bindings
+[0;31mMISMATCH[0m: dsl.tabs - not found in bindings
+[0;31mMISMATCH[0m: dsl.text - not found in bindings
+[0;31mMISMATCH[0m: grid.getAllItems - not found in bindings
+[0;31mMISMATCH[0m: grid.getSlotEntity - not found in bindings
+[0;31mMISMATCH[0m: InventoryGridInit.centerItemOnSlot - not found in bindings
+[0;31mMISMATCH[0m: timer.every_opts - not found in bindings
+[0;31mMISMATCH[0m: timer.run_every_render_frame - not found in bindings
+[0;32mOK[0m: transform.set_space
+[0;32mOK[0m: UIDecorations.addBadge
+[0;32mOK[0m: UIDecorations.draw
+[0;31mMISMATCH[0m: addBadge - not found in bindings
+[0;31mMISMATCH[0m: addPass - not found in bindings
+[0;31mMISMATCH[0m: button - not found in bindings
+[0;31mMISMATCH[0m: centerItemOnSlot - not found in bindings
+[0;31mMISMATCH[0m: createAnimatedObjectWithTransform - not found in bindings
+[0;31mMISMATCH[0m: createCard - not found in bindings
+[0;31mMISMATCH[0m: createSpriteButtonDemo - not found in bindings
+[0;31mMISMATCH[0m: createSpritePanelDemo - not found in bindings
+[0;31mMISMATCH[0m: draw - not found in bindings
+[0;31mMISMATCH[0m: emplace - not found in bindings
+[0;31mMISMATCH[0m: every_opts - not found in bindings
+[0;31mMISMATCH[0m: get - not found in bindings
+[0;31mMISMATCH[0m: getAllItems - not found in bindings
+[0;31mMISMATCH[0m: getSlotEntity - not found in bindings
+[0;31mMISMATCH[0m: new - not found in bindings
+[0;31mMISMATCH[0m: queueDrawBatchedEntities - not found in bindings
+[0;31mMISMATCH[0m: queueDrawCircleFilled - not found in bindings
+[0;31mMISMATCH[0m: run_every_render_frame - not found in bindings
+[0;31mMISMATCH[0m: set_space - not found in bindings
+[0;31mMISMATCH[0m: spawn - not found in bindings
+[0;31mMISMATCH[0m: tabs - not found in bindings
+
+==========================================
+Summary for: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/ui-dsl-reference.md
+==========================================
+  [0;32mOK[0m:       7
+  [0;31mMISMATCH[0m: 33
+  [0;33mSKIPPED[0m:  1 (common patterns)
+
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/ui-validation.md
+==========================================
+
+Found 18 API references in code blocks:
+
+[0;31mMISMATCH[0m: dsl.spawn - not found in bindings
+[0;31mMISMATCH[0m: dsl.text - not found in bindings
+[0;31mMISMATCH[0m: UITestUtils.assertNoErrors - not found in bindings
+[0;31mMISMATCH[0m: UITestUtils.cleanup - not found in bindings
+[0;31mMISMATCH[0m: UITestUtils.spawnAndWait - not found in bindings
+[0;31mMISMATCH[0m: UIValidator.checkGlobalOverlap - not found in bindings
+[0;31mMISMATCH[0m: UIValidator.checkZOrderOcclusion - not found in bindings
+[0;31mMISMATCH[0m: UIValidator.getErrors - not found in bindings
+[0;31mMISMATCH[0m: UIValidator.validate - not found in bindings
+[0;31mMISMATCH[0m: assertNoErrors - not found in bindings
+[0;31mMISMATCH[0m: checkGlobalOverlap - not found in bindings
+[0;31mMISMATCH[0m: checkZOrderOcclusion - not found in bindings
+[0;31mMISMATCH[0m: cleanup - not found in bindings
+[0;31mMISMATCH[0m: getErrors - not found in bindings
+[0;31mMISMATCH[0m: spawn - not found in bindings
+[0;31mMISMATCH[0m: spawnAndWait - not found in bindings
+[0;31mMISMATCH[0m: validate - not found in bindings
+
+==========================================
+Summary for: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/ui-validation.md
+==========================================
+  [0;32mOK[0m:       0
+  [0;31mMISMATCH[0m: 17
+  [0;33mSKIPPED[0m:  1 (common patterns)
+
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/UNIFIED_LUA_API.md
+==========================================
+
+Found 44 API references in code blocks:
+
+[0;31mMISMATCH[0m: component_cache.get - not found in bindings
+[0;31mMISMATCH[0m: EntityBuilder.create - not found in bindings
+[0;31mMISMATCH[0m: EntityBuilder.simple - not found in bindings
+[0;31mMISMATCH[0m: EntityBuilder.validated - not found in bindings
+[0;31mMISMATCH[0m: PhysicsBuilder.for_entity - not found in bindings
+[0;31mMISMATCH[0m: Q.center - not found in bindings
+[0;31mMISMATCH[0m: Q.move - not found in bindings
+[0;31mMISMATCH[0m: Q.offset - not found in bindings
+[0;31mMISMATCH[0m: ShaderBuilder.for_entity - not found in bindings
+[0;31mMISMATCH[0m: signal.emit - not found in bindings
+[0;31mMISMATCH[0m: signal.register - not found in bindings
+[0;31mMISMATCH[0m: timer.after - not found in bindings
+[0;31mMISMATCH[0m: timer.cancel - not found in bindings
+[0;31mMISMATCH[0m: timer.every - not found in bindings
+[0;31mMISMATCH[0m: timer.sequence - not found in bindings
+[0;31mMISMATCH[0m: add - not found in bindings
+[0;31mMISMATCH[0m: after - not found in bindings
+[0;31mMISMATCH[0m: apply - not found in bindings
+[0;31mMISMATCH[0m: bullet - not found in bindings
+[0;31mMISMATCH[0m: cancel - not found in bindings
+[0;31mMISMATCH[0m: center - not found in bindings
+[0;31mMISMATCH[0m: circle - not found in bindings
+[0;31mMISMATCH[0m: collideWith - not found in bindings
+[0;31mMISMATCH[0m: create - not found in bindings
+[0;31mMISMATCH[0m: do_now - not found in bindings
+[0;31mMISMATCH[0m: emit - not found in bindings
+[0;31mMISMATCH[0m: ensure_entity - not found in bindings
+[0;31mMISMATCH[0m: every - not found in bindings
+[0;31mMISMATCH[0m: for_entity - not found in bindings
+[0;31mMISMATCH[0m: get - not found in bindings
+[0;32mOK[0m: get_shader_texture_batching
+[0;32mOK[0m: log_debug
+[0;31mMISMATCH[0m: move - not found in bindings
+[0;31mMISMATCH[0m: offset - not found in bindings
+[0;31mMISMATCH[0m: register - not found in bindings
+[0;31mMISMATCH[0m: safe_script_get - not found in bindings
+[0;31mMISMATCH[0m: script_field - not found in bindings
+[0;31mMISMATCH[0m: sequence - not found in bindings
+[0;32mOK[0m: set_shader_texture_batching
+[0;31mMISMATCH[0m: simple - not found in bindings
+[0;31mMISMATCH[0m: start - not found in bindings
+[0;31mMISMATCH[0m: tag - not found in bindings
+[0;31mMISMATCH[0m: validated - not found in bindings
+[0;31mMISMATCH[0m: wait - not found in bindings
+
+==========================================
+Summary for: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/UNIFIED_LUA_API.md
+==========================================
+  [0;32mOK[0m:       3
+  [0;31mMISMATCH[0m: 41
+  [0;33mSKIPPED[0m:  0 (common patterns)
+
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/working_with_sol.md
+==========================================
+[0;33mINFO: No Lua API calls found in code blocks[0m
+==========================================
+Verifying: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/z-order-rendering.md
+==========================================
+
+Found 9 API references in code blocks:
+
+[0;32mOK[0m: command_buffer.queueDrawBatchedEntities
+[0;32mOK[0m: command_buffer.queueDrawRectangle
+[0;31mMISMATCH[0m: layer_order_system.assignZIndexToEntity - not found in bindings
+[0;31mMISMATCH[0m: layer_order_system.getZIndex - not found in bindings
+[0;31mMISMATCH[0m: assignZIndexToEntity - not found in bindings
+[0;31mMISMATCH[0m: createCard - not found in bindings
+[0;31mMISMATCH[0m: getZIndex - not found in bindings
+[0;31mMISMATCH[0m: queueDrawBatchedEntities - not found in bindings
+[0;31mMISMATCH[0m: queueDrawRectangle - not found in bindings
+
+==========================================
+Summary for: /private/var/folders/td/j4jsyshx0893pxsnpt7mcv480000gn/T/vibe-kanban/worktrees/1aa1-let-s-make-a-ful/TheGameJamTemplate/docs/api/z-order-rendering.md
+==========================================
+  [0;32mOK[0m:       2
+  [0;31mMISMATCH[0m: 7
+  [0;33mSKIPPED[0m:  0 (common patterns)
+

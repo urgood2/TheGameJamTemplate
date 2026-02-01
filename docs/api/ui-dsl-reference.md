@@ -366,3 +366,5 @@ end
   ```lua
   signal.remove("event_name", handler_function)
   ```
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

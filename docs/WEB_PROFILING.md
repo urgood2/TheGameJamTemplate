@@ -380,3 +380,5 @@ Export JSON and import into:
 - [Tracy Profiler Integration](TRACY_PROFILING.md) - Native profiling
 - [Performance Optimization Guide](PERFORMANCE.md) - Optimization techniques
 - [Build System](../CLAUDE.md#build-commands) - Build commands
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

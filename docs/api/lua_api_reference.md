@@ -437,3 +437,5 @@ end
 ---
 
 When adding new bindings: register in `initLuaMasterState`, record with `BindingRecorder`, regenerate `assets/scripts/chugget_code_definitions.lua`, and update examples here.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

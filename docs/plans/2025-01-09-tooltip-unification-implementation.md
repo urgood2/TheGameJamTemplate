@@ -979,3 +979,5 @@ git commit -m "test(tooltips): verify all tooltip types working with unified sys
 - `assets/scripts/core/main.lua` - Update tooltip hide timer
 
 **Total Tasks:** 20
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -104,3 +104,5 @@ Add to CLAUDE.md:
 | Type annotations | 2 hours |
 | Troubleshooting section | 45 min |
 | **Total** | ~5 hours |
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

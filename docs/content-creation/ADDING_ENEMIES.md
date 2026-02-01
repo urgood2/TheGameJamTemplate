@@ -407,3 +407,5 @@ lua assets/scripts/tests/test_enemy_behaviors.lua
 | `assets/scripts/core/behaviors.lua` | Behavior registry and built-ins |
 | `assets/scripts/combat/wave_helpers.lua` | Helper functions |
 | `assets/scripts/combat/enemy_factory.lua` | Enemy spawning |
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

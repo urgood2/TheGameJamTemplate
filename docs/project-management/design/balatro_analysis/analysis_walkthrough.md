@@ -385,3 +385,5 @@ Your game can achieve the same **using the systems we've built**:
 **END OF ANALYSIS**
 
 We have completed the bottom-up analysis of Balatro's mechanics and designed systems to bring that "feel" to your game. The implementations are ready for integration.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -259,3 +259,5 @@ AvatarSystem.record_progress(playerScript, "hp_lost", finalDamage)
 - Projectile lifetime/despawn
 - Visual rendering
 - `onHit` / `onDestroy` callbacks
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

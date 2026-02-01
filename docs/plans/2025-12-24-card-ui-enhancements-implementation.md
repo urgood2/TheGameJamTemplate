@@ -836,3 +836,5 @@ git commit -m "feat(cards): complete card UI enhancements
 | 11 | Cleanup & testing | gameplay.lua |
 
 **Total estimated tasks:** 11 bite-sized steps with frequent commits.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

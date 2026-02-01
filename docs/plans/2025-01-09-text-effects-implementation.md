@@ -1526,3 +1526,5 @@ git commit -m "feat(text): complete text effects Lua port with 38 effects"
 - Matrix transforms for proper scaling
 - Persistent effect state via `ch.effect_data`
 - One-shot effect completion tracking via `ch.effect_finished`
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

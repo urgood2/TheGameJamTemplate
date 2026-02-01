@@ -680,3 +680,5 @@ CardFactory.extend(id, base_def, overrides, opts?)
 - [Content Creation Guide](../content-creation/README.md) - Full card/joker/projectile docs
 - [Timer System](../api/timer.md) - Core timer API
 - [Troubleshooting](../TROUBLESHOOTING.md) - Common issues
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

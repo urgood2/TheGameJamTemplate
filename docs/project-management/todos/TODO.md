@@ -357,3 +357,4 @@ Suggestions for Gloss/Shine Shader Variations
 - [ ] do optimization for quad tree
 - [ ] optimize updatesystems with this; https://chatgpt.com/c/683ef4e3-bc90-800a-8478-9788d51b3d6f  Also consider optimizing by caching parent components when recursing by frame?
 - [ ] use cached variables for transform values? single-component groups don't work.
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

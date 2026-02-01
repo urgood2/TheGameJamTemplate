@@ -914,3 +914,5 @@ git commit -m "feat(shaders): complete shader preset system implementation"
 just build-debug  # Build
 just test         # Run tests
 ```
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

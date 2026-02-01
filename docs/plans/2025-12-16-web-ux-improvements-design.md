@@ -123,3 +123,5 @@ configure_file(src/minshell.html.in ${CMAKE_BINARY_DIR}/minshell.html @ONLY)
 - Error handler registration
 - FPS calculation loop
 - Visibility change listener
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -114,3 +114,5 @@ Where:
 ## Key Insight
 
 The critical realization was that **child draw commands need a consistent coordinate space**. When the camera was restored for the sprite but remained active for child commands, the coordinate spaces were mismatched. By keeping the camera disabled and manually transforming world→screen, everything stays in screen space and child commands work correctly in their local entity space.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

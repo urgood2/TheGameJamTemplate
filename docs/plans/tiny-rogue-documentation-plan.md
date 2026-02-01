@@ -213,3 +213,5 @@ Requires [Fire Essence](items.md#fire-essence) to upgrade.
 - Wiki may have inconsistent formatting - normalize during extraction
 - If wiki has rate limiting, pace requests appropriately
 - Prioritize pages with most mechanical content over stub pages
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

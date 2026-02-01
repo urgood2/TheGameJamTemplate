@@ -78,3 +78,5 @@ end
 - Wand core: `assets/scripts/wand/` (`wand_executor`, `wand_triggers`, `wand_actions`, `wand_modifiers`, `spell_type_evaluator`, `joker_system`, `tag_evaluator`, `tag_discovery_system`; docs/tests alongside).
 - Projectiles: `assets/scripts/combat/projectile_system.lua` (spawn/update/collide/signals).
 - Glue points in gameplay loop: `assets/scripts/core/gameplay.lua` (already requires `CastFeedUI`, calls `init/update/draw`; mirror in action HUD as needed). 
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

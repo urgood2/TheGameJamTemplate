@@ -632,3 +632,5 @@ The Projectile System provides a robust, extensible foundation for projectile-ba
 - EnTT ECS: https://github.com/skypjack/entt
 - Existing Combat System: `/assets/scripts/combat/combat_system.lua`
 - Physics Docs: `/assets/scripts/physics_docs.md`
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

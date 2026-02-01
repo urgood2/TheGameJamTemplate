@@ -80,3 +80,5 @@ Pure physical power.
 2. **Know When to Run**: DCSS is a game of survival. If a fight looks dangerous, retreat and find another way.
 3. **Use Your Consumables**: Don't die with a bag full of potions and scrolls. Use them early and often.
 4. **Worship a God**: Most characters are significantly stronger with divine help. Find an altar early.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

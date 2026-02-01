@@ -175,3 +175,5 @@ For each file:
 3. ✅ _G exports consolidated in gameplay.lua
 4. ✅ All tests pass
 5. ✅ Game compiles and runs
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -981,3 +981,5 @@ physics.enable_collision_grouping(world, {"rock","debris"}, 6, function(e)
   print("group saturated member:", e)
 end)
 ```
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

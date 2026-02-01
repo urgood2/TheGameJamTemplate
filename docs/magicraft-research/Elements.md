@@ -38,3 +38,5 @@
 ## Design Insights
 - Elements are multiplicative with slot logic: homing increases effective application; volley multiplies status reach; fuse enables timed status before payloads.
 - Source vs Tick: Choose Fire for big hits, Poison for many hits. Thunder for multi-target coverage; Frost/Slime for safety.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

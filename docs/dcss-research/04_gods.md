@@ -222,3 +222,5 @@ Most gods use a 6-star piety system:
 
 - **Pakellas**: God of devices and evocations. Removed in 0.19.
 - **Nemelex Xobeh**: God of cards and decks. (Still in game, but mechanics have changed significantly over versions).
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -127,3 +127,5 @@ rec.bind_function(lua, {"physics"}, "SetBullet",
 - Audit script reports 0 incomplete bindings
 - No compilation errors
 - Existing functionality unchanged
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

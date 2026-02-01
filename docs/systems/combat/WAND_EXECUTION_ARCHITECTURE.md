@@ -641,3 +641,5 @@ assets/scripts/wand/
 - ✅ Mana/charges tracked
 - ✅ Performance: 60fps with 10+ wands active
 - ✅ Extensible: new cards don't require engine changes
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

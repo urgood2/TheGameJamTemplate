@@ -315,3 +315,5 @@ end)
 - [Using the Showcase Gallery](./using-showcase-gallery.md) - Browse working examples
 - [Adding Components to Strict](./adding-components-to-strict.md) - Extend the validation system
 - [UI DSL Reference](../api/ui-dsl-reference.md) - Full DSL API documentation
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

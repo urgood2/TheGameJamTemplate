@@ -524,3 +524,5 @@ See `projectile_examples.lua` for complete working examples of all projectile ty
 
 Created for TheGameJamTemplate - Lua/C++ Game Engine
 Compatible with: Raylib, EnTT, Chipmunk2D, LuaJIT
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

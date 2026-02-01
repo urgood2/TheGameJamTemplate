@@ -160,3 +160,5 @@ These screenshots show the actual game visuals for reference:
 ---
 
 *Document generated for artist commission - Trigger Survivors thumbnail art*
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

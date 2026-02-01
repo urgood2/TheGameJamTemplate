@@ -226,3 +226,5 @@ brew install --cask mactex  # or basictex
 - Markdown source in git alongside code
 - Update recipes when APIs change
 - Date-stamp PDF version in footer
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

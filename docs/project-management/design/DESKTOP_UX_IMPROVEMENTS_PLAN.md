@@ -1170,3 +1170,5 @@ This plan provides **11 desktop UX improvements** ranging from essential (thread
 - UI System: `UIElementTemplateNodeBuilder`, `UIConfigBuilder` in `chugget_code_definitions.lua`
 - Crash reporter (reference for threading): `src/util/crash_reporter.cpp`
 - Async save (reference for threading): `src/systems/save/save_file_io.cpp`
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

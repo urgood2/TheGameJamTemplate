@@ -977,3 +977,5 @@ Powers scale with **skill levels** (1-6+ points invested) and have both **passiv
 | On block | 3 | Low (build-dependent) |
 | On self-damage | 4 | Low (niche) |
 | On teleport | 3 | Low (niche) |
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

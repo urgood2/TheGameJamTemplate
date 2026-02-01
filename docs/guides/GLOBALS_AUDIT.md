@@ -115,3 +115,5 @@ grep -n "ENGINECTX_DEPRECATED" src/core/globals.hpp | wc -l
 # Verify no new globals added
 git diff HEAD~10 -- src/core/globals.hpp | grep "^+extern"
 ```
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

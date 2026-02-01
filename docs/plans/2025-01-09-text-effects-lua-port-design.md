@@ -164,3 +164,5 @@ c.scaleY = ch.scale * ch.scaleY
 
 - `util/easing.lua` — existing easing library (outElastic, outBounce, outBack, etc.)
 - `command_buffer.queueDrawText` — must support rotation, scaleX, scaleY
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -1707,3 +1707,5 @@ Uses existing `SaveManager` collector pattern at key `"tutorial_progress"`. Only
 ### No C++ Changes Required
 
 This is a pure Lua implementation that wraps existing systems.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -314,3 +314,5 @@ void Initialize(..., const UIConfig& oldConfig) {
 2. No Lua script changes required
 3. Adding a new UI type requires only a new handler file
 4. Each UI type's logic is in one place (its handler)
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -147,3 +147,5 @@ BRIDGED_EVENTS["MyNewEvent"] = true
 - [signal_group.lua](../../assets/scripts/core/signal_group.lua) - Scoped cleanup
 - [event_bridge.lua](../../assets/scripts/core/event_bridge.lua) - Bus bridging
 - [hump.signal docs](../../docs/external/hump_README.md) - Upstream library
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

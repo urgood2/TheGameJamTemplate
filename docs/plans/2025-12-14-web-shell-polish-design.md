@@ -398,3 +398,5 @@ void ShowCaptureNotification(const std::string& message) {
 - [ ] ESC closes modal
 - [ ] On crash → modal opens automatically, button pulses red
 - [ ] Dev console still works (` key)
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -323,3 +323,5 @@ draw.local_command(eid, "text_pro", {
 - Add more shader families (liquid, energy, particle, etc.)
 - Add more command type wrappers as needed
 - Consider entity metatable extension for `entity:shader()` syntax
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -352,3 +352,5 @@ enemies.elite_zombie = {
 - **dash**: Periodic dash attack
 - **summon**: Spawn minions
 - **teleport**: Blink around arena
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

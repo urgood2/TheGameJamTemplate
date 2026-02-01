@@ -1086,3 +1086,5 @@ After implementation, verify:
 - [ ] Crash reports include Lua context, entity count, browser info
 - [ ] "Report Bug" button opens itch.io community page
 - [ ] CI workflow still builds successfully (no changes to pipeline)
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

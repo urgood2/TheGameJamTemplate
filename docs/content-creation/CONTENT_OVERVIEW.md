@@ -105,3 +105,5 @@ Use these tags for joker synergies:
 | Origins | `data/origins.lua` | Starting passives + prayer |
 | Wand Frames | `data/wand_frames.lua` | Cast block size, cooldowns, triggers |
 | Prayers | `data/prayers.lua` | Active abilities |
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

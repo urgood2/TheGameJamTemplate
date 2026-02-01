@@ -361,3 +361,5 @@ If critical issues arise after deployment:
 - This plan was reviewed by Oracle agent for architectural soundness
 - Cross-grid transfer (P0.3) is the highest-risk new code
 - Test combat thoroughly after P3.6 before proceeding to cleanup
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -201,3 +201,5 @@ local statusText = Text.define()
 5. **Use callbacks for dynamic content** that changes frequently (HP, status effects)
 6. **Use :follow() sparingly** - position updates every frame can be expensive
 7. **Clean up on state transitions** with `Text.stopAll()` or `Text.stopByTag()`
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

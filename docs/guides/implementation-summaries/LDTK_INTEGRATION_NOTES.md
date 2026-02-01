@@ -63,3 +63,5 @@ The `ldtk_rule_import` namespace (auto-layer rule runner) remains available for 
 - Collider generation supports IntGrid-only; no entity shapes or custom metadata yet.
 - Prefab lookup is config-only—spawning logic still comes from your `set_spawner` callback.
 - Multi-world LDtk projects are not handled; assumes a single world and uses the engine’s physics world name (default `"world"`).
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

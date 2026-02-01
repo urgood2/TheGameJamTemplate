@@ -519,3 +519,5 @@ Comprehensive mapping between all `UIConfigBuilder:addX()` bindings and their eq
 ---
 
 ✅ **Summary:** Every `addX()` builder method can be expressed directly as a field inside a DSL `config = { ... }` table. The conversion occurs automatically through dynamic reflection logic in `makeConfigFromTable()`.  Each key is transformed to the corresponding `addX()` call, making the DSL declarative, compact, and future-proof.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

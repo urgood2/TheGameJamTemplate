@@ -218,3 +218,5 @@ docs-lua-api:
 
 - **Worktree:** `.worktrees/codebase-improvements/`
 - **Branch:** `feature/codebase-improvements-2025-12`
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

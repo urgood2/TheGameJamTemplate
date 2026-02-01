@@ -182,3 +182,5 @@ on_projectile_end(current):
 - **Echo Nova Volley**: Volley + Echo + Area Boost + Arcane Nova (×2 for Stellar Drift).
 - **Laser Reflector**: Laser/Ray → Reflection/Ricochet → Venom Crystal.
 - **Summoner Fusion**: Pop/Grimoire ×2 + Fusion Summon + Indomitability.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

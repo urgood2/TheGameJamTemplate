@@ -729,3 +729,5 @@ $env:PATH -split ';' | Select-String cmake
 # Run CMake with maximum verbosity
 cmake -B build --log-level=TRACE 2>&1 | Out-File cmake-debug.log
 ```
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

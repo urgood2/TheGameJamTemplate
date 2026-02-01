@@ -144,3 +144,5 @@ WebProfiler.toggle()
 - Full Guide: `docs/WEB_PROFILING.md`
 - Integration Example: `docs/examples/web_profiler_integration.cpp`
 - Summary: `docs/WEB_PROFILING_README.md`
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

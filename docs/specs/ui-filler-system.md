@@ -434,3 +434,5 @@ The filler API is designed to be forward-compatible with future grid layouts:
 | **Algorithm** | Two-pass: sizing then distribution |
 | **Fractional pixels** | Round to nearest, accept small gaps |
 | **Validation** | Warns on zero-size, multiple fillers, nested attempts |
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -553,3 +553,5 @@ those that are not unlocked will desplay a default "locked" sprite.
 | Shop System | 5 | 0 | 3 (UI disabled) |
 | Polish | ~18 | 1 | ~25 |
 | Release | 3 | 2 | 0 |
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

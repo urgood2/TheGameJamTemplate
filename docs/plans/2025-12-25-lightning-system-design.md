@@ -667,3 +667,5 @@ Stormlord (Avatar)
 - [ ] Storm Caller origin starts with correct cards
 - [ ] Thunderclap prayer stuns and marks enemies
 - [ ] Stormlord avatar crits trigger chains
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

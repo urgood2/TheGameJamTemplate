@@ -21,3 +21,5 @@ Goal: keep adding coverage alongside the globals→EngineContext refactor to cat
 - [System Architecture Overview](SYSTEM_ARCHITECTURE.md) - Subsystem map, ownership, and init order.
 - [C++ Documentation Standards](DOCUMENTATION_STANDARDS.md) - Comment templates and required coverage.
 
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

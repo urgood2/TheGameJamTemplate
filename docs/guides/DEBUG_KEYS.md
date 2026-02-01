@@ -83,3 +83,5 @@ if (s_hotReloadTimer > 0.5f || IsKeyPressed(KEY_F5)) { ... }
 - F5 shader reload has a 0.5s cooldown
 - F10 crash reports are saved to disk
 - Backtick console requires ImGui to be enabled
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -382,3 +382,5 @@ Four-axis morality system affecting shop access, item effects, and endgame gates
 **Document Version**: 1.0  
 **Last Updated**: 2026-01-08  
 **Maintainer**: Design Documentation Team
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

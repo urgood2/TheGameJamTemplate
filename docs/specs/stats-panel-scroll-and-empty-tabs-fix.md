@@ -293,3 +293,5 @@ end
 2. Scroll position is preserved per-tab across switches
 3. All 5 tabs display stats (no "No stats" message unless genuinely empty)
 4. Stats with 0 values display as "0" or "0%" consistently
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

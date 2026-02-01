@@ -675,3 +675,5 @@ Tasks 1-4 can be done in parallel. Task 5 depends on Task 1 (handlers must work 
 | Task 5 | 4-8 hours | 2-4 |
 
 **Total:** ~5-10 hours depending on Task 5 complexity.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

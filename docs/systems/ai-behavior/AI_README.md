@@ -155,3 +155,5 @@ ai.goals.EAT = {
 2. Ensure updaters set `hungry=true`, and `has_food` / `food_visible`.
 3. Add `Eat` GOAP action (pre `{ hungry=true }`, post `{ hungry=false }`).
 4. Done — hunger interrupts long actions.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

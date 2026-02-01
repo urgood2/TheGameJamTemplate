@@ -318,3 +318,5 @@ You are now ready to:
 Start by adding your cards to the `CardTemplates` table in `card_eval_order_test.lua`, then test them with the `simulate_wand()` function or load them in-game with `WandExecutor.loadWand()`.
 
 Happy card crafting! 🎮✨
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

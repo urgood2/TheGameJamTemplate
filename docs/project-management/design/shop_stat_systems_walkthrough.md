@@ -503,3 +503,5 @@ All test files are in:
 - [`test_behavior_registry.lua`](file:///Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/tests/test_behavior_registry.lua) - Complex behaviors
 
 Run with: `lua assets/scripts/tests/test_behavior_registry.lua`
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

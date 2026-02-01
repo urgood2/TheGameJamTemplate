@@ -343,3 +343,5 @@ master (stable)
 - **Phase-by-phase review** catches issues early
 - **Isolated worktree** protects master branch
 - **Profile before and after** every change
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

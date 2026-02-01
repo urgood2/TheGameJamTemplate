@@ -419,3 +419,5 @@ Each stage has unique layouts, enemies, bosses, and hidden items.
 | Gracia's Mirror | Eudaimonia Machine | Unlocks Inverse Mode |
 | Seventh Trumpet | Eudaimonia Machine | Unlocks Endless Mode |
 | Darkasso | Room 1665 | Unlocks Darkanas |
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

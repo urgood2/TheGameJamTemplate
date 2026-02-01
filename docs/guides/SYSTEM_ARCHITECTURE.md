@@ -38,3 +38,5 @@ Lightweight snapshot of the current engine boundaries while the EngineContext mi
 - Add new subsystems only when their ownership/initialization contract is understood.
 - Note any platform divergences (web vs native) and perf constraints if they affect API shape.
 - Keep sections concise; link to deeper design docs when they exist.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

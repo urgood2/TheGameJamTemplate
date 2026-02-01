@@ -232,3 +232,5 @@ Character costs increase by **10%** after each purchase:
 - And so on...
 
 **Tip**: Buy cheaper characters first to minimize total gold spent.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -61,3 +61,5 @@ post_slot.update(dt):
 - [ ] Reverse order flag inverts traversal (Defiant Nature) without breaking triggers.
 - [ ] Post-slot charge hooks (on cast/hit/move/kill/damage) fire stored spell at threshold.
 - [ ] Element/status application aligns with crystals/cores.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

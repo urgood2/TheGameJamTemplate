@@ -368,3 +368,5 @@ end, {
 * [ ] Bind your component types and meta functions on the C++ side.
 
 You’re set. Define behaviours, attach them cleanly, and build ECS‑aware setup in small, composable steps with `run_custom_func`. Enjoy the one‑liner ergonomics with explicit control when you need it.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

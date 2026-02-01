@@ -153,3 +153,5 @@ local enabled = get_shader_texture_batching()
 - `docs/api/` - Individual API documentation files
 - `docs/content-creation/` - Content creation guides
 - `assets/scripts/core/api.lua` - Full API documentation table
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

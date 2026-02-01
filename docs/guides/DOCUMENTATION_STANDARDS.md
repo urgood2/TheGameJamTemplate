@@ -77,3 +77,5 @@ private:
 - If behavior differs on web/native, record the divergence in a `@note`.
 - Prefer updating comments when changing signatures; stale docs are worse than none.
 - When unsure, add an `@note` explaining the current limitation instead of TODOs.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

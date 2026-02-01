@@ -300,3 +300,5 @@ end
 
 1. `assets/scripts/data/cards.lua` - Rename `test_label` → `display_name`
 2. `assets/scripts/data/cards.lua` - Rename `weight` → `spawn_weight`
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

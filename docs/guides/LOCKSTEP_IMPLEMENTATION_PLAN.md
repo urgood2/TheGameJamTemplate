@@ -1148,3 +1148,5 @@ When checksums diverge:
 3. Log RNG call sequences on both sides
 4. Check for missing input or timing drift
 5. Dump input snapshots and RNG/timer state around the divergence
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

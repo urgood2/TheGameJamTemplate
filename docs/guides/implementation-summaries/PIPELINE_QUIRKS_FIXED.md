@@ -252,3 +252,5 @@ If this appears, camera guard found corruption (but prevented it from affecting 
 - ✅ Camera stops working → ERROR log pinpoints the frame
 - ✅ Position mismatch → Logs show transform vs drawPos discrepancy
 - ✅ All issues are now observable and debuggable
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -356,3 +356,5 @@ Many triggers grant "extra attacks" - must handle recursion limits.
 | On stand still | AoE damage, apply status, regenerate |
 | On step | Deal damage, apply buff, trigger movement ability |
 | On apply [status] | Deal damage, spread status, gain buff |
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

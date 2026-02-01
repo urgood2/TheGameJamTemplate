@@ -130,6 +130,27 @@ local registry = _G.registry  -- or just use `registry` directly
 
 ## Common Mistakes to Avoid
 
+> **Full Reference**: See [COMMON_PITFALLS.md](docs/guides/COMMON_PITFALLS.md) for 183 documented pitfalls across 8 categories.
+
+### Critical One-Liners (Most Frequent Causes of Bugs)
+
+| Category | Pitfall | Quick Fix |
+|----------|---------|-----------|
+| **Data Loss** | Data assigned AFTER `attach_ecs()` | Assign ALL data BEFORE `attach_ecs()` |
+| **UI Clicks** | Missing `ScreenSpaceCollisionMarker` | Add to ALL clickable UI entities |
+| **UI Position** | Wrong `DrawCommandSpace` | Use `Screen` for HUD, `World` for game |
+| **Callbacks** | Entity destroyed mid-callback | Always check `entity:valid()` first |
+| **Physics** | Using old `globals.physicsWorld` | Use `PhysicsManager:getWorld("name")` |
+| **Signals** | Using deprecated `publishLuaEvent()` | Use `signal.emit()` instead |
+| **Timers** | Chain/tween never started | Call `:start()` or `:go()` to execute |
+| **Timers** | Timer outlives entity | Use timer groups + `timer.kill_group()` |
+| **Shaders** | Helper function used before defined | Define all functions before use in GLSL |
+| **LuaJIT** | 200+ locals in one file | Group related locals into tables |
+| **Jokers** | Effect returns nothing | Always return modified value |
+| **Content** | Table key ≠ id field | Keep table key and `id` synchronized |
+
+---
+
 ### Don't: Store data in GameObject component
 ```lua
 local gameObj = component_cache.get(entity, GameObject)
@@ -200,6 +221,16 @@ command_buffer.queueDraw(layers.ui, fn, z, layer.DrawCommandSpace.Screen)
 ### UI Decorations: Slot Underlays
 - To render a slot decoration behind the slot sprite (e.g., wand trigger backdrop), use a decoration with `zOffset < 0` on a sprite-panel slot.
 - Inventory grid slot decorations are supported via `slotConfig.decorations` or `gridConfig.slotDecorations`. When a slot uses a sprite panel, decorations are scaled by `ui_scale.SPRITE_SCALE` at definition time.
+
+### Quick Diagnostic Checklist
+
+**UI Not Responding?** → ScreenSpaceCollisionMarker? → DrawCommandSpace? → Z-order? → UIRoot transform?
+
+**Entity Data Nil?** → Data before attach_ecs? → Using global component name (not string)? → Entity valid?
+
+**Physics Broken?** → PhysicsManager:getWorld()? → Same world? → Collision categories match?
+
+**Timer Not Firing?** → :start()/:go() called? → Scope not destroyed? → Entity valid in callback?
 
 ---
 

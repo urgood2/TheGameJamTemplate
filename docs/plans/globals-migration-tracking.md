@@ -337,3 +337,5 @@ emit_combat_event(ctx, 'OnHitResolved', data, 'combat_hit')
 1. Create helper script to find global usages
 2. Batch-migrate screen dimensions (4 globals at once)
 3. Create subsystem structs (CameraShake, LoadingState, etc.)
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

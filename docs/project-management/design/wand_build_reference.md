@@ -42,3 +42,5 @@ This captures the "Achra-adjacent" structure for maximizing build variety with m
 
 ## Natural Next Steps (Appended)
 Natural next steps if you want to try it: define 4 Origins + 4 Disciplines + 5 Wand Frames + 6 Avatars, wire tag breakpoints into the evaluator snapshot, and author prayers as plain spells using the existing effect API.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

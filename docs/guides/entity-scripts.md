@@ -171,3 +171,5 @@ add_state_tag(entity, PLANNING_STATE)
 - [EntityBuilder API](../api/entity-builder.md)
 - [ChildBuilder API](../api/child-builder.md)
 - [UI DSL Reference](../api/ui-dsl-reference.md)
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

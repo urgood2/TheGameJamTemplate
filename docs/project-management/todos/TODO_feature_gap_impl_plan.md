@@ -294,3 +294,5 @@ UIAnim.attachButtonJuice(entity, {
 - ResourceManager keying: by filepath? logical name? UUID? (recommend: filepath + type-specific suffix)
 - Rumble toggle location: config.json vs runtime-only (recommend: runtime API + optional config binding)
 - Coverage gate: total lines vs tracked subset (recommend: total lines after excluding deps)
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

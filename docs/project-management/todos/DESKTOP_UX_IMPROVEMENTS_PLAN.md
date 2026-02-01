@@ -544,3 +544,5 @@ void drawProgressBar(float progress, int x, int y, int width, int height) {
     DrawText(text, x + (width - textWidth) / 2, y + (height - 20) / 2, 20, WHITE);
 }
 ```
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

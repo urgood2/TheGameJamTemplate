@@ -136,3 +136,5 @@
 ## Implementation Notes
 - Model wands with: `mp_max`, `mp_regen`, `cast_interval`, `cooldown`, `scatter`, `simul_count`, `post_slot_trigger(action, gain)`, `flags` (reverse, color_random, cost_multiplier).
 - Reverse casting (Defiant Nature) should invert slot traversal; simultaneous fire executes in parallel; post-slot triggers accumulate independently of main cast loop.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

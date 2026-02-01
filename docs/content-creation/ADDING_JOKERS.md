@@ -459,3 +459,5 @@ Tags are just strings on cards. To add a new tag:
    ```
 
 The validator will warn about unknown tags, but they work. Add common tags to the validator's known list to suppress warnings.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

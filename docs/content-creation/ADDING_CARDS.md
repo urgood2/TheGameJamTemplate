@@ -393,3 +393,5 @@ Tags are just strings. To add a new tag:
    ```
 
 Standard tags: `Fire`, `Ice`, `Lightning`, `Poison`, `Arcane`, `Holy`, `Void`, `Projectile`, `AoE`, `Hazard`, `Summon`, `Buff`, `Debuff`, `Mobility`, `Defense`, `Brute`
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

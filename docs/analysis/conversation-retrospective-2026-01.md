@@ -254,3 +254,5 @@ This retrospective analyzed Claude Code conversation transcripts from the past 3
 | "still not working", "let me try again" | Medium |
 | 10+ tool calls on same issue | Medium |
 | Revert/undo patterns | High |
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

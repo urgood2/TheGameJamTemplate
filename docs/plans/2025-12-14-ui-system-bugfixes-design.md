@@ -133,3 +133,5 @@ TEST(UILayoutTest, AlignmentFlags_ConflictDetection)
 4. Conflicting alignment flags emit warnings
 5. Unit tests cover all calculation functions
 6. Existing UI behavior unchanged (no visual regressions)
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

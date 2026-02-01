@@ -391,3 +391,5 @@ If you encounter issues or need clarification, check:
 2. The implementation in `shader_pipeline.hpp`
 3. The updated `layer.hpp` for render stack changes
 4. Example usage in `layer.cpp` (to be updated)
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

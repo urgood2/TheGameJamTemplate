@@ -496,3 +496,5 @@ vec3 debugRange(float value) {
 - See `RAYLIB_SHADER_GUIDE.md` for raylib-specific shader requirements
 - See `sprite_atlas_uv_remapping_snippet.md` for UV atlas techniques
 - See `sprite_bound_expansion_snippet.md` for sprite boundary effects
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

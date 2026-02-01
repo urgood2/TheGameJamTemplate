@@ -144,3 +144,5 @@ Single window with 3 tabs:
 - [ ] Validator catches missing fields and typos
 - [ ] ImGui panel shows active jokers and tag counts
 - [ ] ImGui panel can spawn test projectiles
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

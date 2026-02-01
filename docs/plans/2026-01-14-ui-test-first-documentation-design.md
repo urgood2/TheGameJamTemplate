@@ -519,3 +519,5 @@ When this is complete, you will be able to:
 4. **Copy-paste from tests** directly into your UI code
 5. **Trust that layouts work** because tests verify positions and sizes
 6. **Catch regressions** when any UI change breaks existing behavior
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

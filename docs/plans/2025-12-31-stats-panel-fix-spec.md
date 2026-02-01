@@ -341,3 +341,5 @@ end
 - [ ] Hover stat → tooltip shows breakdown
 - [ ] Low HP (<25%) → HP pulses continuously
 - [ ] All keyboard shortcuts work (C, Tab, 1-5, Esc)
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

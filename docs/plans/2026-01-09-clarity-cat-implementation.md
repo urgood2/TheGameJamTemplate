@@ -1711,3 +1711,5 @@ Tasks 31-40 would cover:
 - Commit after each task
 - Use conventional commits: `feat:`, `fix:`, `test:`, `docs:`
 - Tag releases: `v0.1.0` (Phase 1), `v0.2.0` (Phase 2), etc.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -232,3 +232,5 @@ end)
 
 - `assets/scripts/ui/ui_syntax_sugar.lua` - Add auto-validation hook
 - `assets/scripts/ui/card_inventory_panel.lua` - Use tracked render wrappers
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

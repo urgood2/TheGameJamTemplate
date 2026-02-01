@@ -133,3 +133,5 @@ After this migration effort:
 
 - `src/core/globals.hpp` - Definition of `globals::getRegistry()`
 - `src/core/engine_context.hpp` - `EngineContext` struct with registry member
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -43,3 +43,5 @@ Note: also ensure that all tools and systems are in place to implement the card 
 - Player stat shape: assume additive bonuses (damage, mana cost reduction, spread tweaks) plus multipliers; will define a minimal schema when implementing.
 - Mana handling: assume block/action mana costs should incorporate player reductions and sufficient-mana checks per action (already in executor) should use resolved cost.
 - Sub-cast inheritance: assume sub-casts inherit parent runtime modifiers + player stats unchanged unless card explicitly alters them.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

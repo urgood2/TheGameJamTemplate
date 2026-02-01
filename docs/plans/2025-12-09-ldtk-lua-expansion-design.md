@@ -418,3 +418,5 @@ The `set_spawner` callback stores a reference to the Lua function. If the Lua st
 
 ### Layer Index Stability
 Layer indices (0-based) are determined by the order in the LDtk project file. If you reorder layers in LDtk, previously saved Lua code using numeric indices will break. For stability, store layer names and use `get_layer_index(name)` lookups when possible.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

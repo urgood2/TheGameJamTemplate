@@ -369,3 +369,5 @@ Arcanas are powerful run modifiers that significantly alter gameplay. The system
 Type on main menu to unlock:
 - `randomazzami` - Unlocks Randomazzo relic
 - `aintnobodygottimeforthat` - Unlocks all 31-minute Arcanas
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

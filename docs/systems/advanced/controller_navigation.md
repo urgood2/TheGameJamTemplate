@@ -245,3 +245,5 @@ controller_nav.debug_print_state()
 * Define groups and layers during scene/UI initialization.
 * Use `controller_nav.navigate` in your main update loop when processing input.
 * Combine with visual highlights or sound cues on `on_focus`/`on_select` callbacks for responsive UI.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

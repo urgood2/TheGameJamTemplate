@@ -502,3 +502,5 @@ Vampire Survivors features **100+ weapons** that auto-attack based on cooldown t
 - Magic Wand + Empty Tome → Holy Wand
 - Runetracer + Armor → NO FUTURE
 - **Result**: Constant projectile barrage
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

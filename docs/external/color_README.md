@@ -196,3 +196,5 @@ A: Use `palette.list()`; each entry has `name` (slug) and `display` (original st
 ## License
 
 Do whatever you want with this file. Attribution appreciated but not required.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

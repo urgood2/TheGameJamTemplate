@@ -362,3 +362,5 @@ storm_aegis = {
 - `assets/scripts/wand/wand_executor.lua` - Add equipment trigger call
 - `assets/scripts/wand/wand_modifiers.lua` - Add `applyEquipmentEffects()`
 - `assets/scripts/combat/combat_system.lua` - Add equipment triggers to kill/damage handlers
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

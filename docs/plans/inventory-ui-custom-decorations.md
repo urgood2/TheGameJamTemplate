@@ -537,3 +537,5 @@ The showcase tab serves as manual verification:
 - [ ] Decoration templates are reusable
 - [ ] Runtime decoration modification works
 - [ ] Conditional decorations show/hide based on state
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

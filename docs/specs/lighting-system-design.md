@@ -358,3 +358,5 @@ end
 - [ ] Web build compatibility
 - [ ] Camera movement affects light positions
 - [ ] Timer-based animation (flicker/pulse)
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

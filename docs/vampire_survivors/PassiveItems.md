@@ -430,3 +430,5 @@ Passive items provide permanent stat bonuses during a run. Each item has 5 level
 - Gold Ring (+50% Curse)
 - Metaglio Right (+25% Curse)
 - **Result**: +175% Curse, massive enemy spawns
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

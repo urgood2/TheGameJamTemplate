@@ -2595,3 +2595,5 @@ Expected: Clean working tree, 11 commits for the feature
 | 10 | `wave_visuals.lua` | Signal handlers for UI feedback |
 | 11 | `wave_examples.lua` | Documentation and usage examples |
 | 12 | - | Verification |
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

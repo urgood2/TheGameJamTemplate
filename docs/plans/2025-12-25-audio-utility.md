@@ -762,3 +762,5 @@ The utility will:
 - Skip already-processed files (detected by hash)
 - Delete original .wav files after successful conversion
 - Update sounds.json with new .ogg filenames
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

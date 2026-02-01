@@ -204,3 +204,5 @@ Detect right mouse button clicks on cards in addition to existing left-click.
 - [ ] **Crit Damage:** `forceCrit` flag, gold color for crit numbers
 - [ ] **Cast From Event:** Fix spawn position to use enemy death location
 - [ ] **Right-Click:** Add detection, log statement placeholder
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

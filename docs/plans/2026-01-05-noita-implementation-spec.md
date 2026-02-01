@@ -1055,3 +1055,5 @@ If issues arise:
 1. All changes are additive (new fields, new functions)
 2. Existing behavior unchanged unless `friendlyFire = true` or `formation` set
 3. Can revert individual features by removing card definitions
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -137,3 +137,4 @@ Specific actions could scale something based on a stat.
     - healing_received_pct
     - modify_stat – Temporary buff/debuff (+X%, duration)
     
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

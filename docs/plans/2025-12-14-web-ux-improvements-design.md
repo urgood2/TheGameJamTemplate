@@ -209,3 +209,5 @@ Pure JS/CSS in `minshell.html`:
 3. Loading screen has smooth fade transitions, Balatro aesthetic
 4. Dev console captures 5000 startup logs, toggles with backtick
 5. No changes to CI/CD or build output
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

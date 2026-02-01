@@ -312,3 +312,5 @@ Key differences from inventory:
 - [ ] Always accessible (any game phase)
 - [ ] Explicit Cancel to dismiss modal
 - [ ] Snap animation (match inventory)
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

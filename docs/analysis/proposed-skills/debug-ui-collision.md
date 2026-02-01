@@ -106,3 +106,5 @@ After applying fix, verify with:
 -- Hover states should activate
 -- Debug bounds should be visible at correct position
 ```
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

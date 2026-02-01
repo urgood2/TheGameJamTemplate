@@ -192,3 +192,5 @@ Detected IDs rendered as clickable links (underlined, accent color).
 - Log persistence across sessions (file-based history)
 - Remote logging / log server
 - Log rotation / size limits
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

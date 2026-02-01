@@ -305,3 +305,5 @@ end
 
 * **v1.1** — Added documentation for global wrappers (`activate_state`, `deactivate_state`, `clear_states`, `is_state_active`) and overload notes; clarified hashing and binding safety.
 * **v1.0** — Initial documentation matching the provided bindings.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

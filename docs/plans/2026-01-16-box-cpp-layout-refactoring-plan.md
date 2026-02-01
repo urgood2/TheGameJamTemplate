@@ -930,3 +930,5 @@ git commit -m "Rollback phase X: [reason]"
 | `assets/scripts/tests/_framework/ui_snapshot.lua` | NEW |
 | `assets/scripts/tests/capture_ui_baselines.lua` | NEW |
 | `assets/scripts/tests/verify_ui_no_regressions.lua` | NEW |
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

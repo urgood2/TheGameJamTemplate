@@ -258,3 +258,4 @@ Backgrounds determine your character's initial skills, equipment, and stat distr
 - Combine with short blades for backstabs
 
 This guide provides comprehensive coverage of all DCSS backgrounds for optimal character creation and progression planning.
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

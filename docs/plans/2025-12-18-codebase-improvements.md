@@ -996,3 +996,5 @@ Document what was accomplished:
 - ✅ Task 7: Decompose scripting_functions
 - ✅ Task 8: Shader/texture batching
 - ✅ Task 9: Unified Lua docs
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -63,3 +63,5 @@ Stabbing is a special mechanic for stealthy characters.
 - **Poison Resistance**: Grants immunity to poison damage.
 - **Negative Energy Resistance**: Reduces damage from life-draining attacks and torment.
 - **Willpower (MR)**: Protects against mental status effects like confusion and paralysis.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

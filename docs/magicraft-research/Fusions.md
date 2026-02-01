@@ -41,3 +41,5 @@ Design Insight: Pad volleys with cheap shots, finish with expensive payloads (No
 | Misses with high scatter | Track/Homing; Precise Shot |
 | Reverse-order wands | Visually reverse slot plan (Defiant Nature) |
 | Charge desync | Align Fuse triggers with post-slot thresholds |
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

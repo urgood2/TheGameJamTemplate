@@ -135,3 +135,5 @@ This documentation is for **design reference only**. Use it to:
 - Reference specific numbers when designing comparable systems
 
 **Do not**: Copy content verbatim for commercial use without proper licensing.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

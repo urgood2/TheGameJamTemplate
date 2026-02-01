@@ -397,3 +397,5 @@ Items commonly apply effects on:
 - Most items give 10-30% resistance to 1-2 types
 - Maximum single resistance: 50% (Garnet Necklace Fire/Lightning, etc.)
 - Some items give negative resistance (Mask of Frenzy: -50% Psychic)
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

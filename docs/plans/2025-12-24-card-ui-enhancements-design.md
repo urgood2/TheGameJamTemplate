@@ -450,3 +450,5 @@ end)
 - [ ] Entity destroyed → tooltip cleaned up
 - [ ] DSL boxes work with attachToEntity
 - [ ] Language change invalidates cache
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -164,3 +164,5 @@ FeatureShowcase = {
 - Badge status shows ✓ for valid items and ✗ for invalid/missing.
 - Tabs and scrolling work; ESC closes the overlay.
 - UIValidator reports no errors after spawn.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

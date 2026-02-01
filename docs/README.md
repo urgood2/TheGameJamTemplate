@@ -6,8 +6,10 @@ Welcome to the comprehensive documentation for the Game Jam Template. This index
 
 - [Main README](../README.md) - Project overview and setup
 - [Changelog](../CHANGELOG.md) - Recent changes and history
+- [AI Agent Knowledge Base](../AGENTS.md) - Hierarchical navigation for AI assistants
+- [Common Pitfalls](guides/COMMON_PITFALLS.md) - 78 critical pitfalls (from 183 inventoried)
 - [Tracy Profiling](../USING_TRACY.md) - Performance profiling guide
-- [Lua Debugging](assets/DEBUGGING_LUA.md) - Debug your Lua scripts
+- [Lua Debugging](tools/DEBUGGING_LUA.md) - Debug your Lua scripts
 - [Game Design Context](../GAME_DESIGN_CONTEXT.md) - Central gameplay/design tenets
 
 ## Content Creation
@@ -129,6 +131,8 @@ Welcome to the comprehensive documentation for the Game Jam Template. This index
 - [Debugging Lua](tools/DEBUGGING_LUA.md) - Lua debugging techniques
 - [Tracy Profiling](../USING_TRACY.md) - Performance profiling
 - [Testing Plan](../TESTING_PLAN.md) - Testing strategies
+- **[Common Pitfalls Reference](guides/COMMON_PITFALLS.md)** - 78 critical pitfalls, gotchas, and warnings
+- [Troubleshooting](TROUBLESHOOTING.md) - Detailed troubleshooting guide
 
 ## Project Management
 
@@ -169,6 +173,8 @@ When adding new documentation:
 
 ---
 
-**Last Updated**: 2026-01-13
+**Last Updated**: 2026-01-30
 
 
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -808,3 +808,5 @@ If all tests pass and no additional changes needed, the feature is complete.
 | 7 | Integration testing | 5 min |
 
 **Total: ~36 minutes**
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

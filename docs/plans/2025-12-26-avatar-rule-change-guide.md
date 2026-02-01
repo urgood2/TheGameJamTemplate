@@ -400,3 +400,5 @@ After stubs are in place:
 3. Refactor multicast execution for `multicast_loops`
 4. Create summon tracking system for `summon_*` rules
 5. Add comprehensive tests for each rule
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

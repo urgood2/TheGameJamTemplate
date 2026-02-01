@@ -576,3 +576,5 @@ The system is fully extensible - any effect type string works, you just need to 
    -- RIGHT
    { type = "proc", trigger = "on_kill", effect = "heal", value = 5 }
    ```
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

@@ -227,3 +227,5 @@ All features implemented, tested, and documented.
 - Architecture doc: `WAND_EXECUTION_ARCHITECTURE.md`
 - Examples: `wand_test_examples.lua`
 - Report: `/WAND_EXECUTION_REPORT.md`
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

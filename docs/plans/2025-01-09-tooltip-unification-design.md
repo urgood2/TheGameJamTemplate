@@ -172,3 +172,5 @@ Always relative to hovered entity using existing functions:
 4. Delete `generateTooltipUI()` from `ui_defs.lua`
 5. Delete legacy functions from `util.lua`
 6. Test all tooltip types work correctly
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

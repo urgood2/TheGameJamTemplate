@@ -513,3 +513,5 @@ end)
 - [Using the Showcase Gallery](./using-showcase-gallery.md) - Browse working examples
 - [Adding Components to Strict](./adding-components-to-strict.md) - Extend the system
 - [Testing Guide](../guides/TESTING_GUIDE.md) - General testing practices
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

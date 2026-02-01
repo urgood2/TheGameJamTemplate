@@ -543,3 +543,5 @@ When adding a new strict component:
 - [Writing UI Tests](./writing-ui-tests.md) - Test your components
 - [Using the Showcase Gallery](./using-showcase-gallery.md) - Add working examples
 - [UI DSL Reference](../api/ui-dsl-reference.md) - Full API documentation
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

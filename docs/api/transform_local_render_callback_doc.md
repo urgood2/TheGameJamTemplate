@@ -161,3 +161,5 @@ transform.remove_local_callback(self.ent)
 * **Sprite vs. fixed size:** If a sprite exists, `width/height` comes from the sprite. Otherwise, use `set_local_callback_size`.
 
 ---
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

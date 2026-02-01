@@ -588,3 +588,5 @@ signal.register("stage_completed", function(results)
     play_sound("stage_complete")
 end)
 ```
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

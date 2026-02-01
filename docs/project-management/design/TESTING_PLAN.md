@@ -556,3 +556,5 @@ Based on what we find:
 ---
 
 Ready to start testing? Let me know when you've compiled and I'll help you run through these tests!
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

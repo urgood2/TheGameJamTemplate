@@ -366,3 +366,5 @@ Weapon evolutions are the primary power spikes in Vampire Survivors. Evolving a 
 
 ### Requires Specific Character
 - [ ] Sole Solution (Victory Sword + Torrona's Box MAX) - Queen Sigma only
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

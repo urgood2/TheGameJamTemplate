@@ -927,3 +927,5 @@ After completing all tasks, verify:
 | 6. UI Definitions | 6.1 | No | High (design only) |
 
 Total: ~12 tasks, ~6 with TDD
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

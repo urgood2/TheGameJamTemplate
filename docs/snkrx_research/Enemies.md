@@ -436,3 +436,5 @@ end
 - [SNKRX Source Code - enemies.lua](https://github.com/a327ex/SNKRX/blob/master/enemies.lua)
 - [SNKRX Source Code - arena.lua](https://github.com/a327ex/SNKRX/blob/master/arena.lua)
 - [SNKRX Source Code - objects.lua](https://github.com/a327ex/SNKRX/blob/master/objects.lua)
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

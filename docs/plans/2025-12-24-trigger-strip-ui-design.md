@@ -267,3 +267,5 @@ The design supports future additions:
 - Drag to reorder triggers
 - Right-click context menu
 - Keyboard navigation through the strip
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

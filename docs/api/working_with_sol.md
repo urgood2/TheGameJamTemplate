@@ -10,3 +10,4 @@ lua.new_usertype<UIConfig>("UIConfig",
 
 
 ## If facing entt "slot not available" errors, check out: https://github.com/skypjack/entt/issues/1095
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

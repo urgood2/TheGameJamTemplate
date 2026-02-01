@@ -54,3 +54,5 @@ Text.define()
     :spawn()
     :at(vx, vy - 10)
 ```
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

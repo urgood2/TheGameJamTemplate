@@ -450,3 +450,5 @@ struct Alignment {
 ```
 
 These are exposed to Lua as `AlignmentFlag.*` via Sol2 bindings in `transform_functions.cpp:2557-2563`.
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

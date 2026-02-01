@@ -160,3 +160,5 @@ git diff HEAD~10 -- "*.cpp" "*.hpp" | grep -E "new\s+\w|delete\s+"
 - [C++ Core Guidelines: Resource Management](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#S-resource)
 - [chipmunk_raii.hpp](../../src/systems/physics/chipmunk_raii.hpp)
 - [test_memory_safety.cpp](../../tests/unit/test_memory_safety.cpp)
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

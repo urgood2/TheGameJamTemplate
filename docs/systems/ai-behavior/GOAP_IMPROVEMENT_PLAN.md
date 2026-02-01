@@ -256,3 +256,5 @@ Modify:
 4) Phase 3 numeric thresholds
 5) Phase 4 usability helpers
 6) Phase 5-6 advanced features (optional)
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

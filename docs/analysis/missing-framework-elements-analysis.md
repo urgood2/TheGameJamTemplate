@@ -656,3 +656,5 @@ The demo spec has a solid foundation but requires specification of:
 | Starting Variance | Character-varied | God + class choice |
 | Run Identity | Emergent | Build from offerings |
 | Skill vs Build Ratio | Balanced | Both matter |
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

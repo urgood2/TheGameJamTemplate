@@ -324,3 +324,5 @@ The implementation is conservative and safe, allowing easy comparison between ea
 2. **Identify critical shaders** for preload list
 3. **Monitor telemetry** for lazy load patterns
 4. **Consider background compilation** for zero-latency lazy loading
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

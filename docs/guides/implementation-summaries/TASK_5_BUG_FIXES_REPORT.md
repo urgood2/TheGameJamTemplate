@@ -662,3 +662,5 @@ for (auto& overlay : component.overlayDraws) {
 - **11 bugs fixed** (11/12 - 92%)
 - **~365 lines** of fixes across 5 files
 - **Priority order:** Physics (critical) → UI → Memory → Shaders
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

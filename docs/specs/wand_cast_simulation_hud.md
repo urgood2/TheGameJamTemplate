@@ -285,3 +285,5 @@ if currentMana < 0:
 - DPS/damage calculation overlay
 - Comparison mode (before/after card change)
 - Playback speed control
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

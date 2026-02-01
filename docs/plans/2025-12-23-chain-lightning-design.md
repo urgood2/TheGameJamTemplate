@@ -84,3 +84,5 @@ Uses `ActionAPI.damage(ctx, source, target, amount, "lightning")` for:
 - [ ] MOD_DOUBLE_CAST spawns two independent chains
 - [ ] No chain to primary target (excluded)
 - [ ] Chains respect max count limit
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

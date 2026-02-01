@@ -137,3 +137,5 @@ end
 - `localization.getStyled()` does one gsub pass per call
 - Tooltips are cached by key - styled parsing happens once per tooltip creation
 - Cache invalidates on font version change (language switch)
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

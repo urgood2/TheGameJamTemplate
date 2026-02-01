@@ -230,3 +230,5 @@ Done! Created:
 - docs/ui-specs/mockups/character-stats-panel.png
 - docs/ui-specs/character-stats-panel.md
 ```
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

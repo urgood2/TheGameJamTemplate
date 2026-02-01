@@ -138,3 +138,5 @@ Actionable roadmap to ship a playable demo to itch.io + Steam. Timebox is ~10–
 - [ ] Console overlay toggle: shows last 50 log lines + errors; keep it non-blocking in release.
 - [ ] Log rotation: cap log size and keep last N files; avoid PII; include timestamps.
 - [ ] Crash/fatal handler: write last message + stack (if available) and seed; reopen game to a “sorry” screen with log location.  
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

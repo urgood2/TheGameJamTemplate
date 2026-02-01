@@ -283,3 +283,5 @@ end
 - `core.shader_builder` (for entity mode shader setup)
 - `core.entity_cache` (for entity validation)
 - `core.component_cache` (for Transform access)
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

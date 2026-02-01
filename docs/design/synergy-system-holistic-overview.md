@@ -155,3 +155,5 @@ Power Fantasy: "Why cast once when my army can cast with me?"
 - `crit_chains` rule (Stormlord) - stub exists, needs logic
 - `missing_hp_dmg` rule (Bloodgod) - stub exists, needs logic
 - `summon_cast_share` rule (Voidwalker) - stub exists, needs logic
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

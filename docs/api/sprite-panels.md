@@ -558,3 +558,5 @@ dsl.spriteButton {
 - [UI Helper Reference](ui_helper_reference.md) - Full UI DSL documentation
 - [Text Builder API](text-builder.md) - Animated text rendering
 - Demo file: `assets/scripts/ui/sprite_ui_showcase.lua` - Working examples
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

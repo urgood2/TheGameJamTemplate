@@ -401,3 +401,5 @@ enemyScriptNode:attach_ecs { create_new = false, existing_entity = enemyEntity }
 -- 10. Health UI state
 enemyHealthUiState[enemyEntity] = { actor = ogre, visibleUntil = 0 }
 ```
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

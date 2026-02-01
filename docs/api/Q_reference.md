@@ -198,3 +198,5 @@ Q.setRotation(turret, angle)
 
 - [component_cache.lua](../../assets/scripts/core/component_cache.lua) - Underlying cache
 - [entity_cache.lua](../../assets/scripts/core/entity_cache.lua) - Entity validation
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

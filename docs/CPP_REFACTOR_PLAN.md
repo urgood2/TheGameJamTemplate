@@ -821,3 +821,5 @@ test(blackboard): add type safety tests
 docs(errors): update error handling decision tree
 fix(debug): resolve F3 key conflict
 ```
+
+<!-- Verified: 2026-01-30 against commit 8d9e2ea52 -->

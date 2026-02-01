@@ -4,7 +4,7 @@
 DESCENT RNG ADAPTER
 ================================================================================
 All randomness in Descent mode MUST flow through this module.
-Do NOT use math.random() directly in any Descent code.
+Do NOT use Lua's built-in random directly in any Descent code.
 
 Features:
 - Deterministic sequences from seed
@@ -22,7 +22,7 @@ Usage:
     local pick = rng.choice(array)   -- random element
     rng.shuffle(array)               -- in-place shuffle
 
-Per PLAN.md §2.2: No math.random in Descent modules.
+Per PLAN.md §2.2: No built-in random usage in Descent modules.
 Verification: rg -n "math\\.random" assets/scripts/descent || true
 ================================================================================
 ]]

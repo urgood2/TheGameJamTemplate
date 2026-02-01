@@ -17,3 +17,4 @@ This repo is worked on by multiple coding agents (Claude Code, Codex, Gemini) vi
 ## Guardrails
 - Run UBS before committing.
 - Prefer small, atomic commits unless a refactor demands otherwise.
+- Determinism lint: `just lint-descent-determinism` (fails if `math.random` appears under `assets/scripts/descent`).

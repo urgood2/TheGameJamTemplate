@@ -145,8 +145,12 @@ local function discover_test_files()
         "tests.test_descent_map",
         "tests.test_descent_combat",
         "tests.test_descent_pathfinding",
+        "tests.test_descent_procgen_validation",
         "tests.test_descent_enemy_ai",
         "tests.test_descent_spells",
+        "tests.test_descent_rng",
+        "tests.test_descent_player",
+        "tests.test_descent_endings",
         -- Add more test_descent_*.lua files as they are created
     }
 

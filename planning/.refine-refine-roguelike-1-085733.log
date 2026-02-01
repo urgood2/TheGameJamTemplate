@@ -1,0 +1,914 @@
+==> Codex refinement: model=gpt-5.2 (until approved, max=2)
+==> Iteration 1: reviewing /tmp/test_plan.md
+OpenAI Codex v0.93.0 (research preview)
+--------
+workdir: /data/projects/roguelike-1
+model: gpt-5.2
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: auto
+session id: 019c1835-0333-75f1-b866-5e7cccc9d1e0
+--------
+user
+Review this engineering plan file: /tmp/test_plan.md
+
+Your task:
+1. Check for: specificity, testability, parallelizability, completeness, clarity
+2. If the plan is EXCELLENT and ready for implementation, output ONLY: APPROVED
+3. If the plan needs improvement, output an IMPROVED version of the entire plan (markdown only, no commentary)
+
+Be strict. Only approve if the plan is truly implementation-ready.
+mcp: mcp_agent_mail starting
+mcp: mcp_agent_mail ready
+mcp startup: ready: mcp_agent_mail
+exec
+/usr/bin/zsh -lc "sed -n '1,200p' /tmp/test_plan.md" in /data/projects/roguelike-1 succeeded in 9ms:
+# Test Plan v0
+
+## Goal
+Build a simple counter app.
+
+## Tasks
+1. Make counter
+2. Add buttons
+3. Test it
+
+
+
+thinking
+**Improving the engineering plan**
+
+The current plan lacks specificity and testability, so I aim to enhance it into a clear markdown format. This should include the requirements and tech stack. I'll outline sections such as scope, assumptions, acceptance criteria, architecture, tasks with parallelization opportunities, a testing plan, rollout strategy, and potential risks. It's essential to ensure the plan is implementation-ready yet minimal. I should indicate options for the target environment while keeping it generic to provide flexibility.
+thinking
+**Refining the plan steps**
+
+The improved plan should explicitly state "Confirm target platform" as step 0, but I realize it may not be fully ready yet. While the user wants an improved version, it doesn't have to be entirely implementable from scratch. I’ll ensure we can design the plan for universal implementation using vanilla HTML, CSS, and JS—like a single-page app. This avoids making assumptions and incorporates essential elements like accessibility. I’ll also consider testing frameworks like Playwright or Vitest, noting any setup requirements.
+thinking
+**Crafting a general plan**
+
+I know the user might be working within a specific repository, but since I'm not sure, I think it's best to keep the plan general. I plan to suggest that if an existing testing framework is available, it should be used; otherwise, we can default to creating a minimal setup with Vite and TypeScript. I’ll structure the improved plan starting with "Context/Constraints" and include decision points. I also want to add tasks, including requirements, implementation steps, testing, and acceptance criteria, all formatted in markdown without extra commentary.
+codex
+# Counter App Engineering Plan v1
+
+## Goal
+Implement a simple counter app with increment/decrement/reset controls, validated by automated tests and basic accessibility checks.
+
+## Scope
+- Single counter value displayed on screen
+- Buttons: Increment (+1), Decrement (-1), Reset (to 0)
+- Optional: configurable step size (default 1) **only if already required by the product/repo**
+
+## Assumptions / Decisions (must be resolved before coding)
+1. **Target platform**: Web UI (browser).
+2. **Project stack**:
+   - If the repo already has a UI framework/test runner: **use the existing stack**.
+   - If no stack exists: bootstrap **Vite + React + TypeScript** with **Playwright** for E2E tests.
+
+## Acceptance Criteria (testable)
+- On initial load, counter displays `0`.
+- Clicking **Increment** increases the displayed value by `1`.
+- Clicking **Decrement** decreases the displayed value by `1` (allow negatives unless explicitly prohibited).
+- Clicking **Reset** sets the displayed value back to `0`.
+- All controls are keyboard accessible (Tab focus, Enter/Space activation).
+- Automated tests cover the behaviors above and pass in CI/local.
+
+## UX / Accessibility Requirements
+- Counter value is visible and clearly labeled (e.g., “Count: 3”).
+- Buttons have clear text labels; no icon-only controls unless they include accessible names.
+- Counter updates are readable by assistive tech (e.g., use an `aria-live="polite"` region or ensure the value is in normal text associated with a label).
+
+## Implementation Plan
+
+### Phase 0 — Repo Discovery (parallelizable)
+- Determine existing tooling (framework, build system, test runner, linting).
+- Decide whether to integrate into an existing app or create a new minimal app folder.
+
+### Phase 1 — UI + State (parallelizable)
+- Create `Counter` UI component/view:
+  - State: `count: number` initialized to `0`
+  - Handlers: `increment()`, `decrement()`, `reset()`
+- Render:
+  - Display label + numeric value
+  - Buttons wired to handlers
+
+### Phase 2 — Tests (parallelizable with Phase 1 once UI contract is agreed)
+- Add automated tests:
+  - **E2E/UI tests** (preferred): verify initial state and all button behaviors via DOM interactions.
+  - If repo already uses unit tests: add unit tests for state transitions in addition to (or instead of) E2E.
+- Include keyboard interaction coverage (at least one test that activates a button via keyboard).
+
+### Phase 3 — Quality Gates
+- Ensure code compiles/builds.
+- Run formatting/linting using repo-standard commands.
+- Confirm tests run in one command locally and are suitable for CI.
+
+## Work Breakdown (with parallelization)
+- Track A: UI implementation (Counter view/component + styling)
+- Track B: Test setup (Playwright config or existing test integration)
+- Track C: CI wiring (if CI exists, add test job; otherwise document the command)
+
+## Deliverables
+- Counter UI implementation in the app
+- Automated tests for all acceptance criteria
+- Updated documentation (minimal): how to run the app and tests (`README` or existing docs location)
+
+## Verification Checklist
+- [ ] App starts/renders without errors
+- [ ] All acceptance criteria manually verified once
+- [ ] Automated tests pass locally
+- [ ] Lint/format pass (or repo-equivalent)
+- [ ] CI (if present) runs tests successfully
+tokens used
+2,072
+# Counter App Engineering Plan v1
+
+## Goal
+Implement a simple counter app with increment/decrement/reset controls, validated by automated tests and basic accessibility checks.
+
+## Scope
+- Single counter value displayed on screen
+- Buttons: Increment (+1), Decrement (-1), Reset (to 0)
+- Optional: configurable step size (default 1) **only if already required by the product/repo**
+
+## Assumptions / Decisions (must be resolved before coding)
+1. **Target platform**: Web UI (browser).
+2. **Project stack**:
+   - If the repo already has a UI framework/test runner: **use the existing stack**.
+   - If no stack exists: bootstrap **Vite + React + TypeScript** with **Playwright** for E2E tests.
+
+## Acceptance Criteria (testable)
+- On initial load, counter displays `0`.
+- Clicking **Increment** increases the displayed value by `1`.
+- Clicking **Decrement** decreases the displayed value by `1` (allow negatives unless explicitly prohibited).
+- Clicking **Reset** sets the displayed value back to `0`.
+- All controls are keyboard accessible (Tab focus, Enter/Space activation).
+- Automated tests cover the behaviors above and pass in CI/local.
+
+## UX / Accessibility Requirements
+- Counter value is visible and clearly labeled (e.g., “Count: 3”).
+- Buttons have clear text labels; no icon-only controls unless they include accessible names.
+- Counter updates are readable by assistive tech (e.g., use an `aria-live="polite"` region or ensure the value is in normal text associated with a label).
+
+## Implementation Plan
+
+### Phase 0 — Repo Discovery (parallelizable)
+- Determine existing tooling (framework, build system, test runner, linting).
+- Decide whether to integrate into an existing app or create a new minimal app folder.
+
+### Phase 1 — UI + State (parallelizable)
+- Create `Counter` UI component/view:
+  - State: `count: number` initialized to `0`
+  - Handlers: `increment()`, `decrement()`, `reset()`
+- Render:
+  - Display label + numeric value
+  - Buttons wired to handlers
+
+### Phase 2 — Tests (parallelizable with Phase 1 once UI contract is agreed)
+- Add automated tests:
+  - **E2E/UI tests** (preferred): verify initial state and all button behaviors via DOM interactions.
+  - If repo already uses unit tests: add unit tests for state transitions in addition to (or instead of) E2E.
+- Include keyboard interaction coverage (at least one test that activates a button via keyboard).
+
+### Phase 3 — Quality Gates
+- Ensure code compiles/builds.
+- Run formatting/linting using repo-standard commands.
+- Confirm tests run in one command locally and are suitable for CI.
+
+## Work Breakdown (with parallelization)
+- Track A: UI implementation (Counter view/component + styling)
+- Track B: Test setup (Playwright config or existing test integration)
+- Track C: CI wiring (if CI exists, add test job; otherwise document the command)
+
+## Deliverables
+- Counter UI implementation in the app
+- Automated tests for all acceptance criteria
+- Updated documentation (minimal): how to run the app and tests (`README` or existing docs location)
+
+## Verification Checklist
+- [ ] App starts/renders without errors
+- [ ] All acceptance criteria manually verified once
+- [ ] Automated tests pass locally
+- [ ] Lint/format pass (or repo-equivalent)
+- [ ] CI (if present) runs tests successfully
+==>   → Refined: planning/PLAN_codex_iter1.md
+==> Iteration 2: reviewing planning/PLAN_codex_iter1.md
+OpenAI Codex v0.93.0 (research preview)
+--------
+workdir: /data/projects/roguelike-1
+model: gpt-5.2
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: auto
+session id: 019c1835-9d1d-7de1-815e-42f9c1d506aa
+--------
+user
+Review this engineering plan file: planning/PLAN_codex_iter1.md
+
+Your task:
+1. Check for: specificity, testability, parallelizability, completeness, clarity
+2. If the plan is EXCELLENT and ready for implementation, output ONLY: APPROVED
+3. If the plan needs improvement, output an IMPROVED version of the entire plan (markdown only, no commentary)
+
+Be strict. Only approve if the plan is truly implementation-ready.
+mcp: mcp_agent_mail starting
+mcp: mcp_agent_mail ready
+mcp startup: ready: mcp_agent_mail
+exec
+/usr/bin/zsh -lc "ls -la planning && sed -n '1,200p' planning/PLAN_codex_iter1.md" in /data/projects/roguelike-1 succeeded in 15ms:
+total 268
+drwxrwxr-x  2 ubuntu ubuntu  4096 Feb  1 08:58 .
+drwxrwxr-x 33 ubuntu ubuntu  4096 Feb  1 06:36 ..
+-rw-r--r--  1 ubuntu ubuntu 10412 Feb  1 08:58 .refine-refine-roguelike-1-085733.log
+-rw-rw-r--  1 ubuntu ubuntu 30917 Feb  1 04:15 PLAN.md
+-rw-r--r--  1 ubuntu ubuntu  3296 Feb  1 08:58 PLAN_codex_iter1.md
+-rw-rw-r--  1 ubuntu ubuntu 20797 Feb  1 03:59 PLAN_codex_iter2.md
+-rw-rw-r--  1 ubuntu ubuntu 23442 Feb  1 04:04 PLAN_codex_iter3.md
+-rw-rw-r--  1 ubuntu ubuntu 26896 Feb  1 04:08 PLAN_codex_iter4.md
+-rw-rw-r--  1 ubuntu ubuntu 30917 Feb  1 04:15 PLAN_codex_iter5.md
+-rw-rw-r--  1 ubuntu ubuntu 91820 Feb  1 03:42 PLAN_v0.md
+-rw-r--r--  1 ubuntu ubuntu  2518 Feb  1 08:34 QA_REPORT.md
+-rw-r--r--  1 ubuntu ubuntu  4745 Feb  1 06:07 descent_spec.md
+# Counter App Engineering Plan v1
+
+## Goal
+Implement a simple counter app with increment/decrement/reset controls, validated by automated tests and basic accessibility checks.
+
+## Scope
+- Single counter value displayed on screen
+
+thinking
+**Reviewing project plan**
+
+I’m considering the plan for the counter app, but it doesn't seem to fit since this is the roguelike-1 repo. The initial plan might just be a placeholder, and I definitely need something more specific. Right now, it’s not implementation-ready because I have unresolved assumptions, and it lacks proper file paths and commands. Without additional context, I can't customize the plan, but I can quickly inspect the repository to gather the necessary details and create a tailored plan. Let's explore the structure!
+exec
+/usr/bin/zsh -lc 'ls -la && rg -n "vite|react|playwright|jest|vitest|cypress" -S . 2>/dev/null | head -n 50' in /data/projects/roguelike-1 succeeded in 72ms:
+total 2192
+drwxrwxr-x 33 ubuntu ubuntu   4096 Feb  1 06:36 .
+drwxr-xr-x 14 ubuntu ubuntu   4096 Feb  1 06:35 ..
+-rw-rw-r--  1 ubuntu ubuntu  30724 Feb  1 03:34 .DS_Store
+drwxrwxr-x  3 ubuntu ubuntu   4096 Feb  1 03:34 .agent
+-rw-rw-r--  1 ubuntu ubuntu    850 Feb  1 03:34 .agent_config.json
+drwxrwxr-x  4 ubuntu ubuntu   4096 Feb  1 03:46 .apr
+drwxrwxr-x  2 ubuntu ubuntu   4096 Feb  1 08:31 .beads
+drwxrwxr-x  6 ubuntu ubuntu   4096 Feb  1 03:34 .claude
+drwxrwxr-x  2 ubuntu ubuntu   4096 Feb  1 03:42 .flywheel
+-rw-rw-r--  1 ubuntu ubuntu     69 Feb  1 03:34 .git
+drwxrwxr-x  4 ubuntu ubuntu   4096 Feb  1 03:34 .github
+-rw-rw-r--  1 ubuntu ubuntu 183088 Feb  1 05:51 .gitignore
+-rw-rw-r--  1 ubuntu ubuntu      0 Feb  1 03:34 .gitignore.tmp
+-rw-rw-r--  1 ubuntu ubuntu    929 Feb  1 03:34 .luarc.json
+-rw-rw-r--  1 ubuntu ubuntu    485 Feb  1 03:34 .mcp.json
+drwxr-xr-x  5 ubuntu ubuntu   4096 Feb  1 06:05 .ntm
+drwxrwxr-x  3 ubuntu ubuntu   4096 Feb  1 03:34 .opencode
+drwxrwxr-x  2 ubuntu ubuntu   4096 Feb  1 03:34 .ralph-tui
+drwxrwxr-x  3 ubuntu ubuntu   4096 Feb  1 06:36 .ruff_cache
+
+
+thinking
+**Evaluating project alignment**
+
+I see this repo is a C++/Lua game engine, and the current plan seems focused on a counter app, which doesn't align. The user just asked for a review of the plan file, but it must be ready for implementation. I think we need an improved version featuring descent or roguelike elements. Maybe “Counter App” is just a placeholder, but I can’t be sure without more context about their intentions. I’ll aim to revise it toward a roguelike-specific plan.
+thinking
+**Improving the project plan**
+
+The user asked to improve the plan, and I can adapt it for a counter app within the repo's environment. It seems possible to implement the counter app as a minimal web demo in `test.html`. There's the `BUILDING_FOR_WEB` note about Emscripten builds, so that’s a consideration. I think reviewing the engineering plan could help us refine it by doing some repo exploration. It might help to tie the plan to the existing UI and build system, but I need to check the README for context first.
+exec
+/usr/bin/zsh -lc "sed -n '1,200p' README.md && echo '---' && sed -n '1,200p' Justfile && echo '---' && ls -la src | head" in /data/projects/roguelike-1 succeeded in 20ms:
+# Game Jam Template
+
+![Tests](https://github.com/urgood2/TheGameJamTemplate/actions/workflows/tests.yml/badge.svg?branch=master)
+
+A C++20 + Lua game-jam scaffold built on Raylib. It comes with a fast render pipeline, battle-ready combat systems, card/ability tooling, UI/layout helpers, shader pipelines (native + WebGL), and profiling/debug utilities so you can iterate quickly.
+
+## Highlights
+- Lua-first gameplay scripting with exposed engine systems (camera, physics, particles, timers, UI, combat, wand/cards, shaders)
+- Layered render queue with shader batching, fullscreen effects, and web-compatible shader variants
+- Rich UI toolkit (layouts, localization, controller navigation, tooltips, typing text, scroll panes, progress bars)
+- Profiling and debug support (Tracy integration, Lua debugging hooks)
+- Ownership watermarking system to help prevent casual game theft on itch.io (see `docs/guides/OWNERSHIP_SYSTEM.md`)
+- Targets desktop and web (Emscripten) with shared assets
+
+## Getting Started
+Prerequisites: CMake (≥3.14), a C++20 toolchain, and [just](https://github.com/casey/just). For web builds you also need [emsdk](https://emscripten.org/).
+
+Clone (init submodules if present):
+```bash
+git clone <repo-url>
+
+
+
+thinking
+**Proposing a better plan**
+
+I’ve noted a mismatch in the plan for the "counter app." To address this, I think we should come up with a more specific and implementable proposal. Since the repo involves C++ with Raylib and Lua, I can suggest adding a counter demo as a new UI scene in the game template. This could include a count variable, plus/minus/reset buttons, and unit tests written in C++ or Lua. However, I need to avoid overfitting the plan, while also integrating it into the existing UI toolkit.
+thinking
+**Improving the plan for CounterDemoScene**
+
+I can propose a plan that leverages the existing stack by creating a minimal `CounterDemoScene` in Lua with the UI toolkit, while integrating C++. The focus should be on specificity, testability, parallelizability, completeness, and clarity. The plan will need to outline repo discovery, file paths, commands, and acceptance criteria for tests, with detailed steps. Inclusion of specific workflow instructions is essential, like using Beads and agent mail. I should mention using `just` commands for building/testing and outline which C++ unit tests to add for state transitions.
+thinking
+**Refining the Counter App Testing Plan**
+
+I’m considering whether the `test-descent` tests apply for the counter app. It’s possible that there are existing UI components I could leverage, and I should write new C++ unit tests focused on button activation via keyboard. Since similar tests exist for controller navigation, I can propose adding tests with the existing UI toolkit functions to verify button triggers and count updates. I need to outline which files to modify, along with commands, and possibly inspect the `src/systems/ui` directory to get a better grasp of the architecture.
+exec
+/usr/bin/zsh -lc "ls -la src/systems | head -n 80 && echo '---' && ls -la assets/scripts | head -n 80 && echo '---' && ls -la tests/unit | head -n 80" in /data/projects/roguelike-1 succeeded in 34ms:
+total 244
+drwxrwxr-x 43 ubuntu ubuntu  4096 Feb  1 03:34 .
+drwxrwxr-x  7 ubuntu ubuntu  4096 Feb  1 03:34 ..
+-rw-rw-r--  1 ubuntu ubuntu  6148 Feb  1 03:34 .DS_Store
+drwxrwxr-x  2 ubuntu ubuntu  4096 Feb  1 03:34 ai
+-rw-rw-r--  1 ubuntu ubuntu 46394 Feb  1 03:34 anim_system.cpp
+-rw-rw-r--  1 ubuntu ubuntu  4692 Feb  1 03:34 anim_system.hpp
+drwxrwxr-x  2 ubuntu ubuntu  4096 Feb  1 03:34 camera
+drwxrwxr-x  2 ubuntu ubuntu  4096 Feb  1 03:34 chipmunk_objectivec
+drwxrwxr-x  2 ubuntu ubuntu  4096 Feb  1 03:34 collision
+drwxrwxr-x  2 ubuntu ubuntu  4096 Feb  1 03:34 composable_mechanics
+drwxrwxr-x  2 ubuntu ubuntu  4096 Feb  1 03:34 entity_gamestate_management
+drwxrwxr-x  2 ubuntu ubuntu  4096 Feb  1 03:34 event
+drwxrwxr-x  2 ubuntu ubuntu  4096 Feb  1 03:34 factory
+drwxrwxr-x  2 ubuntu ubuntu  4096 Feb  1 03:34 fade
+drwxrwxr-x  2 ubuntu ubuntu  4096 Feb  1 03:34 gif
+drwxrwxr-x  2 ubuntu ubuntu  4096 Feb  1 03:34 gui_indicator
+drwxrwxr-x  2 ubuntu ubuntu  4096 Feb  1 03:34 input
+drwxrwxr-x  2 ubuntu ubuntu  4096 Feb  1 03:34 layer
+drwxrwxr-x  2 ubuntu ubuntu  4096 Feb  1 03:34 ldtk_loader
+
+
+
+thinking
+**Planning UI Demo Improvements**
+
+I need to devise a plan for enhancing the "Counter App" as a UI demo within the existing engine. This will involve using the current testing framework, including gtest and Lua tests. The steps should be explicit: I'll add a new Lua demo and a menu entry, create a scene with the counter, and include C++ unit tests for UI updates. I'll ensure that the demo meets keyboard accessibility standards and revise acceptance criteria to align with the engine’s input conventions.
+thinking
+**Structuring the Testing Plan**
+
+I want to use existing patterns from `test_controller_nav.cpp` for my plan. It should clearly specify commands like `just build-debug`, `just test`, and others related to UI and lint checks. Including the Beads process can be beneficial; I can mention triaging with BV and claiming beads under a "Process" section, though that might not be expected in the plan. However, to complete the repo, I can add a "Workflow" section. I need to ensure the markdown is clean and that the goals, scope, and assumptions are clear and resolved.
+thinking
+**Clarifying the Development Plan**
+
+I need to replace vague decisions with concrete actions. My plan involves using C++20 and the Lua stack to implement a demo scene and integrate it with the UI system, while also ensuring testing through gtest or a Lua test harness. I should provide a detailed, step-by-step guide with file paths, acceptance criteria, and tasks. Including edge cases is essential, like handling negatives and large numbers. I should omit the optional step size unless deemed necessary, and ensure the plan is specific without labeling it as "APPROVED." I’ll check existing demos for patterns as well.
+exec
+/usr/bin/zsh -lc 'ls -la assets/scripts/demos && rg -n "demos" assets/scripts -S | head -n 50' in /data/projects/roguelike-1 succeeded in 62ms:
+total 132
+drwxrwxr-x  2 ubuntu ubuntu  4096 Feb  1 03:34 .
+drwxrwxr-x 27 ubuntu ubuntu  4096 Feb  1 06:07 ..
+-rw-rw-r--  1 ubuntu ubuntu 13709 Feb  1 03:34 goap_ai_demo.lua
+-rw-rw-r--  1 ubuntu ubuntu 17926 Feb  1 03:34 lighting_demo.lua
+-rw-rw-r--  1 ubuntu ubuntu 43589 Feb  1 03:34 text_builder_demo.lua
+-rw-rw-r--  1 ubuntu ubuntu 43668 Feb  1 03:34 ui_filler_demo.lua
+assets/scripts/examples/inventory_grid_demo.lua:94:local demoState = {
+assets/scripts/examples/inventory_grid_demo.lua:184:    demoState.cardRegistry[entity] = scriptData
+assets/scripts/examples/inventory_grid_demo.lua:222:        group = demoState.timerGroup,
+assets/scripts/examples/inventory_grid_demo.lua:243:    local cardData = demoState.cardRegistry[item]
+assets/scripts/examples/inventory_grid_demo.lua:367:    demoState.grids = {}
+assets/scripts/examples/inventory_grid_demo.lua:368:    demoState.stackBadges = {}
+assets/scripts/examples/inventory_grid_demo.lua:369:    demoState.gridOnscreenX = x
+assets/scripts/examples/inventory_grid_demo.lua:370:    demoState.gridOnscreenY = y
+assets/scripts/examples/inventory_grid_demo.lua:374:        local visible = (tabId == demoState.activeTab)
+assets/scripts/examples/inventory_grid_demo.lua:376:        demoState.grids[tabId] = gridEntity
+assets/scripts/examples/inventory_grid_demo.lua:377:        demoState.stackBadges[tabId] = {}
+assets/scripts/examples/inventory_grid_demo.lua:380:    demoState.gridEntity = demoState.grids[demoState.activeTab]
+assets/scripts/examples/inventory_grid_demo.lua:381:    log_debug("[InventoryGridDemo] All grids created, active: " .. demoState.activeTab)
+
+thinking
+**Exploring demo scripts**
+
+I'm looking at existing demo scripts to model some UI creation. I'll start by inspecting `ui_filler_demo.lua` and `inventory_grid_demo` for any patterns. I plan to open a relevant snippet first and read the initial portion of `assets/scripts/demos/ui_filler_demo.lua` to see how they've structured things. This should give me useful insights on how to approach my own scripting!
+exec
+/usr/bin/zsh -lc "sed -n '1,220p' assets/scripts/demos/ui_filler_demo.lua" in /data/projects/roguelike-1 succeeded in 10ms:
+--[[
+================================================================================
+UI FILLER DEMO - Comprehensive Feature Showcase
+================================================================================
+Demonstrates ALL UI filler capabilities with staggered display and labels.
+Each feature is shown individually with its name and code example.
+
+Usage:
+    local UIFillerDemo = require("demos.ui_filler_demo")
+    UIFillerDemo.start()    -- Start the demo
+    UIFillerDemo.stop()     -- Stop and cleanup
+
+Environment variables:
+    RUN_UI_FILLER_DEMO=1    -- Auto-start demo in main menu
+    AUTO_EXIT_AFTER_DEMO=1  -- Exit after demo completes
+]]
+
+local UIFillerDemo = {}
+
+local dsl = require("ui.ui_syntax_sugar")
+
+thinking
+**Planning a counter app in Lua**
+
+I’m thinking of implementing the counter app as a demo in Lua, specifically under `assets/scripts/demos/counter_demo.lua`, using a domain-specific language (DSL). I should also add a Lua-based test under `assets/scripts/tests/test_counter_demo.lua`, utilizing deterministic timers. Additionally, it might be beneficial to include a C++ unit test to run the script and check its state. I see that there are existing Lua files within the tests directory, so I’ll inspect `tests/unit/test_feature_showcase.lua` to gather more insights.
+exec
+/usr/bin/zsh -lc "sed -n '1,200p' tests/unit/test_feature_showcase.lua && echo '---' && rg -n \"RUN_.*DEMO\" -S assets/scripts | head -n 50 && echo '---' && rg -n \"AUTO_EXIT_AFTER_DEMO\" -S assets/scripts | head -n 50" in /data/projects/roguelike-1 succeeded in 111ms:
+--[[
+    Test for feature_showcase.lua
+
+    This test validates that FeatureShowcase:
+    1. Module exists with required API (init, show, hide, switchCategory, cleanup)
+    2. Category constants are properly defined
+    3. State management works correctly
+    4. Integration with verifier works
+
+    Note: Full UI rendering tests require the game engine.
+    These tests focus on standalone logic validation.
+
+    Run standalone: lua tests/unit/test_feature_showcase.lua
+]]
+
+local test_feature_showcase = {}
+
+-- Test that FeatureShowcase module exists and has required API
+function test_feature_showcase.test_module_exists()
+    local ok, FeatureShowcase = pcall(require, "ui.showcase.feature_showcase")
+
+thinking
+**Exploring testing mechanisms**
+
+I'm thinking about Lua tests, which can run standalone, but gtest might not handle them directly. However, I see there are `.lua` files in tests/unit that I can run with `lua tests/unit/...`. The repo uses gtest too, and running `just test` will compile and run those C++ tests, but they might not cover the Lua tests. Maybe I can add a Lua-only test, like `lua tests/unit/test_counter_demo.lua`, and see if there’s a way to integrate it with gtest. I'll need to check for existing mechanisms in CMake or the test harness.
+exec
+/usr/bin/zsh -lc "rg -n \"tests/unit/.*\\\\.lua|test_.*\\\\.lua\" CMakeLists.txt tests -S | head -n 80" in /data/projects/roguelike-1 succeeded in 53ms:
+tests/unit/test_feature_showcase.lua:13:    Run standalone: lua tests/unit/test_feature_showcase.lua
+tests/unit/test_showcase_cards.lua:14:    Run standalone: lua tests/unit/test_showcase_cards.lua
+tests/unit/test_showcase_verifier.lua:10:    Run standalone: lua tests/unit/test_showcase_verifier.lua
+
+
+thinking
+**Analyzing testing strategies**
+
+So it seems those Lua tests might not actually run in CI. I’m thinking that the `just test` might only be for building and running `./build/tests/unit_tests`. That makes Lua tests optional. The plan should definitely allow for CI testing, so I need to add C++ unit tests. The counter functionality is in Lua, which complicates things for C++. Maybe I could implement the counter in C++ in the UI system for easier testing and integrate it with Lua. We can still handle model and UI integration tests with the existing components.
+thinking
+**Defining testing strategies**
+
+The plan needs to clearly specify how to conduct the tests, so I’ll have to research the UI system functions. I can propose tests at multiple levels: one for the CounterModel as a unit test and another for the UI update using the existing UI testing harness utilized in other tests. I’ll need to discover patterns for simulating clicks. I think I should check out `tests/unit/test_ui_components.cpp` for a minimal harness to guide me.
+exec
+/usr/bin/zsh -lc "sed -n '1,220p' tests/unit/test_ui_components.cpp" in /data/projects/roguelike-1 succeeded in 9ms:
+// tests/unit/test_ui_components.cpp
+// Unit tests for the split UI component system
+
+#include <gtest/gtest.h>
+#include "systems/ui/core/ui_components.hpp"
+#include "systems/ui/ui_data.hpp"
+
+using namespace ui;
+
+class UIComponentsTest : public ::testing::Test {
+protected:
+    void SetUp() override {}
+    void TearDown() override {}
+};
+
+// =============================================================================
+// UIElementCore Tests
+// =============================================================================
+
+TEST_F(UIComponentsTest, UIElementCore_DefaultValues) {
+
+thinking
+**Evaluating code files**
+
+I’m checking a file that focuses on pure configurations and not on interactions. It seems like `test_controller_nav.cpp` might handle some simulations. I think I need to inspect the relevant sections to understand it better. This could help me figure out how everything connects, especially if there’s interaction involved elsewhere. Let’s stay curious and keep digging into the details!
+exec
+/usr/bin/zsh -lc "sed -n '1,260p' tests/unit/test_controller_nav.cpp" in /data/projects/roguelike-1 succeeded in 8ms:
+#include <gtest/gtest.h>
+
+#include "sol/sol.hpp"
+
+#include "systems/input/controller_nav.hpp"
+#include "util/error_handling.hpp"
+
+using controller_nav::NavManager;
+using controller_nav::NavGroup;
+
+namespace {
+
+struct Counter {
+    int focusCalls = 0;
+    int unfocusCalls = 0;
+};
+
+sol::state& shared_lua() {
+    static sol::state lua{};
+    static const bool initialized = [] {
+
+
+
+
+thinking
+**Testing controller navigation**
+
+I’m figuring out how to test the controller navigation by calling the select_current on a group. For the counter demo, the idea is to check if selecting a button triggers a callback that increments the counter. This callback actually calls a Lua function, and I’m considering creating a Lua callback that increments a counter variable accessible from C++ and updates the UI. I think I could also do state transition tests in Lua without the engine, which could be effective for continuous integration.
+thinking
+**Implementing CounterDemo**
+
+I’m planning to implement the `CounterDemo` module with functions like `create_model()` and `increment(model)` for the UI, which will utilize the model. The gtest will call Lua functions through sol to verify results. However, I should specify my plan better. Implementing the model in C++ could avoid Lua tests, but testing through both Lua and C++ seems more manageable. I also need to consider parallel execution, as the UI module and tests can run together. We need to resolve assumptions and decisions before coding!
+thinking
+**Improving the Counter Demo Plan**
+
+I’m putting together an improved plan for the `Counter Demo Engineering Plan v1`. The goal is to add a simple counter UI demo scene to the game template, accessible from the main menu through an environment variable or menu entry, along with automated tests for the model and interaction. 
+
+The scope includes creating a Lua-only module at `assets/scripts/demos/counter_demo.lua` and integrating it into `assets/scripts/core/main.lua`, gated by the env var `RUN_COUNTER_DEMO`. For tests, I’ll set up a C++ unit test file that uses sol to require the module and verify actions like incrementing, decrementing, and resetting the counter, while ensuring negative inputs are handled. I’ll also decide on inputs like click or Enter/Space. Acceptance criteria will include setting the initial count to 0, updating button activations, and ensuring access via keyboard and controller.
+thinking
+**Testing Keyboard Accessibility**
+
+To ensure keyboard accessibility, I can verify if the module registers navigation callbacks in the unit test. It might be useful to check that UI buttons include `force_focus` and are part of the navigation group, though that could get complicated. A simpler approach could be testing if `get_actions()` returns necessary functions or confirming the existence of button callback functions. 
+
+I’d prefer to manage accessibility acceptance via manual testing combined with existing baseline tests. However, the plan needs to be easily testable. I'll implement unit tests for the model and create an integration test that uses embedded Lua to confirm that `CounterDemo.build_ui_def()` produces a correct DSL tree. I'll also inspect the UI DSL to ensure it’s purely data definitions, likely returning tables, so I can perform tests by building the DSL tree and simulating callbacks through the stored functions.
+exec
+/usr/bin/zsh -lc "sed -n '1,240p' assets/scripts/ui/ui_syntax_sugar.lua" in /data/projects/roguelike-1 succeeded in 9ms:
+--[[
+================================================================================
+UI DSL (ui_syntax_sugar) - Declarative UI Tree Builder
+================================================================================
+Build UI hierarchies with readable, declarative syntax.
+
+BASIC USAGE:
+    local dsl = require("ui.ui_syntax_sugar")
+
+    local myUI = dsl.root {
+        config = { color = "blackberry", padding = 10 },
+        children = {
+            dsl.vbox {
+                config = { spacing = 6 },
+                children = {
+                    dsl.text("Title", { fontSize = 24, color = "white" }),
+                    dsl.button("Click Me", { onClick = fn, color = "blue" }),
+                    dsl.progressBar({ getValue = fn, fullColor = "green" }),
+                }
+            }
+exec
+/usr/bin/zsh -lc "sed -n '1310,1405p' assets/scripts/core/main.lua" in /data/projects/roguelike-1 succeeded in 10ms:
+    if runUIValidatorTests then
+        local ok, test_module = pcall(require, "tests.run_ui_validator_tests")
+        if ok and test_module and test_module.run then
+            log_debug("[UIValidator] Running tests...")
+            local success = test_module.run()
+            if success then
+                log_debug("[UIValidator] All tests passed!")
+            else
+                log_warn("[UIValidator] Some tests FAILED - check console output")
+            end
+        else
+            log_warn("[UIValidator] Could not load test module: " .. tostring(test_module))
+        end
+    end
+
+    local runGOAPTests = os.getenv("RUN_GOAP_TESTS") == "1"
+    if runGOAPTests then
+        local ok, test_module = pcall(require, "tests.test_goap_api")
+        if ok and test_module and test_module.run then
+            log_debug("[GOAP Tests] Running GOAP API tests...")
+
+
+
+
+
+thinking
+**Creating Project Plan**
+
+- **Title:** Project Summary
+- **Context:** This project utilizes C++20, Lua, and Raylib, with testing managed by gtest and executed via `just test`.
+- **Goals:** [Define project goals]
+- **Non-goals:** [Define what’s not included]
+- **Implementation Decisions:** Develop as a Lua demo and pure model; integrate into the main menu via environment variable.
+- **Acceptance Criteria:** Establish testable cases and methods.
+- **Work Plan:** Outline steps with checkboxes and associated commands.
+- **Parallelization:** Identify tracks and dependencies.
+- **Testing Plan:** Incorporate new tests in `tests/unit/test_counter_model.cpp` and optional manual execution.
+- **Rollout:** [Specify rollout strategy]
+- **Documentation:** Update `README.md`, possibly including notes under `assets/scripts/demos/` or `docs`. A snippet will be added to `README.md` based on guidelines.
+thinking
+# Counter Demo Engineering Plan v1 (roguelike-1)
+
+## Goal
+Implement in-engine counter UI demo and tests.
+
+## Scope
+New Lua model module, demo UI module, integration.
+
+## Decisions
+Use existing stack; no new frontend build.
+
+## Acceptance Criteria
+- Unit: Test model functions.
+- Integration: 
+  - Demo starts with environment variable.
+  - Count changes via callbacks.
+  - `AUTO_EXIT_AFTER_DEMO=1` exits with code 0 after verifying smoke test.
+  - For automated integration, run in-engine with `AUTO_EXIT_AFTER_TEST=1`.
+thinking
+## Enhancing Demo Testability
+
+For the demo, we can add optional settings like `AUTO_EXIT_AFTER_DEMO=1` and `AUTO_EXIT_DEMO_SECONDS=...`. However, tests shouldn't depend on interactive elements. I could introduce a new test mode called `RUN_COUNTER_DEMO_TESTS=1` within `counter_demo.lua` to run a script that increments values and asserts outcomes.
+
+To maintain a testable plan, I propose:
+
+- **Unit Tests (CI):** Integrate a gtest C++ test in `tests/unit/test_counter_model_lua.cpp` that uses sol for Lua model verification, ensuring coverage with `just test`.
+
+- **In-Engine Smoke Test (Optional):** Execute `RUN_COUNTER_DEMO=1 AUTO_EXIT_AFTER_DEMO=1` with the expectation of exit code 0 and a log line indicating completion. When `AUTO_EXIT_AFTER_DEMO=1`, the demo should automatically drive its actions, validate counts, and exit appropriately.
+thinking
+## Enhancing the Counter Demo 
+
+I see an opportunity to implement an automated runtime test, which is great! I’ll modify `counter_demo.lua` to include an optional self-test. If the environment variable `RUN_COUNTER_DEMO_SELFTEST=1` is set, it will run a sequence of increment, decrement, and reset operations, asserting the expected values. If successful, it will log the result and exit with code 0 if `AUTO_EXIT_AFTER_DEMO=1`.
+
+However, running this self-test in CI might require headless execution, which is not in the plan. Acceptance criteria state that tests should pass both in CI and locally.
+
+I’ll ensure that `just test` covers the model logic, but `just test-descent-headless` is optional. Also, I'll address accessibility by focusing on the navigation ordering for controllers. We can integrate with `controller_nav`; for example, through `controller_nav.add_entity("ui", <button_entity>)`. However, it seems likely that the UI box automatically registers focus in Lua. 
+
+So, our acceptance criteria will state that buttons must be focusable through existing controller navigation, and we’ll verify this manually by ensuring the Tab and arrow keys can focus and Enter or Space activates them.
+thinking
+# Improved Engineering Plan
+
+1. **Background/Discovery:** Confirm no new dependencies and locate the main menu integration point.
+2. **Implementation:** 
+   - Create model file.
+   - Create demo UI file.
+   - Integrate into core/main.
+   - Add tests.
+3. **Tests:** Implement gtest file.
+4. **Documentation:** Update README file to reflect changes.
+5. **Verification:** Run necessary commands to ensure functionality.
+6. **Parallelization:** Establish tracks and dependencies. 
+
+*Note: Ensure the system supports necessary configurations and file reservations as needed for implementation.*
+codex
+# Counter Demo Engineering Plan v1 (roguelike-1)
+
+## Goal
+Add a small, in-engine “Counter Demo” UI screen (increment/decrement/reset) that can be launched via an environment variable, with automated unit tests validating the counter logic and a reproducible smoke-run path.
+
+## Context (repo-specific)
+- Runtime: C++20 + Lua on Raylib (native + web/Emscripten builds).
+- Build/test entrypoints: `just build-debug`, `just test` (GoogleTest).
+- UI authoring: Lua UI DSL via `assets/scripts/ui/ui_syntax_sugar.lua`.
+- Main menu bootstrap: `assets/scripts/core/main.lua` already supports env-var gated demos/tests (e.g., `RUN_UI_FILLER_DEMO=1`).
+
+## Non-Goals
+- No new frontend stack (no Vite/React/Playwright).
+- No persistence, analytics, save/load, or network.
+- No changes under `assets/scripts/descent` (avoid determinism lint risks).
+
+## Decisions (resolved before coding)
+- Implement the counter as a Lua demo module under `assets/scripts/demos/`.
+- Keep counter logic in a pure-Lua “model” module with zero engine/UI dependencies to make unit testing trivial.
+- Integrate demo launch into `assets/scripts/core/main.lua` behind `RUN_COUNTER_DEMO=1`.
+- Add GoogleTest coverage (runs under `just test`) by embedding Lua via `sol` to test the pure-Lua model.
+
+## Acceptance Criteria (specific + testable)
+### Runtime behavior
+- Launching the game with `RUN_COUNTER_DEMO=1` shows a counter panel on screen.
+- Initial displayed value is `Count: 0`.
+- Clicking/tapping buttons updates the displayed value:
+  - `Increment` increases by `+1`
+  - `Decrement` decreases by `-1` (negatives allowed)
+  - `Reset` sets to `0`
+- Demo can be cleanly stopped/removed without leaving orphan UI entities (no errors in logs during stop).
+
+### Automated tests (CI/local)
+- `just test` passes and includes unit tests covering:
+  - Initial state (`0`)
+  - Increment, decrement, reset
+  - Multiple operations sequence (e.g., `0 -> 1 -> 2 -> 1 -> 0`)
+  - Input validation defaults (e.g., nil/invalid step uses default `1` if step is supported)
+
+### Accessibility / Input (engine-appropriate)
+- Buttons have clear text labels (`Increment`, `Decrement`, `Reset`).
+- Buttons are activatable via keyboard/controller navigation using the repo’s existing UI/controller-nav behavior (manual verification).
+
+## Public Interface / Files (concrete)
+### New Lua modules
+- `assets/scripts/demos/counter_model.lua`
+  - Pure Lua, no `ui.*`, no `globals`, no `registry`.
+  - API:
+    - `new(initialCount?) -> model`
+    - `increment(model, step?)`
+    - `decrement(model, step?)`
+    - `reset(model)`
+    - `get(model) -> number`
+- `assets/scripts/demos/counter_demo.lua`
+  - Depends on `ui.ui_syntax_sugar` and `demos.counter_model`.
+  - API:
+    - `start()` spawns UI
+    - `stop()` cleans up spawned UI and restores any menu offsets if changed
+
+### Modified integration point
+- `assets/scripts/core/main.lua`
+  - Add env var gate:
+    - `RUN_COUNTER_DEMO=1` starts demo after a short timer (pattern matches `RUN_UI_FILLER_DEMO`)
+    - Optional: `AUTO_EXIT_AFTER_DEMO=1` exits after a fixed delay (for smoke runs)
+
+### New C++ unit test
+- `tests/unit/test_counter_model_lua.cpp`
+  - Uses `sol::state` to set `package.path` to include `assets/scripts`.
+  - Requires `demos.counter_model` and asserts acceptance sequences.
+
+## Implementation Steps
+### Phase 0 — Process + Coordination
+- Triage a ready bead with `BV`, claim it (`in_progress`).
+- Reserve files (exclusive) before edits:
+  - `assets/scripts/core/main.lua`
+  - `assets/scripts/demos/counter_demo.lua`
+  - `assets/scripts/demos/counter_model.lua`
+  - `tests/unit/test_counter_model_lua.cpp`
+- Notify dependents via Agent Mail when the bead is closed.
+
+### Phase 1 — Pure Counter Model (unblocks tests)
+- Implement `assets/scripts/demos/counter_model.lua` as pure state + functions.
+- Define step behavior:
+  - Default step = `1`
+  - If `step` provided, coerce to integer `>= 1` (or explicitly reject invalid and use default).
+
+### Phase 2 — Demo UI Module
+- Implement `assets/scripts/demos/counter_demo.lua`:
+  - Create a single root panel using `dsl.root { ... }`.
+  - Display uses either:
+    - `dsl.dynamicText(function() return "Count: " .. model.count end, ...)`, or
+    - a text node that is re-rendered via a small update hook (choose whichever matches existing patterns best).
+  - Buttons wire to model ops and ensure displayed text updates.
+
+### Phase 3 — Wire Into Main Menu
+- In `assets/scripts/core/main.lua`, add:
+  - `local runCounterDemo = os.getenv("RUN_COUNTER_DEMO") == "1"`
+  - If true: `require("demos.counter_demo").start()` after a short delay (e.g., `timer.after(0.5, ...)`).
+  - Optional auto-exit: if `AUTO_EXIT_AFTER_DEMO=1`, exit after a fixed duration (e.g., 5–10s) to allow smoke runs.
+
+### Phase 4 — Unit Tests (GoogleTest + Sol)
+- Add `tests/unit/test_counter_model_lua.cpp`:
+  - Configure `sol::state lua; lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::math, sol::lib::table);`
+  - Set `package.path` to include `<repo>/assets/scripts/?.lua` and `<repo>/assets/scripts/?/init.lua`.
+  - `auto model = lua.require_script("demos.counter_model", ... )` (or `lua["require"]("demos.counter_model")`).
+  - Call exported functions and assert count values.
+
+### Phase 5 — Verification + Quality Gates
+- Local verification commands (must be green):
+  - `just test`
+  - `just lint-descent-determinism`
+- Smoke-run demo:
+  - Build: `just build-debug`
+  - Run: `RUN_COUNTER_DEMO=1 AUTO_EXIT_AFTER_DEMO=1 ./build/raylib-cpp-cmake-template`
+  - Expect clean exit and no error logs related to UI spawning/removal.
+
+## Parallelization Plan
+- Track A (Model): `counter_model.lua` (independent, start first).
+- Track B (Tests): `test_counter_model_lua.cpp` (depends only on Track A API).
+- Track C (UI + Integration): `counter_demo.lua` + `core/main.lua` wiring (can proceed once Track A API is fixed).
+
+## Deliverables
+- `assets/scripts/demos/counter_model.lua`
+- `assets/scripts/demos/counter_demo.lua`
+- `assets/scripts/core/main.lua` demo launch hook
+- `tests/unit/test_counter_model_lua.cpp`
+- Verified commands documented in the bead closure message (Agent Mail)
+
+## Done Checklist
+- [ ] Bead claimed and later closed; Agent Mail notification sent
+- [ ] All reserved files released
+- [ ] `just test` passes
+- [ ] `just lint-descent-determinism` passes
+- [ ] Smoke-run works with `RUN_COUNTER_DEMO=1 AUTO_EXIT_AFTER_DEMO=1`
+tokens used
+50,210
+# Counter Demo Engineering Plan v1 (roguelike-1)
+
+## Goal
+Add a small, in-engine “Counter Demo” UI screen (increment/decrement/reset) that can be launched via an environment variable, with automated unit tests validating the counter logic and a reproducible smoke-run path.
+
+## Context (repo-specific)
+- Runtime: C++20 + Lua on Raylib (native + web/Emscripten builds).
+- Build/test entrypoints: `just build-debug`, `just test` (GoogleTest).
+- UI authoring: Lua UI DSL via `assets/scripts/ui/ui_syntax_sugar.lua`.
+- Main menu bootstrap: `assets/scripts/core/main.lua` already supports env-var gated demos/tests (e.g., `RUN_UI_FILLER_DEMO=1`).
+
+## Non-Goals
+- No new frontend stack (no Vite/React/Playwright).
+- No persistence, analytics, save/load, or network.
+- No changes under `assets/scripts/descent` (avoid determinism lint risks).
+
+## Decisions (resolved before coding)
+- Implement the counter as a Lua demo module under `assets/scripts/demos/`.
+- Keep counter logic in a pure-Lua “model” module with zero engine/UI dependencies to make unit testing trivial.
+- Integrate demo launch into `assets/scripts/core/main.lua` behind `RUN_COUNTER_DEMO=1`.
+- Add GoogleTest coverage (runs under `just test`) by embedding Lua via `sol` to test the pure-Lua model.
+
+## Acceptance Criteria (specific + testable)
+### Runtime behavior
+- Launching the game with `RUN_COUNTER_DEMO=1` shows a counter panel on screen.
+- Initial displayed value is `Count: 0`.
+- Clicking/tapping buttons updates the displayed value:
+  - `Increment` increases by `+1`
+  - `Decrement` decreases by `-1` (negatives allowed)
+  - `Reset` sets to `0`
+- Demo can be cleanly stopped/removed without leaving orphan UI entities (no errors in logs during stop).
+
+### Automated tests (CI/local)
+- `just test` passes and includes unit tests covering:
+  - Initial state (`0`)
+  - Increment, decrement, reset
+  - Multiple operations sequence (e.g., `0 -> 1 -> 2 -> 1 -> 0`)
+  - Input validation defaults (e.g., nil/invalid step uses default `1` if step is supported)
+
+### Accessibility / Input (engine-appropriate)
+- Buttons have clear text labels (`Increment`, `Decrement`, `Reset`).
+- Buttons are activatable via keyboard/controller navigation using the repo’s existing UI/controller-nav behavior (manual verification).
+
+## Public Interface / Files (concrete)
+### New Lua modules
+- `assets/scripts/demos/counter_model.lua`
+  - Pure Lua, no `ui.*`, no `globals`, no `registry`.
+  - API:
+    - `new(initialCount?) -> model`
+    - `increment(model, step?)`
+    - `decrement(model, step?)`
+    - `reset(model)`
+    - `get(model) -> number`
+- `assets/scripts/demos/counter_demo.lua`
+  - Depends on `ui.ui_syntax_sugar` and `demos.counter_model`.
+  - API:
+    - `start()` spawns UI
+    - `stop()` cleans up spawned UI and restores any menu offsets if changed
+
+### Modified integration point
+- `assets/scripts/core/main.lua`
+  - Add env var gate:
+    - `RUN_COUNTER_DEMO=1` starts demo after a short timer (pattern matches `RUN_UI_FILLER_DEMO`)
+    - Optional: `AUTO_EXIT_AFTER_DEMO=1` exits after a fixed delay (for smoke runs)
+
+### New C++ unit test
+- `tests/unit/test_counter_model_lua.cpp`
+  - Uses `sol::state` to set `package.path` to include `assets/scripts`.
+  - Requires `demos.counter_model` and asserts acceptance sequences.
+
+## Implementation Steps
+### Phase 0 — Process + Coordination
+- Triage a ready bead with `BV`, claim it (`in_progress`).
+- Reserve files (exclusive) before edits:
+  - `assets/scripts/core/main.lua`
+  - `assets/scripts/demos/counter_demo.lua`
+  - `assets/scripts/demos/counter_model.lua`
+  - `tests/unit/test_counter_model_lua.cpp`
+- Notify dependents via Agent Mail when the bead is closed.
+
+### Phase 1 — Pure Counter Model (unblocks tests)
+- Implement `assets/scripts/demos/counter_model.lua` as pure state + functions.
+- Define step behavior:
+  - Default step = `1`
+  - If `step` provided, coerce to integer `>= 1` (or explicitly reject invalid and use default).
+
+### Phase 2 — Demo UI Module
+- Implement `assets/scripts/demos/counter_demo.lua`:
+  - Create a single root panel using `dsl.root { ... }`.
+  - Display uses either:
+    - `dsl.dynamicText(function() return "Count: " .. model.count end, ...)`, or
+    - a text node that is re-rendered via a small update hook (choose whichever matches existing patterns best).
+  - Buttons wire to model ops and ensure displayed text updates.
+
+### Phase 3 — Wire Into Main Menu
+- In `assets/scripts/core/main.lua`, add:
+  - `local runCounterDemo = os.getenv("RUN_COUNTER_DEMO") == "1"`
+  - If true: `require("demos.counter_demo").start()` after a short delay (e.g., `timer.after(0.5, ...)`).
+  - Optional auto-exit: if `AUTO_EXIT_AFTER_DEMO=1`, exit after a fixed duration (e.g., 5–10s) to allow smoke runs.
+
+### Phase 4 — Unit Tests (GoogleTest + Sol)
+- Add `tests/unit/test_counter_model_lua.cpp`:
+  - Configure `sol::state lua; lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::math, sol::lib::table);`
+  - Set `package.path` to include `<repo>/assets/scripts/?.lua` and `<repo>/assets/scripts/?/init.lua`.
+  - `auto model = lua.require_script("demos.counter_model", ... )` (or `lua["require"]("demos.counter_model")`).
+  - Call exported functions and assert count values.
+
+### Phase 5 — Verification + Quality Gates
+- Local verification commands (must be green):
+  - `just test`
+  - `just lint-descent-determinism`
+- Smoke-run demo:
+  - Build: `just build-debug`
+  - Run: `RUN_COUNTER_DEMO=1 AUTO_EXIT_AFTER_DEMO=1 ./build/raylib-cpp-cmake-template`
+  - Expect clean exit and no error logs related to UI spawning/removal.
+
+## Parallelization Plan
+- Track A (Model): `counter_model.lua` (independent, start first).
+- Track B (Tests): `test_counter_model_lua.cpp` (depends only on Track A API).
+- Track C (UI + Integration): `counter_demo.lua` + `core/main.lua` wiring (can proceed once Track A API is fixed).
+
+## Deliverables
+- `assets/scripts/demos/counter_model.lua`
+- `assets/scripts/demos/counter_demo.lua`
+- `assets/scripts/core/main.lua` demo launch hook
+- `tests/unit/test_counter_model_lua.cpp`
+- Verified commands documented in the bead closure message (Agent Mail)
+
+## Done Checklist
+- [ ] Bead claimed and later closed; Agent Mail notification sent
+- [ ] All reserved files released
+- [ ] `just test` passes
+- [ ] `just lint-descent-determinism` passes
+- [ ] Smoke-run works with `RUN_COUNTER_DEMO=1 AUTO_EXIT_AFTER_DEMO=1`
+==>   → Refined: planning/PLAN_codex_iter2.md
+==> ⚠️  Max iterations (2) reached without approval
+==>   Review planning/PLAN.md manually or run again with --max N
+==> Done: planning/PLAN.md
+=== DONE ===

@@ -11,6 +11,13 @@ These tests should pass even before any Descent gameplay code exists.
 
 local t = require("tests.test_runner")
 
+-- Ensure shop tests are loaded by the in-engine test runner list.
+require("tests.test_descent_shop")
+-- Ensure targeting tests are loaded by the in-engine test runner list.
+require("tests.test_descent_targeting")
+-- Ensure render tests are loaded by the in-engine test runner list.
+require("tests.test_descent_render")
+
 t.describe("Descent Smoke Tests", function()
     t.describe("Test Runner Infrastructure", function()
         t.it("should load the test runner module", function()

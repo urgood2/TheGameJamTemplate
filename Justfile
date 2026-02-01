@@ -120,6 +120,17 @@ test-descent-headless:
 	xvfb-run -a env AUTO_EXIT_AFTER_TEST=1 RUN_DESCENT_TESTS=1 ./build/raylib-cpp-cmake-template 2>&1 | tee /tmp/descent_tests.log
 	echo "Exit code: $?"
 
+# Lint: ensure no math.random usage in Descent modules
+lint-descent-determinism:
+	#!/usr/bin/env bash
+	set -e
+	echo "=== Linting Descent determinism (no math.random) ==="
+	if rg -n "math\\.random" assets/scripts/descent; then
+		echo "ERROR: math.random found in Descent modules. Use descent.rng instead."
+		exit 1
+	fi
+	echo "OK: no math.random usage in assets/scripts/descent."
+
 # =============================================================================
 # UI Baseline Testing (Lua-based layout verification)
 # =============================================================================

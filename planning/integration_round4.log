@@ -1,0 +1,8 @@
+`★ Insight ─────────────────────────────────────`
+The integrated v4 plan represents a significant architectural hardening while preserving the original feature scope. Key patterns:
+1. **Layered determinism** — Integer ticks at core, float only at UI boundary
+2. **Single source of truth** — StatusEngine, DamageSystem, EventBus as authoritative APIs
+3. **Correlation for debugging** — proc_id chains enable "show me everything caused by X"
+`─────────────────────────────────────────────────`
+
+The integrated plan is now at `/data/projects/TheGameJamTemplate/planning/PLAN_v4.md`. The file is 955 lines and incorporates all 24 changes with appropriate integration into the existing structure.

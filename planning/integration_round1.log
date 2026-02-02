@@ -1,0 +1,10 @@
+The integrated plan is now at `/data/projects/TheGameJamTemplate/planning/PLAN_v1.md`. The key changes integrated are:
+
+1. **Update order fix** (critical correctness)
+2. **Event envelope standardization** (reliability)
+3. **Lifecycle manager requirement** (leak prevention)
+4. **Multi-trigger DSL** (clarity)
+5. **Shop/loot separation** (clarity)
+6. **Determinism QA requirements** (debuggability)
+
+The ReactionSystem is included in minimal form as a calculated scope expansion with high gameplay value. Optional features (daily seed, wand upgrades) are explicitly deferred.

@@ -1,0 +1,88 @@
+`★ Insight ─────────────────────────────────────`
+The v2→v3 revision represents a shift from "determinism as goal" to "determinism as guarantee." Key architectural patterns:
+1. **Semantic commands** decouple input from UI layout — a classic anti-corruption layer
+2. **Origin tagging** for skill events is a creative solution to the responsiveness-vs-safety tradeoff
+3. **Named RNG streams** prevent the "butterfly effect" where unrelated systems couple through shared random state
+`─────────────────────────────────────────────────`
+
+I've created the integrated PLAN_v3.md. Now let me provide my assessment of each proposed change:
+
+---
+
+## Changes I Wholeheartedly Agree With
+
+**Change 01 — CommandStream (semantic commands):**  
+This is the single most impactful improvement. Raw input capture is a classic trap that breaks the moment UI layout changes. Semantic commands are the right abstraction level for replays.
+
+**Change 02 — SimClock hardening:**  
+Spiral-of-death protection is basic robustness that should have been in v2. The clamp at `max_sim_steps_per_render = 4` is sensible, and storing sim config in replay metadata ensures fail-fast on mismatches.
+
+**Change 03 — Entity identity explicit:**  
+Monotonic, never-reused eids with `entity_kind` for tracing. This is foundational for determinism debugging and shouldn't be left ambiguous.
+
+**Change 05 — status_removed event:**  
+The `reason` field (`"apply"|"refresh"|"decay"|"cleanse"|"expire"`) is particularly valuable for skills/items that care about *why* a status changed, not just *that* it changed.
+
+**Change 06 — DamageSystem as pipeline:**  
+Setting up the pipeline architecture now (even if modifiers are passthrough initially) prevents a painful refactor later when equipment/artifact effects need to modify damage.
+
+**Change 07 — Formalize RNG Streams:**  
+This is essential. Without named streams and explicit `rng` passing, you get "shop reroll changes projectile spread" coupling that's nearly impossible to debug.
+
+**Change 09 — CardPipeline versioning:**  
+Including `content_build.build_hash` and `card_pipeline_version` in `deck_hash` is obviously correct — without it, stale compiled plans will cause subtle bugs.
+
+**Change 11 — ReactionSystem proc guards:**  
+Infinite loop prevention for reactions is critical. The `max_reactions_per_target_per_frame` and per-reaction cooldowns are essential safety rails.
+
+**Change 12 — ContentRegistry migrations:**  
+Explicit migrations for renamed/removed IDs are necessary for content iteration. The warnings list for non-fatal issues (missing description, unused card) improves authoring workflow.
+
+**Change 13 — Lifecycle scoping:**  
+Adding `name` and `domain` to `Lifecycle.bind()` is low-cost, high-value. `Lifecycle.dump(owner_eid)` makes leak hunting actually doable instead of "counts increased somewhere."
+
+**Change 14 — Determinism tooling:**  
+Standardized trace hash spec + trace_diff.lua + golden replay CI gate converts determinism from aspiration to hard guarantee. This is the difference between "we think it's deterministic" and "CI catches desync."
+
+**Change 17 — Tools/QA owner:**  
+Having Agent F own determinism tooling prevents "everyone's job → nobody's job." The golden replay gate on CI is valuable accountability.
+
+---
+
+## Changes I Somewhat Agree With
+
+**Change 04 — EventBus deferred dispatch:**  
+The safety improvement is good, but the behavioral change (all emits during dispatch are deferred) could affect existing code that expects immediate dispatch. I've included it with the explicit rule, but teams should audit existing code paths. The `phase` metadata for debugging is unambiguously good.
+
+**Change 08 — Skill immediate execution with origin tagging:**  
+The concept is sound — origin-tagged events excluded from the triggering snapshot preserves responsiveness without feedback loops. However, the implementation complexity is higher than deferring to next frame. I've included the optional `defer_skill_events=true` toggle as an escape hatch. The `trigger_window` for multi-frame windows is a nice tuning knob but adds complexity.
+
+**Change 10 — AuraSystem performance budget:**  
+The budgeting concept is good, but `max_targets_processed_per_frame` with round-robin continuation adds complexity that may not be needed if profiling shows auras aren't a bottleneck. I've included it as a "deterministic perf budget" with the note that overlap caching is optional and deferred.
+
+**Change 15 — Codex + seed surfacing:**  
+These are good UX additions but feel more "nice to have" than the engineering changes. I've prioritized seed surfacing (low effort, high value for testing) and included Codex as a small phase. If time is tight, Codex could be deferred.
+
+**Change 16 — Gold sink:**  
+The design concern about "reroll until perfect" is valid, but this is more of a game design decision than an engineering requirement. I've included it as a "choose one" option (Card Removal Service or Wand Polish) with the note that it prevents degenerate strategy. This could be deferred to a balance pass if needed.
+
+---
+
+## Changes I Disagree With (or have reservations about)
+
+**None fundamentally,** but I have reservations about implementation priority:
+
+- The **immediate skill execution with origin tagging** (Change 08) is clever but adds cognitive load. The one-frame delay in v2 was simpler to reason about. I've included it because responsiveness matters for game feel, but teams should test carefully.
+
+- The **Codex UI** (Change 15) is nice but could bloat scope. I'd deprioritize it relative to the determinism infrastructure.
+
+- The **gold sink** (Change 16) is valid game design but feels out of scope for an "engineering plan." I've included it as optional since the concern about degenerate play is real.
+
+---
+
+The integrated plan is saved at `/data/projects/TheGameJamTemplate/planning/PLAN_v3.md`. The most impactful wins are:
+1. CommandStream (semantic commands)
+2. RNG streams + explicit passing  
+3. Trace hashing + golden replay gate
+4. EventBus deferred dispatch
+5. Skill immediate execution with origin tagging

@@ -1,0 +1,8 @@
+`★ Insight ─────────────────────────────────────`
+**Key architectural patterns in v2:**
+1. **Separation of sim time vs render time** — This is the foundation of deterministic gameplay. The accumulator pattern (`acc += render_dt; while (acc >= sim_dt) { step(); acc -= sim_dt; }`) is standard in physics engines and essential for replay.
+2. **Event immutability as enforcement, not convention** — Using metatables to freeze events in dev mode transforms a "should not mutate" rule into a "cannot mutate" guarantee. This catches bugs early rather than during replay validation.
+3. **Hash-based cache invalidation** — `deck_hash` for CardPipeline and `content_build.build_hash` for replay both use the same pattern: compute a stable hash of inputs, cache by hash, invalidate on mismatch. This is idiomatic for reproducibility.
+`─────────────────────────────────────────────────`
+
+The integrated plan is saved at `/data/projects/TheGameJamTemplate/planning/PLAN_v2.md`. The core v2 changes around determinism infrastructure (fixed-step sim, DamageSystem, stable ordering) are solid engineering. The concerns I raised are mostly about scope management and sensible defaults, not fundamental disagreements with the direction.

@@ -412,3 +412,9 @@ patch.isVisible = true
 | --- | --- | --- | --- |
 | sourceEntity | entt::entity | entt::null |  |
 | zBias | float | 0.0f |  |
+
+## Tests
+- `core.components.transformcustom.read_write` (doc_id: `component:TransformCustom`)
+- `core.components.framedata.read` (doc_id: `component:FrameData`)
+- `core.components.spritecomponentascii.read_write` (doc_id: `component:SpriteComponentASCII`)
+- `core.components.animationqueuecomponent.read_write` (doc_id: `component:AnimationQueueComponent`)

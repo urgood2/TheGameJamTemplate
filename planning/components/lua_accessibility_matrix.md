@@ -59,21 +59,21 @@ Component accessibility from Lua. Status: skeleton - needs manual verification.
 | Stats | combat | ❓ Unknown | TBD | Needs verification |
 | StatusFlags | combat | ❓ Unknown | TBD | Needs verification |
 | Team | combat | ❓ Unknown | TBD | Needs verification |
-| Action | core | ❓ Unknown | TBD | Needs verification |
-| AnimationObject | core | ❓ Unknown | TBD | Needs verification |
-| AnimationQueueComponent | core | ❓ Unknown | TBD | Needs verification |
-| ContainerComponent | core | ❓ Unknown | TBD | Needs verification |
-| FrameData | core | ❓ Unknown | TBD | Needs verification |
-| GOAPComponent | core | ❓ Unknown | TBD | Needs verification |
-| InfoComponent | core | ❓ Unknown | TBD | Needs verification |
-| LocationComponent | core | ❓ Unknown | TBD | Needs verification |
-| NinePatchComponent | core | ❓ Unknown | TBD | Needs verification |
-| ParticleComponent | core | ❓ Unknown | TBD | Needs verification |
-| SpriteComponentASCII | core | ❓ Unknown | TBD | Needs verification |
-| TileComponent | core | ❓ Unknown | TBD | Needs verification |
-| TransformCustom | core | ❓ Unknown | TBD | Needs verification |
-| TweenedLocationComponent | core | ❓ Unknown | TBD | Needs verification |
-| VFXTag | core | ❓ Unknown | TBD | Needs verification |
+| Action | core | ❓ Unknown | component_cache.get | Stub exposed; access unverified |
+| AnimationObject | core | ❓ Unknown | component_cache.get | Stub exposed; access unverified |
+| AnimationQueueComponent | core | ❓ Unknown | component_cache.get | Stub exposed; access unverified |
+| ContainerComponent | core | ❓ Unknown | component_cache.get | Stub exposed; access unverified |
+| FrameData | core | ❓ Unknown | component_cache.get | Stub exposed; access unverified |
+| GOAPComponent | core | ❓ Unknown | component_cache.get | Stub exposed; access unverified |
+| InfoComponent | core | ❓ Unknown | component_cache.get | Tag component; stub exposed |
+| LocationComponent | core | ❓ Unknown | component_cache.get | Stub exposed; access unverified |
+| NinePatchComponent | core | ❓ Unknown | component_cache.get | Stub exposed; access unverified |
+| ParticleComponent | core | ❓ Unknown | component_cache.get | Stub exposed; access unverified |
+| SpriteComponentASCII | core | ❓ Unknown | component_cache.get | Stub exposed; access unverified |
+| TileComponent | core | ❓ Unknown | component_cache.get | Stub exposed; access unverified |
+| TransformCustom | core | ❓ Unknown | component_cache.get | Stub exposed; access unverified |
+| TweenedLocationComponent | core | ❓ Unknown | component_cache.get | Tag component; stub exposed |
+| VFXTag | core | ❓ Unknown | component_cache.get | Tag component; stub exposed |
 | IInputProvider | input | ❓ Unknown | TBD | Needs verification |
 | NavCallbacks | input | ❓ Unknown | TBD | Needs verification |
 | NavGroup | input | ❓ Unknown | TBD | Needs verification |

@@ -24,7 +24,11 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:FrameData"
+      "doc_id": "component:FrameData",
+      "source_ref": "src/components/graphics.hpp:15",
+      "test_id": "core.components.framedata.read",
+      "verified": false,
+      "tier": 1
     },
     {
       "name": "SpriteComponentASCII",
@@ -84,7 +88,11 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:SpriteComponentASCII"
+      "doc_id": "component:SpriteComponentASCII",
+      "source_ref": "src/components/graphics.hpp:31",
+      "test_id": "core.components.spritecomponentascii.read_write",
+      "verified": false,
+      "tier": 1
     },
     {
       "name": "AnimationObject",
@@ -174,7 +182,8 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:AnimationObject"
+      "doc_id": "component:AnimationObject",
+      "source_ref": "src/components/graphics.hpp:51"
     },
     {
       "name": "AnimationQueueComponent",
@@ -236,7 +245,11 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:AnimationQueueComponent"
+      "doc_id": "component:AnimationQueueComponent",
+      "source_ref": "src/components/graphics.hpp:76",
+      "test_id": "core.components.animationqueuecomponent.read_write",
+      "verified": false,
+      "tier": 1
     },
     {
       "name": "TweenedLocationComponent",
@@ -247,7 +260,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:TweenedLocationComponent"
+      "doc_id": "component:TweenedLocationComponent",
+      "source_ref": "src/components/graphics.hpp:90"
     },
     {
       "name": "ParticleComponent",
@@ -309,7 +323,8 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:ParticleComponent"
+      "doc_id": "component:ParticleComponent",
+      "source_ref": "src/components/particle.hpp:6"
     },
     {
       "name": "TransformCustom",
@@ -357,7 +372,11 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:TransformCustom"
+      "doc_id": "component:TransformCustom",
+      "source_ref": "src/components/components.hpp:36",
+      "test_id": "core.components.transformcustom.read_write",
+      "verified": false,
+      "tier": 1
     },
     {
       "name": "Action",
@@ -419,7 +438,8 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:Action"
+      "doc_id": "component:Action",
+      "source_ref": "src/components/components.hpp:52"
     },
     {
       "name": "GOAPComponent",
@@ -547,7 +567,8 @@
           "is_complex": true
         }
       ],
-      "doc_id": "component:GOAPComponent"
+      "doc_id": "component:GOAPComponent",
+      "source_ref": "src/components/components.hpp:75"
     },
     {
       "name": "TileComponent",
@@ -681,7 +702,8 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:TileComponent"
+      "doc_id": "component:TileComponent",
+      "source_ref": "src/components/components.hpp:132"
     },
     {
       "name": "LocationComponent",
@@ -699,7 +721,8 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:LocationComponent"
+      "doc_id": "component:LocationComponent",
+      "source_ref": "src/components/components.hpp:161"
     },
     {
       "name": "NinePatchComponent",
@@ -783,7 +806,8 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:NinePatchComponent"
+      "doc_id": "component:NinePatchComponent",
+      "source_ref": "src/components/components.hpp:168"
     },
     {
       "name": "ContainerComponent",
@@ -803,7 +827,8 @@
           "is_complex": true
         }
       ],
-      "doc_id": "component:ContainerComponent"
+      "doc_id": "component:ContainerComponent",
+      "source_ref": "src/components/components.hpp:187"
     },
     {
       "name": "InfoComponent",
@@ -814,7 +839,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:InfoComponent"
+      "doc_id": "component:InfoComponent",
+      "source_ref": "src/components/components.hpp:193"
     },
     {
       "name": "VFXTag",
@@ -825,7 +851,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:VFXTag"
+      "doc_id": "component:VFXTag",
+      "source_ref": "src/components/components.hpp:200"
     },
     {
       "name": "ParticleTag",
@@ -845,7 +872,8 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:ParticleTag"
+      "doc_id": "component:ParticleTag",
+      "source_ref": "src/systems/particles/particle.hpp:58"
     },
     {
       "name": "Particle",
@@ -955,7 +983,8 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:Particle"
+      "doc_id": "component:Particle",
+      "source_ref": "src/systems/particles/particle.hpp:62"
     },
     {
       "name": "ParticleEmitter",
@@ -1102,7 +1131,8 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:ParticleEmitter"
+      "doc_id": "component:ParticleEmitter",
+      "source_ref": "src/systems/particles/particle.hpp:89"
     },
     {
       "name": "ParticleAnimationConfig",
@@ -1146,7 +1176,8 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:ParticleAnimationConfig"
+      "doc_id": "component:ParticleAnimationConfig",
+      "source_ref": "src/systems/particles/particle.hpp:116"
     },
     {
       "name": "StencilMaskSource",
@@ -1166,7 +1197,8 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:StencilMaskSource"
+      "doc_id": "component:StencilMaskSource",
+      "source_ref": "src/systems/particles/particle.hpp:1024"
     },
     {
       "name": "StencilMaskedParticle",
@@ -1192,7 +1224,8 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:StencilMaskedParticle"
+      "doc_id": "component:StencilMaskedParticle",
+      "source_ref": "src/systems/particles/particle.hpp:1029"
     }
   ]
 }

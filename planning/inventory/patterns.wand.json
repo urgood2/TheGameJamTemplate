@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-02-03T05:42:54.153311+00:00",
+  "generated_at": "2026-02-03T06:44:11.751338+00:00",
   "area": "wand",
   "patterns": [
     {
@@ -8,9 +8,9 @@
       "name": "Card registry lazy-load caching",
       "doc_id": "pattern:wand.registry.lazy_load",
       "category": "registry",
-      "description": "CardRegistry lazily requires data.cards, caches cards and trigger cards, and serves helpers by id/tag.",
+      "description": "CardRegistry lazily requires data.cards, caches cards/trigger cards, and serves helper getters.",
       "source_refs": [
-        "assets/scripts/wand/card_registry.lua:8"
+        "assets/scripts/wand/card_registry.lua:14"
       ],
       "recommended": true,
       "verified": false,
@@ -23,9 +23,10 @@
       "name": "Behavior registry register/execute with pcall",
       "doc_id": "pattern:wand.behavior_registry.register_execute",
       "category": "behavior_registry",
-      "description": "BehaviorRegistry registers behavior functions by id and executes them with pcall, returning success and result.",
+      "description": "BehaviorRegistry registers behavior functions and executes them with pcall, returning success and result.",
       "source_refs": [
-        "assets/scripts/wand/card_behavior_registry.lua:33"
+        "assets/scripts/wand/card_behavior_registry.lua:58",
+        "assets/scripts/wand/card_behavior_registry.lua:84"
       ],
       "recommended": true,
       "verified": false,
@@ -38,9 +39,10 @@
       "name": "Joker effects mutate modifier table in place",
       "doc_id": "pattern:wand.modifiers.joker_effect_schema",
       "category": "modifiers",
-      "description": "Joker effects are mapped via schema to modifier fields; applyJokerEffects mutates the shared modifiers table before wand_actions reads it.",
+      "description": "Joker effects map through a schema to modifier fields; applyJokerEffects mutates the shared modifiers table before action execution.",
       "source_refs": [
-        "assets/scripts/wand/wand_modifiers.lua:1"
+        "assets/scripts/wand/wand_modifiers.lua:166",
+        "assets/scripts/wand/wand_modifiers.lua:204"
       ],
       "recommended": true,
       "verified": false,
@@ -53,9 +55,27 @@
       "name": "Sub-cast tracing with stable ids",
       "doc_id": "pattern:wand.executor.subcast_trace",
       "category": "executor",
-      "description": "WandExecutor builds a trace id from wand, block, card, and trigger then logs and optionally signals debug events.",
+      "description": "WandExecutor builds a trace id from wand, block, and trigger then emits debug events to correlate sub-casts.",
       "source_refs": [
-        "assets/scripts/wand/wand_executor.lua:24"
+        "assets/scripts/wand/wand_executor.lua:47",
+        "assets/scripts/wand/wand_executor.lua:57"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "wand.executor.subcast_queue",
+      "name": "Sub-cast queue for delayed execution",
+      "doc_id": "pattern:wand.executor.subcast_queue",
+      "category": "executor",
+      "description": "Sub-casts are queued (timer/collision/death) and executed during update to avoid physics callback issues.",
+      "source_refs": [
+        "assets/scripts/wand/wand_executor.lua:830",
+        "assets/scripts/wand/wand_executor.lua:977",
+        "assets/scripts/wand/wand_executor.lua:991"
       ],
       "recommended": true,
       "verified": false,
@@ -70,7 +90,178 @@
       "category": "triggers",
       "description": "WandTriggers registers trigger definitions, sets timer tags/event types, and cleanup cancels timers and removes signal listeners.",
       "source_refs": [
-        "assets/scripts/wand/wand_triggers.lua:46"
+        "assets/scripts/wand/wand_triggers.lua:92",
+        "assets/scripts/wand/wand_triggers.lua:63"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "wand.joker_system.aggregate_effects",
+      "name": "Joker effect aggregation by schema",
+      "doc_id": "pattern:wand.joker_system.aggregate_effects",
+      "category": "joker_system",
+      "description": "JokerSystem.trigger_event aggregates numeric effects via schema modes, collects messages, and merges tables/flags.",
+      "source_refs": [
+        "assets/scripts/wand/joker_system.lua:42"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "wand.synergy.tag_set_thresholds",
+      "name": "Tag set bonuses with tier thresholds",
+      "doc_id": "pattern:wand.synergy.tag_set_thresholds",
+      "category": "synergy",
+      "description": "Set bonuses define tier thresholds per tag, with active tiers derived from tag counts.",
+      "source_refs": [
+        "assets/scripts/wand/card_synergy_system.lua:81",
+        "assets/scripts/wand/card_synergy_system.lua:306"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "wand.synergy.curated_combo_detection",
+      "name": "Curated combo detection by card id",
+      "doc_id": "pattern:wand.synergy.curated_combo_detection",
+      "category": "synergy",
+      "description": "Curated combos are detected by building a set of card ids and verifying required ids are present.",
+      "source_refs": [
+        "assets/scripts/wand/card_synergy_system.lua:270"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "wand.tag_evaluator.count_tags_normalized",
+      "name": "Normalized tag counting",
+      "doc_id": "pattern:wand.tag_evaluator.count_tags_normalized",
+      "category": "tag_evaluator",
+      "description": "TagEvaluator normalizes tag names and counts tags across deck cards for later threshold evaluation.",
+      "source_refs": [
+        "assets/scripts/wand/tag_evaluator.lua:90",
+        "assets/scripts/wand/tag_evaluator.lua:106"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "wand.tag_evaluator.apply_thresholds",
+      "name": "Apply tag thresholds and discoveries",
+      "doc_id": "pattern:wand.tag_evaluator.apply_thresholds",
+      "category": "tag_evaluator",
+      "description": "TagEvaluator evaluates tag thresholds, triggers discovery checks, and applies/removes bonuses based on breakpoints.",
+      "source_refs": [
+        "assets/scripts/wand/tag_evaluator.lua:142"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "wand.spell_type.classification",
+      "name": "Spell type classification",
+      "doc_id": "pattern:wand.spell_type.classification",
+      "category": "spell_type",
+      "description": "SpellTypeEvaluator classifies cast blocks into spell types based on action count, modifiers, and tags.",
+      "source_refs": [
+        "assets/scripts/wand/spell_type_evaluator.lua:20"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "wand.spell_type.tag_analysis",
+      "name": "Spell tag analysis metrics",
+      "doc_id": "pattern:wand.spell_type.tag_analysis",
+      "category": "spell_type",
+      "description": "SpellTypeEvaluator analyzes tag counts and diversity to feed joker logic and discovery UI.",
+      "source_refs": [
+        "assets/scripts/wand/spell_type_evaluator.lua:135"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "wand.upgrade.paths_and_custom_behaviors",
+      "name": "Upgrade paths and custom behaviors",
+      "doc_id": "pattern:wand.upgrade.paths_and_custom_behaviors",
+      "category": "upgrade",
+      "description": "CardUpgrade defines stat upgrade paths and custom behaviors, applying both when a card levels up.",
+      "source_refs": [
+        "assets/scripts/wand/card_upgrade_system.lua:42",
+        "assets/scripts/wand/card_upgrade_system.lua:206",
+        "assets/scripts/wand/card_upgrade_system.lua:297"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "wand.discovery.tag_thresholds",
+      "name": "Tag threshold discovery tracking",
+      "doc_id": "pattern:wand.discovery.tag_thresholds",
+      "category": "discovery",
+      "description": "TagDiscoverySystem records threshold discoveries and returns new discovery events without duplicates.",
+      "source_refs": [
+        "assets/scripts/wand/tag_discovery_system.lua:79"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "wand.actions.execution_context",
+      "name": "Execution context builder",
+      "doc_id": "pattern:wand.actions.execution_context",
+      "category": "actions",
+      "description": "WandActions builds an execution context with caster entity, faction, position, and angle defaults.",
+      "source_refs": [
+        "assets/scripts/wand/wand_actions.lua:182"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "wand.actions.upgrade_behaviors",
+      "name": "Run card upgrade behaviors",
+      "doc_id": "pattern:wand.actions.upgrade_behaviors",
+      "category": "actions",
+      "description": "Upgrade behaviors are collected from card upgrades and executed via behavior registry or built-in handlers.",
+      "source_refs": [
+        "assets/scripts/wand/wand_actions.lua:68",
+        "assets/scripts/wand/wand_actions.lua:140"
       ],
       "recommended": true,
       "verified": false,

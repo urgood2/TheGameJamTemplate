@@ -2013,6 +2013,7 @@ Critical gotchas:
 | uiRoot | std::optional<entt::entity> | None | complex |
 | drawLayers | std::map<int, entt::entity> | None | complex |
 | onBoxResize | std::function<void(entt::entity)> | nullptr | complex |
+
 **Gotchas:**
 - Move `UIBoxComponent.uiRoot` with the entity Transform, then call `ui.box.RenewAlignment` to refresh layout.
 
@@ -2419,4 +2420,3 @@ Critical gotchas:
 | stride_in_bytes | int | None |  |
 | padding | int | None |  |
 | skip_missing | int | None |  |
-

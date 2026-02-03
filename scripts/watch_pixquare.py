@@ -102,10 +102,35 @@ def get_aseprite_files(directory: Path) -> list[Path]:
     ]
 
 
-# Placeholder for processing functions (next tasks)
 def process_animation(source: Path, aseprite_exe: str, verbose: bool, move: bool) -> bool:
     """Process an animation file - copy to assets/animations/."""
-    raise NotImplementedError("Task 3")
+    if verbose:
+        print(f"  Processing animation: {source.name}")
+
+    # Wait for file to be fully synced
+    if not is_file_stable(source):
+        print(f"  Skipping {source.name} - still syncing")
+        return False
+
+    dest = ANIMATIONS_TARGET / source.name
+
+    try:
+        # Copy file (overwrite if exists)
+        shutil.copy2(str(source), str(dest))
+
+        if verbose:
+            print(f"  Copied to {dest}")
+
+        # Move to processed
+        move_to_processed(source, move)
+
+        notify("Pixquare Sync", f"Animation '{source.stem}' synced")
+        return True
+
+    except Exception as e:
+        print(f"ERROR processing {source.name}: {e}")
+        notify("Pixquare Sync Error", f"Failed: {source.name}")
+        return False
 
 
 def process_sprite(source: Path, aseprite_exe: str, verbose: bool, move: bool) -> bool:

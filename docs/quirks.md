@@ -27,14 +27,39 @@ This document consolidates all known quirks, gotchas, and ordering requirements 
   - [Slot Decorations and Sprite Panels](#slot-decorations-and-sprite-panels)
   - [ObjectAttachedToUITag for Draggables](#objectattachedtouitag-for-draggables)
 - [Lua / C++ Bindings](#lua--c-bindings)
+  - [C++ globals are injected, not require() modules](#lua-globals-vs-modules)
+  - [Userdata newindex assignment failure](#lua-userdata-newindex)
+  - [Use Color.new, not Lua tables](#lua-color-userdata)
+  - [Callback signature mismatches](#lua-callback-signatures)
+  - [Wrong require() paths cause module not found](#lua-require-paths)
 - [Physics System](#physics-system)
+  - [Collisions not working without tags and masks](#physics-collision-tags)
+  - [Collision masks must be updated for both tags](#physics-collision-masks-update)
+  - [Physics world lookup returns nil](#physics-world-nil)
+  - [Body not moving due to sync mode](#physics-sync-mode)
+  - [Sync mode order matters](#physics-sync-order)
+  - [Arbiter data is only valid during callbacks](#physics-arbiter-lifetime)
 - [Rendering & Layers](#rendering--layers)
+  - [Wrong layer or Z-order hides entities](#rendering-z-order-layer)
+  - [Layer ordering uses layer_order_system](#rendering-layer-order-system)
+  - [DrawCommandSpace controls camera space](#rendering-drawcommandspace)
 - [Shader System](#shader-system)
 - [Sound System](#sound-system)
 - [Camera System](#camera-system)
 - [Animation System](#animation-system)
 - [Combat System](#combat-system)
+  - [Projectile collision tags must match targets](#combat-projectile-collision-tags)
+  - [Arc projectiles need manual gravity if world gravity is zero](#combat-projectile-manual-gravity)
+  - [Homing projectiles need non-zero homing_strength](#combat-homing-strength)
+  - [Always set projectile lifetime](#combat-projectile-lifetime)
+  - [Buff stacking depends on stack_mode](#combat-buff-stacking)
+  - [Damage must flow through CombatSystem pipeline](#combat-damage-pipeline)
 - [Input System](#input-system)
+  - [Initialize input handler once](#input-handler-init-once)
+  - [Delay input setup until systems are ready](#input-handler-delay)
+  - [Capture input after systems initialize](#input-capture-timing)
+  - [Controller focus requires active layer](#input-focus-management)
+- [Registry Anchors (Auto)](#registry-anchors-auto)
 
 ---
 
@@ -227,6 +252,7 @@ local sounds = { footsteps = { ... } }
 
 ---
 
+<a id="ui--uibox-system"></a>
 ## UI / UIBox System
 
 This section documents UI/UIBox ordering requirements and common failure modes.
@@ -744,6 +770,58 @@ local registry = _G.registry
 **Evidence:**
 - Unverified: Documentation guidance (docs/guides/UI_PANEL_IMPLEMENTATION_GUIDE.md)
 
+<a id="input-capture-timing"></a>
+### Capture input after systems initialize
+- doc_id: pattern:input.capture.timing
+- Test: Unverified: Documentation guidance
+- Source: docs/guides/UI_PANEL_IMPLEMENTATION_GUIDE.md
+
+**Problem:**
+`input.getState()` returns nil or missing fields during panel setup.
+
+**Root cause:**
+Input handlers run before input systems and globals are ready.
+
+**Solution:**
+Defer setup and poll input state inside the render-frame handler.
+
+```lua
+timer.after_opts({
+    delay = 0.1,
+    action = function() setupInputHandler() end,
+    tag = "panel_input_setup",
+    group = TIMER_GROUP,
+})
+```
+
+**Evidence:**
+- Unverified: Documentation guidance (docs/guides/UI_PANEL_IMPLEMENTATION_GUIDE.md)
+
+<a id="input-focus-management"></a>
+### Controller focus requires active layer
+- doc_id: pattern:input.focus.management
+- Test: Unverified: Documentation guidance
+- Source: docs/systems/advanced/controller_navigation.md
+
+**Problem:**
+Controller navigation does nothing or focus sticks after UI rebuilds.
+
+**Root cause:**
+No active layer or focused entity set after dynamic UI creation.
+
+**Solution:**
+Create group and layer, add group to layer, set the active layer, and focus the first entity.
+
+```lua
+controller_nav.create_group("menu_buttons")
+controller_nav.create_layer("main_menu")
+controller_nav.add_group_to_layer("main_menu", "menu_buttons")
+controller_nav.ud:set_active_layer("main_menu")
+controller_nav.focus_entity(first_button)
+```
+
+**Evidence:**
+- Unverified: Documentation guidance (docs/systems/advanced/controller_navigation.md)
 <a id="lua-userdata-newindex"></a>
 ### Userdata newindex assignment failure
 - doc_id: pattern:lua.bindings.userdata_newindex
@@ -883,6 +961,31 @@ PhysicsBuilder.for_entity(entity)
 **Evidence:**
 - Unverified: Troubleshooting guide (docs/TROUBLESHOOTING.md)
 
+<a id="physics-collision-masks-update"></a>
+### Collision masks must be updated for both tags
+- doc_id: pattern:physics.collision.masks_bidirectional
+- Test: Unverified: Cookbook guidance
+- Source: docs/lua-cookbook/cookbook.md
+
+**Problem:**
+Collisions still fail after calling `enable_collision_between_many`.
+
+**Root cause:**
+Collision rules are registered, but existing bodies keep their old masks unless updated.
+
+**Solution:**
+After enabling collisions, update masks for both tags.
+
+```lua
+physics.enable_collision_between_many(world, "projectile", { "enemy", "WORLD" })
+physics.enable_collision_between_many(world, "enemy", { "projectile" })
+physics.update_collision_masks_for(world, "projectile", { "enemy", "WORLD" })
+physics.update_collision_masks_for(world, "enemy", { "projectile" })
+```
+
+**Evidence:**
+- Unverified: Cookbook guidance (docs/lua-cookbook/cookbook.md)
+
 <a id="physics-world-nil"></a>
 ### Physics world lookup returns nil
 - doc_id: pattern:physics.world.lookup
@@ -934,6 +1037,32 @@ PhysicsBuilder.for_entity(entity)
 
 **Evidence:**
 - Unverified: Troubleshooting guide (docs/TROUBLESHOOTING.md)
+
+<a id="physics-sync-order"></a>
+### Sync mode order matters
+- doc_id: pattern:physics.sync.order
+- Test: Unverified: Cookbook guidance
+- Source: docs/lua-cookbook/cookbook.md
+
+**Problem:**
+Entities snap back to old positions or ignore physics movement right after creation.
+
+**Root cause:**
+Physics setup order is wrong, leaving Transform as the authoritative source.
+
+**Solution:**
+Create sprite, position it, create physics body, configure properties, then set sync mode and collision masks.
+
+```lua
+-- 1. Create sprite + set transform position
+-- 2. Create physics body
+-- 3. Configure properties
+physics.set_sync_mode(registry, entity, physics.PhysicsSyncMode.AuthoritativePhysics)
+-- 4. Update collision masks
+```
+
+**Evidence:**
+- Unverified: Cookbook guidance (docs/lua-cookbook/cookbook.md)
 
 <a id="physics-arbiter-lifetime"></a>
 ### Arbiter data is only valid during callbacks
@@ -996,6 +1125,50 @@ end
 
 **Evidence:**
 - Unverified: Troubleshooting guide (docs/TROUBLESHOOTING.md)
+
+<a id="rendering-layer-order-system"></a>
+### Layer ordering uses layer_order_system
+- doc_id: pattern:rendering.layer.layer_order_system
+- Test: Unverified: Documentation guidance
+- Source: docs/api/z-order-rendering.md
+
+**Problem:**
+Entities appear behind UI or ignore expected Z ordering.
+
+**Root cause:**
+Layer sorting uses `layer_order_system` and `z_orders` constants; relying only on `Transform.actualZ` is inconsistent.
+
+**Solution:**
+Assign Z order via `layer_order_system` or explicit draw command Z values.
+
+```lua
+layer_order_system.assignZIndexToEntity(entity, z_orders.ui_tooltips + 100)
+```
+
+**Evidence:**
+- Unverified: Documentation guidance (docs/api/z-order-rendering.md)
+
+<a id="rendering-drawcommandspace"></a>
+### DrawCommandSpace controls camera space
+- doc_id: pattern:rendering.drawspace.world_screen
+- Test: Unverified: Documentation guidance
+- Source: docs/api/z-order-rendering.md
+
+**Problem:**
+HUD elements move with the camera or world objects stick to the screen.
+
+**Root cause:**
+Draw commands default to World space if not explicitly set.
+
+**Solution:**
+Use Screen for fixed HUD, World for camera-following elements.
+
+```lua
+command_buffer.queueDrawRectangle(layers.ui, function(c) ... end, z, layer.DrawCommandSpace.Screen)
+```
+
+**Evidence:**
+- Unverified: Documentation guidance (docs/api/z-order-rendering.md)
 
 ---
 
@@ -1183,6 +1356,61 @@ ProjectileSystem.spawn({
 **Evidence:**
 - Unverified: Common pitfalls list (docs/guides/COMMON_PITFALLS.md)
 
+<a id="combat-buff-stacking"></a>
+### Buff stacking depends on stack_mode
+- doc_id: pattern:combat.status.stack_mode
+- Test: Unverified: Documentation reference
+- Source: docs/api/combat-systems.md
+
+**Problem:**
+Reapplying a buff does not increase effect or unexpectedly resets duration.
+
+**Root cause:**
+`stack_mode` defaults to replace behavior and `stat_mods` apply only once.
+
+**Solution:**
+Set `stack_mode` explicitly and use `stat_mods_per_stack` when you want per-stack scaling.
+
+```lua
+StatusEffects.burning = {
+    id = "burning",
+    stack_mode = "intensity",
+    max_stacks = 99,
+    duration = 5,
+    stat_mods_per_stack = { damage_pct = 0.05 },
+}
+```
+
+**Evidence:**
+- Unverified: Documentation reference (docs/api/combat-systems.md)
+
+<a id="combat-damage-pipeline"></a>
+### Damage must flow through CombatSystem pipeline
+- doc_id: pattern:combat.damage.pipeline_order
+- Test: Unverified: Documentation reference
+- Source: docs/api/combat-systems.md, docs/systems/combat/PROJECTILE_ARCHITECTURE.md
+
+**Problem:**
+Damage ignores resists, armor, block, or absorbs.
+
+**Root cause:**
+Direct HP modification bypasses the combat pipeline and its order of operations.
+
+**Solution:**
+Always call `CombatSystem.applyDamage` with `damageType` so the pipeline applies resist, armor, block, and absorb rules in order.
+
+```lua
+CombatSystem.applyDamage({
+    target = target,
+    source = source,
+    damage = baseDamage,
+    damageType = "fire",
+})
+```
+
+**Evidence:**
+- Unverified: Documentation reference (docs/api/combat-systems.md)
+
 ---
 
 <a id="input-system"></a>
@@ -1238,3 +1466,2058 @@ timer.after_opts({
 
 **Evidence:**
 - Unverified: Documentation guidance (docs/guides/UI_PANEL_IMPLEMENTATION_GUIDE.md)
+
+---
+
+## Registry Anchors (Auto)
+
+These entries are generated from `planning/cm_rules_candidates.yaml` to ensure registry anchors have a home in this document. Expand or relocate entries into the main system sections as needed.
+
+### ECS Patterns
+
+#### child-builder-attach-offset
+- doc_id: pattern:core.child_builder.attach_offset
+- Test: test_core_patterns.lua::core.child_builder.attach_offset
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When attaching child entities, use ChildBuilder to configure inherited properties and offsets in one flow.
+
+**Root cause:**
+ChildBuilder sets role inheritance, offsets, and alignment correctly for child entities.
+
+**Solution:**
+```lua
+ChildBuilder.for_entity(child):attachTo(parent):offset(20, 0):rotateWith():apply()
+```
+
+**Anti-pattern:**
+```lua
+-- attach child without inherited properties configured
+```
+
+**Evidence:**
+- Verified: Test: test_core_patterns.lua::core.child_builder.attach_offset
+
+#### ecs-cache-performance
+- doc_id: pattern:ecs.cache.performance
+- Test: test_entity_lifecycle.lua::ecs.cache.performance
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When repeatedly accessing components, use component_cache for fast lookups and invalidate on teardown.
+
+**Root cause:**
+Cached lookups avoid repeated registry access while remaining safe when invalidated.
+
+**Solution:**
+```lua
+local t = component_cache.get(eid, Transform)
+component_cache.invalidate(eid, Transform)
+```
+
+**Anti-pattern:**
+```lua
+local t = registry:get(eid, Transform) -- repeated each frame
+```
+
+**Evidence:**
+- Verified: Test: test_entity_lifecycle.lua::ecs.cache.performance
+
+#### ecs-init-data-preserved
+- doc_id: pattern:ecs.init.data_preserved
+- Test: test_entity_lifecycle.lua::ecs.init.data_preserved
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When initializing scripts, pass data in the constructor so init can read it before attach_ecs.
+
+**Root cause:**
+init runs during construction; passing data up front preserves initialization state.
+
+**Solution:**
+```lua
+local ScriptType = Node:extend()
+local script = ScriptType { data = { value = 99 } }
+script:attach_ecs { create_new = false, existing_entity = eid }
+```
+
+**Anti-pattern:**
+```lua
+local ScriptType = Node:extend()
+local script = ScriptType {}
+script.data = { value = 99 }
+script:attach_ecs { create_new = false, existing_entity = eid }
+```
+
+**Evidence:**
+- Verified: Test: test_entity_lifecycle.lua::ecs.init.data_preserved
+
+#### entity-builder-create
+- doc_id: pattern:core.entity_builder.create
+- Test: test_core_patterns.lua::core.entity_builder.create
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When creating entities with standard fields, use EntityBuilder.create with a config table for consistent setup.
+
+**Root cause:**
+EntityBuilder.create wires sprite, transform, and data in one deterministic call.
+
+**Solution:**
+```lua
+local entity, script = EntityBuilder.create({ sprite = "kobold", position = { x = 100, y = 200 }, size = { 64, 64 }, data = { health = 100 } })
+```
+
+**Anti-pattern:**
+```lua
+-- manual component wiring scattered across files
+```
+
+**Evidence:**
+- Verified: Test: test_core_patterns.lua::core.entity_builder.create
+
+#### entity-builder-fluent-chain
+- doc_id: pattern:core.entity_builder.fluent_chain
+- Test: test_core_patterns.lua::core.entity_builder.fluent_chain
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When chaining entity creation steps, use the EntityBuilder fluent API for readable setup.
+
+**Root cause:**
+Fluent chaining keeps spawn parameters together and avoids partial setup.
+
+**Solution:**
+```lua
+local entity = EntityBuilder.new("wall_tile"):at(wx, wy):build()
+```
+
+**Anti-pattern:**
+```lua
+-- create entity then patch fields across multiple functions
+```
+
+**Evidence:**
+- Verified: Test: test_core_patterns.lua::core.entity_builder.fluent_chain
+
+### ECS Gotchas
+
+#### attach-ecs-assign-after-fails
+- doc_id: pattern:ecs.attach_ecs.assign_after_attach_fails
+- Test: test_entity_lifecycle.lua::ecs.attach_ecs.assign_after_attach_fails
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When attach_ecs is called before assigning script data, attach-time hooks read nil values and initialization fails.
+
+**Root cause:**
+attach_ecs captures data immediately; assigning after the call does not backfill state.
+
+**Solution:**
+```lua
+local script = EntityType {}
+script.data = { value = 42 }
+script:attach_ecs { create_new = false, existing_entity = eid }
+```
+
+**Anti-pattern:**
+```lua
+local script = EntityType {}
+script:attach_ecs { create_new = false, existing_entity = eid }
+script.data = { value = 42 }
+```
+
+**Evidence:**
+- Verified: Test: test_entity_lifecycle.lua::ecs.attach_ecs.assign_after_attach_fails
+
+#### cache-get-after-destroy
+- doc_id: pattern:ecs.cache.get_after_destroy
+- Test: test_entity_lifecycle.lua::ecs.cache.get_after_destroy
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When an entity is destroyed, cached component handles become invalid and must not be reused.
+
+**Root cause:**
+component_cache entries are invalidated on destroy; reuse leads to stale data.
+
+**Solution:**
+```lua
+registry:destroy(eid)
+component_cache.invalidate(eid)
+local t = component_cache.get(eid, Transform) -- nil
+```
+
+**Anti-pattern:**
+```lua
+local t = component_cache.get(eid, Transform)
+registry:destroy(eid)
+-- reusing t after destroy
+```
+
+**Evidence:**
+- Verified: Test: test_entity_lifecycle.lua::ecs.cache.get_after_destroy
+
+#### destroy-cache-cleared
+- doc_id: pattern:ecs.destroy.cache_cleared
+- Test: test_entity_lifecycle.lua::ecs.destroy.cache_cleared
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When destroying entities, invalidate cached components so later lookups do not return stale data.
+
+**Root cause:**
+component_cache can retain destroyed entries unless explicitly cleared.
+
+**Solution:**
+```lua
+registry:destroy(eid)
+component_cache.invalidate(eid)
+```
+
+**Anti-pattern:**
+```lua
+registry:destroy(eid)
+-- cache not invalidated
+```
+
+**Evidence:**
+- Verified: Test: test_entity_lifecycle.lua::ecs.destroy.cache_cleared
+
+#### destroy-cleanup-references
+- doc_id: pattern:ecs.destroy.cleanup_all_references
+- Test: test_entity_lifecycle.lua::ecs.destroy.cleanup_all_references
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When destroying entities, remove timer, signal, and parent-child references to avoid callbacks hitting dead entities.
+
+**Root cause:**
+Timers and signals keep references alive after destroy; cleanup prevents late callbacks.
+
+**Solution:**
+```lua
+registry:destroy(eid)
+timer.cancel(timer_handle)
+entity_links.unlink(eid)
+```
+
+**Anti-pattern:**
+```lua
+registry:destroy(eid)
+-- timers and links still reference eid
+```
+
+**Evidence:**
+- Verified: Test: test_entity_lifecycle.lua::ecs.destroy.cleanup_all_references
+
+#### destroy-no-stale-refs
+- doc_id: pattern:ecs.destroy.no_stale_refs
+- Test: test_entity_lifecycle.lua::ecs.destroy.no_stale_refs
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When destroying entities, clear external references because stale ids can reappear and point at new entities.
+
+**Root cause:**
+Entt can reuse ids; stale references can mutate unrelated entities.
+
+**Solution:**
+```lua
+registry:destroy(eid)
+component_cache.invalidate(eid)
+ref = nil
+```
+
+**Anti-pattern:**
+```lua
+registry:destroy(eid)
+-- ref still used later
+```
+
+**Evidence:**
+- Verified: Test: test_entity_lifecycle.lua::ecs.destroy.no_stale_refs
+
+#### ensure-entity-invalid
+- doc_id: pattern:ecs.validate.ensure_entity_invalid
+- Test: test_entity_lifecycle.lua::ecs.validate.ensure_entity_invalid
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When ensure_entity returns false, stop processing because the entity id is invalid and any component access will be stale.
+
+**Root cause:**
+Invalid entity ids can point to destroyed entities; guard before using component_cache.
+
+**Solution:**
+```lua
+if not ensure_entity(eid) then return end
+local t = component_cache.get(eid, Transform)
+```
+
+**Anti-pattern:**
+```lua
+local t = component_cache.get(eid, Transform) -- no validity check
+```
+
+**Evidence:**
+- Verified: Test: test_entity_lifecycle.lua::ecs.validate.ensure_entity_invalid
+
+#### ensure-entity-nil
+- doc_id: pattern:ecs.validate.ensure_entity_nil
+- Test: Unverified: no test
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When ensure_entity receives entt_null or nil, treat it as invalid and return early.
+
+**Root cause:**
+nil or entt_null ids are never valid; short-circuit prevents invalid lookups.
+
+**Solution:**
+```lua
+if not ensure_entity(eid) then return end
+```
+
+**Anti-pattern:**
+```lua
+local t = component_cache.get(eid, Transform) -- eid may be nil
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### ensure-scripted-entity-invalid
+- doc_id: pattern:ecs.validate.ensure_scripted_entity_invalid
+- Test: test_entity_lifecycle.lua::ecs.validate.ensure_scripted_entity_invalid
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When ensure_scripted_entity returns false, do not access script tables because ScriptComponent is missing.
+
+**Root cause:**
+Script lookups fail when ScriptComponent is missing; guard with ensure_scripted_entity.
+
+**Solution:**
+```lua
+if not ensure_scripted_entity(eid) then return end
+local script = safe_script_get(eid)
+```
+
+**Anti-pattern:**
+```lua
+local script = safe_script_get(eid) -- eid may not be scripted
+```
+
+**Evidence:**
+- Verified: Test: test_entity_lifecycle.lua::ecs.validate.ensure_scripted_entity_invalid
+
+#### safe-script-get-invalid
+- doc_id: pattern:ecs.access.safe_script_get_invalid
+- Test: test_entity_lifecycle.lua::ecs.access.safe_script_get_invalid
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When safe_script_get returns nil, abort script logic because the entity is invalid or missing ScriptComponent.
+
+**Root cause:**
+safe_script_get fails on invalid entities; continuing with nil scripts causes crashes.
+
+**Solution:**
+```lua
+local script = safe_script_get(eid)
+if not script then return end
+```
+
+**Anti-pattern:**
+```lua
+local script = safe_script_get(eid)
+script.health = 0 -- script may be nil
+```
+
+**Evidence:**
+- Verified: Test: test_entity_lifecycle.lua::ecs.access.safe_script_get_invalid
+
+#### safe-script-get-nil
+- doc_id: pattern:ecs.access.safe_script_get_nil
+- Test: Unverified: no test
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When safe_script_get returns nil for entt_null, skip logic because the entity is not scripted.
+
+**Root cause:**
+nil scripts are expected for invalid ids; continue only when script exists.
+
+**Solution:**
+```lua
+local script = safe_script_get(eid)
+if not script then return end
+```
+
+**Anti-pattern:**
+```lua
+local script = safe_script_get(eid)
+script:tick()
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### script-field-nil-default
+- doc_id: pattern:ecs.access.script_field_nil
+- Test: test_entity_lifecycle.lua::ecs.access.script_field_nil
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When script_field is used with a nil default, treat missing fields as intentional nil to avoid unintended fallbacks.
+
+**Root cause:**
+script_field returns the provided default even if it is nil; callers must handle nil explicitly.
+
+**Solution:**
+```lua
+local mana = script_field(eid, "mana", nil)
+if mana == nil then return end
+```
+
+**Anti-pattern:**
+```lua
+local mana = script_field(eid, "mana", nil)
+-- assume mana is always a number
+```
+
+**Evidence:**
+- Verified: Test: test_entity_lifecycle.lua::ecs.access.script_field_nil
+
+### Lua / C++ Bindings
+
+#### binding-addshaderpass
+- doc_id: pattern:binding.addshaderpass
+- Test: Unverified: binding docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When calling addShaderPass, pass arguments in the bound order because the C++ binding does not validate optional parameters.
+
+**Root cause:**
+Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+
+**Solution:**
+```lua
+-- addShaderPass usage
+addShaderPass(...)
+```
+
+**Anti-pattern:**
+```lua
+-- missing required args
+addShaderPass()
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### binding-layertbl.createlayer
+- doc_id: pattern:binding.layertbl.createlayer
+- Test: Unverified: binding docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When calling layerTbl.CreateLayer, pass arguments in the bound order because the C++ binding does not validate optional parameters.
+
+**Root cause:**
+Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+
+**Solution:**
+```lua
+-- layerTbl.CreateLayer usage
+layerTbl.CreateLayer(...)
+```
+
+**Anti-pattern:**
+```lua
+-- missing required args
+layerTbl.CreateLayer()
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### binding-layertbl.updatelayerzindex
+- doc_id: pattern:binding.layertbl.updatelayerzindex
+- Test: Unverified: binding docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When calling layerTbl.UpdateLayerZIndex, pass arguments in the bound order because the C++ binding does not validate optional parameters.
+
+**Root cause:**
+Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+
+**Solution:**
+```lua
+-- layerTbl.UpdateLayerZIndex usage
+layerTbl.UpdateLayerZIndex(...)
+```
+
+**Anti-pattern:**
+```lua
+-- missing required args
+layerTbl.UpdateLayerZIndex()
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### binding-physics_table.clear_pair_handlers
+- doc_id: pattern:binding.physics_table.clear_pair_handlers
+- Test: Unverified: binding docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When calling physics_table.clear_pair_handlers, pass arguments in the bound order because the C++ binding does not validate optional parameters.
+
+**Root cause:**
+Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+
+**Solution:**
+```lua
+-- physics_table.clear_pair_handlers usage
+physics_table.clear_pair_handlers(...)
+```
+
+**Anti-pattern:**
+```lua
+-- missing required args
+physics_table.clear_pair_handlers()
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### binding-physics_table.disable_collision_between
+- doc_id: pattern:binding.physics_table.disable_collision_between
+- Test: Unverified: binding docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When calling physics_table.disable_collision_between, pass arguments in the bound order because the C++ binding does not validate optional parameters.
+
+**Root cause:**
+Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+
+**Solution:**
+```lua
+-- physics_table.disable_collision_between usage
+physics_table.disable_collision_between(...)
+```
+
+**Anti-pattern:**
+```lua
+-- missing required args
+physics_table.disable_collision_between()
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### binding-physics_table.enable_collision_between
+- doc_id: pattern:binding.physics_table.enable_collision_between
+- Test: Unverified: binding docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When calling physics_table.enable_collision_between, pass arguments in the bound order because the C++ binding does not validate optional parameters.
+
+**Root cause:**
+Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+
+**Solution:**
+```lua
+-- physics_table.enable_collision_between usage
+physics_table.enable_collision_between(...)
+```
+
+**Anti-pattern:**
+```lua
+-- missing required args
+physics_table.enable_collision_between()
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### binding-physics_table.on_pair_begin
+- doc_id: pattern:binding.physics_table.on_pair_begin
+- Test: Unverified: binding docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When calling physics_table.on_pair_begin, pass arguments in the bound order because the C++ binding does not validate optional parameters.
+
+**Root cause:**
+Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+
+**Solution:**
+```lua
+-- physics_table.on_pair_begin usage
+physics_table.on_pair_begin(...)
+```
+
+**Anti-pattern:**
+```lua
+-- missing required args
+physics_table.on_pair_begin()
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### binding-physics_table.on_pair_postsolve
+- doc_id: pattern:binding.physics_table.on_pair_postsolve
+- Test: Unverified: binding docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When calling physics_table.on_pair_postsolve, pass arguments in the bound order because the C++ binding does not validate optional parameters.
+
+**Root cause:**
+Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+
+**Solution:**
+```lua
+-- physics_table.on_pair_postsolve usage
+physics_table.on_pair_postsolve(...)
+```
+
+**Anti-pattern:**
+```lua
+-- missing required args
+physics_table.on_pair_postsolve()
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### binding-physics_table.on_pair_presolve
+- doc_id: pattern:binding.physics_table.on_pair_presolve
+- Test: Unverified: binding docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When calling physics_table.on_pair_presolve, pass arguments in the bound order because the C++ binding does not validate optional parameters.
+
+**Root cause:**
+Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+
+**Solution:**
+```lua
+-- physics_table.on_pair_presolve usage
+physics_table.on_pair_presolve(...)
+```
+
+**Anti-pattern:**
+```lua
+-- missing required args
+physics_table.on_pair_presolve()
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### binding-physics_table.on_pair_separate
+- doc_id: pattern:binding.physics_table.on_pair_separate
+- Test: Unverified: binding docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When calling physics_table.on_pair_separate, pass arguments in the bound order because the C++ binding does not validate optional parameters.
+
+**Root cause:**
+Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+
+**Solution:**
+```lua
+-- physics_table.on_pair_separate usage
+physics_table.on_pair_separate(...)
+```
+
+**Anti-pattern:**
+```lua
+-- missing required args
+physics_table.on_pair_separate()
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### binding-physics_table.reapply_all_filters
+- doc_id: pattern:binding.physics_table.reapply_all_filters
+- Test: Unverified: binding docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When calling physics_table.reapply_all_filters, pass arguments in the bound order because the C++ binding does not validate optional parameters.
+
+**Root cause:**
+Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+
+**Solution:**
+```lua
+-- physics_table.reapply_all_filters usage
+physics_table.reapply_all_filters(...)
+```
+
+**Anti-pattern:**
+```lua
+-- missing required args
+physics_table.reapply_all_filters()
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### binding-physics_table.set_collision_tags
+- doc_id: pattern:binding.physics_table.set_collision_tags
+- Test: Unverified: binding docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When calling physics_table.set_collision_tags, pass arguments in the bound order because the C++ binding does not validate optional parameters.
+
+**Root cause:**
+Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+
+**Solution:**
+```lua
+-- physics_table.set_collision_tags usage
+physics_table.set_collision_tags(...)
+```
+
+**Anti-pattern:**
+```lua
+-- missing required args
+physics_table.set_collision_tags()
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### binding-physics_table.update_collision_masks_for
+- doc_id: pattern:binding.physics_table.update_collision_masks_for
+- Test: Unverified: binding docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When calling physics_table.update_collision_masks_for, pass arguments in the bound order because the C++ binding does not validate optional parameters.
+
+**Root cause:**
+Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+
+**Solution:**
+```lua
+-- physics_table.update_collision_masks_for usage
+physics_table.update_collision_masks_for(...)
+```
+
+**Anti-pattern:**
+```lua
+-- missing required args
+physics_table.update_collision_masks_for()
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### binding-sh.loadshadersfromjson
+- doc_id: pattern:binding.sh.loadshadersfromjson
+- Test: Unverified: binding docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When calling sh.loadShadersFromJSON, pass arguments in the bound order because the C++ binding does not validate optional parameters.
+
+**Root cause:**
+Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+
+**Solution:**
+```lua
+-- sh.loadShadersFromJSON usage
+sh.loadShadersFromJSON(...)
+```
+
+**Anti-pattern:**
+```lua
+-- missing required args
+sh.loadShadersFromJSON()
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### binding-sp.loadfromfile
+- doc_id: pattern:binding.sp.loadfromfile
+- Test: Unverified: binding docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When calling sp.loadFromFile, pass arguments in the bound order because the C++ binding does not validate optional parameters.
+
+**Root cause:**
+Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+
+**Solution:**
+```lua
+-- sp.loadFromFile usage
+sp.loadFromFile(...)
+```
+
+**Anti-pattern:**
+```lua
+-- missing required args
+sp.loadFromFile()
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### binding-t.after
+- doc_id: pattern:binding.t.after
+- Test: Unverified: binding docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When calling t.after, pass arguments in the bound order because the C++ binding does not validate optional parameters.
+
+**Root cause:**
+Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+
+**Solution:**
+```lua
+-- t.after usage
+t.after(...)
+```
+
+**Anti-pattern:**
+```lua
+-- missing required args
+t.after()
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### binding-t.cancel
+- doc_id: pattern:binding.t.cancel
+- Test: Unverified: binding docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When calling t.cancel, pass arguments in the bound order because the C++ binding does not validate optional parameters.
+
+**Root cause:**
+Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+
+**Solution:**
+```lua
+-- t.cancel usage
+t.cancel(...)
+```
+
+**Anti-pattern:**
+```lua
+-- missing required args
+t.cancel()
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### binding-t.every
+- doc_id: pattern:binding.t.every
+- Test: Unverified: binding docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When calling t.every, pass arguments in the bound order because the C++ binding does not validate optional parameters.
+
+**Root cause:**
+Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+
+**Solution:**
+```lua
+-- t.every usage
+t.every(...)
+```
+
+**Anti-pattern:**
+```lua
+-- missing required args
+t.every()
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### binding-t.run_every_render_frame
+- doc_id: pattern:binding.t.run_every_render_frame
+- Test: Unverified: binding docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When calling t.run_every_render_frame, pass arguments in the bound order because the C++ binding does not validate optional parameters.
+
+**Root cause:**
+Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+
+**Solution:**
+```lua
+-- t.run_every_render_frame usage
+t.run_every_render_frame(...)
+```
+
+**Anti-pattern:**
+```lua
+-- missing required args
+t.run_every_render_frame()
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### binding-t.update
+- doc_id: pattern:binding.t.update
+- Test: Unverified: binding docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When calling t.update, pass arguments in the bound order because the C++ binding does not validate optional parameters.
+
+**Root cause:**
+Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+
+**Solution:**
+```lua
+-- t.update usage
+t.update(...)
+```
+
+**Anti-pattern:**
+```lua
+-- missing required args
+t.update()
+```
+
+**Evidence:**
+- Unverified: unverified
+
+### Physics Patterns
+
+#### physics-add-collider
+- doc_id: pattern:physics.add_collider
+- Test: Unverified: docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When adding colliders, create physics first and then call AddCollider with correct shape and sensor flags.
+
+**Root cause:**
+Collider creation depends on physics bodies; calling before setup creates invalid shapes.
+
+**Solution:**
+```lua
+physics.AddCollider(world, entity, "player", "rectangle", 32, 48, 0, 0, false)
+```
+
+**Anti-pattern:**
+```lua
+physics.AddCollider(world, entity, "player", "rectangle", 32, 48, 0, 0, false) -- no body
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### physics-add-shape
+- doc_id: pattern:physics.add_shape_to_entity
+- Test: Unverified: docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When adding extra shapes, use add_shape_to_entity so the body and primary shape stay consistent.
+
+**Root cause:**
+Multi-shape bodies require consistent bookkeeping that helpers provide.
+
+**Solution:**
+```lua
+physics.add_shape_to_entity(world, entity, "player", "circle", 16, 0, 0, 0, false)
+```
+
+**Anti-pattern:**
+```lua
+-- manually attach shapes without tracking indices
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### physics-builder-basic-chain
+- doc_id: pattern:core.physics_builder.basic_chain
+- Test: test_core_patterns.lua::core.physics_builder.basic_chain
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When setting up physics on an entity, use PhysicsBuilder to apply colliders, tags, and masks in one chain.
+
+**Root cause:**
+PhysicsBuilder centralizes collider configuration and reduces missing tag or mask setup.
+
+**Solution:**
+```lua
+PhysicsBuilder.for_entity(entity):circle():tag("projectile"):bullet():collideWith({ "enemy", "WORLD" }):apply()
+```
+
+**Anti-pattern:**
+```lua
+-- collider configured without tags or masks
+```
+
+**Evidence:**
+- Verified: Test: test_core_patterns.lua::core.physics_builder.basic_chain
+
+#### physics-create-from-transform
+- doc_id: pattern:physics.create_physics_for_transform
+- Test: Unverified: docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When creating physics from transforms, call create_physics_for_transform with proper shape config.
+
+**Root cause:**
+Transform-backed physics ensures colliders align with visual positions.
+
+**Solution:**
+```lua
+physics.create_physics_for_transform(registry, PhysicsManager, entity, { shape = "rectangle", tag = "player" })
+```
+
+**Anti-pattern:**
+```lua
+-- manually create body without syncing to transform
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### physics-enable-collision-between
+- doc_id: pattern:physics.enable_collision_between
+- Test: Unverified: docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When enabling collisions between groups, use enable_collision_between or enable_collision_between_many to keep masks consistent.
+
+**Root cause:**
+Centralizing mask updates prevents missing pairings when new tags are added.
+
+**Solution:**
+```lua
+physics.enable_collision_between(world, "player", { "enemy", "terrain" })
+```
+
+**Anti-pattern:**
+```lua
+-- manually toggling shape masks without updating tag list
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### physics-entity-from-ptr
+- doc_id: pattern:physics.raycast_entity_from_ptr
+- Test: Unverified: docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When converting raycast hits, use entity_from_ptr to map shape or body pointers back to entities.
+
+**Root cause:**
+Hit structures expose raw pointers; entity_from_ptr restores entity ids safely.
+
+**Solution:**
+```lua
+local e = physics.entity_from_ptr(hit.shape)
+```
+
+**Anti-pattern:**
+```lua
+-- treat hit.shape as an entity id
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### physics-segment-query
+- doc_id: pattern:physics.segment_query_with_callback
+- Test: Unverified: docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When running segment queries, use the provided callback pattern so you can terminate or continue properly.
+
+**Root cause:**
+Segment queries require callback return values to control traversal.
+
+**Solution:**
+```lua
+physics.segment_query_first(world, from, to, function(hit) return true end)
+```
+
+**Anti-pattern:**
+```lua
+-- ignoring callback return value
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### physics-set-collision-tags
+- doc_id: pattern:physics.set_collision_tags
+- Test: Unverified: docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When defining collision categories, register tags and masks before spawning bodies so filters apply to existing shapes.
+
+**Root cause:**
+Collision tags must be defined before filters are applied to shapes.
+
+**Solution:**
+```lua
+physics.set_collision_tags(world, { "player", "enemy", "terrain" })
+```
+
+**Anti-pattern:**
+```lua
+-- spawn shapes before tags are registered
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### physics-update-collision-masks
+- doc_id: pattern:physics.update_collision_masks_for
+- Test: Unverified: docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When changing mask rules at runtime, call update_collision_masks_for to reapply filters to existing shapes.
+
+**Root cause:**
+Existing shapes keep old filters unless masks are reapplied.
+
+**Solution:**
+```lua
+physics.update_collision_masks_for(world, "player", { "enemy", "terrain" })
+```
+
+**Anti-pattern:**
+```lua
+-- update tag list without reapplying masks
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### physics-world-create
+- doc_id: pattern:physics.world_create
+- Test: Unverified: docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When creating a physics world, pass meter scale and gravity at initialization for consistent simulation units.
+
+**Root cause:**
+Consistent unit scaling avoids mismatched forces and collider sizes.
+
+**Solution:**
+```lua
+local world = physics.PhysicsWorld(registry, 64.0, 0.0, 900.0)
+```
+
+**Anti-pattern:**
+```lua
+local world = physics.PhysicsWorld(registry, 1.0, 0.0, 900.0) -- inconsistent scale
+```
+
+**Evidence:**
+- Unverified: unverified
+
+### Rendering Patterns
+
+#### render-batch-group
+- doc_id: pattern:render.batch_group.use
+- Test: Unverified: docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When batching draw commands, keep batch group ids stable to avoid flickering ordering.
+
+**Root cause:**
+Stable batch ids ensure deterministic sorting and grouping in the renderer.
+
+**Solution:**
+```lua
+command_buffer.queueDraw(layers.ui, fn, 0, layer.DrawCommandSpace.Screen, "inventory")
+```
+
+**Anti-pattern:**
+```lua
+-- dynamic batch ids per frame
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### render-command-buffer
+- doc_id: pattern:render.command_buffer.queue_draw
+- Test: Unverified: docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When issuing draw calls, enqueue them through the command buffer for deterministic render order.
+
+**Root cause:**
+Command buffers centralize draw order and layer sorting.
+
+**Solution:**
+```lua
+command_buffer.queueDraw(layers.ui, fn, 0, layer.DrawCommandSpace.Screen)
+```
+
+**Anti-pattern:**
+```lua
+-- call draw functions directly outside command buffer
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### render-draw-space-screen
+- doc_id: pattern:render.drawcommandspace.screen
+- Test: Unverified: docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When drawing HUD elements, use DrawCommandSpace.Screen to keep them fixed to the viewport.
+
+**Root cause:**
+Screen space commands ignore camera transforms and keep UI stable.
+
+**Solution:**
+```lua
+command_buffer.queueDraw(layers.ui, fn, 0, layer.DrawCommandSpace.Screen)
+```
+
+**Anti-pattern:**
+```lua
+command_buffer.queueDraw(layers.ui, fn, 0, layer.DrawCommandSpace.World)
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### render-draw-space-world
+- doc_id: pattern:render.drawcommandspace.world
+- Test: Unverified: docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When drawing world-space visuals, use DrawCommandSpace.World so they track camera transforms.
+
+**Root cause:**
+World space commands align with camera and physics coordinates.
+
+**Solution:**
+```lua
+command_buffer.queueDraw(layers.world, fn, 0, layer.DrawCommandSpace.World)
+```
+
+**Anti-pattern:**
+```lua
+-- using screen space for world objects
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### render-global-uniforms
+- doc_id: pattern:render.global_uniforms.before_draw
+- Test: Unverified: docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When using global shader uniforms, update them before enqueuing draw commands.
+
+**Root cause:**
+Uniform changes after queueing will not affect already captured draw state.
+
+**Solution:**
+```lua
+globalShaderUniforms.time = t
+command_buffer.queueDraw(...)
+```
+
+**Anti-pattern:**
+```lua
+command_buffer.queueDraw(...)
+globalShaderUniforms.time = t
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### render-groups-register
+- doc_id: pattern:render.render_groups.register
+- Test: Unverified: docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When grouping renderables, create render groups and update them via render group helpers.
+
+**Root cause:**
+Render groups keep related entities on consistent layers and z offsets.
+
+**Solution:**
+```lua
+layerTbl.CreateLayer("ui")
+render_groups.register("inventory", layers.ui)
+```
+
+**Anti-pattern:**
+```lua
+-- ad hoc layer assignment without grouping
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### render-layer-z-order
+- doc_id: pattern:render.layer_z_order
+- Test: Unverified: docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When ordering draw layers, update layer Z indices so higher layers draw last.
+
+**Root cause:**
+Explicit Z ordering prevents UI or effects from drawing under gameplay layers.
+
+**Solution:**
+```lua
+layerTbl.UpdateLayerZIndex(layers.ui, 200)
+```
+
+**Anti-pattern:**
+```lua
+-- rely on default ordering without updating Z
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### render-shader-pipeline-attach
+- doc_id: pattern:render.shader_pipeline.attach
+- Test: Unverified: docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When building shader pipelines, attach passes before setting uniforms to avoid missing references.
+
+**Root cause:**
+Uniforms are stored per pass; passes must exist before applying values.
+
+**Solution:**
+```lua
+addShaderPass(pipeline, "glow")
+sh.ApplyUniformsToShader(pipeline, uniforms)
+```
+
+**Anti-pattern:**
+```lua
+sh.ApplyUniformsToShader(pipeline, uniforms) -- no passes yet
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### render-transform-local
+- doc_id: pattern:render.transform_local_callback
+- Test: Unverified: docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When using transform-local render callbacks, ensure transforms are updated before rendering.
+
+**Root cause:**
+Local render callbacks rely on up-to-date transforms to compute offsets.
+
+**Solution:**
+```lua
+update_transforms()
+render_local_callbacks()
+```
+
+**Anti-pattern:**
+```lua
+render_local_callbacks() -- transforms not updated
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### shader-builder-add-apply
+- doc_id: pattern:core.shader_builder.add_apply
+- Test: test_core_patterns.lua::core.shader_builder.add_apply
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When applying shaders, use ShaderBuilder.add(...):apply() to ensure the pipeline component is attached.
+
+**Root cause:**
+ShaderBuilder ensures shader passes are attached and configured before draw.
+
+**Solution:**
+```lua
+ShaderBuilder.for_entity(entity):add("3d_skew_holo"):apply()
+```
+
+**Anti-pattern:**
+```lua
+-- set shader name without attaching ShaderPipelineComponent
+```
+
+**Evidence:**
+- Verified: Test: test_core_patterns.lua::core.shader_builder.add_apply
+
+### Combat Patterns
+
+#### combat-ability-cost
+- doc_id: pattern:combat.ability.cost_check
+- Test: Unverified: docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When executing abilities, verify resource costs before resolving effects to avoid negative resources.
+
+**Root cause:**
+Cost validation prevents abilities from firing when resources are insufficient.
+
+**Solution:**
+```lua
+if can_pay_cost(caster, cost) then pay_cost(caster, cost) end
+```
+
+**Anti-pattern:**
+```lua
+pay_cost(caster, cost) -- no check
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### combat-buff-order
+- doc_id: pattern:combat.buff.application_order
+- Test: Unverified: docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When applying buffs and debuffs, process application order before damage to ensure correct scaling.
+
+**Root cause:**
+Buff order affects damage outcomes and status calculations.
+
+**Solution:**
+```lua
+apply_buffs(attacker)
+apply_damage(target)
+```
+
+**Anti-pattern:**
+```lua
+apply_damage(target)
+apply_buffs(attacker)
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### combat-damage-bundle
+- doc_id: pattern:combat.damage_bundle.create
+- Test: Unverified: docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When dealing damage, construct a DamageBundle with base damage and modifiers before applying resistances.
+
+**Root cause:**
+Bundling damage values keeps modifiers and resistances applied consistently.
+
+**Solution:**
+```lua
+local bundle = DamageBundle.new(base, modifiers)
+combat.apply_damage(target, bundle)
+```
+
+**Anti-pattern:**
+```lua
+combat.apply_damage(target, base) -- no modifiers
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### combat-damage-resist
+- doc_id: pattern:combat.damage.apply_resist
+- Test: Unverified: docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When applying damage, run resist calculations before reducing health.
+
+**Root cause:**
+Resist calculations change final damage and should be applied consistently.
+
+**Solution:**
+```lua
+local final = apply_resist(target, bundle)
+apply_damage(target, final)
+```
+
+**Anti-pattern:**
+```lua
+apply_damage(target, bundle) -- no resist
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### combat-effect-graph
+- doc_id: pattern:combat.effect_graph.resolve
+- Test: Unverified: docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When resolving effect graphs, process nodes deterministically to keep combat outcomes stable.
+
+**Root cause:**
+Deterministic resolution prevents order-dependent bugs in combat logic.
+
+**Solution:**
+```lua
+effect_graph.resolve(sequence)
+```
+
+**Anti-pattern:**
+```lua
+-- iterate nodes in unordered table
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### combat-event-on-hit
+- doc_id: pattern:combat.event.emit_on_hit
+- Test: Unverified: docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When processing hits, emit combat events so downstream systems can react.
+
+**Root cause:**
+Combat events drive VFX, UI updates, and triggers.
+
+**Solution:**
+```lua
+combat_bus.emit("hit", attacker, target, bundle)
+```
+
+**Anti-pattern:**
+```lua
+apply_damage(target, bundle) -- no event
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### combat-projectile-lifecycle
+- doc_id: pattern:combat.projectile.lifecycle
+- Test: Unverified: docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When spawning projectiles, register them with the combat system and clean them up on hit or timeout.
+
+**Root cause:**
+Projectile lifecycle management prevents orphan entities and missed hit processing.
+
+**Solution:**
+```lua
+local proj = spawn_projectile(params)
+projectile_system.register(proj)
+```
+
+**Anti-pattern:**
+```lua
+spawn_projectile(params) -- not registered
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### combat-projectile-remove
+- doc_id: pattern:combat.projectile.remove_on_hit
+- Test: Unverified: docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When projectiles hit, remove them immediately to prevent double hits.
+
+**Root cause:**
+Leaving projectiles alive risks repeated collisions and duplicate effects.
+
+**Solution:**
+```lua
+on_hit(function(p) destroy_projectile(p) end)
+```
+
+**Anti-pattern:**
+```lua
+-- projectile keeps moving after hit
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### combat-status-stacking
+- doc_id: pattern:combat.status.stack_rules
+- Test: Unverified: docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When stacking status effects, enforce stack limits and refresh timers rather than duplicating entries.
+
+**Root cause:**
+Stack rules keep buffs predictable and prevent runaway power scaling.
+
+**Solution:**
+```lua
+status.apply_or_refresh(target, status_id, stacks)
+```
+
+**Anti-pattern:**
+```lua
+status.apply(target, status_id) -- duplicates without refresh
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### combat-target-filter
+- doc_id: pattern:combat.target.filter_alive
+- Test: Unverified: docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When selecting targets, filter for alive entities and valid teams before applying effects.
+
+**Root cause:**
+Filtering prevents applying effects to dead or invalid targets.
+
+**Solution:**
+```lua
+local targets = filter_alive(team_targets)
+```
+
+**Anti-pattern:**
+```lua
+local targets = team_targets -- includes dead
+```
+
+**Evidence:**
+- Unverified: unverified
+
+### Timer Patterns
+
+#### timer-after-basic
+- doc_id: pattern:core.timer.after_basic
+- Test: test_core_patterns.lua::core.timer.after_basic
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When scheduling delayed work, use timer.after with a small callback to keep logic deterministic.
+
+**Root cause:**
+timer.after provides a consistent delayed callback hook.
+
+**Solution:**
+```lua
+local tag = timer.after(0.5, function() do_work() end)
+```
+
+**Anti-pattern:**
+```lua
+-- manual frame countdown scattered across update loops
+```
+
+**Evidence:**
+- Verified: Test: test_core_patterns.lua::core.timer.after_basic
+
+#### timer-cancel-on-cleanup
+- doc_id: pattern:timer.cancel_on_cleanup
+- Test: Unverified: docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When a delayed action can be canceled, store the timer handle and cancel it on cleanup.
+
+**Root cause:**
+Canceling timers prevents callbacks after entities are destroyed.
+
+**Solution:**
+```lua
+local handle = timer.after(1.0, fn)
+timer.cancel(handle)
+```
+
+**Anti-pattern:**
+```lua
+timer.after(1.0, fn) -- no cancel on cleanup
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### timer-every-guarded
+- doc_id: pattern:core.timer.every_guarded_tick
+- Test: test_core_patterns.lua::core.timer.every_guarded_tick
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When running repeated ticks, guard timer.every callbacks with validity checks to prevent stale entity work.
+
+**Root cause:**
+Guarded callbacks stop timers when entities are destroyed.
+
+**Solution:**
+```lua
+timer.every(interval, function() if not entity_cache.valid(e) then return false end end)
+```
+
+**Anti-pattern:**
+```lua
+timer.every(interval, function() use_entity(e) end)
+```
+
+**Evidence:**
+- Verified: Test: test_core_patterns.lua::core.timer.every_guarded_tick
+
+#### timer-group-cancel
+- doc_id: pattern:timer.group_cancel
+- Test: Unverified: docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When managing groups of timers, use a shared tag or group id for bulk cancellation.
+
+**Root cause:**
+Grouping timers simplifies cleanup and avoids leaks.
+
+**Solution:**
+```lua
+local tag = timer.every(1.0, fn, 0, false, nil, "ui")
+timer.cancel(tag)
+```
+
+**Anti-pattern:**
+```lua
+-- individual timers without group cleanup
+```
+
+**Evidence:**
+- Unverified: unverified
+
+#### timer-tween-scalar
+- doc_id: pattern:core.timer.tween_scalar
+- Test: test_core_patterns.lua::core.timer.tween_scalar
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When tweening scalar values, use timer.tween_scalar with getter and setter functions.
+
+**Root cause:**
+tween_scalar provides deterministic interpolation with explicit getters and setters.
+
+**Solution:**
+```lua
+timer.tween_scalar(duration, getter, setter, target)
+```
+
+**Anti-pattern:**
+```lua
+-- manual interpolation with inconsistent dt
+```
+
+**Evidence:**
+- Verified: Test: test_core_patterns.lua::core.timer.tween_scalar
+
+### Signal Patterns
+
+#### signal-emit
+- doc_id: pattern:core.signal.emit
+- Test: test_core_patterns.lua::core.signal.emit
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When emitting events, use signal.emit with explicit parameters to keep handlers consistent.
+
+**Root cause:**
+signal.emit sends arguments to all handlers in a predictable order.
+
+**Solution:**
+```lua
+signal.emit("grid_transfer_failed", item, from, to, reason)
+```
+
+**Anti-pattern:**
+```lua
+-- direct handler calls without signal bus
+```
+
+**Evidence:**
+- Verified: Test: test_core_patterns.lua::core.signal.emit
+
+#### signal-event-bridge
+- doc_id: pattern:core.event_bridge.attach
+- Test: test_core_patterns.lua::core.event_bridge.attach
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When bridging bus events to signals, call EventBridge.attach to connect the systems.
+
+**Root cause:**
+EventBridge attaches signal forwarding to the shared event bus.
+
+**Solution:**
+```lua
+local EventBridge = require("core.event_bridge")
+EventBridge.attach(ctx)
+```
+
+**Anti-pattern:**
+```lua
+-- emit bus events without signal bridge
+```
+
+**Evidence:**
+- Verified: Test: test_core_patterns.lua::core.event_bridge.attach
+
+#### signal-group-cleanup
+- doc_id: pattern:core.signal_group.cleanup
+- Test: test_core_patterns.lua::core.signal_group.cleanup
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When managing multiple listeners, use SignalGroup and call cleanup to unregister them.
+
+**Root cause:**
+SignalGroup keeps related listeners together and cleans them in one call.
+
+**Solution:**
+```lua
+local group = SignalGroup.new("menu")
+group:on("game_state_changed", handler)
+group:cleanup()
+```
+
+**Anti-pattern:**
+```lua
+-- listeners registered without cleanup
+```
+
+**Evidence:**
+- Verified: Test: test_core_patterns.lua::core.signal_group.cleanup
+
+#### signal-register
+- doc_id: pattern:core.signal.register
+- Test: test_core_patterns.lua::core.signal.register
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When registering listeners, use signal.register and store the handler for cleanup.
+
+**Root cause:**
+Registering through the signal bus centralizes event handling.
+
+**Solution:**
+```lua
+signal.register("character_select_opened", function() setMainMenuVisible(false) end)
+```
+
+**Anti-pattern:**
+```lua
+-- ad hoc event tables without unregister
+```
+
+**Evidence:**
+- Verified: Test: test_core_patterns.lua::core.signal.register
+
+#### signal-unregister
+- doc_id: pattern:signal.unregister
+- Test: Unverified: docs only
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When listeners are no longer needed, unregister them to prevent duplicate callbacks.
+
+**Root cause:**
+Unregistering keeps handler lists short and avoids double firing.
+
+**Solution:**
+```lua
+signal.remove("event_name", handler)
+```
+
+**Anti-pattern:**
+```lua
+-- leave handler registered forever
+```
+
+**Evidence:**
+- Unverified: unverified
+
+### Wand Patterns
+
+#### wand-cumulative-stats
+- doc_id: pattern:wand.cumulative_stats.apply
+- Test: Unverified: wand_cumulative_test.lua
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When applying cumulative wand stats, recompute totals after all modifiers are attached.
+
+**Root cause:**
+Recomputing totals after modifiers avoids inconsistent stat displays.
+
+**Solution:**
+```lua
+wand.recompute_stats(wand)
+```
+
+**Anti-pattern:**
+```lua
+-- use cached stats after adding modifiers
+```
+
+**Evidence:**
+- Unverified: proposed
+
+#### wand-system-integration
+- doc_id: pattern:wand.system.integration
+- Test: Unverified: wand_system_integration_test.lua
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When integrating wand systems, ensure the panel and runtime state stay synchronized.
+
+**Root cause:**
+UI and runtime state must remain consistent to avoid desync.
+
+**Solution:**
+```lua
+wand_panel.sync_from_state(wand_state)
+```
+
+**Anti-pattern:**
+```lua
+-- update runtime without UI sync
+```
+
+**Evidence:**
+- Unverified: proposed
+
+#### wand-template-apply
+- doc_id: pattern:wand.template.apply
+- Test: Unverified: test_wand_templates_phase2.lua
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When creating wands, apply a template first so base stats and slots are initialized.
+
+**Root cause:**
+Templates establish baseline stats before custom modifications.
+
+**Solution:**
+```lua
+local wand = wand_templates.apply(template_id, overrides)
+```
+
+**Anti-pattern:**
+```lua
+-- build wand stats without template baseline
+```
+
+**Evidence:**
+- Unverified: proposed
+
+#### wand-trigger-order
+- doc_id: pattern:wand.trigger.phase_order
+- Test: Unverified: test_wand_triggers_phase2.lua
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When firing spells, respect trigger ordering so phase effects resolve predictably.
+
+**Root cause:**
+Trigger ordering prevents spells from skipping or double-applying effects.
+
+**Solution:**
+```lua
+wand.apply_triggers(wand, "pre")
+wand.cast_spells(wand)
+wand.apply_triggers(wand, "post")
+```
+
+**Anti-pattern:**
+```lua
+wand.cast_spells(wand) -- no trigger phases
+```
+
+**Evidence:**
+- Unverified: proposed
+
+#### wand-upgrade-apply
+- doc_id: pattern:wand.upgrade.apply
+- Test: Unverified: wand_upgrade_behavior_test.lua
+- Source: planning/cm_rules_candidates.yaml
+
+**Problem:**
+When upgrading wands, apply upgrade behavior rules to preserve balance constraints.
+
+**Root cause:**
+Upgrade rules prevent invalid slot counts or stat overflows.
+
+**Solution:**
+```lua
+wand_upgrades.apply(wand, upgrade_id)
+```
+
+**Anti-pattern:**
+```lua
+-- direct stat edits without upgrade rules
+```
+
+**Evidence:**
+- Unverified: proposed

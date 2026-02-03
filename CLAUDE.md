@@ -84,47 +84,9 @@ cmake -B build -DUSE_LUAJIT=OFF && cmake --build build               # Lua 5.4.4
 
 ---
 
-## C++ Bindings vs Lua Modules (CRITICAL)
+## C++ Bindings vs Lua Modules
 
-**Many "modules" are C++ globals, NOT Lua files you can `require()`!**
-
-```lua
--- WRONG: These will fail with "module not found"
-local shader_pipeline = require("shaders.shader_pipeline")  -- ERROR!
-local registry = require("core.registry")                    -- ERROR!
-
--- CORRECT: Access C++ bindings from _G
-local shader_pipeline = _G.shader_pipeline
-local registry = _G.registry  -- or just use `registry` directly
-```
-
-### C++ Globals (use `_G.name` or bare name)
-| Global | Purpose |
-|--------|---------|
-| `registry` | EnTT entity registry |
-| `component_cache` | Cached component access |
-| `shader_pipeline` | Shader pipeline manager |
-| `physics` | Physics system bindings |
-| `globals` | Game state and screen dimensions |
-| `localization` | Localization system |
-| `animation_system` | Animation creation/control |
-| `layer_order_system` | Z-ordering system |
-| `command_buffer` | Draw command queue |
-| `layers` | Layer references (sprites, ui, etc.) |
-| `z_orders` | Z-order constants |
-| `globalShaderUniforms` | Shader uniform manager |
-
-### Lua Modules (use `require()`)
-| Module | Path |
-|--------|------|
-| Timer | `require("core.timer")` |
-| Signal | `require("external.hump.signal")` |
-| Component Cache | `require("core.component_cache")` |
-| UI DSL | `require("ui.ui_syntax_sugar")` |
-| EntityBuilder | `require("core.entity_builder")` |
-| ShaderBuilder | `require("core.shader_builder")` |
-
-**Rule of thumb:** If it's defined in C++ (check `chugget_code_definitions.lua` for hints), use `_G.name`. If it's a `.lua` file in `assets/scripts/`, use `require()`.
+Canonical guidance lives in [Engine Quirks](docs/quirks.md) under "Lua / C++ Bindings". Keep this file lean and link to quirks for details.
 
 ---
 

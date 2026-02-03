@@ -92,10 +92,16 @@ TEST(StubsCompile, AllHeadersIncludable) {
     EXPECT_GT(perf.average_ms(), 0.0);
 
     testing::TestApiRegistry registry;
-    registry.register_entry({"query", testing::TestApiKind::Query});
-    EXPECT_EQ(registry.entries().size(), 1u);
+    registry.set_version("1.0.0");
+    registry.register_state_path({"game.ready", "boolean", false, "Game ready flag"});
+    registry.register_query({"ui.element_rect", {{"name", "string", true, "element name"}}, "table", "Get rect"});
+    registry.register_command({"scene.load", {{"name", "string", true, "scene name"}}, "Load scene"});
+    registry.register_capability("screenshots", true);
+    EXPECT_TRUE(registry.validate_state_path("game.ready"));
+    EXPECT_TRUE(registry.validate_query("ui.element_rect"));
+    EXPECT_TRUE(registry.validate_command("scene.load"));
 
-    EXPECT_FALSE(testing::write_test_api_json(registry, "test_api.json"));
+    EXPECT_TRUE(testing::write_test_api_json(registry, "test_api.json"));
     EXPECT_FALSE(testing::write_artifact_index("tests/out"));
 
     testing::TimelineWriter timeline;

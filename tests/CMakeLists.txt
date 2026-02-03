@@ -23,6 +23,7 @@ add_executable(unit_tests
     unit/test_collision_log.cpp
     unit/test_error_handling.cpp
     unit/test_config_validation.cpp
+    unit/test_test_mode_config.cpp
     unit/test_sound_system.cpp
     unit/test_scripting_bindings.cpp
     unit/test_scripting_lifecycle.cpp
@@ -48,6 +49,8 @@ add_executable(unit_tests
     unit/test_render_stack_safety.cpp
     unit/test_save_file_io.cpp
     unit/test_replace_children.cpp
+    unit/test_mode_config.cpp
+    unit/test_test_mode_config.cpp
     helpers/test_stubs.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_system.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_presets.cpp
@@ -75,6 +78,7 @@ add_executable(unit_tests
     ${CMAKE_SOURCE_DIR}/src/systems/input/input_cursor_events.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/input/input_focus.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/input/input_polling.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/test_mode_config.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/entity_gamestate_management/entity_gamestate_management.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/ai/ai_system.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/scripting/scripting_functions.cpp
@@ -116,6 +120,23 @@ if(TRACY_ENABLE AND NOT EMSCRIPTEN)
 endif()
 
 gtest_discover_tests(unit_tests)
+
+# ======================================================================
+# Test Mode Config CLI Driver (for E2E scripts)
+# ======================================================================
+add_executable(test_mode_config_cli
+    helpers/test_mode_config_cli.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/test_mode_config.cpp
+)
+
+target_include_directories(test_mode_config_cli PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_link_libraries(test_mode_config_cli PRIVATE
+    CommonSettings
+)
 
 # ======================================================================
 # Lua Backend Smoke Tests (minimal dependencies - just Sol2/Lua)

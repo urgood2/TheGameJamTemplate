@@ -51,6 +51,20 @@ except Exception:
 PY
 }
 
+log_partial_results() {
+    if [ -f "test_output/status.json" ]; then
+        local pcount
+        local fcount
+        local scount
+        pcount=$(json_get "test_output/status.json" "passed_count")
+        fcount=$(json_get "test_output/status.json" "failed")
+        scount=$(json_get "test_output/status.json" "skipped")
+        log "  Partial results: ${pcount:-0}/${fcount:-0}/${scount:-0}"
+    else
+        log "  Partial results: unknown"
+    fi
+}
+
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
@@ -75,7 +89,10 @@ log "Engine exited with code ${ENGINE_EXIT}"
 
 log "Checking run_state.json..."
 if [ ! -f "test_output/run_state.json" ]; then
+    log "  File exists: no"
     log "CRASH DETECTED: run_state.json missing"
+    log "  Last test started: unknown"
+    log_partial_results
     log "=== RESULT: CRASH ==="
     log "Exit code: 2"
     exit 2
@@ -92,6 +109,7 @@ log "  last_test_completed: ${LAST_COMPLETED:-unknown}"
 if [ "${IN_PROGRESS}" = "true" ]; then
     log "CRASH DETECTED: in_progress still true"
     log "  Last test started: ${LAST_STARTED:-unknown}"
+    log_partial_results
     log "=== RESULT: CRASH ==="
     log "Exit code: 2"
     exit 2

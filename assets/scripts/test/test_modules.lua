@@ -25,6 +25,7 @@ return {
 
     -- ==== Entity & ECS ====
     "test.test_entity_lifecycle",   -- Entity lifecycle patterns
+    "test.test_core_components",    -- Core + graphics component access
     "test.test_physics_components", -- Physics component access
     "test.test_ui_components",      -- UI component access
     "test.test_combat_components",  -- Combat component access

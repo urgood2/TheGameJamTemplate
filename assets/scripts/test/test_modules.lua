@@ -25,6 +25,8 @@ return {
 
     -- ==== Entity & ECS ====
     "test.test_entity_lifecycle",   -- Entity lifecycle patterns
+    "test.test_physics_components", -- Physics component access
+    "test.test_ui_components",      -- UI component access
 
     -- ==== Localization ====
     "test.test_styled_localization", -- Styled localization tests

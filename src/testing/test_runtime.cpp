@@ -25,6 +25,12 @@
 #include "testing/timeline_writer.hpp"
 
 namespace testing {
+SchemaValidationResult validate_json_with_schema_file(const nlohmann::json& instance,
+                                                     const std::filesystem::path& schema_path);
+bool write_json_file(const std::filesystem::path& path,
+                     const nlohmann::json& value,
+                     std::string& err);
+
 namespace {
 
 std::string platform_string() {

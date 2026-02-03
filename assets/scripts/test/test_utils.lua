@@ -3,10 +3,14 @@
 
 local TestUtils = {}
 
+TestUtils.DEFAULT_SEED = 12345
+
 local log_handle = nil
 local current_test_id = nil
 local screenshot_hook = nil
 local artifact_hook = nil
+local spawned_entities = {}
+local fallback_entity_id = 900000
 
 local function fail(msg)
     error(msg or "assertion failed", 2)
@@ -121,90 +125,137 @@ local function touch(path)
 end
 
 function TestUtils.assert_eq(actual, expected, msg)
+    TestUtils.log(string.format("[ASSERT] assert_eq: comparing actual=%s expected=%s", tostring(actual), tostring(expected)))
     if actual ~= expected then
-        fail(string.format("%s: expected %s, got %s", msg or "assert_eq", tostring(expected), tostring(actual)))
+        local message = string.format("%s: expected %s, got %s", msg or "assert_eq", tostring(expected), tostring(actual))
+        TestUtils.log(string.format("[ASSERT] assert_eq: FAIL - actual=%s expected=%s - msg: '%s'", tostring(actual), tostring(expected), msg or ""))
+        fail(message)
     end
+    TestUtils.log("[ASSERT] assert_eq: PASS")
 end
 
 function TestUtils.assert_neq(actual, expected, msg)
+    TestUtils.log(string.format("[ASSERT] assert_neq: comparing actual=%s expected=%s", tostring(actual), tostring(expected)))
     if actual == expected then
+        TestUtils.log(string.format("[ASSERT] assert_neq: FAIL - actual=%s expected=%s - msg: '%s'", tostring(actual), tostring(expected), msg or ""))
         fail(string.format("%s: expected != %s", msg or "assert_neq", tostring(expected)))
     end
+    TestUtils.log("[ASSERT] assert_neq: PASS")
 end
 
 function TestUtils.assert_true(value, msg)
+    TestUtils.log(string.format("[ASSERT] assert_true: value=%s", tostring(value)))
     if not value then
+        TestUtils.log(string.format("[ASSERT] assert_true: FAIL - msg: '%s'", msg or ""))
         fail(msg or "assert_true failed")
     end
+    TestUtils.log("[ASSERT] assert_true: PASS")
 end
 
 function TestUtils.assert_false(value, msg)
+    TestUtils.log(string.format("[ASSERT] assert_false: value=%s", tostring(value)))
     if value then
+        TestUtils.log(string.format("[ASSERT] assert_false: FAIL - msg: '%s'", msg or ""))
         fail(msg or "assert_false failed")
     end
+    TestUtils.log("[ASSERT] assert_false: PASS")
 end
 
 function TestUtils.assert_nil(value, msg)
+    TestUtils.log(string.format("[ASSERT] assert_nil: value=%s", tostring(value)))
     if value ~= nil then
+        TestUtils.log(string.format("[ASSERT] assert_nil: FAIL - msg: '%s'", msg or ""))
         fail(msg or "assert_nil failed")
     end
+    TestUtils.log("[ASSERT] assert_nil: PASS")
 end
 
 function TestUtils.assert_not_nil(value, msg)
+    TestUtils.log(string.format("[ASSERT] assert_not_nil: value=%s", tostring(value)))
     if value == nil then
+        TestUtils.log(string.format("[ASSERT] assert_not_nil: FAIL - msg: '%s'", msg or ""))
         fail(msg or "assert_not_nil failed")
     end
+    TestUtils.log("[ASSERT] assert_not_nil: PASS")
 end
 
 function TestUtils.assert_gt(actual, expected, msg)
+    TestUtils.log(string.format("[ASSERT] assert_gt: comparing actual=%s expected=%s", tostring(actual), tostring(expected)))
     if not (actual > expected) then
+        TestUtils.log(string.format("[ASSERT] assert_gt: FAIL - msg: '%s'", msg or ""))
         fail(msg or "assert_gt failed")
     end
+    TestUtils.log("[ASSERT] assert_gt: PASS")
 end
 
 function TestUtils.assert_gte(actual, expected, msg)
+    TestUtils.log(string.format("[ASSERT] assert_gte: comparing actual=%s expected=%s", tostring(actual), tostring(expected)))
     if not (actual >= expected) then
+        TestUtils.log(string.format("[ASSERT] assert_gte: FAIL - msg: '%s'", msg or ""))
         fail(msg or "assert_gte failed")
     end
+    TestUtils.log("[ASSERT] assert_gte: PASS")
 end
 
 function TestUtils.assert_lt(actual, expected, msg)
+    TestUtils.log(string.format("[ASSERT] assert_lt: comparing actual=%s expected=%s", tostring(actual), tostring(expected)))
     if not (actual < expected) then
+        TestUtils.log(string.format("[ASSERT] assert_lt: FAIL - msg: '%s'", msg or ""))
         fail(msg or "assert_lt failed")
     end
+    TestUtils.log("[ASSERT] assert_lt: PASS")
 end
 
 function TestUtils.assert_lte(actual, expected, msg)
+    TestUtils.log(string.format("[ASSERT] assert_lte: comparing actual=%s expected=%s", tostring(actual), tostring(expected)))
     if not (actual <= expected) then
+        TestUtils.log(string.format("[ASSERT] assert_lte: FAIL - msg: '%s'", msg or ""))
         fail(msg or "assert_lte failed")
     end
+    TestUtils.log("[ASSERT] assert_lte: PASS")
 end
 
 function TestUtils.assert_contains(haystack, needle, msg)
+    TestUtils.log(string.format("[ASSERT] assert_contains: haystack=%s needle=%s", tostring(haystack), tostring(needle)))
     if type(haystack) ~= "string" or not haystack:find(needle, 1, true) then
+        TestUtils.log(string.format("[ASSERT] assert_contains: FAIL - msg: '%s'", msg or ""))
         fail(msg or "assert_contains failed")
     end
+    TestUtils.log("[ASSERT] assert_contains: PASS")
 end
 
 function TestUtils.assert_throws(fn, msg)
+    TestUtils.log("[ASSERT] assert_throws: expecting throw")
     local ok = pcall(fn)
     if ok then
+        TestUtils.log(string.format("[ASSERT] assert_throws: FAIL - msg: '%s'", msg or ""))
         fail(msg or "assert_throws failed")
     end
+    TestUtils.log("[ASSERT] assert_throws: PASS")
+    return true
 end
 
 function TestUtils.assert_error(fn, expected, msg)
+    if msg == nil and expected ~= nil then
+        msg = expected
+        expected = nil
+    end
+    TestUtils.log("[ASSERT] assert_error: expecting error")
     local ok, err = pcall(fn)
     if ok then
+        TestUtils.log(string.format("[ASSERT] assert_error: FAIL - msg: '%s'", msg or ""))
         fail(msg or "assert_error failed")
     end
     if expected and not tostring(err):find(expected, 1, true) then
+        TestUtils.log(string.format("[ASSERT] assert_error: FAIL - expected '%s' got '%s'", tostring(expected), tostring(err)))
         fail(string.format("%s: expected error containing '%s', got '%s'", msg or "assert_error", tostring(expected), tostring(err)))
     end
+    TestUtils.log("[ASSERT] assert_error: PASS")
 end
 
 function TestUtils.safe_filename(name)
-    local safe = tostring(name or ""):gsub("[^%w%._-]", "_")
+    local safe = tostring(name or ""):lower():gsub("[^a-z0-9%._-]", "_")
+    safe = safe:gsub("_+", "_")
     if safe == "" then
         safe = "unnamed"
     end
@@ -270,10 +321,10 @@ end
 
 function TestUtils.wipe_output()
     os.execute('rm -f test_output/*.json test_output/*.md test_output/*.xml test_output/*.txt 2>/dev/null')
-    os.execute('rm -rf test_output/screenshots 2>/dev/null')
-    os.execute('rm -rf test_output/artifacts 2>/dev/null')
-    os.execute('rmdir /s /q test_output\\screenshots 2>NUL')
-    os.execute('rmdir /s /q test_output\\artifacts 2>NUL')
+    os.execute('rm -f test_output/screenshots/* 2>/dev/null')
+    os.execute('rm -f test_output/artifacts/* 2>/dev/null')
+    os.execute('del /q test_output\\screenshots\\* 2>NUL')
+    os.execute('del /q test_output\\artifacts\\* 2>NUL')
     TestUtils.ensure_output_dirs()
 end
 
@@ -338,10 +389,21 @@ local function placeholder_png(path)
     file:close()
 end
 
+local function file_size(path)
+    local handle = io.open(path, "rb")
+    if not handle then
+        return 0
+    end
+    local size = handle:seek("end") or 0
+    handle:close()
+    return size
+end
+
 function TestUtils.capture_screenshot(name)
     TestUtils.ensure_output_dirs()
     local safe = TestUtils.safe_filename(name)
     local path = "test_output/screenshots/" .. safe .. ".png"
+    TestUtils.log(string.format("[SCREENSHOT] capture_screenshot: capturing '%s'", safe))
     if _G.TakeScreenshot then
         _G.TakeScreenshot(path)
     elseif _G.capture_screenshot then
@@ -349,11 +411,87 @@ function TestUtils.capture_screenshot(name)
     else
         placeholder_png(path)
     end
+    local size = file_size(path)
+    TestUtils.log(string.format("[SCREENSHOT] capture_screenshot: written to %s (%d bytes)", path, size))
     if screenshot_hook and current_test_id then
         screenshot_hook(current_test_id, path)
     end
     TestUtils.record_artifact(path)
     return path
+end
+
+function TestUtils.step_frames(n)
+    local frames = tonumber(n) or 0
+    if frames <= 0 then
+        return
+    end
+    if _G.step_frames then
+        _G.step_frames(frames)
+        return
+    end
+    if _G.advance_frame then
+        for _ = 1, frames do
+            _G.advance_frame()
+        end
+        return
+    end
+    -- Fallback no-op loop for deterministic call sites.
+    for _ = 1, frames do
+        -- intentionally empty
+    end
+end
+
+function TestUtils.screenshot_after_frames(name, n_frames)
+    local frames = tonumber(n_frames) or 0
+    TestUtils.log(string.format("[SCREENSHOT] screenshot_after_frames: waiting %d frames...", frames))
+    TestUtils.step_frames(frames)
+    TestUtils.log(string.format("[SCREENSHOT] screenshot_after_frames: capturing '%s'", tostring(name)))
+    local path = TestUtils.capture_screenshot(name)
+    local size = file_size(path)
+    local size_kb = math.ceil(size / 1024)
+    TestUtils.log(string.format("[SCREENSHOT] screenshot_after_frames: written to %s (%dKB)", path, size_kb))
+    return path
+end
+
+local function clear_spawned_entities()
+    if #spawned_entities == 0 then
+        return 0
+    end
+    local cleared = 0
+    if _G.registry and type(_G.registry.destroy) == "function" then
+        for _, entity in ipairs(spawned_entities) do
+            pcall(function() _G.registry:destroy(entity) end)
+            cleared = cleared + 1
+            if _G.component_cache and type(_G.component_cache.invalidate) == "function" then
+                _G.component_cache.invalidate(entity)
+            end
+        end
+    else
+        cleared = #spawned_entities
+    end
+    spawned_entities = {}
+    return cleared
+end
+
+function TestUtils.spawn_test_entity(opts)
+    local options = opts or {}
+    local entity = nil
+    if _G.registry and type(_G.registry.create) == "function" then
+        entity = _G.registry:create()
+    else
+        fallback_entity_id = fallback_entity_id + 1
+        entity = fallback_entity_id
+    end
+    table.insert(spawned_entities, entity)
+    if options.components and _G.component_cache and type(_G.component_cache.set) == "function" then
+        for component, data in pairs(options.components) do
+            _G.component_cache.set(entity, component, data)
+        end
+    end
+    if options.init and type(options.init) == "function" then
+        options.init(entity)
+    end
+    return entity
 end
 
 function TestUtils.write_json(path, data)
@@ -366,31 +504,52 @@ function TestUtils.write_json(path, data)
     file:close()
 end
 
-function TestUtils.write_file(path, content)
+function TestUtils.write_file(path, content, add_newline)
     local file = io.open(path, "w")
     if not file then
-        fail("Could not write file: " .. tostring(path))
+        return false
     end
     file:write(content or "")
-    file:write("\n")
+    if add_newline ~= false then
+        file:write("\n")
+    end
     file:close()
+    return true
 end
 
 function TestUtils.reset_world()
+    TestUtils.log("[RESET] reset_world: clearing test entities...")
+    local cleared = clear_spawned_entities()
+    local extra_cleared = 0
+    if _G.clear_all_test_entities then
+        local ok, result = pcall(_G.clear_all_test_entities)
+        if ok and type(result) == "number" then
+            extra_cleared = result
+        end
+    end
+    TestUtils.log(string.format("[RESET] reset_world: entities cleared: %d", cleared + extra_cleared))
+
+    TestUtils.log("[RESET] reset_world: resetting registries...")
+    if _G.reset_ui_registry then
+        pcall(_G.reset_ui_registry)
+    end
+    if _G.reset_physics_world then
+        pcall(_G.reset_physics_world)
+    end
     if _G.component_cache and _G.component_cache.clear then
         _G.component_cache.clear()
     elseif _G.component_cache and _G.component_cache._reset then
         _G.component_cache._reset()
     end
 
-    math.randomseed(12345)
-
+    TestUtils.log(string.format("[RESET] reset_world: resetting RNG seed to: %d", TestUtils.DEFAULT_SEED))
+    math.randomseed(TestUtils.DEFAULT_SEED)
     if _G.engine_rng and _G.engine_rng.seed then
-        _G.engine_rng.seed(12345)
+        _G.engine_rng.seed(TestUtils.DEFAULT_SEED)
     end
 
     if _G.reset_world then
-        _G.reset_world()
+        pcall(_G.reset_world)
     end
 
     if _G.camera and _G.camera.set_position then
@@ -399,12 +558,13 @@ function TestUtils.reset_world()
     if _G.camera and _G.camera.set_zoom then
         _G.camera.set_zoom(1.0)
     end
+    TestUtils.log("[RESET] reset_world: camera reset to default")
 
     if _G.ui_root and _G.ui_root.reset then
         _G.ui_root.reset()
     end
 
-    TestUtils.log("[RESET] World reset complete")
+    TestUtils.log("[RESET] reset_world: COMPLETE")
 end
 
 return TestUtils

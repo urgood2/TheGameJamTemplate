@@ -75,7 +75,7 @@ All outputs are written to `test_output/` in the project root:
 local TestRunner = require("test.test_runner")
 local test_utils = require("test.test_utils")
 
-TestRunner:register("physics.raycast.basic", "physics", function()
+TestRunner.register("physics.raycast.basic", "physics", function()
     -- Arrange
     local start = vec2(0, 0)
     local target = vec2(100, 0)
@@ -176,19 +176,42 @@ Each run wipes `test_output/` files and regenerates:
 
 Baselines are stored under `test_baselines/` and are never deleted by the runner.
 
-## UBS (Unified Build Script)
+## Visual Baselines
 
-Before committing, ensure tests pass:
+Visual baselines are stored under:
+
+`test_baselines/screenshots/<platform>/<renderer>/<resolution>/`
+
+To record baselines manually:
+
+```lua
+local TestRunner = require("test.test_runner")
+TestRunner.run({ record_baselines = true })
+```
+
+Baselines are never deleted by the runner. Use `python3 scripts/check_baseline_size.py` to enforce size limits.
+
+## Build Validation (UBS)
+
+**What is UBS?** Justfile-driven build + unit test validation gate.
+
+**Commands:**
 
 ```bash
-# Full build + test
+# Full build validation
 just build-debug && just test
 
-# Quick test only
+# Quick validation
 just test
 ```
 
-UBS definition for this repo: `just build-debug && just test` (build + unit tests). The pass signal is a zero exit code and the `./build/tests/unit_tests` binary output.
+**Pass/Fail Signal:**
+- Exit code `0` = PASS
+- Exit code non-zero = FAIL
+
+**Log Location:**
+- Stdout/stderr from `just`/`cmake`
+- Unit test output from `./build/tests/unit_tests`
 
 ## Crash Detection
 
@@ -207,6 +230,78 @@ python scripts/check_run_state.py test_output/run_state.json
 
 Exit codes: `0` = passed, `1` = failed, `2` = crash, `3` = hang
 
+## Pre-flight Verification
+
+Phase 1 pre-flight verification completed. All Go/No-Go gates documented below.
+
+```
+[PREFLIGHT] === Pre-flight Environment Verification ===
+[PREFLIGHT] Test scene loading: NOT VERIFIED
+[PREFLIGHT]   Entrypoint: Lua scripts loaded by scripting::initLuaMasterState
+[PREFLIGHT]   File: src/systems/scripting/scripting_functions.cpp
+[PREFLIGHT] Screenshot capture: CONDITIONAL
+[PREFLIGHT]   Function: TakeScreenshot() or capture_screenshot()
+[PREFLIGHT]   Safe timing: end-of-frame via screenshot_after_frames()
+[PREFLIGHT] UBS definition: IDENTIFIED
+[PREFLIGHT]   Command: just build-debug && just test
+[PREFLIGHT]   Pass/fail signal: exit code 0 = PASS
+```
+
+### 1. Test Scene Loading
+- **Status**: NOT VERIFIED (no explicit C++ test scene switch found)
+- **Entrypoint**: Lua scripts are loaded by `scripting::initLuaMasterState` (C++), which consumes a file list and sets Lua `package.path`
+- **Known Lua root**: `assets/scripts/core/main.lua` (main loop)
+- **Scene selection**: `TEST_SCENE=1` env var and/or `_G.TEST_SCENE` are used by the harness to mark test mode
+- **Authoritative files**: `test_runner.lua`, `test_smoke.lua`, `test_selftest.lua`, `run_smoke.lua`
+
+### 2. Deterministic Execution
+- **RNG seeding**: `math.randomseed(12345)` via `test_utils.reset_world()`
+- **Frame-driven waits**: `test_utils.step_frames(n)` helper available
+- **Camera reset**: `camera.set_position(0,0); camera.set_zoom(1.0)` in reset_world
+- **Animation isolation**: Frame-count driven, not time-based
+
+### 3. Rendering Config
+- **Resolution**: Recorded in `capabilities.json` as `environment.resolution`
+- **DPI scale**: Recorded in `capabilities.json` as `environment.dpi_scale`
+- **Renderer**: Recorded in `capabilities.json` as `environment.renderer`
+- **VSync**: Should be disabled for deterministic capture (engine-dependent)
+
+### 4. Screenshot Capture
+- **Status**: CONDITIONALLY AVAILABLE (fallback to placeholder outside engine)
+- **Functions**: `TakeScreenshot`, `capture_screenshot`, or `take_screenshot`
+- **Safe timing**: End-of-frame (via `screenshot_after_frames()`)
+- **Helper**: `test_utils.screenshot_after_frames(name, nFrames)`
+
+### 5. Write Access
+- **Status**: VERIFIED (test_output/ writable)
+- **Directories**: `test_output/`, `test_output/screenshots/`, `test_output/artifacts/`
+- **Gitkeep markers**: Committed in screenshots/ and artifacts/
+
+### 6. World Reset Strategy
+- **Function**: `test_utils.reset_world()`
+- **Clears**: Spawned entities, registries (UI/physics), component cache
+- **Resets**: RNG seed, camera position/zoom, UI root
+- **Logging**: `[RESET]` prefix for debugging
+
+### 7. Log Capture
+- **Status**: NOT DETECTED in current runtime
+- **Methods**: `capture_log_start/end`, `log_capture_start/end`, or `test_logger`
+- **Fallback**: Tests log directly via print(), captured by runner
+
+### 8. UBS Definition
+- **Name**: Unified Build Script (build + test validation)
+- **Command**: `just build-debug && just test`
+- **Pass signal**: Exit code 0
+- **Log location**: Stdout/stderr + `./build/tests/unit_tests`
+- **CI gate**: Required before merge / Phase 8 changes
+
+### 9. Run Procedure
+- **Interactive (current)**: `lua5.4 assets/scripts/test/run_smoke.lua`
+- **In-engine (pending)**: hook a test scene or console command to `require("test.test_runner")`
+- **CI/Headless (pending)**: provide a `--scene test` switch once wired
+- **Smoke only**: `lua5.4 assets/scripts/test/run_smoke.lua`
+- **Sharded**: `--shard-count N --shard-index I`
+
 ## Go/No-Go Gates
 
 Check `test_output/capabilities.json` for environment capabilities:
@@ -222,9 +317,33 @@ Check `test_output/capabilities.json` for environment capabilities:
     "headless": false,
     "network": false,
     "gpu": true,
-    "test_scene": true,
+    "test_scene": false,
     "output_writable": true,
-    "world_reset": true
+    "world_reset": true,
+    "ubs": true
+  },
+  "gates": {
+    "deterministic_test_scene": false,
+    "test_output_writable": true,
+    "screenshot_capture": false,
+    "log_capture": false,
+    "world_reset": true,
+    "ubs_identified": true
+  },
+  "details": {
+    "screenshot_api": "TakeScreenshot",
+    "screenshot_timing": "end_of_frame",
+    "log_capture_method": "engine_logger",
+    "world_reset_strategy": "test_utils.reset_world()",
+    "ubs_command": "just build-debug && just test",
+    "ubs_quick_command": "just test",
+    "ubs_pass_fail": "Exit code 0 = PASS; non-zero = FAIL",
+    "ubs_log_location": "stdout/stderr"
+  },
+  "environment": {
+    "renderer": "opengl",
+    "resolution": "1920x1080",
+    "dpi_scale": 1.0
   }
 }
 ```
@@ -236,11 +355,15 @@ Tests requiring missing capabilities are skipped, not failed.
 ```
 assets/scripts/test/
 ├── README.md              # This file
+├── capabilities.lua       # Capability detection helper (optional)
+├── json.lua               # Deterministic JSON encoder (optional)
 ├── test_runner.lua        # Main test harness
 ├── test_utils.lua         # Assertion helpers
 ├── test_registry.lua      # doc_id to test mapping
 ├── run_state.lua          # Crash detection sentinel
-├── test_smoke.lua          # Harness self-tests
+├── test_selftest.lua      # Harness self-tests
+├── test_smoke.lua         # Smoke tests
+├── run_smoke.lua          # Standalone smoke runner
 ├── test_entity_lifecycle.lua  # Entity lifecycle tests
 ├── test_styled_localization.lua # Localization tests
 └── ...                    # Additional test modules
@@ -254,7 +377,7 @@ assets/scripts/test/
 - Ensure `reset_world()` is called between tests
 
 ### Screenshots not captured
-- Verify `capabilities.json` shows `screenshot_available: true`
+- Verify `capabilities.json` shows `capabilities.screenshot: true`
 - Check test uses `requires = {"screenshot"}`
 - Ensure frame timing allows capture
 

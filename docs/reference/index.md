@@ -2,53 +2,49 @@
 
 This index provides links to all documentation generated for the engine.
 
-> **Note:** Binding and component counts are extracted from machine-readable inventories.
+> **Note:** Binding/component/pattern counts are extracted from machine-readable inventories.
 > Run `scripts/recount_scope_stats.py` to regenerate counts.
 
 ## Bindings Documentation
 
 Sol2 Lua bindings extracted from C++ source files.
 
-| System | Bindings | Inventory |
-|--------|----------|-----------|
-| Core | 83 | [bindings.core.json](../../planning/inventory/bindings.core.json) |
-| Physics | 113 | [bindings.physics.json](../../planning/inventory/bindings.physics.json) |
-| Layer | 133 | [bindings.layer.json](../../planning/inventory/bindings.layer.json) |
-| UI | 89 | [bindings.ui.json](../../planning/inventory/bindings.ui.json) |
-| Timer | 51 | [bindings.timer.json](../../planning/inventory/bindings.timer.json) |
-| Input | 43 | [bindings.input.json](../../planning/inventory/bindings.input.json) |
-| Scripting | 34 | [bindings.scripting.json](../../planning/inventory/bindings.scripting.json) |
-| LDtk | 33 | [bindings.ldtk.json](../../planning/inventory/bindings.ldtk.json) |
-| Text | 32 | [bindings.text.json](../../planning/inventory/bindings.text.json) |
-| Shaders | 26 | [bindings.shaders.json](../../planning/inventory/bindings.shaders.json) |
-| Util | 13 | [bindings.util.json](../../planning/inventory/bindings.util.json) |
-| GIF | 11 | [bindings.gif.json](../../planning/inventory/bindings.gif.json) |
-| Event | 7 | [bindings.event.json](../../planning/inventory/bindings.event.json) |
-| Save | 5 | [bindings.save.json](../../planning/inventory/bindings.save.json) |
+| System | Bindings | Doc | Inventory |
+|--------|----------|-----|-----------|
+| Core | 149 | [core_bindings.md](../../planning/bindings/core_bindings.md) | [bindings.core.json](../../planning/inventory/bindings.core.json) |
+| Physics | 135 | [physics_bindings.md](../../planning/bindings/physics_bindings.md) | [bindings.physics.json](../../planning/inventory/bindings.physics.json) |
+| UI | 327 | [ui_bindings.md](../../planning/bindings/ui_bindings.md) | [bindings.ui.json](../../planning/inventory/bindings.ui.json) |
+| Timer + Animation | 116 | [timer_anim_bindings.md](../../planning/bindings/timer_anim_bindings.md) | [bindings.timer_anim.json](../../planning/inventory/bindings.timer_anim.json) |
+| Input + Sound + AI | 145 | [input_sound_ai_bindings.md](../../planning/bindings/input_sound_ai_bindings.md) | [bindings.input_sound_ai.json](../../planning/inventory/bindings.input_sound_ai.json) |
+| Shader + Layer | 507 | [shader_layer_bindings.md](../../planning/bindings/shader_layer_bindings.md) | [bindings.shader_layer.json](../../planning/inventory/bindings.shader_layer.json) |
 
 ## Component Documentation
 
 ECS components extracted from `src/components/components.hpp`.
 
-| Category | Inventory |
-|----------|-----------|
-| Core | [components.core.json](../../planning/inventory/components.core.json) |
-| UI | [components.ui.json](../../planning/inventory/components.ui.json) |
-| Combat | [components.combat.json](../../planning/inventory/components.combat.json) |
-| Physics | [components.physics.json](../../planning/inventory/components.physics.json) |
-| Particles | [components.particles.json](../../planning/inventory/components.particles.json) |
-| Input | [components.input.json](../../planning/inventory/components.input.json) |
-| Scripting | [components.scripting.json](../../planning/inventory/components.scripting.json) |
-| AI | [components.ai.json](../../planning/inventory/components.ai.json) |
-| Other | [components.other.json](../../planning/inventory/components.other.json) |
+| Category | Components | Inventory | Doc |
+|----------|------------|-----------|-----|
+| Core | 15 | [components.core.json](../../planning/inventory/components.core.json) | Pending (Phase 3) |
+| UI | 126 | [components.ui.json](../../planning/inventory/components.ui.json) | Pending (Phase 3) |
+| Combat | 54 | [components.combat.json](../../planning/inventory/components.combat.json) | Pending (Phase 3) |
+| Physics | 18 | [components.physics.json](../../planning/inventory/components.physics.json) | Pending (Phase 3) |
+| Particles | 6 | [components.particles.json](../../planning/inventory/components.particles.json) | Pending (Phase 3) |
+| Input | 7 | [components.input.json](../../planning/inventory/components.input.json) | Pending (Phase 3) |
+| Scripting | 5 | [components.scripting.json](../../planning/inventory/components.scripting.json) | Pending (Phase 3) |
+| AI | 1 | [components.ai.json](../../planning/inventory/components.ai.json) | Pending (Phase 3) |
+| Other | 414 | [components.other.json](../../planning/inventory/components.other.json) | Pending (Phase 3) |
 
 ## Pattern Documentation
 
 Code patterns mined from the codebase.
 
-| Area | Patterns Doc |
-|------|--------------|
-| *Coming soon* | Pattern mining in Phase 5 |
+| Area | Patterns | Doc | Inventory |
+|------|----------|-----|-----------|
+| Core | 12 | [core_patterns.md](../../planning/patterns/core_patterns.md) | [patterns.core.json](../../planning/inventory/patterns.core.json) |
+| Combat | 12 | [combat_patterns.md](../../planning/patterns/combat_patterns.md) | [patterns.combat.json](../../planning/inventory/patterns.combat.json) |
+| UI | 16 | [ui_patterns.md](../../planning/patterns/ui_patterns.md) | [patterns.ui.json](../../planning/inventory/patterns.ui.json) |
+| Data | 9 | [data_patterns.md](../../planning/patterns/data_patterns.md) | [patterns.data.json](../../planning/inventory/patterns.data.json) |
+| Wand | 7 | [wand_patterns.md](../../planning/patterns/wand_patterns.md) | [patterns.wand.json](../../planning/inventory/patterns.wand.json) |
 
 ## Machine-Readable Inventories
 
@@ -80,11 +76,11 @@ Rule candidates for the cm coding memory system:
 
 - [Test README](../../assets/scripts/test/README.md) - Test harness documentation
 - `test_output/` - Test outputs (gitignored)
-  - `status.json` - Pass/fail summary
-  - `results.json` - Per-test details
-  - `report.md` - Human-readable report
-  - `junit.xml` - CI integration
-  - `test_manifest.json` - doc_id mappings
+- `test_output/status.json` - Pass/fail summary
+- `test_output/results.json` - Per-test details
+- `test_output/report.md` - Human-readable report
+- `test_output/junit.xml` - CI integration
+- `test_output/test_manifest.json` - doc_id mappings
 
 ## CLAUDE.md Reference
 

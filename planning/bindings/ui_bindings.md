@@ -33,6 +33,33 @@ Counts (approx):
 - **Draw layer assignment**: Call `ui.box.set_draw_layer(uiBox, "ui")` after initialization to ensure draw ordering is correct.
 - **Screen-space interactions**: UI click detection typically requires `ScreenSpaceCollisionMarker` on relevant UI elements (not auto-added).
 
+## Detail Tiers
+- **Tier 0**: Extracted binding list only (see AUTOGEN list below).
+- **Tier 1**: Semantics + minimal example (high-frequency bindings).
+- **Tier 2**: Verified test id + evidence (not assigned here; see Phase 7).
+
+## High-Frequency Bindings (Tier 1)
+- `ui.box.Initialize` — Detail Tier: 1. Creates a UI box from a template node and transform table. Minimal usage:
+  ```lua
+  local root = ui.definitions.def({
+      type = "ROOT",
+      config = { id = "root" },
+      children = { { type = "TEXT", config = { id = "label", text = "Hi" } } }
+  })
+  local box = ui.box.Initialize({ x = 0, y = 0 }, root)
+  ```
+- `ui.box.RenewAlignment` — Detail Tier: 1. Required after offset changes or replacing children (see gotchas).
+- `ui.box.AddStateTagToUIBox` — Detail Tier: 1. Re-apply after `ReplaceChildren` to ensure tags persist.
+- `ui.box.set_draw_layer` — Detail Tier: 1. Must target a valid layer name (e.g. `"ui"`).
+- `ui.box.ReplaceChildren` — Detail Tier: 1. Rebuilds UI subtree; call `RenewAlignment` + reapply state tags after use.
+- `ui.box.GetUIEByID` — Detail Tier: 1. Returns `Entity|nil` for a UI element by id.
+
+## Doc Divergences
+- `ui.box.SetVisible` appears in planning notes but is not bound in `src/systems/ui/ui.cpp`.
+
+## Related UI Helpers
+- `ChildBuilder.setOffset` (Lua helper) changes offsets; call `ui.box.RenewAlignment` after this to reflow layout.
+
 ## Extractor Normalization
 - Converted extractor prefixes:
   - `box.*` → `ui.box.*`

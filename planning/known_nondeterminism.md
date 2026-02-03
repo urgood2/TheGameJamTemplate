@@ -1,34 +1,35 @@
 # Known Non-Determinism Sources
 
 This document lists known sources of non-deterministic behavior that can cause
-test flakes, particularly for visual/screenshot tests. Each section includes
-affected tests, mitigations, and configuration guidance.
+visual and logic test flakes, with mitigations and configuration references.
 
 ## GPU Rendering Differences
 ### Description
-Different GPUs (and different drivers for the same GPU) may produce slightly
-different pixel values for the same rendering operations.
+Different GPUs and driver versions can produce slightly different pixels for the
+same render pass (shader math, precision, blending, and texture sampling).
 
 ### Affected Tests
-- Tests tagged with "visual"
-- All screenshot comparisons
+- tests tagged with `visual`
+- all screenshot comparisons
 
 ### Mitigation
-- Use pixel-diff tolerance (default: 0.1% pixels may differ)
-- Use SSIM threshold (default: 0.98)
-- Configure per-platform baselines
+- Use tolerance thresholds for pixel diff + SSIM.
+- Prefer deterministic render paths (disable dynamic exposure, noise, etc.).
+- Capture baselines per platform/renderer/resolution.
 
 ### Configuration
+`test_baselines/visual_tolerances.json`:
 ```json
-// test_baselines/visual_tolerances.json
 {
-  "default": {
-    "pixel_diff_percent": 0.1,
+  "schema_version": "1.0",
+  "default_tolerance": {
+    "pixel_diff_threshold": 0.01,
     "ssim_threshold": 0.98
   },
-  "overrides": {
+  "per_test_overrides": {
     "ui.panel.shadow_effect": {
-      "pixel_diff_percent": 0.5,
+      "pixel_diff_threshold": 0.05,
+      "ssim_threshold": 0.95,
       "reason": "Shadow blur varies by GPU"
     }
   }
@@ -37,106 +38,97 @@ different pixel values for the same rendering operations.
 
 ## Font Rasterization Variations
 ### Description
-Font rendering differs between operating systems and font engines.
+Font rendering differs between operating systems and font engines, affecting
+kerning, hinting, and glyph rasterization.
 
 ### Affected Tests
-- Tests with text rendering
-- UI tests with labels
+- UI tests with text rendering
+- screenshot comparisons containing labels or text blocks
 
 ### Mitigation
-- Use bitmap fonts for critical text tests
-- Set explicit font hash in test_output/capabilities.json
-- Maintain platform-specific baselines
+- Use bitmap fonts for critical visual tests.
+- Pin font assets and versions.
+- Record font hash/capability metadata in `test_output/capabilities.json`.
 
 ### Configuration
-```json
-// test_output/capabilities.json (recorded by test harness)
-{
-  "environment": {
-    "fonts": {
-      "default_font_hash": "sha256:..."
-    }
-  }
-}
-```
+`test_output/capabilities.json` should capture font metadata when available
+(e.g., `font_hash`, `font_engine`). Use per-test tolerance overrides when text
+is visually unstable.
 
 ## Time-Based Animations
 ### Description
-Frame-time dependent animations produce different results based on system
-performance and timing jitter.
+Animations driven by real time or variable frame times can diverge across
+machines due to performance differences.
 
 ### Affected Tests
-- Animation tests
-- Particle effect tests
-- Tween tests
+- animation tests
+- particle effect tests
+- tween tests
 
 ### Mitigation
-- Use fixed frame counts (test_utils.step_frames(N))
-- Disable vsync for deterministic frame pacing (where possible)
-- Capture at specific frame numbers, not elapsed time
+- Advance with fixed frame counts (`test_utils.step_frames(N)`), not wall time.
+- Disable vsync where supported for deterministic stepping.
+- Capture screenshots at deterministic frame numbers.
 
 ### Configuration
-```lua
--- Use frame stepping in tests
-test_utils.step_frames(30)
-test_utils.capture_screenshot("ui.panel.after_30_frames")
-```
+- Use test harness utilities that step fixed frames.
+- Record fixed-step configuration in `test_output/capabilities.json` when set.
 
 ## Floating Point Precision
 ### Description
-Different CPUs/compilers may produce slightly different floating point results.
+Different CPUs, compilers, and SIMD paths can produce small floating point
+differences that accumulate over time.
 
 ### Affected Tests
-- Physics simulation tests
-- Math-heavy calculations
+- physics simulation tests
+- math-heavy calculations
 
 ### Mitigation
-- Use epsilon comparisons (test_utils.assert_near)
-- Round to significant digits for display comparisons
-- Test invariants, not exact values
+- Use epsilon comparisons (`test_utils.assert_near`).
+- Round or clamp values for comparisons when appropriate.
+- Assert invariants rather than exact values for long-running simulations.
 
 ### Configuration
-```lua
-test_utils.assert_near(actual, expected, 1e-4, "Value within tolerance")
-```
+Document tolerances at the test level (e.g., `assert_near` epsilon) and include
+expected ranges in test descriptions.
 
 ## RNG State
 ### Description
-Random number generators produce different sequences without fixed seeds.
+Random number generators produce different sequences without fixed seeds or
+when external RNG state leaks between tests.
 
 ### Affected Tests
-- Particle systems
-- Procedural generation
-- Combat damage rolls
+- particle systems
+- procedural generation
+- combat damage rolls
 
 ### Mitigation
-- Call math.randomseed(FIXED_SEED) at test start
-- Reset any engine RNG in test_utils.reset_world()
-- Document any additional RNG sources
+- Call `math.randomseed(FIXED_SEED)` at test start.
+- Reset engine RNG (via `test_utils.reset_world()`).
+- Avoid shared RNG state across tests.
 
 ### Configuration
-```lua
-math.randomseed(12345)
-```
+Document fixed seeds in tests and ensure `test_utils.reset_world()` is called
+between test cases.
 
 ## Platform-Specific Baseline Routing
-Baselines are stored per platform/renderer/resolution:
+Visual baselines are stored by platform/renderer/resolution. The harness selects
+baselines using a computed platform key (OS, arch, renderer, GPU vendor, and
+resolution). See `test_baselines/README.md` for full details and examples.
 
+Baseline path format:
 ```
-test_baselines/screenshots/<platform>/<renderer>/<resolution>/
+test_baselines/screenshots/<platform_key>/<renderer>/<resolution>/<safe_test_id>.png
 ```
 
-When tests run on a new environment, ensure baselines exist for the matching
-triplet. If they do not, capture new baselines first and document any variance
-in tolerances or overrides.
+Example platform key: `linux-x64-opengl-nvidia-1920x1080`
 
-## Logging Guidance
-When non-determinism affects a test, log in the following format:
-
+## Logging Requirements
+When non-determinism affects a test:
 ```
 [NONDETERMINISM] Test: ui.panel.shadow_effect
 [NONDETERMINISM] Source: GPU rendering differences
-[NONDETERMINISM] Tolerance applied: pixel_diff_percent=0.5
-[NONDETERMINISM] Actual diff: 0.3% (within tolerance)
+[NONDETERMINISM] Tolerance applied: pixel_diff_threshold=0.05
+[NONDETERMINISM] Actual diff: 0.03 (within tolerance)
 [NONDETERMINISM] See: planning/known_nondeterminism.md#gpu-rendering-differences
 ```

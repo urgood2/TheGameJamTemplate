@@ -655,7 +655,7 @@
         "doc_id": "sol2_function_ui_box_set_draw_layer",
         "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ui/ui.cpp:1102",
         "extraction_confidence": "medium",
-        "tier": 0,
+        "tier": 1,
         "verified": false
       },
       {
@@ -666,7 +666,7 @@
         "doc_id": "sol2_function_ui_box_initialize",
         "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ui/ui.cpp:1116",
         "extraction_confidence": "medium",
-        "tier": 0,
+        "tier": 1,
         "verified": false
       },
       {
@@ -677,7 +677,7 @@
         "doc_id": "sol2_function_ui_box_initialize",
         "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ui/ui.cpp:1117",
         "extraction_confidence": "medium",
-        "tier": 0,
+        "tier": 1,
         "verified": false
       },
       {
@@ -699,7 +699,7 @@
         "doc_id": "sol2_function_ui_box_addstatetagtouibox",
         "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ui/ui.cpp:1135",
         "extraction_confidence": "medium",
-        "tier": 0,
+        "tier": 1,
         "verified": false
       },
       {
@@ -776,7 +776,7 @@
         "doc_id": "sol2_function_ui_box_renewalignment",
         "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ui/ui.cpp:1173",
         "extraction_confidence": "medium",
-        "tier": 0,
+        "tier": 1,
         "verified": false
       },
       {
@@ -820,7 +820,7 @@
         "doc_id": "sol2_function_ui_box_getuiebyid",
         "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ui/ui.cpp:1186",
         "extraction_confidence": "medium",
-        "tier": 0,
+        "tier": 1,
         "verified": false
       },
       {
@@ -963,7 +963,7 @@
         "doc_id": "sol2_function_ui_box_replacechildren",
         "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ui/ui.cpp:1243",
         "extraction_confidence": "medium",
-        "tier": 0,
+        "tier": 1,
         "verified": false
       },
       {

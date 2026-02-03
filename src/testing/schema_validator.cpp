@@ -2,8 +2,11 @@
 
 #include <cstdlib>
 #include <fstream>
+#include <iostream>
 #include <regex>
 #include <sstream>
+
+#include <spdlog/spdlog.h>
 
 #include <spdlog/spdlog.h>
 
@@ -305,7 +308,10 @@ void validate_or_exit(const std::filesystem::path& schema_path,
     if (result.ok) {
         return;
     }
-    SPDLOG_ERROR("[test_mode] schema validation failed for {}: {}", label, result.error);
+    const std::string message =
+        "schema validation failed for " + label + ": " + result.error;
+    SPDLOG_ERROR("[test_mode] {}", message);
+    std::cerr << message << std::endl;
     std::exit(2);
 }
 

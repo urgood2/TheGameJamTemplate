@@ -327,3 +327,285 @@ rules:
     example_bad: |
       local box = dsl.spawn(pos, def) -- missing state tag
     last_verified_commit: "pending"
+
+  # =====================================================
+  # ECS GOTCHAS (from Phase 4B)
+  # =====================================================
+
+  - rule_id: "ecs-gotcha-001"
+    category: "ecs-gotchas"
+    rule_text: "When attaching scripts, always assign data before attach_ecs because attach-time hooks read fields immediately."
+    doc_id: "pattern:ecs.attach_ecs.assign_before_attach"
+    test_ref: "test_entity_lifecycle.lua::ecs.attach_ecs.assign_before_attach"
+    quirks_anchor: "ecs-attach-ecs-timing"
+    status: "verified"
+    severity: "error"
+    tags: ["ecs", "lifecycle", "ordering"]
+    rationale: "Attach-time hooks (run_custom_func, addStateTag, etc.) read fields immediately. Late data means hooks see nil."
+    example_good: |
+      local script = EntityType {}
+      script.data = { value = 42 }    -- Assign FIRST
+      script:attach_ecs { ... }       -- Attach LAST
+    example_bad: |
+      local script = EntityType {}
+      script:attach_ecs { ... }       -- Attach first
+      script.data = { value = 42 }    -- DATA LOST!
+    last_verified_commit: "pending"
+
+  - rule_id: "ecs-gotcha-002"
+    category: "ecs-gotchas"
+    rule_text: "Never store gameplay data on GameObject components; use the script table instead to keep data discoverable."
+    doc_id: "pattern:ecs.gameobject.no_data_storage"
+    test_ref: "test_entity_lifecycle.lua::ecs.gameobject.no_data_storage"
+    quirks_anchor: "ecs-gameobject-restrictions"
+    status: "verified"
+    severity: "error"
+    tags: ["ecs", "component", "storage"]
+    rationale: "GameObject is a component wrapper. Script data must live on the script table to be discoverable via safe_script_get/getScriptTableFromEntityID."
+    example_good: |
+      local script = safe_script_get(entity)
+      script.myData = { hp = 10 }
+    example_bad: |
+      local gameObj = component_cache.get(entity, GameObject)
+      gameObj.myData = {}  -- WRONG: bypasses script table system
+    last_verified_commit: "pending"
+
+  - rule_id: "ecs-gotcha-003"
+    category: "ecs-gotchas"
+    rule_text: "Keep LuaJIT functions under ~200 locals by grouping values in tables to avoid crashes."
+    doc_id: "pattern:ecs.luajit.200_local_limit"
+    test_ref: "test_entity_lifecycle.lua::ecs.luajit.200_local_limit"
+    quirks_anchor: "ecs-luajit-locals"
+    status: "verified"
+    severity: "error"
+    tags: ["luajit", "performance", "limits"]
+    rationale: "LuaJIT crashes at runtime if a function has more than 200 locals."
+    example_good: |
+      local sounds = { footsteps = { ... } }
+    example_bad: |
+      local sound1, sound2, sound3 = ...  -- 197 more = CRASH
+    last_verified_commit: "pending"
+
+  - rule_id: "ecs-gotcha-004"
+    category: "ecs-gotchas"
+    rule_text: "Invalidate component_cache entries on destroy or component removal to prevent stale data."
+    doc_id: "pattern:ecs.cache.invalidation"
+    test_ref: "test_entity_lifecycle.lua::ecs.cache.invalidation"
+    quirks_anchor: "ecs-component-cache"
+    status: "verified"
+    severity: "error"
+    tags: ["ecs", "cache", "cleanup"]
+    rationale: "Cached lookups are fast but must be invalidated on destroy/remove to avoid stale data."
+    example_good: |
+      component_cache.invalidate(eid, Transform)
+    example_bad: |
+      -- Forget to invalidate after destroy; cache returns stale data
+    last_verified_commit: "pending"
+
+  - rule_id: "ecs-gotcha-005"
+    category: "ecs-gotchas"
+    rule_text: "Attach-time callbacks (run_custom_func/addStateTag) require data assigned before attach_ecs."
+    doc_id: "pattern:ecs.attach_ecs.assign_before_attach"
+    test_ref: "test_entity_lifecycle.lua::ecs.attach_ecs.assign_before_attach"
+    quirks_anchor: "ecs-attach-ecs-timing"
+    status: "verified"
+    severity: "error"
+    tags: ["ecs", "lifecycle", "callbacks"]
+    rationale: "Callbacks run during attach_ecs and need data already present."
+    example_good: |
+      script.data = { state = "ready" }
+      script:attach_ecs { run_custom_func = setup }
+    example_bad: |
+      script:attach_ecs { run_custom_func = setup }  -- setup sees nil data
+    last_verified_commit: "pending"
+
+  # =====================================================
+  # ECS PATTERNS (from Phase 4B)
+  # =====================================================
+
+  - rule_id: "ecs-pattern-001"
+    category: "ecs-patterns"
+    rule_text: "Use Node.quick or EntityBuilder.validated to guarantee data assignment occurs before attach_ecs."
+    doc_id: "pattern:ecs.attach_ecs.assign_before_attach"
+    test_ref: "test_entity_lifecycle.lua::ecs.attach_ecs.assign_before_attach"
+    quirks_anchor: "ecs-attach-ecs-timing"
+    status: "verified"
+    severity: "info"
+    tags: ["ecs", "pattern", "builder"]
+    rationale: "Builder patterns enforce correct ordering automatically."
+    example_good: |
+      EntityBuilder.validated({data = {value = 42}}):attach()
+    example_bad: |
+      -- Manual ordering is error-prone
+    last_verified_commit: "pending"
+
+  - rule_id: "ecs-pattern-002"
+    category: "ecs-patterns"
+    rule_text: "Store entity state on the script table so safe_script_get and script_field can retrieve it reliably."
+    doc_id: "pattern:ecs.gameobject.script_table_usage"
+    test_ref: "test_entity_lifecycle.lua::ecs.gameobject.script_table_usage"
+    quirks_anchor: "ecs-gameobject-restrictions"
+    status: "verified"
+    severity: "info"
+    tags: ["ecs", "pattern", "storage"]
+    rationale: "Script table is the canonical location for entity state."
+    example_good: |
+      script.hp = 100
+      script.data.inventory = {}
+    example_bad: |
+      -- Storing elsewhere makes data undiscoverable
+    last_verified_commit: "pending"
+
+  - rule_id: "ecs-pattern-003"
+    category: "ecs-patterns"
+    rule_text: "Validate entity ids with ensure_entity before component or script access to avoid invalid lookups."
+    doc_id: "pattern:ecs.validate.ensure_entity_valid"
+    test_ref: "test_entity_lifecycle.lua::ecs.validate.ensure_entity_valid"
+    quirks_anchor: "ecs-validation"
+    status: "verified"
+    severity: "warn"
+    tags: ["ecs", "validation", "safety"]
+    rationale: "Accessing invalid entities causes crashes or undefined behavior."
+    example_good: |
+      if ensure_entity(eid) then
+          local t = component_cache.get(eid, Transform)
+      end
+    example_bad: |
+      local t = component_cache.get(eid, Transform)  -- might be invalid
+    last_verified_commit: "pending"
+
+  - rule_id: "ecs-pattern-004"
+    category: "ecs-patterns"
+    rule_text: "Use ensure_scripted_entity when you require a ScriptComponent to avoid nil script tables."
+    doc_id: "pattern:ecs.validate.ensure_scripted_entity_valid"
+    test_ref: "test_entity_lifecycle.lua::ecs.validate.ensure_scripted_entity_valid"
+    quirks_anchor: "ecs-validation"
+    status: "verified"
+    severity: "warn"
+    tags: ["ecs", "validation", "script"]
+    rationale: "ensure_scripted_entity confirms both validity AND script presence."
+    example_good: |
+      if ensure_scripted_entity(eid) then
+          local script = safe_script_get(eid)
+      end
+    example_bad: |
+      local script = safe_script_get(eid)  -- might return nil
+    last_verified_commit: "pending"
+
+  - rule_id: "ecs-pattern-005"
+    category: "ecs-patterns"
+    rule_text: "Use safe_script_get for script access and guard nil to prevent crashes on destroyed entities."
+    doc_id: "pattern:ecs.access.safe_script_get_valid"
+    test_ref: "test_entity_lifecycle.lua::ecs.access.safe_script_get_valid"
+    quirks_anchor: "ecs-script-access"
+    status: "verified"
+    severity: "info"
+    tags: ["ecs", "access", "safety"]
+    rationale: "safe_script_get returns nil on invalid/missing script instead of crashing."
+    example_good: |
+      local script = safe_script_get(eid)
+      if script then ... end
+    example_bad: |
+      local script = getScriptTableFromEntityID(eid)  -- crashes on invalid
+    last_verified_commit: "pending"
+
+  - rule_id: "ecs-pattern-006"
+    category: "ecs-patterns"
+    rule_text: "Prefer script_field(eid, field, default) to avoid nil checks and express defaults explicitly."
+    doc_id: "pattern:ecs.access.script_field_default"
+    test_ref: "test_entity_lifecycle.lua::ecs.access.script_field_default"
+    quirks_anchor: "ecs-script-access"
+    status: "verified"
+    severity: "info"
+    tags: ["ecs", "access", "defaults"]
+    rationale: "script_field safely returns default without manual nil handling."
+    example_good: |
+      local health = script_field(eid, "health", 100)
+    example_bad: |
+      local script = safe_script_get(eid)
+      local health = script and script.health or 100
+    last_verified_commit: "pending"
+
+  - rule_id: "ecs-pattern-007"
+    category: "ecs-patterns"
+    rule_text: "Use component_cache.get for hot paths instead of registry:get to avoid redundant lookups."
+    doc_id: "pattern:ecs.cache.get_valid"
+    test_ref: "test_entity_lifecycle.lua::ecs.cache.get_valid"
+    quirks_anchor: "ecs-component-cache"
+    status: "verified"
+    severity: "info"
+    tags: ["ecs", "cache", "performance"]
+    rationale: "Cached lookups are O(1) after first access."
+    example_good: |
+      local transform = component_cache.get(eid, Transform)
+    example_bad: |
+      local transform = registry:get(Transform, eid)  -- always lookups
+    last_verified_commit: "pending"
+
+  - rule_id: "ecs-pattern-008"
+    category: "ecs-patterns"
+    rule_text: "After destroying entities, clear cached components to avoid stale reference bugs."
+    doc_id: "pattern:ecs.destroy.cache_cleared"
+    test_ref: "test_entity_lifecycle.lua::ecs.destroy.cache_cleared"
+    quirks_anchor: "ecs-destruction"
+    status: "verified"
+    severity: "warn"
+    tags: ["ecs", "destroy", "cache"]
+    rationale: "Destruction must clear caches to avoid returning dead data."
+    example_good: |
+      registry:destroy(eid)
+      component_cache.invalidate(eid)
+    example_bad: |
+      registry:destroy(eid)  -- cache still returns old transform
+    last_verified_commit: "pending"
+
+  - rule_id: "ecs-pattern-009"
+    category: "ecs-patterns"
+    rule_text: "On destruction, revalidate references with safe_script_get or ensure_entity before reuse."
+    doc_id: "pattern:ecs.destroy.no_stale_refs"
+    test_ref: "test_entity_lifecycle.lua::ecs.destroy.no_stale_refs"
+    quirks_anchor: "ecs-destruction"
+    status: "verified"
+    severity: "warn"
+    tags: ["ecs", "destroy", "validation"]
+    rationale: "Always re-validate before using old ids after any destruction."
+    example_good: |
+      if safe_script_get(ref) == nil then
+          -- reference is stale, handle accordingly
+      end
+    example_bad: |
+      -- Assume ref is still valid after unrelated destroy
+    last_verified_commit: "pending"
+
+  - rule_id: "ecs-pattern-010"
+    category: "ecs-patterns"
+    rule_text: "Destroy-then-recreate should produce a clean script table with no cached garbage."
+    doc_id: "pattern:ecs.destroy.then_recreate"
+    test_ref: "test_entity_lifecycle.lua::ecs.destroy.then_recreate"
+    quirks_anchor: "ecs-destruction"
+    status: "verified"
+    severity: "info"
+    tags: ["ecs", "destroy", "recreation"]
+    rationale: "New entity after destroy must have fresh state, not cached remnants."
+    example_good: |
+      destroy_entity(old_eid)
+      local new = create_entity()  -- clean slate
+    example_bad: |
+      -- New entity somehow has old entity's cached data
+    last_verified_commit: "pending"
+
+  - rule_id: "ecs-pattern-011"
+    category: "ecs-patterns"
+    rule_text: "Remove invalid entity references from registries or lists after destroy to avoid stale lookups."
+    doc_id: "pattern:ecs.destroy.cleanup_all_references"
+    test_ref: "test_entity_lifecycle.lua::ecs.destroy.cleanup_all_references"
+    quirks_anchor: "ecs-destruction"
+    status: "verified"
+    severity: "warn"
+    tags: ["ecs", "destroy", "cleanup"]
+    rationale: "Entity lists/registries must be cleaned to prevent iterating over destroyed entities."
+    example_good: |
+      enemy_list = filter(enemy_list, ensure_entity)
+    example_bad: |
+      -- enemy_list still contains destroyed entity ids
+    last_verified_commit: "pending"

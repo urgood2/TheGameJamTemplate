@@ -81,9 +81,10 @@ Counts:
 - `ui.box.set_draw_layer.basic` → `sol2_function_box_set_draw_layer`
 - `ui.box.get_uie_by_id.basic` → `sol2_function_box_getuiebyid`
 - `ui.box.replace_children.basic` → `sol2_function_box_replacechildren`
-- `ui.child_builder.set_offset.basic` → `helper:ChildBuilder.setOffset`
+- `ui.child_builder.set_offset.basic` → `binding:ChildBuilder.setOffset`
 - `ui.screen_space_collision_marker.toggle` → `component:ScreenSpaceCollisionMarker`
 - `ui.draw_command_space.enum` → `binding:layer.DrawCommandSpace.Screen`
+- `ui.draw_command_space.enum` → `binding:layer.DrawCommandSpace.World`
 
 <!-- AUTOGEN:BEGIN binding_list -->
 - `FocusArgs.button` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ui/ui.cpp:154`

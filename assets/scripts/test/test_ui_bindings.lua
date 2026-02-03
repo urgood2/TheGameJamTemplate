@@ -95,7 +95,7 @@ TestRunner.register("ui.box.initialize.basic", "ui", function()
     TestUtils.reset_world()
 end, {
     tags = {"ui", "bindings"},
-    doc_ids = {"sol2_function_ui_box_initialize"},
+    doc_ids = {"sol2_function_box_initialize"},
     requires = {"test_scene"},
 })
 
@@ -111,7 +111,7 @@ TestRunner.register("ui.box.renew_alignment.basic", "ui", function()
     TestUtils.reset_world()
 end, {
     tags = {"ui", "bindings"},
-    doc_ids = {"sol2_function_ui_box_renewalignment"},
+    doc_ids = {"sol2_function_box_renewalignment"},
     requires = {"test_scene"},
 })
 
@@ -124,7 +124,7 @@ TestRunner.register("ui.box.add_state_tag.basic", "ui", function()
     TestUtils.reset_world()
 end, {
     tags = {"ui", "bindings"},
-    doc_ids = {"sol2_function_ui_box_addstatetagtouibox"},
+    doc_ids = {"sol2_function_box_addstatetagtouibox"},
     requires = {"test_scene"},
 })
 
@@ -137,7 +137,7 @@ TestRunner.register("ui.box.set_draw_layer.basic", "ui", function()
     TestUtils.reset_world()
 end, {
     tags = {"ui", "bindings"},
-    doc_ids = {"sol2_function_ui_box_set_draw_layer"},
+    doc_ids = {"sol2_function_box_set_draw_layer"},
     requires = {"test_scene"},
 })
 
@@ -153,7 +153,7 @@ TestRunner.register("ui.box.get_uie_by_id.basic", "ui", function()
     TestUtils.reset_world()
 end, {
     tags = {"ui", "bindings"},
-    doc_ids = {"sol2_function_ui_box_getuiebyid"},
+    doc_ids = {"sol2_function_box_getuiebyid"},
     requires = {"test_scene"},
 })
 
@@ -173,7 +173,7 @@ TestRunner.register("ui.box.replace_children.basic", "ui", function()
     TestUtils.reset_world()
 end, {
     tags = {"ui", "bindings"},
-    doc_ids = {"sol2_function_ui_box_replacechildren"},
+    doc_ids = {"sol2_function_box_replacechildren"},
     requires = {"test_scene"},
 })
 
@@ -198,7 +198,7 @@ TestRunner.register("ui.child_builder.set_offset.basic", "ui", function()
     TestUtils.reset_world()
 end, {
     tags = {"ui", "bindings"},
-    doc_ids = {"helper:ChildBuilder.setOffset"},
+    doc_ids = {"binding:ChildBuilder.setOffset"},
     requires = {"test_scene"},
 })
 

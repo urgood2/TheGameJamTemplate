@@ -7,13 +7,13 @@
 
     <key>ProgramArguments</key>
     <array>
-        <string>/usr/bin/python3</string>
+        <string>__PYTHON_PATH__</string>
         <string>scripts/watch_pixquare.py</string>
         <string>--verbose</string>
     </array>
 
     <key>WorkingDirectory</key>
-    <string>/Users/joshuashin/Projects/TheGameJamTemplate</string>
+    <string>__WORKING_DIR__</string>
 
     <key>RunAtLoad</key>
     <true/>
@@ -22,15 +22,15 @@
     <true/>
 
     <key>StandardOutPath</key>
-    <string>/Users/joshuashin/Library/Logs/pixquare-watcher.log</string>
+    <string>__HOME__/Library/Logs/pixquare-watcher.log</string>
 
     <key>StandardErrorPath</key>
-    <string>/Users/joshuashin/Library/Logs/pixquare-watcher.log</string>
+    <string>__HOME__/Library/Logs/pixquare-watcher.log</string>
 
     <key>EnvironmentVariables</key>
     <dict>
         <key>PATH</key>
-        <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
     </dict>
 </dict>
 </plist>

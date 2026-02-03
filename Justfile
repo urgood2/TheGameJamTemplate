@@ -708,9 +708,18 @@ sync-pixquare-dry:
 
 # Install Pixquare watcher as login service (starts automatically)
 install-pixquare-service:
-	cp scripts/com.thegamejamtemplate.pixquare-watcher.plist ~/Library/LaunchAgents/
+	#!/usr/bin/env bash
+	set -e
+	PYTHON_PATH=$(which python3)
+	WORKING_DIR=$(pwd)
+	sed "s|__PYTHON_PATH__|$PYTHON_PATH|g; s|__WORKING_DIR__|$WORKING_DIR|g; s|__HOME__|$HOME|g" \
+		scripts/com.thegamejamtemplate.pixquare-watcher.plist.template \
+		> ~/Library/LaunchAgents/com.thegamejamtemplate.pixquare-watcher.plist
 	launchctl load ~/Library/LaunchAgents/com.thegamejamtemplate.pixquare-watcher.plist
-	@echo "Pixquare watcher installed and started"
+	echo "Pixquare watcher installed and started"
+	echo "  Python: $PYTHON_PATH"
+	echo "  Working dir: $WORKING_DIR"
+	echo "  Log: ~/Library/Logs/pixquare-watcher.log"
 
 # Uninstall Pixquare watcher login service
 uninstall-pixquare-service:

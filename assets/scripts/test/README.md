@@ -201,6 +201,66 @@ TestRunner.run({ record_baselines = true })
 
 Baselines are never deleted by the runner. Use `python3 scripts/check_baseline_size.py` to enforce size limits.
 
+## Visual Test Quarantine
+
+Visual tests can be flaky due to GPU/font rendering differences. The quarantine mechanism allows them to run without failing PR CI while still surfacing issues in nightly runs.
+
+### Quarantine File
+
+`test_baselines/visual_quarantine.json`:
+
+```json
+{
+    "schema_version": "1.0",
+    "updated_at": "2026-02-03T00:00:00Z",
+    "default_expiry_days": 14,
+    "quarantined_tests": [
+        {
+            "test_id": "rendering.shader.bloom",
+            "reason": "GPU-dependent bloom intensity varies across vendors",
+            "owner": "@developer",
+            "issue_link": "https://github.com/org/repo/issues/123",
+            "quarantined_at": "2026-02-03T00:00:00Z",
+            "expires_at": "2026-02-17T00:00:00Z",
+            "platforms": ["*"],
+            "renewal_count": 0,
+            "max_renewals": 2
+        }
+    ]
+}
+```
+
+### Quarantine Entry Requirements
+
+Every entry MUST include:
+- `test_id`: Full test identifier
+- `reason`: Clear explanation of why flaky
+- `owner`: Person responsible for fixing
+- `issue_link`: Link to tracking issue (required)
+- `quarantined_at`: ISO timestamp when added
+- `expires_at`: ISO timestamp (14 days default)
+- `platforms`: Array of affected platforms (or `["*"]`)
+
+### CI Behavior
+
+| Mode | Quarantine Failures | Environment Variable |
+|------|---------------------|---------------------|
+| PR CI | Warning only (passes) | `TEST_QUARANTINE_MODE=pr` |
+| Nightly | Error (fails) | `TEST_QUARANTINE_MODE=nightly` |
+
+### Expiry and Renewal Policy
+
+- Default expiry: **14 days**
+- Renewal requires updating `expires_at` and incrementing `renewal_count`
+- Maximum **2 renewals** (42 days total)
+- After max renewals: must fix or remove test
+
+### Report Section
+
+The `report.md` includes a quarantine section with a table showing:
+- Test ID, reason, owner, expiry date, status
+- Note for expired quarantines that are now blocking
+
 ## Full Verification Pipeline
 
 For a single-command verification pass (inventory regen + schemas + docs + tests):

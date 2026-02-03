@@ -1,0 +1,60 @@
+`★ Insight ─────────────────────────────────────`
+The integration process required careful thought about:
+1. **Document structure** - GPT Pro's changes touch many sections; I reorganized to maintain flow while adding new content
+2. **Terminology consistency** - The original uses "stable" to mean "frame-deterministic"; GPT Pro adds "stable" for API versioning. Both meanings are valid but needed contextual clarity.
+3. **Progressive disclosure** - Core concepts go in main sections; detailed specs go in new appendices to avoid bloating the main plan.
+`─────────────────────────────────────────────────`
+
+Now let me provide my analysis of each change:
+
+---
+
+## Analysis: Agreement Assessment
+
+### Changes I Wholeheartedly Agree With ✓
+
+**Change 1 — Determinism Contract:** This is the single most valuable addition. The original plan *assumed* determinism would work but didn't specify *how*. The explicit rules (no wall-clock time, seeded RNG, stable iteration order, deterministic async) are exactly what a team needs to prevent the "it works on my machine" problem. The rendering caveat is also crucial—pixel-perfect cross-GPU is a trap that many teams fall into.
+
+**Change 3 — Condition Wait APIs (`wait_until`):** This is essential. Tests using only `wait_frames(n)` either use a conservative `n` (slow) or an optimistic `n` (flaky). Condition waits with frame-based timeouts give you both speed and reliability. The `wait_until_state` and `wait_until_log` helpers are practical conveniences.
+
+**Change 6 — Forensics Bundle:** This directly addresses the "can't reproduce CI failure" problem. Having the exact seed, args, input trace, and final logs in one place makes debugging remote failures tractable. Without this, you end up with "CI is red but I can't figure out why" cycles that erode trust in the test suite.
+
+**Change 7 — Exit Codes + Richer JSON:** Clear exit codes (`0`=pass, `1`=fail, `2`=config error, `3`=timeout, `4`=crash) are essential for CI scripting and debugging. Making JSON authoritative (with JUnit as a derived format) is the right architecture—JUnit is lossy by design.
+
+**Change 11 — Test Isolation Rules:** Explicit cleanup between tests prevents cascading failures. The pattern of "clear inputs + log_mark + optional reset hook" is minimal and effective. Without this, one failed test can leave state that breaks subsequent tests.
+
+**Change 12 — Actionable CI Summaries:** "Artifacts uploaded" isn't enough. Failing test names, repro commands, and diff paths directly in the CI summary saves significant debugging time. The canonical renderer strategy prevents the "screenshot tests pass on Linux but fail on macOS" problem.
+
+---
+
+### Changes I Somewhat Agree With ~
+
+**Change 2 — `TestRuntime` Core:** I agree with the concept of a central runtime object owning subsystems, but the specific files (`artifact_store`, `path_sandbox`) may be over-engineering for v1. The principle is sound—avoid scattered globals—but the implementation could start simpler. *Included with minor reservations.*
+
+**Change 4 — Test API Surface + query/command APIs:** The concept is correct: exposing internal engine objects directly to tests creates a maintenance burden. However, the dual system (`get_state`/`set_state` *and* `query`/`command`) adds complexity. In practice, I'd probably start with just `query`/`command` and skip the path-based access. *Included as-is, but teams might simplify.*
+
+**Change 5 — Screenshot ROI/masks/stabilization:** These features are genuinely useful, but they're also complexity that may not be needed in v1. For a game jam template, most screenshot tests might be simple "does the menu look right?" checks. The `.meta.json` pattern is clever but adds another file format to maintain. *Included, but marked as optional where possible.*
+
+**Change 8 — Listing/filtering/tags/quarantine:** Tags and filtering are useful at scale, but for a small suite (3 example tests), they're overhead. The `--list-tests` flag is immediately useful for debugging sharding. *Included but recognized as "grow into this" rather than "need on day 1".*
+
+**Change 9 — Retry-on-failure with flaky labeling:** This is pragmatic but philosophically risky. Retries can mask real flakiness rather than forcing you to fix it. The `--allow-flaky=false` default is good, but teams often flip this to green when under deadline pressure. *Included with the strong default, but watch for abuse.*
+
+---
+
+### Changes I Disagree With ✗
+
+**Change 10 — Text Input + Gamepad Injection:** I don't *disagree* with the feature, but I disagree with prioritizing it for v1. For a game jam template E2E suite, keyboard/mouse covers 90%+ of interaction. Text input and gamepad are legitimate needs, but adding them before the core system is solid is scope creep. The implementation complexity (cross-platform text input events, multiple gamepad APIs) is non-trivial. *Included in the plan for completeness, but should be Phase 2/3 priority, not Phase 1.*
+
+**None of the changes are fundamentally wrong.** GPT Pro's revisions come from real experience with E2E test suites that have failed in production. The only disagreements are about *prioritization* and *when* to add complexity, not *whether* the features are valuable.
+
+---
+
+## Summary
+
+| Category | Changes |
+|----------|---------|
+| **Wholeheartedly agree** | 1 (Determinism), 3 (Condition waits), 6 (Forensics), 7 (Exit codes), 11 (Test isolation), 12 (CI summaries) |
+| **Somewhat agree** | 2 (TestRuntime), 4 (Test API Surface), 5 (Screenshot ROI/masks), 8 (Tags/filtering), 9 (Retries) |
+| **Disagree with priority** | 10 (Text/gamepad input in v1) |
+
+The integrated plan (PLAN_v1.md) incorporates all changes. Teams should treat the "somewhat agree" features as candidates for deferral if time is tight, and prioritize the "wholeheartedly agree" changes as non-negotiable for a stable test suite.

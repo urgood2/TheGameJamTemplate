@@ -159,6 +159,19 @@ local function main()
         end
     end
 
+    local coverage_ok, CoverageReport = pcall(require, TEST_ROOT .. ".test_coverage_report")
+    if coverage_ok and CoverageReport and CoverageReport.generate then
+        local coverage_path = REPORT_DIR .. "/coverage_report.md"
+        local report_ok = CoverageReport.generate(REPORT_DIR .. "/results.json", coverage_path)
+        if report_ok then
+            log("  Coverage report written to: " .. coverage_path)
+        else
+            log("  WARNING: Failed to write coverage report")
+        end
+    else
+        log("  WARNING: Failed to load coverage report generator")
+    end
+
     -- Summary
     local total = (passed or 0) + (failed or 0) + (skipped or 0)
     log("=== Test Suite Complete ===")

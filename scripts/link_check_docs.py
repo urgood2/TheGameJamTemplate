@@ -10,6 +10,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 LOG_PREFIX = "[LINKS]"
+EXIT_SUCCESS = 0
+EXIT_FAILURE = 1
+EXIT_ERROR = 2
 
 DOC_ID_RE = re.compile(r"(?:pattern|binding|component):[A-Za-z0-9._-]+")
 DOC_ID_LINE_RE = re.compile(r"\bdoc_ids?\b", re.IGNORECASE)
@@ -91,7 +94,10 @@ def load_quirks_anchors(quirks_path: Path) -> set[str]:
 def load_manifest_tests(manifest_path: Path) -> set[str]:
     if not manifest_path.exists():
         return set()
-    payload = json.loads(manifest_path.read_text())
+    try:
+        payload = json.loads(manifest_path.read_text())
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Invalid JSON in manifest: {manifest_path}") from exc
     return {entry.get("test_id") for entry in payload.get("tests", []) if entry.get("test_id")}
 
 
@@ -160,8 +166,10 @@ def run_checks(root: Path) -> tuple[list[str], list[str]]:
     duplicates = {doc_id: occs for doc_id, occs in doc_id_occurrences.items() if len(occs) > 1}
     if duplicates:
         for doc_id, occs in duplicates.items():
+            log(f"  FAIL: Duplicate doc_id: {doc_id}")
             errors.append(f"Duplicate doc_id: {doc_id}")
             for occ in occs:
+                log(f"    - {occ.file_path}:{occ.line_number}")
                 errors.append(f"  - {occ.file_path}:{occ.line_number}")
     else:
         log("  PASS: All unique")
@@ -175,6 +183,8 @@ def run_checks(root: Path) -> tuple[list[str], list[str]]:
         if "::" in test_id:
             test_id = test_id.split("::", 1)[1]
         if test_id not in manifest_tests:
+            log(f"  FAIL: Test not found: {test_id}")
+            log(f"    - Referenced in: {occ.file_path}:{occ.line_number}")
             errors.append(f"Test not found: {test_id}")
             errors.append(f"  - Referenced in: {occ.file_path}:{occ.line_number}")
     if not any(err.startswith("Test not found") for err in errors):
@@ -186,6 +196,8 @@ def run_checks(root: Path) -> tuple[list[str], list[str]]:
     log(f"  Anchors referenced: {len(quirks_refs)}")
     for occ in quirks_refs:
         if occ.value not in anchors:
+            log(f"  FAIL: Missing anchor: #{occ.value}")
+            log(f"    - Referenced in: {occ.file_path}:{occ.line_number}")
             errors.append(f"Missing anchor: #{occ.value}")
             errors.append(f"  - Referenced in: {occ.file_path}:{occ.line_number}")
     if not any(err.startswith("Missing anchor") for err in errors):
@@ -200,6 +212,8 @@ def run_checks(root: Path) -> tuple[list[str], list[str]]:
             continue
         if not target_path.exists():
             broken_links += 1
+            log(f"  FAIL: Broken link: {occ.value}")
+            log(f"    - From: {occ.file_path}:{occ.line_number}")
             errors.append(f"Broken link: {occ.value}")
             errors.append(f"  - From: {occ.file_path}:{occ.line_number}")
     if broken_links == 0:
@@ -213,6 +227,8 @@ def run_checks(root: Path) -> tuple[list[str], list[str]]:
         if not candidate.is_absolute():
             candidate = (root / path_part).resolve()
         if not candidate.exists():
+            log(f"  WARNING: source_ref file not found: {path_part}")
+            log(f"    - In: {occ.file_path}:{occ.line_number}")
             warnings.append(f"source_ref file not found: {path_part}")
             warnings.append(f"  - In: {occ.file_path}:{occ.line_number}")
 
@@ -225,11 +241,26 @@ def main() -> int:
     args = parser.parse_args()
 
     root = args.root or get_git_root() or Path.cwd()
-    errors, warnings = run_checks(root)
+    missing_inputs: list[str] = []
+    if not find_markdown_files(root):
+        missing_inputs.append("planning/{bindings,components,patterns}/*.md")
+    manifest_path = root / "test_output" / "test_manifest.json"
+    quirks_path = root / "docs" / "quirks.md"
+    if not manifest_path.exists():
+        missing_inputs.append(str(manifest_path))
+    if not quirks_path.exists():
+        missing_inputs.append(str(quirks_path))
+    if missing_inputs:
+        log("ERROR: Missing required input files")
+        for missing in missing_inputs:
+            log(f"  - {missing}")
+        return EXIT_ERROR
 
-    if warnings:
-        for warning in warnings:
-            log(f"WARNING: {warning}")
+    try:
+        errors, warnings = run_checks(root)
+    except (OSError, UnicodeDecodeError, ValueError) as exc:
+        log(f"ERROR: {exc}")
+        return EXIT_ERROR
 
     log("=== SUMMARY ===")
     log(f"Errors: {len([e for e in errors if not e.startswith('  -')])}")
@@ -237,12 +268,10 @@ def main() -> int:
 
     if errors:
         log("Status: FAIL")
-        for err in errors:
-            log(err)
-        return 1
+        return EXIT_FAILURE
 
     log("Status: PASS")
-    return 0
+    return EXIT_SUCCESS
 
 
 if __name__ == "__main__":

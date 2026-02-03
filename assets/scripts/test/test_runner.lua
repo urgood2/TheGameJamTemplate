@@ -433,10 +433,10 @@ local function write_junit(path, summary, results)
                 xml_escape(result.error and result.error.message or "error"),
                 xml_escape(result.error and result.error.stack_trace or "")
             ))
-        elseif result.status == "skip" then
+        elseif result.status == "skip" or result.status == "quarantine_fail" then
             table.insert(lines, string.format(
                 '    <skipped message="%s" />',
-                xml_escape(result.skip_reason or "skipped")
+                xml_escape(result.status == "quarantine_fail" and "quarantined failure" or (result.skip_reason or "skipped"))
             ))
         end
         table.insert(lines, "  </testcase>")
@@ -794,6 +794,7 @@ function TestRunner.configure(opts)
     if opts.wipe_output ~= nil then config.wipe_output = opts.wipe_output end
     if opts.record_baselines ~= nil then config.record_baselines = opts.record_baselines end
     if opts.skip_self_tests ~= nil then config.skip_self_tests = opts.skip_self_tests end
+    if opts.quarantine_mode ~= nil then config.quarantine_mode = tostring(opts.quarantine_mode) end
 end
 
 function TestRunner.before_each(self_or_fn, maybe_fn)
@@ -897,8 +898,19 @@ function TestRunner.run(self_or_opts, maybe_opts)
     end
 
     local results = {}
-    local counts = { passed = 0, failed = 0, skipped = 0 }
+    local counts = {
+        passed = 0,
+        failed = 0,
+        skipped = 0,
+        quarantine_failed = 0,
+        quarantine_blocking = 0,
+        quarantine_expired = 0,
+    }
+    local quarantine_mode = normalize_quarantine_mode(config.quarantine_mode)
+    local quarantine_entries = BaselineCompare.get_quarantine_entries()
     local run_start = os.clock()
+
+    log_quarantine_status(quarantine_entries, quarantine_mode)
 
     local function run_entry(test)
         local skip_reason = missing_requirements(test.requires, capabilities)

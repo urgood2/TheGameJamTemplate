@@ -23,7 +23,8 @@
           "default": null,
           "is_complex": false
         }
-      ]
+      ],
+      "doc_id": "component:ObjectLayerTag"
     },
     {
       "name": "PhysicsLayer",
@@ -46,7 +47,8 @@
           "default": null,
           "is_complex": false
         }
-      ]
+      ],
+      "doc_id": "component:PhysicsLayer"
     },
     {
       "name": "PhysicsWorldRef",
@@ -69,7 +71,8 @@
           "default": null,
           "is_complex": false
         }
-      ]
+      ],
+      "doc_id": "component:PhysicsWorldRef"
     },
     {
       "name": "WorldStateBinding",
@@ -92,7 +95,8 @@
           "default": null,
           "is_complex": false
         }
-      ]
+      ],
+      "doc_id": "component:WorldStateBinding"
     },
     {
       "name": "CraneState",
@@ -133,7 +137,8 @@
           "default": "nullptr",
           "is_complex": false
         }
-      ]
+      ],
+      "doc_id": "component:CraneState"
     },
     {
       "name": "BodyComponent",
@@ -143,7 +148,8 @@
       "is_tag": true,
       "extraction_confidence": 1.0,
       "notes": [],
-      "fields": []
+      "fields": [],
+      "doc_id": "component:BodyComponent"
     },
     {
       "name": "SteerableComponent",
@@ -282,7 +288,8 @@
           "default": "0.0f",
           "is_complex": false
         }
-      ]
+      ],
+      "doc_id": "component:SteerableComponent"
     },
     {
       "name": "StickyConfig",
@@ -305,7 +312,8 @@
           "default": null,
           "is_complex": false
         }
-      ]
+      ],
+      "doc_id": "component:StickyConfig"
     },
     {
       "name": "TankController",
@@ -382,7 +390,8 @@
           "default": "false",
           "is_complex": false
         }
-      ]
+      ],
+      "doc_id": "component:TankController"
     },
     {
       "name": "CollisionEvent",
@@ -392,7 +401,8 @@
       "is_tag": true,
       "extraction_confidence": 1.0,
       "notes": [],
-      "fields": []
+      "fields": [],
+      "doc_id": "component:CollisionEvent"
     },
     {
       "name": "CollisionPair",
@@ -415,7 +425,8 @@
           "default": null,
           "is_complex": false
         }
-      ]
+      ],
+      "doc_id": "component:CollisionPair"
     },
     {
       "name": "CollisionPairHash",
@@ -425,7 +436,8 @@
       "is_tag": true,
       "extraction_confidence": 1.0,
       "notes": [],
-      "fields": []
+      "fields": [],
+      "doc_id": "component:CollisionPairHash"
     },
     {
       "name": "ColliderComponent",
@@ -516,7 +528,8 @@
           "default": "0.0f, bodyRot = 0.0f",
           "is_complex": false
         }
-      ]
+      ],
+      "doc_id": "component:ColliderComponent"
     },
     {
       "name": "CollisionTag",
@@ -547,7 +560,8 @@
           "default": null,
           "is_complex": true
         }
-      ]
+      ],
+      "doc_id": "component:CollisionTag"
     },
     {
       "name": "RaycastHit",
@@ -576,7 +590,8 @@
           "default": null,
           "is_complex": false
         }
-      ]
+      ],
+      "doc_id": "component:RaycastHit"
     },
     {
       "name": "UFNode",
@@ -599,7 +614,8 @@
           "default": "1",
           "is_complex": false
         }
-      ]
+      ],
+      "doc_id": "component:UFNode"
     },
     {
       "name": "GravityField",
@@ -652,7 +668,8 @@
           "default": "1.0f",
           "is_complex": false
         }
-      ]
+      ],
+      "doc_id": "component:GravityField"
     },
     {
       "name": "PlatformerCtrl",
@@ -747,7 +764,8 @@
           "default": "false",
           "is_complex": false
         }
-      ]
+      ],
+      "doc_id": "component:PlatformerCtrl"
     }
   ]
 }

@@ -1,4 +1,6 @@
 {
   "schema_version": "1.0",
+  "updated_at": "2026-02-03T00:00:00Z",
+  "default_expiry_days": 14,
   "quarantined_tests": []
 }

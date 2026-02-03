@@ -16,7 +16,7 @@
 
 local TestRunner = require("test.test_runner")
 local test_utils = require("test.test_utils")
-local TestRegistry = require("test.test_registry")
+local TestRegistry = require("test.test_registry_runtime")
 local RunState = require("test.run_state")
 
 -- Try to load capabilities module

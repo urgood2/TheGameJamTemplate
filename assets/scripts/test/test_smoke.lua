@@ -174,7 +174,7 @@ end, {
 -- Smoke test 7: Test registry works
 TestRunner.register("smoke.registry.basic", "smoke", function()
     print("[SMOKE] Checking: test registry...")
-    local TestRegistry = require("test.test_registry")
+    local TestRegistry = require("test.test_registry_runtime")
     -- Registry should be loadable and have basic methods
     test_utils.assert_not_nil(TestRegistry.register, "Registry has register method")
     test_utils.assert_not_nil(TestRegistry.all, "Registry has all method")

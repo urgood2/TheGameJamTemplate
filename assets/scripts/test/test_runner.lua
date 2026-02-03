@@ -4,7 +4,7 @@
 local TestRunner = {}
 
 local TestUtils = require("test.test_utils")
-local TestRegistry = require("test.test_registry")
+local TestRegistry = require("test.test_registry_runtime")
 local RunState = require("test.run_state")
 
 local RUNNER_VERSION = "1.0"

@@ -26,6 +26,10 @@ This file provides guidance to Claude Code when working with this repository.
   VPS location: `ubuntu@161.97.94.111:~/.local/bin/flywheel`
   Local repo: `~/Projects/flywheel-workflow`
 
+## Engine Quirks
+
+For comprehensive documentation of engine gotchas and workarounds, see [Engine Quirks](docs/quirks.md).
+
 ## Notifications
 
 **ALWAYS use terminal-notifier when requesting confirmation or permission:**
@@ -148,78 +152,7 @@ local registry = _G.registry  -- or just use `registry` directly
 
 ## Common Mistakes to Avoid
 
-### Don't: Store data in GameObject component
-```lua
-local gameObj = component_cache.get(entity, GameObject)
-gameObj.myData = {}  -- WRONG - bypasses script table system
-```
-
-### Don't: Call attach_ecs before assigning data
-```lua
-script:attach_ecs { ... }
-script.data = {}  -- WRONG - data is lost!
-```
-
-### Do: Initialize properly (see [Entity Scripts Guide](docs/guides/entity-scripts.md))
-```lua
-local script = EntityType {}
-script.data = {}              -- Assign FIRST
-script:attach_ecs { ... }     -- Attach LAST
-```
-
-### Don't: Exceed LuaJIT's 200 local variable limit
-```lua
--- WRONG: File-scope locals accumulate
-local sound1, sound2, sound3 = ...  -- 197 more = CRASH
-
--- RIGHT: Group into tables
-local sounds = { footsteps = { ... } }
-```
-
-### Don't: Forget ScreenSpaceCollisionMarker for UI elements
-```lua
--- WRONG: UI element won't receive clicks
-local button = createUIElement(...)
-
--- RIGHT: Add collision marker for click detection
-registry:emplace(button, ScreenSpaceCollisionMarker {})
-```
-
-### Don't: Implement UI panels without reading the guide
-**For ANY UI panel work (skill trees, equipment windows, inventory, character sheets):**
-→ **READ FIRST**: [UI Panel Implementation Guide](docs/guides/UI_PANEL_IMPLEMENTATION_GUIDE.md)
-
-Critical patterns that WILL break if done wrong:
-- Must move BOTH entity Transform AND `UIBoxComponent.uiRoot` for visibility
-- Must call `ui.box.AddStateTagToUIBox` after spawn AND after `ReplaceChildren`
-- Must call `ui.box.RenewAlignment` after ANY `ReplaceChildren` operation
-- Must clean all 3 registries on grid destroy: `itemRegistry`, `grid`, `dsl.cleanupGrid`
-- NEVER add `ObjectAttachedToUITag` to draggable cards/items
-
-### Don't: Use ChildBuilder.setOffset on UIBox without RenewAlignment
-```lua
--- WRONG: Children inside UIBox won't reposition after offset change
-ChildBuilder.setOffset(uiContainer, x, y)
-
--- RIGHT: Call RenewAlignment after changing offset to force child layout update
-ChildBuilder.setOffset(uiContainer, x, y)
-ui.box.RenewAlignment(registry, uiContainer)
-```
-
-### Don't: Mix World and Screen DrawCommandSpace carelessly
-```lua
--- WRONG: HUD follows camera
-command_buffer.queueDraw(layers.ui, fn, z, layer.DrawCommandSpace.World)
-
--- RIGHT: Use Screen for fixed HUD
-command_buffer.queueDraw(layers.ui, fn, z, layer.DrawCommandSpace.Screen)
-```
-
-### UI Decorations: Slot Underlays
-- To render a slot decoration behind the slot sprite (e.g., wand trigger backdrop), use a decoration with `zOffset < 0` on a sprite-panel slot.
-- Inventory grid slot decorations are supported via `slotConfig.decorations` or `gridConfig.slotDecorations`. When a slot uses a sprite panel, decorations are scaled by `ui_scale.SPRITE_SCALE` at definition time.
-
----
+See [Engine Quirks](docs/quirks.md) for the canonical list of engine gotchas and required ordering patterns.
 
 ## Global Helper Functions
 

@@ -99,7 +99,13 @@ Web users see a notification with a "Copy to Clipboard" button for easy sharing.
 - Draw-command/shader batching: `BATCHED_ENTITY_RENDERING.md`, `DRAW_COMMAND_OPTIMIZATION.md`
 - Testing checklist: `TESTING_CHECKLIST.md`
 
+## CM Playbook Backup
+Export the playbook backup with:
+```bash
+cm playbook export --json > planning/cm_rules_backup.json
+```
+Output ordering is stable; only `metadata.exportedAt` changes between exports.
+
 ## Credits & Licensing
 - Project scaffold originally based on https://github.com/tupini07/raylib-cpp-cmake-template.
 - All new code/assets are © Chugget. Please do not reuse without permission or explicit licensing.
-

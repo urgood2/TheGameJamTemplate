@@ -1,0 +1,56 @@
+{
+  "schema_version": "1.0.0",
+  "version": "1.0.0",
+  "state_paths": [
+    {
+      "path": "game.initialized",
+      "type": "boolean",
+      "writable": false,
+      "description": "True when game is fully initialized"
+    },
+    {
+      "path": "game.current_scene",
+      "type": "string",
+      "writable": false,
+      "description": "Name of current scene"
+    }
+  ],
+  "queries": [
+    {
+      "name": "ui.element_rect",
+      "arguments": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "description": "Name of UI element"
+        }
+      ],
+      "returns": "table {x, y, w, h}",
+      "description": "Get bounding rectangle of UI element"
+    }
+  ],
+  "commands": [
+    {
+      "name": "scene.load",
+      "arguments": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "description": "Scene name to load"
+        }
+      ],
+      "description": "Load a scene by name"
+    }
+  ],
+  "capabilities": {
+    "screenshots": true,
+    "gamepad": true,
+    "perf": true,
+    "perf_allocs": false,
+    "perf_memory": true,
+    "snapshot": true,
+    "render_hash": false
+  }
+}

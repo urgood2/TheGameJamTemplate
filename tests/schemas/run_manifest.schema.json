@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Run Manifest",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schema_version", "args", "seed", "platform", "resolution", "timestamp"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "args": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "seed": {"type": "integer"},
+    "platform": {
+      "type": "string",
+      "enum": ["linux", "windows", "mac", "unknown"]
+    },
+    "engine_version": {"type": "string"},
+    "content_fingerprint": {"type": "string"},
+    "renderer": {"type": "string"},
+    "renderer_fingerprint": {"type": "string"},
+    "baseline_key": {"type": "string"},
+    "resolution": {
+      "type": "string",
+      "pattern": "^[0-9]+x[0-9]+$"
+    },
+    "git_sha": {"type": "string"},
+    "build_id": {"type": "string"},
+    "determinism_pins": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "ftz_daz": {"type": "boolean"},
+        "rounding": {
+          "type": "string",
+          "enum": ["nearest", "toward_zero", "toward_inf", "toward_neg_inf"]
+        },
+        "locale": {"type": "string"},
+        "timezone": {"type": "string"},
+        "thread_mode": {"type": "string", "enum": ["single", "multi"]}
+      }
+    },
+    "test_api_fingerprint": {"type": "string"},
+    "test_ordering_hash": {"type": "string"},
+    "shard": {"type": "integer", "minimum": 1},
+    "total_shards": {"type": "integer", "minimum": 1},
+    "timeout_seconds": {"type": "integer", "minimum": 1},
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

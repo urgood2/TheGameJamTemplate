@@ -1,0 +1,1198 @@
+{
+  "category": "core_graphics",
+  "count": 21,
+  "components": [
+    {
+      "name": "FrameData",
+      "category": "core_graphics",
+      "file_path": "src/components/graphics.hpp",
+      "line_number": 15,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "frame",
+          "type": "Rectangle",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "texture",
+          "type": "Texture2D*",
+          "default": null,
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:FrameData"
+    },
+    {
+      "name": "SpriteComponentASCII",
+      "category": "core_graphics",
+      "file_path": "src/components/graphics.hpp",
+      "line_number": 31,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "spriteFrame",
+          "type": "std::shared_ptr<globals::SpriteFrameData>",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "spriteData",
+          "type": "FrameData",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "spriteNumber",
+          "type": "int",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "charCP437",
+          "type": "char",
+          "default": "' '",
+          "is_complex": false
+        },
+        {
+          "name": "codepoint_UTF16",
+          "type": "int",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "spriteUUID",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "noBackgroundColor",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "noForegroundColor",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:SpriteComponentASCII"
+    },
+    {
+      "name": "AnimationObject",
+      "category": "core_graphics",
+      "file_path": "src/components/graphics.hpp",
+      "line_number": 51,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "uuid",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "id",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "currentElapsedTime",
+          "type": "double",
+          "default": "0",
+          "is_complex": false
+        },
+        {
+          "name": "flippedHorizontally",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "flippedVertically",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "intrinsincRenderScale",
+          "type": "std::optional<float>",
+          "default": "std::nullopt",
+          "is_complex": false
+        },
+        {
+          "name": "uiRenderScale",
+          "type": "std::optional<float>",
+          "default": "std::nullopt",
+          "is_complex": false
+        },
+        {
+          "name": "playbackDirection",
+          "type": "PlaybackDirection",
+          "default": "PlaybackDirection::Forward",
+          "is_complex": false
+        },
+        {
+          "name": "pingpongReversing",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "paused",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "speedMultiplier",
+          "type": "float",
+          "default": "1.0f",
+          "is_complex": false
+        },
+        {
+          "name": "loopCount",
+          "type": "int",
+          "default": "-1",
+          "is_complex": false
+        },
+        {
+          "name": "currentLoopCount",
+          "type": "int",
+          "default": "0",
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:AnimationObject"
+    },
+    {
+      "name": "AnimationQueueComponent",
+      "category": "core_graphics",
+      "file_path": "src/components/graphics.hpp",
+      "line_number": 76,
+      "is_tag": false,
+      "extraction_confidence": 0.8,
+      "notes": [
+        "2 complex types need manual review"
+      ],
+      "fields": [
+        {
+          "name": "noDraw",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "drawWithLegacyPipeline",
+          "type": "bool",
+          "default": "true",
+          "is_complex": false
+        },
+        {
+          "name": "enabled",
+          "type": "bool",
+          "default": "true",
+          "is_complex": false
+        },
+        {
+          "name": "defaultAnimation",
+          "type": "AnimationObject",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "animationQueue",
+          "type": "std::vector<AnimationObject>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "fgColorOverwriteMap",
+          "type": "std::map<int, std::string>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "currentAnimationIndex",
+          "type": "int",
+          "default": "0",
+          "is_complex": false
+        },
+        {
+          "name": "useCallbackOnAnimationQueueComplete",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:AnimationQueueComponent"
+    },
+    {
+      "name": "TweenedLocationComponent",
+      "category": "core_graphics",
+      "file_path": "src/components/graphics.hpp",
+      "line_number": 90,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:TweenedLocationComponent"
+    },
+    {
+      "name": "ParticleComponent",
+      "category": "core_graphics",
+      "file_path": "src/components/particle.hpp",
+      "line_number": 6,
+      "is_tag": false,
+      "extraction_confidence": 0.9,
+      "notes": [
+        "1 complex types need manual review"
+      ],
+      "fields": [
+        {
+          "name": "sprites",
+          "type": "std::vector<SpriteComponentASCII>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "animation_speed",
+          "type": "float",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "lifetime",
+          "type": "float",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "speed",
+          "type": "float",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "direction",
+          "type": "Vector2",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "start_color",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "end_color",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "gravity",
+          "type": "float",
+          "default": null,
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:ParticleComponent"
+    },
+    {
+      "name": "TransformCustom",
+      "category": "core_graphics",
+      "file_path": "src/components/components.hpp",
+      "line_number": 36,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "x",
+          "type": "float",
+          "default": "0.0f",
+          "is_complex": false
+        },
+        {
+          "name": "y",
+          "type": "float",
+          "default": "0.0f",
+          "is_complex": false
+        },
+        {
+          "name": "w",
+          "type": "float",
+          "default": "1.0f",
+          "is_complex": false
+        },
+        {
+          "name": "h",
+          "type": "float",
+          "default": "1.0f",
+          "is_complex": false
+        },
+        {
+          "name": "r",
+          "type": "float",
+          "default": "0.0f",
+          "is_complex": false
+        },
+        {
+          "name": "scale",
+          "type": "float",
+          "default": "1.0f",
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:TransformCustom"
+    },
+    {
+      "name": "Action",
+      "category": "core_graphics",
+      "file_path": "src/components/components.hpp",
+      "line_number": 52,
+      "is_tag": false,
+      "extraction_confidence": 0.6,
+      "notes": [
+        "4 complex types need manual review"
+      ],
+      "fields": [
+        {
+          "name": "abort",
+          "type": "sol::protected_function",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "name",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "watchMask",
+          "type": "bfield_t",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "start",
+          "type": "sol::function",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "thread",
+          "type": "sol::thread",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "update",
+          "type": "sol::coroutine",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "finish",
+          "type": "sol::function",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "is_running",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:Action"
+    },
+    {
+      "name": "GOAPComponent",
+      "category": "core_graphics",
+      "file_path": "src/components/components.hpp",
+      "line_number": 75,
+      "is_tag": false,
+      "extraction_confidence": 0.7,
+      "notes": [
+        "3 complex types need manual review"
+      ],
+      "fields": [
+        {
+          "name": "ap",
+          "type": "actionplanner_t",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "cached_current_state",
+          "type": "worldstate_t",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "current_state",
+          "type": "worldstate_t",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "goal",
+          "type": "worldstate_t",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "plan_start_state",
+          "type": "worldstate_t",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "type",
+          "type": "std::string",
+          "default": "\"NONE\"",
+          "is_complex": false
+        },
+        {
+          "name": "planSize",
+          "type": "int",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "planCost",
+          "type": "int",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "current_action",
+          "type": "int",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "retries",
+          "type": "int",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "max_retries",
+          "type": "int",
+          "default": "3",
+          "is_complex": false
+        },
+        {
+          "name": "dirty",
+          "type": "bool",
+          "default": "true",
+          "is_complex": false
+        },
+        {
+          "name": "actionset_version",
+          "type": "uint32_t",
+          "default": "0",
+          "is_complex": false
+        },
+        {
+          "name": "atom_schema_version",
+          "type": "uint32_t",
+          "default": "0",
+          "is_complex": false
+        },
+        {
+          "name": "trace_buffer",
+          "type": "ai::AITraceBuffer",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "blackboard",
+          "type": "Blackboard",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "actionQueue",
+          "type": "std::queue<Action>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "def",
+          "type": "sol::table",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "currentUpdateCoroutine",
+          "type": "sol::coroutine",
+          "default": null,
+          "is_complex": true
+        }
+      ],
+      "doc_id": "component:GOAPComponent"
+    },
+    {
+      "name": "TileComponent",
+      "category": "core_graphics",
+      "file_path": "src/components/components.hpp",
+      "line_number": 132,
+      "is_tag": false,
+      "extraction_confidence": 0.7,
+      "notes": [
+        "3 complex types need manual review"
+      ],
+      "fields": [
+        {
+          "name": "tileID",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "isImpassable",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "blocksLight",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "entitiesOnTile",
+          "type": "std::vector<entt::entity>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "liquidsOnTile",
+          "type": "std::vector<entt::entity>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "taskDoingEntitiesOnTile",
+          "type": "std::vector<entt::entity>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "replacementOnDestroy",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "isDestructible",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "canBeMadeIntoMulch",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "taskDoingEntityTransition",
+          "type": "entt::entity",
+          "default": "entt::null",
+          "is_complex": false
+        },
+        {
+          "name": "taskDoingEntityDrawCycleTime",
+          "type": "float",
+          "default": "3.0f",
+          "is_complex": false
+        },
+        {
+          "name": "isDisplayingTaskDoingEntityTransition",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "taskDoingEntityDrawCycleTimer",
+          "type": "float",
+          "default": "0",
+          "is_complex": false
+        },
+        {
+          "name": "taskDoingEntityDrawIndex",
+          "type": "int",
+          "default": "0",
+          "is_complex": false
+        },
+        {
+          "name": "itemOnTileDrawCycleTime",
+          "type": "float",
+          "default": "2.0f",
+          "is_complex": false
+        },
+        {
+          "name": "itemOnTileDrawCycleTimer",
+          "type": "float",
+          "default": "0",
+          "is_complex": false
+        },
+        {
+          "name": "itemDrawIndex",
+          "type": "int",
+          "default": "0",
+          "is_complex": false
+        },
+        {
+          "name": "liquidOnTileDrawCycleTime",
+          "type": "float",
+          "default": "2.0f",
+          "is_complex": false
+        },
+        {
+          "name": "liquidOnTileDrawCycleTimer",
+          "type": "float",
+          "default": "0",
+          "is_complex": false
+        },
+        {
+          "name": "liquidDrawIndex",
+          "type": "int",
+          "default": "0",
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:TileComponent"
+    },
+    {
+      "name": "LocationComponent",
+      "category": "core_graphics",
+      "file_path": "src/components/components.hpp",
+      "line_number": 161,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "regionIdentifier",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:LocationComponent"
+    },
+    {
+      "name": "NinePatchComponent",
+      "category": "core_graphics",
+      "file_path": "src/components/components.hpp",
+      "line_number": 168,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "texture",
+          "type": "Texture2D",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "nPatchInfo",
+          "type": "NPatchInfo",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "alpha",
+          "type": "float",
+          "default": "1.0f",
+          "is_complex": false
+        },
+        {
+          "name": "fgColor",
+          "type": "Color",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "bgColor",
+          "type": "Color",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "destRect",
+          "type": "Rectangle",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "timeToLive",
+          "type": "float",
+          "default": "0",
+          "is_complex": false
+        },
+        {
+          "name": "timeAlive",
+          "type": "float",
+          "default": "0",
+          "is_complex": false
+        },
+        {
+          "name": "blinkEnabled",
+          "type": "bool",
+          "default": "true",
+          "is_complex": false
+        },
+        {
+          "name": "blinkInterval",
+          "type": "float",
+          "default": "0.5f",
+          "is_complex": false
+        },
+        {
+          "name": "blinkTimer",
+          "type": "float",
+          "default": "0.0f",
+          "is_complex": false
+        },
+        {
+          "name": "isVisible",
+          "type": "bool",
+          "default": "true",
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:NinePatchComponent"
+    },
+    {
+      "name": "ContainerComponent",
+      "category": "core_graphics",
+      "file_path": "src/components/components.hpp",
+      "line_number": 187,
+      "is_tag": false,
+      "extraction_confidence": 0.9,
+      "notes": [
+        "1 complex types need manual review"
+      ],
+      "fields": [
+        {
+          "name": "items",
+          "type": "std::vector<entt::entity>",
+          "default": null,
+          "is_complex": true
+        }
+      ],
+      "doc_id": "component:ContainerComponent"
+    },
+    {
+      "name": "InfoComponent",
+      "category": "core_graphics",
+      "file_path": "src/components/components.hpp",
+      "line_number": 193,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:InfoComponent"
+    },
+    {
+      "name": "VFXTag",
+      "category": "core_graphics",
+      "file_path": "src/components/components.hpp",
+      "line_number": 200,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:VFXTag"
+    },
+    {
+      "name": "ParticleTag",
+      "category": "core_graphics",
+      "file_path": "src/systems/particles/particle.hpp",
+      "line_number": 58,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [
+        "source_category:particles"
+      ],
+      "fields": [
+        {
+          "name": "name",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:ParticleTag"
+    },
+    {
+      "name": "Particle",
+      "category": "core_graphics",
+      "file_path": "src/systems/particles/particle.hpp",
+      "line_number": 62,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [
+        "source_category:particles"
+      ],
+      "fields": [
+        {
+          "name": "renderType",
+          "type": "ParticleRenderType",
+          "default": "ParticleRenderType::CIRCLE_FILLED",
+          "is_complex": false
+        },
+        {
+          "name": "velocity",
+          "type": "std::optional<Vector2>",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "rotation",
+          "type": "std::optional<float>",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "rotationSpeed",
+          "type": "std::optional<float>",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "scale",
+          "type": "std::optional<float>",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "lifespan",
+          "type": "std::optional<float>",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "age",
+          "type": "std::optional<float>",
+          "default": "0.0f",
+          "is_complex": false
+        },
+        {
+          "name": "color",
+          "type": "std::optional<Color>",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "gravity",
+          "type": "std::optional<float>",
+          "default": "0.0f",
+          "is_complex": false
+        },
+        {
+          "name": "acceleration",
+          "type": "std::optional<float>",
+          "default": "0.0f",
+          "is_complex": false
+        },
+        {
+          "name": "startColor",
+          "type": "std::optional<Color>",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "endColor",
+          "type": "std::optional<Color>",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "autoAspect",
+          "type": "std::optional<bool>",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "faceVelocity",
+          "type": "std::optional<bool>",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "z",
+          "type": "std::optional<int>",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "space",
+          "type": "std::optional<RenderSpace>",
+          "default": null,
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:Particle"
+    },
+    {
+      "name": "ParticleEmitter",
+      "category": "core_graphics",
+      "file_path": "src/systems/particles/particle.hpp",
+      "line_number": 89,
+      "is_tag": false,
+      "extraction_confidence": 0.9,
+      "notes": [
+        "1 complex types need manual review",
+        "source_category:particles"
+      ],
+      "fields": [
+        {
+          "name": "size",
+          "type": "Vector2",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "emissionRate",
+          "type": "float",
+          "default": "0.1f",
+          "is_complex": false
+        },
+        {
+          "name": "lastEmitTime",
+          "type": "float",
+          "default": "0.0f",
+          "is_complex": false
+        },
+        {
+          "name": "particleLifespan",
+          "type": "float",
+          "default": "1.0f",
+          "is_complex": false
+        },
+        {
+          "name": "particleSpeed",
+          "type": "float",
+          "default": "1.0f",
+          "is_complex": false
+        },
+        {
+          "name": "fillArea",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "oneShot",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "oneShotParticleCount",
+          "type": "float",
+          "default": "10.f",
+          "is_complex": false
+        },
+        {
+          "name": "prewarm",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "prewarmParticleCount",
+          "type": "float",
+          "default": "10.f",
+          "is_complex": false
+        },
+        {
+          "name": "useGlobalCoords",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "speedScale",
+          "type": "float",
+          "default": "1.0f",
+          "is_complex": false
+        },
+        {
+          "name": "explosiveness",
+          "type": "float",
+          "default": "0.0f",
+          "is_complex": false
+        },
+        {
+          "name": "randomness",
+          "type": "float",
+          "default": "0.1f",
+          "is_complex": false
+        },
+        {
+          "name": "emissionSpread",
+          "type": "float",
+          "default": "0.0f",
+          "is_complex": false
+        },
+        {
+          "name": "gravityStrength",
+          "type": "float",
+          "default": "0.0f",
+          "is_complex": false
+        },
+        {
+          "name": "emissionDirection",
+          "type": "Vector2",
+          "default": "{0, -1}",
+          "is_complex": false
+        },
+        {
+          "name": "acceleration",
+          "type": "float",
+          "default": "0.0f",
+          "is_complex": false
+        },
+        {
+          "name": "blendMode",
+          "type": "BlendMode",
+          "default": "BLEND_ALPHA",
+          "is_complex": false
+        },
+        {
+          "name": "colors",
+          "type": "std::vector<Color>",
+          "default": "{WHITE, GRAY, LIGHTGRAY}",
+          "is_complex": true
+        },
+        {
+          "name": "defaultZ",
+          "type": "std::optional<int>",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "defaultSpace",
+          "type": "std::optional<RenderSpace>",
+          "default": null,
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:ParticleEmitter"
+    },
+    {
+      "name": "ParticleAnimationConfig",
+      "category": "core_graphics",
+      "file_path": "src/systems/particles/particle.hpp",
+      "line_number": 116,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [
+        "source_category:particles"
+      ],
+      "fields": [
+        {
+          "name": "useSpriteNotAnimation",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "loop",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "animationName",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "fg",
+          "type": "std::optional<Color>",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "bg",
+          "type": "std::optional<Color>",
+          "default": null,
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:ParticleAnimationConfig"
+    },
+    {
+      "name": "StencilMaskSource",
+      "category": "core_graphics",
+      "file_path": "src/systems/particles/particle.hpp",
+      "line_number": 1024,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [
+        "source_category:particles"
+      ],
+      "fields": [
+        {
+          "name": "paddingPx",
+          "type": "float",
+          "default": "0.0f",
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:StencilMaskSource"
+    },
+    {
+      "name": "StencilMaskedParticle",
+      "category": "core_graphics",
+      "file_path": "src/systems/particles/particle.hpp",
+      "line_number": 1029,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [
+        "source_category:particles"
+      ],
+      "fields": [
+        {
+          "name": "sourceEntity",
+          "type": "entt::entity",
+          "default": "entt::null",
+          "is_complex": false
+        },
+        {
+          "name": "zBias",
+          "type": "float",
+          "default": "0.0f",
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:StencilMaskedParticle"
+    }
+  ]
+}

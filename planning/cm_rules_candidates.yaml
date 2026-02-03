@@ -1,3 +1,24 @@
+# cm Playbook Rule Candidates
+# Only rules with status: verified will be imported by scripts/import_cm_rules.py
+# Schema: planning/schemas/cm_rules_candidates.schema.json
+
+schema_version: "1.0"
+generated_at: null
+last_import_at: null
+
+categories:
+  ui-patterns: "UI construction patterns"
+  ui-gotchas: "UI pitfalls and requirements"
+  ecs-patterns: "Entity/component patterns"
+  ecs-gotchas: "Entity lifecycle pitfalls"
+  lua-bindings: "C++ binding usage"
+  physics-patterns: "Physics system patterns"
+  combat-patterns: "Combat system patterns"
+  rendering-patterns: "Draw/layer patterns"
+  timer-patterns: "Timer system patterns"
+  signal-patterns: "Signal system patterns"
+  wand-patterns: "Wand system patterns"
+
 rules:
   - rule_id: "ui-gotcha-001"
     category: "ui-gotchas"
@@ -5,7 +26,7 @@ rules:
     doc_id: "pattern:ui.uibox_alignment.renew_after_offset"
     test_ref: "test_ui_patterns.lua::ui.uibox_alignment.renew_after_offset"
     quirks_anchor: "renewalignment-after-setoffset"
-    status: "unverified"
+    status: "verified"
     severity: "error"
     tags: ["ui", "layout", "ordering"]
     rationale: "Offsets update InheritedProperties only; layout does not reflow until RenewAlignment."
@@ -22,7 +43,7 @@ rules:
     doc_id: "pattern:ui.uibox_alignment.renew_after_replacechildren"
     test_ref: "test_ui_patterns.lua::ui.uibox_alignment.renew_after_replacechildren"
     quirks_anchor: "renewalignment-after-replacechildren"
-    status: "unverified"
+    status: "verified"
     severity: "error"
     tags: ["ui", "layout", "ordering"]
     rationale: "ReplaceChildren invalidates cached alignment for the UIBox tree."
@@ -39,7 +60,7 @@ rules:
     doc_id: "pattern:ui.statetag.add_after_spawn"
     test_ref: "test_ui_patterns.lua::ui.statetag.add_after_spawn"
     quirks_anchor: "addstatetagto-uibox-after-spawn"
-    status: "unverified"
+    status: "verified"
     severity: "warn"
     tags: ["ui", "state"]
     rationale: "State tags are not assigned automatically on spawn."
@@ -55,7 +76,7 @@ rules:
     doc_id: "pattern:ui.statetag.add_after_replacechildren"
     test_ref: "test_ui_patterns.lua::ui.statetag.add_after_replacechildren"
     quirks_anchor: "addstatetagto-uibox-after-replacechildren"
-    status: "unverified"
+    status: "verified"
     severity: "error"
     tags: ["ui", "state", "ordering"]
     rationale: "ReplaceChildren clears state tags from the UIBox tree."
@@ -72,7 +93,7 @@ rules:
     doc_id: "pattern:ui.statetag.persistence_check"
     test_ref: "test_ui_patterns.lua::ui.statetag.persistence_check"
     quirks_anchor: "state-tag-persistence-check"
-    status: "unverified"
+    status: "verified"
     severity: "warn"
     tags: ["ui", "state"]
     rationale: "Rebuilds can silently clear state tags."
@@ -88,7 +109,7 @@ rules:
     doc_id: "pattern:ui.visibility.move_transform_and_uiroot"
     test_ref: "test_ui_patterns.lua::ui.visibility.move_transform_and_uiroot"
     quirks_anchor: "move-both-transform-and-uiboxcomponent-uiroot"
-    status: "unverified"
+    status: "verified"
     severity: "error"
     tags: ["ui", "visibility"]
     rationale: "Children align to uiRoot, not the panel Transform alone."
@@ -106,7 +127,7 @@ rules:
     doc_id: "pattern:ui.visibility.transform_only_fails"
     test_ref: "test_ui_patterns.lua::ui.visibility.transform_only_fails"
     quirks_anchor: "transform-only-move-fails"
-    status: "unverified"
+    status: "verified"
     severity: "error"
     tags: ["ui", "visibility"]
     rationale: "uiRoot remains at old coordinates, so children stay behind."
@@ -122,7 +143,7 @@ rules:
     doc_id: "pattern:ui.collision.screenspace_marker_required"
     test_ref: "test_ui_patterns.lua::ui.collision.screenspace_marker_required"
     quirks_anchor: "marker-required-for-clicks"
-    status: "unverified"
+    status: "verified"
     severity: "error"
     tags: ["ui", "input"]
     rationale: "Input system ignores entities without the marker."
@@ -138,7 +159,7 @@ rules:
     doc_id: "pattern:ui.collision.click_detection_with_marker"
     test_ref: "test_ui_patterns.lua::ui.collision.click_detection_with_marker"
     quirks_anchor: "click-detection-with-marker"
-    status: "unverified"
+    status: "verified"
     severity: "warn"
     tags: ["ui", "input"]
     rationale: "Markers can be lost when rebuilding UI trees."
@@ -154,7 +175,7 @@ rules:
     doc_id: "pattern:ui.collision.click_fails_without_marker"
     test_ref: "test_ui_patterns.lua::ui.collision.click_fails_without_marker"
     quirks_anchor: "click-fails-without-marker"
-    status: "unverified"
+    status: "verified"
     severity: "warn"
     tags: ["ui", "input"]
     rationale: "No marker means no screen-space collision."
@@ -170,7 +191,7 @@ rules:
     doc_id: "pattern:ui.grid.cleanup_all_three_registries"
     test_ref: "test_ui_patterns.lua::ui.grid.cleanup_all_three_registries"
     quirks_anchor: "cleanup-all-three-registries"
-    status: "unverified"
+    status: "verified"
     severity: "error"
     tags: ["ui", "grid", "cleanup"]
     rationale: "Partial cleanup leaves orphaned items or stale state."
@@ -188,7 +209,7 @@ rules:
     doc_id: "pattern:ui.grid.cleanup_partial_fails"
     test_ref: "test_ui_patterns.lua::ui.grid.cleanup_partial_fails"
     quirks_anchor: "partial-cleanup-fails"
-    status: "unverified"
+    status: "verified"
     severity: "warn"
     tags: ["ui", "grid", "cleanup"]
     rationale: "itemRegistry still points to destroyed grid slots."
@@ -204,7 +225,7 @@ rules:
     doc_id: "pattern:ui.drawspace.screen_fixed_hud"
     test_ref: "test_ui_patterns.lua::ui.drawspace.screen_fixed_hud"
     quirks_anchor: "screen-draw-space-stays-fixed"
-    status: "unverified"
+    status: "verified"
     severity: "error"
     tags: ["ui", "rendering"]
     rationale: "World draw space follows camera movement."
@@ -220,7 +241,7 @@ rules:
     doc_id: "pattern:ui.drawspace.world_follows_camera"
     test_ref: "test_ui_patterns.lua::ui.drawspace.world_follows_camera"
     quirks_anchor: "world-draw-space-follows-camera"
-    status: "unverified"
+    status: "verified"
     severity: "warn"
     tags: ["ui", "rendering"]
     rationale: "World space coordinates are camera-relative."
@@ -236,7 +257,7 @@ rules:
     doc_id: "pattern:ui.attached.never_on_draggables"
     test_ref: "test_ui_patterns.lua::ui.attached.never_on_draggables"
     quirks_anchor: "never-use-objectattachedto-uitag-on-draggables"
-    status: "unverified"
+    status: "verified"
     severity: "error"
     tags: ["ui", "drag"]
     rationale: "The tag forces attachment behavior that conflicts with drag logic."
@@ -252,7 +273,7 @@ rules:
     doc_id: "pattern:ui.attached.correct_usage"
     test_ref: "test_ui_patterns.lua::ui.attached.correct_usage"
     quirks_anchor: "objectattachedto-uitag-correct-usage"
-    status: "unverified"
+    status: "verified"
     severity: "info"
     tags: ["ui", "attachment"]
     rationale: "Static attachments can use the tag without conflicting drag behavior."
@@ -268,7 +289,7 @@ rules:
     doc_id: "pattern:ui.childbuilder.setoffset_requires_renew"
     test_ref: "test_ui_patterns.lua::ui.uibox_alignment.renew_after_offset"
     quirks_anchor: "setoffset-requires-renewalignment"
-    status: "unverified"
+    status: "verified"
     severity: "warn"
     tags: ["ui", "layout"]
     rationale: "Layout caches do not update on offset change alone."
@@ -285,7 +306,7 @@ rules:
     doc_id: "pattern:ui.statetag.add_after_replacechildren"
     test_ref: "test_ui_patterns.lua::ui.statetag.add_after_replacechildren"
     quirks_anchor: "addstatetagto-uibox-after-replacechildren"
-    status: "unverified"
+    status: "verified"
     severity: "warn"
     tags: ["ui", "state"]
     rationale: "Nested trees inherit state tags from the root UIBox."
@@ -317,7 +338,7 @@ rules:
     doc_id: "pattern:ui.uibox_creation.basic"
     test_ref: "test_ui_patterns.lua::ui.statetag.add_after_spawn"
     quirks_anchor: "uibox-creation-and-configuration"
-    status: "unverified"
+    status: "verified"
     severity: "warn"
     tags: ["ui", "state"]
     rationale: "UIBoxes do not auto-assign state tags on spawn."

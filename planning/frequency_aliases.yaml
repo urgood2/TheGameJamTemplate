@@ -1,0 +1,46 @@
+# Frequency Scanner Alias Configuration
+# Maps canonical names to aliases used in the codebase.
+
+aliases:
+  # Physics system
+  physics.segment_query:
+    canonical: physics.segment_query
+    aliases:
+      - "physics:segment_query"
+      - "physics.raycast"
+    notes: "raycast is informal name used in comments"
+
+  physics.entity_from_ptr:
+    canonical: physics.entity_from_ptr
+    aliases:
+      - "physics:entity_from_ptr"
+      - "get_entity_from_shape"
+
+  # UI system
+  ui.box.RenewAlignment:
+    canonical: ui.box.RenewAlignment
+    aliases:
+      - "RenewAlignment"
+      - "UIBox:RenewAlignment"
+    notes: "Often called without ui.box prefix"
+
+  ui.box.AddStateTagToUIBox:
+    canonical: ui.box.AddStateTagToUIBox
+    aliases:
+      - "AddStateTagToUIBox"
+      - "addStateTag"
+
+  # Core
+  component_cache.get:
+    canonical: component_cache.get
+    aliases:
+      - "component_cache:get"
+      - "cc.get"
+    notes: "cc is common shorthand"
+
+  # Timer
+  timer.after:
+    canonical: timer.after
+    aliases:
+      - "Timer:after"
+      - "timer:after"

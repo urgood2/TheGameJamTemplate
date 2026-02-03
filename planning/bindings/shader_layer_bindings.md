@@ -57,6 +57,32 @@ Common helpers:
 `shaders.ShaderUniformSet` and `shaders.ShaderUniformComponent` provide uniform
 storage and per-entity overrides.
 
+## Key Binding Notes
+
+### shaders.loadShadersFromJSON
+**doc_id:** `sol2_function_sh_loadshadersfromjson`
+Loads shader definitions from JSON. Use `assets/shaders/shaders.json` for the default set.
+
+### shaders.setShaderMode / shaders.unsetShaderMode
+**doc_id:** `sol2_function_sh_setshadermode`, `sol2_function_sh_unsetshadermode`
+Wrap immediate rendering in a shader mode. Use with care around queued draw commands.
+
+### addShaderPass / addShaderPreset / clearShaderPasses
+**doc_id:** `sol2_function_addshaderpass`, `sol2_function_addshaderpreset`, `sol2_function_clearshaderpasses`
+Operate on `shader_pipeline.ShaderPipelineComponent` for an entity. `addShaderPass` creates the pipeline if missing.
+
+### layer.CreateLayer / layer.CreateLayerWithSize
+**doc_id:** `sol2_function_createlayer`, `sol2_function_createlayerwithsize`
+Returns a layer handle used by `command_buffer` queues and execute helpers.
+
+### command_buffer.queueDrawRectangle / executeDrawRectangle
+**doc_id:** `sol2_usertype_command_buffer`
+Queue takes `(layer, init_fn, z, space)`; execute takes `(layer, init_fn)`.
+
+### layer.DrawCommandSpace
+**doc_id:** `sol2_usertype_layer_drawcommandspace`
+Use `Screen` for HUD and `World` for camera-relative rendering.
+
 ## Tests
 
 Test file: `assets/scripts/test/test_shader_layer_bindings.lua`

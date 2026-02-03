@@ -16,6 +16,8 @@ cleanup() {
 trap cleanup EXIT
 
 mkdir -p "${work_dir}/assets/scripts/tests/e2e"
+mkdir -p "${work_dir}/tests"
+echo "# temp" > "${work_dir}/CMakeLists.txt"
 echo "return true" > "${work_dir}/tests/sample.lua"
 
 pushd "${work_dir}" >/dev/null

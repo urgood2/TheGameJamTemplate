@@ -106,7 +106,7 @@ struct TestModeConfig {
     int max_failures = 0;
     bool shuffle_tests = false;
     uint32_t shuffle_seed = 0;
-    std::filesystem::path test_manifest_path;
+    std::filesystem::path test_manifest_path = std::filesystem::path("tests/test_manifest.json");
 
     RngScope rng_scope = RngScope::Test;
     RendererMode renderer = RendererMode::Offscreen;

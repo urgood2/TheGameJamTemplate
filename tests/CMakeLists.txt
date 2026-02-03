@@ -23,7 +23,6 @@ add_executable(unit_tests
     unit/test_collision_log.cpp
     unit/test_error_handling.cpp
     unit/test_config_validation.cpp
-    unit/test_test_mode_config.cpp
     unit/test_sound_system.cpp
     unit/test_scripting_bindings.cpp
     unit/test_scripting_lifecycle.cpp
@@ -50,7 +49,6 @@ add_executable(unit_tests
     unit/test_save_file_io.cpp
     unit/test_replace_children.cpp
     unit/test_mode_config.cpp
-    unit/test_test_mode_config.cpp
     helpers/test_stubs.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_system.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_presets.cpp
@@ -137,6 +135,27 @@ target_include_directories(test_mode_config_cli PRIVATE
 target_link_libraries(test_mode_config_cli PRIVATE
     CommonSettings
 )
+
+# ======================================================================
+# Test Mode Config Unit Tests (lightweight target)
+# ======================================================================
+add_executable(test_mode_config_tests
+    unit/test_mode_config.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/test_mode_config.cpp
+)
+
+target_include_directories(test_mode_config_tests PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(test_mode_config_tests PRIVATE
+    gtest_main
+    CommonSettings
+)
+
+gtest_discover_tests(test_mode_config_tests)
 
 # ======================================================================
 # Lua Backend Smoke Tests (minimal dependencies - just Sol2/Lua)

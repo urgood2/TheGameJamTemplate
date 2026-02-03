@@ -73,26 +73,38 @@ end
 
 -- Copy layers from source to target
 local layers_added = 0
-for _, src_layer in ipairs(source_sprite.layers) do
-    if src_layer.isImage then
-        -- Create new layer in target with prefixed name
-        local new_layer = target_sprite:newLayer()
-        new_layer.name = prefix .. "_" .. src_layer.name
 
-        -- Copy cels from source layer to new layer
-        for _, src_cel in ipairs(src_layer.cels) do
-            local frame_num = src_cel.frameNumber
-            -- Ensure frame exists
-            while #target_sprite.frames < frame_num do
-                target_sprite:newEmptyFrame()
+-- Use a transaction for proper undo support
+app.transaction(function()
+    for _, src_layer in ipairs(source_sprite.layers) do
+        if src_layer.isImage then
+            -- Create new layer in target with prefixed name
+            local new_layer = target_sprite:newLayer()
+            new_layer.name = prefix .. "_" .. src_layer.name
+
+            -- Copy cels from source layer to new layer
+            for _, src_cel in ipairs(src_layer.cels) do
+                local frame_num = src_cel.frameNumber
+                -- Ensure frame exists
+                while #target_sprite.frames < frame_num do
+                    target_sprite:newEmptyFrame()
+                end
+
+                -- Create a new image matching target's color mode
+                local src_img = src_cel.image
+                local new_img = Image(src_img.width, src_img.height, target_sprite.colorMode)
+
+                -- Use drawImage to copy with automatic color conversion
+                new_img:drawImage(src_img, Point(0, 0))
+
+                -- Create cel with the new image
+                target_sprite:newCel(new_layer, frame_num, new_img, src_cel.position)
             end
-            -- Create cel with copied image
-            target_sprite:newCel(new_layer, frame_num, src_cel.image, src_cel.position)
-        end
 
-        layers_added = layers_added + 1
+            layers_added = layers_added + 1
+        end
     end
-end
+end)
 
 -- Save target sprite
 target_sprite:saveAs(target_path)

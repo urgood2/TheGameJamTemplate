@@ -1,4 +1,3 @@
-```markdown
 # Master Plan: End-to-End (E2E) Game Testing System — v4
 
 This document integrates GPT Pro's v3.1 revisions into the v3 plan, adding:
@@ -35,11 +34,6 @@ This document integrates GPT Pro's v3.1 revisions into the v3 plan, adding:
 - Web/Emscripten support, perceptual diff/ML diffing, full UI automation framework, multiplayer/network determinism.
 - Cross-GPU pixel-perfect equivalence (unless running a canonical software renderer / fixed backend in CI).
 
-### Conventions (for implementability)
-- **MUST** = required for correctness/CI reliability.
-- **SHOULD** = strongly recommended; may be staged after MVP if necessary.
-- All file paths written by the harness **MUST** be **relative** to the run root and validated against allowed roots (see §2 Behavior rules).
-
 ---
 
 ## 0.1 Determinism Contract (Test Mode)
@@ -68,17 +62,10 @@ In `--test-mode`, the engine must behave as a **deterministic simulator** given:
    - Set consistent FP environment (rounding mode, FTZ/DAZ) at startup in `--test-mode`.
    - Avoid fast-math in determinism-critical codepaths (or document/contain it).
    - If physics relies on FP, require a deterministic physics step (fixed dt, fixed iteration counts).
-   - Implementation pinning checklist (SHOULD, to make this testable):
-     - Record FP config in `run_manifest.json.determinism_pins` (FTZ/DAZ, rounding, flush mode).
-     - Ensure the pin is applied once at startup before any simulation or scripts run.
 
 7. **Process environment must be pinned.**
    - Freeze locale/timezone in test mode (or explicitly set to a known value).
    - Avoid environment-dependent formatting/parsing affecting state or UI layout.
-   - Concrete target (SHOULD):
-     - Locale: `C`
-     - Timezone: `UTC`
-     - Record both in `run_manifest.json.determinism_pins`.
 
 8. **Filesystem nondeterminism must be eliminated.**
    - Never rely on directory enumeration order; always sort deterministically.
@@ -91,8 +78,6 @@ In `--test-mode`, the engine must behave as a **deterministic simulator** given:
 10. **External network access must be pinned/disabled.**
     - Default: outbound network disabled in `--test-mode` to avoid nondeterminism and CI risk.
     - If needed: allow `localhost` only via explicit flag (`--allow-network=localhost`).
-    - Enforcement MUST be observable (testable):
-      - Violations produce `DET_NET` determinism tripwire output and `failure_kind=harness_error` (or `determinism_divergence` if caught during audit) with clear message.
 
 ### Diagnostics stance
 - In `--test-mode`, determinism violations should produce an explicit warning/error category (easy to grep in CI).
@@ -100,8 +85,6 @@ In `--test-mode`, the engine must behave as a **deterministic simulator** given:
   - fail-fast option: `--determinism-violation=fatal|warn` (default: `fatal` in CI, `warn` locally)
   - each violation includes a stable code (`DET_TIME`, `DET_RNG`, `DET_FS_ORDER`, `DET_ASYNC_ORDER`, `DET_NET`, ...)
   - optional stack trace when available
-- Testability requirement (SHOULD):
-  - Each tripwire code maps to a stable `failure_kind` and includes enough context to reproduce (e.g., offending call site, frame number).
 
 ### Rendering caveat
 - Pixel-perfect screenshot baselines are only guaranteed on a controlled render stack (same backend/driver/software renderer).
@@ -118,18 +101,7 @@ In `--test-mode`, the engine must behave as a **deterministic simulator** given:
 ### Additions
 - `report.json` includes:
   - `schema_version` (semver)
-  - `failure_kind` (stable enum):
-    - `assertion`
-    - `timeout`
-    - `crash`
-    - `harness_error`
-    - `determinism_divergence`
-    - `log_gating`
-    - `baseline_missing`
-    - `baseline_mismatch`
-    - `capability_missing`
-    - `perf_budget_exceeded`
-    - `unknown`
+  - `failure_kind` (stable enum: `assertion|timeout|crash|harness_error|determinism_divergence|log_gating|baseline_missing|baseline_mismatch|capability_missing|perf_budget_exceeded|unknown`)
   - `engine_version` + `content_fingerprint` (hashes)
   - per-test: `status`, `attempts`, `artifacts[]` (structured), `timings_frames`, `timings_ms` (optional)
 - `run_manifest.json` includes:
@@ -139,16 +111,6 @@ In `--test-mode`, the engine must behave as a **deterministic simulator** given:
   - `renderer_fingerprint` (backend + device + driver + colorspace)
   - `determinism_pins` (FTZ/DAZ, rounding, locale, TZ, thread mode, etc.)
   - `test_api_fingerprint` (hash of exported Test API registry descriptor)
-
-### Schema/versioning rules (to make this implementable)
-- `schema_version` MUST follow semver:
-  - Major bump: breaking changes (field removal/meaning change).
-  - Minor bump: additive/backwards-compatible fields.
-  - Patch bump: clarifications/bugfixes with no consumer impact.
-- JSON schemas SHOULD specify:
-  - `additionalProperties` policy (explicitly allow or disallow unknown fields).
-  - Required fields and stable enums.
-  - File path fields as **relative paths** (no absolute paths in reports).
 
 ### Schemas (checked-in)
 - `tests/schemas/report.schema.json`
@@ -181,9 +143,6 @@ The harness validates outputs against these schemas in `--test-mode` and exits `
   - `perf_tracker.{hpp,cpp}`           — performance metrics collection + budgets
   - `test_api_registry.{hpp,cpp}`      — typed registry for state paths/queries/commands + versioning
   - `test_api_dump.{hpp,cpp}`          — writes `test_api.json` description artifact
-  - (Added for completeness; referenced later in Phase 4)
-    - `artifact_index.{hpp,cpp}`       — generates `index.html` linking per-test artifacts and repro commands
-    - `timeline_writer.{hpp,cpp}`      — writes merged `timeline.jsonl`
 
 ### 1.1.1 Tools (host-side)
 - `tools/e2e_supervisor/`
@@ -223,8 +182,6 @@ The harness validates outputs against these schemas in `--test-mode` and exits `
     - `.../<test_id>/<name>.meta.json` (thresholds, ROI, masks, notes)
   - Baseline updates should be created on canonical render stacks only.
   - Non-canonical machines should default to staging updates to avoid poisoning baselines.
-  - Testability requirement (SHOULD):
-    - Baseline path resolution is pure and deterministic given (`platform`, `baseline_key`, `resolution`, `test_id`, `name`).
 
 #### Baseline staging
 - `tests/baselines_staging/` — staging area for baseline updates (not committed by default)
@@ -251,8 +208,6 @@ The harness validates outputs against these schemas in `--test-mode` and exits `
     - `repro.sh`            — per-run (and/or per-test) repro script
     - `repro.ps1`           — PowerShell repro script
     - `forensics.zip`       — optional zipped bundle for easy CI download
-  - Clarification for implementability:
-    - `run_id` uniqueness MAY use wall-clock time, but MUST NOT affect simulation determinism (only output paths).
 
 ---
 
@@ -275,19 +230,11 @@ All flags optional unless noted:
 - `--fixed-fps <int>` (default: `60`; forces fixed timestep)
 - `--resolution <WxH>` (default: `1280x720`)
 - `--allow-network <mode>` (default: `deny`; `deny|localhost|any`)
-- Clarifications (testability/clarity):
-  - If both `--test-script` and `--test-suite` are provided, treat as configuration error and exit `2` (explicitly reject ambiguity).
-  - `--test-filter` MUST define matching semantics:
-    - Either accept a `regex:` prefix to force regex, otherwise treat as glob.
-    - Or accept both and document precedence; in any case, it MUST be deterministic and tested.
 
 ### Output paths
 - `--artifacts <dir>` (default: `tests/out/<run_id>/artifacts`)
 - `--report-json <path>` (default: `tests/out/<run_id>/report.json`)
 - `--report-junit <path>` (default: `tests/out/<run_id>/report.junit.xml`)
-- Path requirements (MUST):
-  - All paths are validated via `path_sandbox` and written via `artifact_store` atomically.
-  - Report fields store **relative** paths under the run root.
 
 ### Baselines
 - `--update-baselines` (accept missing/mismatched baselines by writing actual → staging)
@@ -299,9 +246,6 @@ All flags optional unless noted:
   - `apply`: write directly to `tests/baselines/...` (requires explicit opt-in)
 - `--baseline-staging-dir <dir>` (default: `tests/baselines_staging`)
 - `--baseline-approve-token <token>` (default: empty; if set, require matching env var `E2E_BASELINE_APPROVE=<token>` to write)
-- Baseline key computation (SHOULD, for clarity):
-  - Define canonical string format: `<backend>_<dynamic_range>_<colorspace>` (e.g. `vulkan_sdr_srgb`).
-  - Record chosen `baseline_key` in `run_manifest.json` and `report.json.run.baseline_key`.
 
 ### Sharding + timeouts
 - `--shard <n>` and `--total-shards <k>` (default: `1/1`; deterministic sharding)
@@ -309,8 +253,6 @@ All flags optional unless noted:
 - `--default-test-timeout-frames <int>` (default: `1800`; per-test timeout measured in frames)
 - `--failure-video <mode>` (default: `off`; `off|on`)
 - `--failure-video-frames <n>` (default: `180`; number of frames to retain/encode on failure)
-- Shard determinism (MUST):
-  - Sharding is based on stable ordering of discovered tests (after filters/tags), then the stable predicate `(test_index % total_shards) == (shard-1)` (see §5 Phase 3).
 
 ### Retries + flake policy
 - `--retry-failures <n>` (default: `0`; rerun failing tests up to N times)
@@ -335,9 +277,6 @@ All flags optional unless noted:
 ### Renderer control
 - `--renderer <mode>` (default: `offscreen`; `null|offscreen|windowed`)
   - `null`: logic-only; screenshot APIs unsupported (capabilities reflect this)
-- Clarify interaction (SHOULD):
-  - `--headless` SHOULD imply `--renderer=offscreen` unless explicitly overridden.
-  - If `--renderer=null`, then `--headless` is allowed but screenshots MUST be reported as `capability_missing`.
 
 ### Determinism audit (tripwire)
 - `--determinism-audit` (default: `false`)
@@ -349,8 +288,6 @@ All flags optional unless noted:
 ### Log gating
 - `--fail-on-log-level <level>` (default: empty; if set, fail if logs at/above level occur during a test)
 - `--fail-on-log-category <glob>` (default: empty; optional filter)
-- Testability detail (SHOULD):
-  - Define log level ordering and normalization (e.g., `trace<debug<info<warn<error<fatal`).
 
 ### Input record/replay (optional, but significant productivity gain)
 - `--record-input <path>` (default: empty; record effective input events to JSONL)
@@ -400,8 +337,6 @@ Responsibilities (Orchestrator):
    - Windows: minidump (if enabled)
 7. Merge child reports into one authoritative run report (JSON + JUnit).
 8. Normalize exit codes to the same contract (0/1/2/3/4).
-9. Testability requirement (SHOULD):
-   - Each child process writes into a distinct `tests/out/<run_id>/` (or `tests/out/<run_id>/shard_<i>/test_<id>/`) so merging is deterministic and artifact paths do not collide.
 
 CI should call the supervisor/orchestrator rather than invoking the game directly.
 
@@ -433,9 +368,6 @@ Expose a global table `test_harness` only in test mode.
 - `test_harness.exit(code)`
 - `test_harness.skip(reason)` (marks current test skipped safely)
 - `test_harness.xfail(reason)` (expected fail; fail→XFAIL, pass→XPASS)
-- Clarifications (testability):
-  - `exit(code)` ends the run immediately after the current frame boundary; the runner writes reports/forensics before exiting where possible.
-  - `skip/xfail` MUST be represented in `report.json.tests[].status` and in JUnit in a conventional way (skipped/expected failure).
 
 ### 3.1.1 Steps + attachments (debuggability)
 - `test_harness.step(name, fn) -> returns fn result`
@@ -443,16 +375,12 @@ Expose a global table `test_harness` only in test mode.
 - `test_harness.attach_text(name, text, opts?)`
 - `test_harness.attach_file(name, path, opts?)`
   - `opts`: `{ mime="text/plain", max_bytes=1048576 }`
-- Attachment/path safety (MUST):
-  - `attach_file` MUST read only from approved **read roots** and write an artifact copy under the run root so reports never reference arbitrary filesystem paths.
 
 ### 3.2 Input injection (applied at frame boundaries)
 - `press_key`, `release_key`, `tap_key`
 - `move_mouse`, `mouse_down`, `mouse_up`, `click`
 - `text_input(str)`
 - `gamepad_button_down/up`, `gamepad_set_axis`
-- Clarification (SHOULD):
-  - All injected inputs are scheduled against explicit frames (current or future) and applied deterministically at the start of the frame (see §4).
 
 **Input coordinate contract:**
 - `move_mouse(x,y)` uses **render target pixel coordinates** under `--resolution` (0..W-1, 0..H-1).
@@ -468,8 +396,6 @@ Expose a global table `test_harness` only in test mode.
 ### 3.3 State query/set (via Test API Surface)
 - `get_state(path) -> value|nil, err?`
 - `set_state(path, value) -> true|nil, err?`
-- Error contract (SHOULD, for clarity):
-  - Errors are strings with stable prefixes (e.g., `capability_missing:<name>`, `invalid_path:<path>`, `type_error:<details>`).
 
 #### 3.3.1 Explicit queries/commands (preferred)
 - `query(name, args?) -> value|nil, err?`
@@ -493,9 +419,6 @@ Expose a global table `test_harness` only in test mode.
   - If `--update-baselines`, copy actual → baseline (staging or apply per `--baseline-write-mode`) and record baseline update in report.
   - If `<name>.meta.json` exists, merge as defaults (test overrides allowed).
   - If renderer is `null`, this must SKIP via capabilities.
-  - Baseline naming clarity (SHOULD):
-    - Baseline image path convention under `<test_id>/` SHOULD be `<name>.png` and meta file `<name>.meta.json`.
-    - `name` MUST be stable within the test to avoid baseline churn.
 
 ### 3.5 Logs
 - `log_mark() -> index`
@@ -511,16 +434,12 @@ Expose a global table `test_harness` only in test mode.
 - `test_harness.test_api_version` string, e.g. `"1.0.0"`
 - `test_harness.require(opts) -> true|error`
   - `opts`: `{ min_test_api_version="1.0.0", requires={"screenshots","gamepad"} }`
-- Testability requirement (SHOULD):
-  - Capabilities are also written into `run_manifest.json` and the JSON report so CI can interpret skips.
 
 ### 3.7 Determinism hashing (audit support)
 - `test_harness.frame_hash(scope?) -> string`
   - `test_api` (default): hash of Test API Surface snapshot
   - `engine`: optional internal deterministic hash
   - `render_hash`: optional hash of backbuffer (canonical renderer only)
-- Hashing clarity (SHOULD):
-  - Use a stable algorithm (e.g., `sha256`) and a canonical serialization (stable key ordering, stable float formatting).
 
 ### 3.8 Performance hooks (optional)
 - `test_harness.perf_mark() -> token`
@@ -547,8 +466,6 @@ Expose a global table `test_harness` only in test mode.
   1. Applies queued test input events scheduled for this frame.
   2. Advances the game with fixed `dt = 1/fixed_fps`.
   3. Resumes test coroutine until it yields or completes.
-- Clarification (MUST):
-  - Ordering above is invariant and documented, since it defines determinism semantics for input timing and waits.
 
 ### Watchdogs
 - Run-level watchdog: `--timeout-seconds`.
@@ -611,8 +528,6 @@ When retries are enabled and a test fails then passes:
 4. Define and commit JSON schemas for `report.json` and `run_manifest.json`.
 5. Define a schema for `test_api.json` (registry descriptor) and commit it.
 **Gate:** repo compiles with stubs; contracts committed as docs/comments; schemas validated.
-- Gate testability (SHOULD):
-  - Add a minimal schema-validation step in test mode that exits `2` on invalid schema outputs (even if tests are stubbed).
 
 ### Phase 1 — Test Mode Core (C++)
 1. `test_mode_config`: parse flags, validate, compute `<run_id>`, create output dirs.
@@ -625,9 +540,6 @@ When retries are enabled and a test fails then passes:
 8. `determinism_guard`: runtime tripwires for time/RNG/fs/async/network violations.
 9. `test_api_registry`: typed registration for state paths, queries, commands.
 **Gate:** `./game --test-mode --test-script <minimal.lua>` can wait frames, log, and exit(0).
-- Gate testability (SHOULD):
-  - The minimal script produces a schema-valid `report.json` (even if it contains 0 tests) and a `run_manifest.json`.
-  - Exit code is `0` and deterministic across repeated invocations with the same flags.
 
 ### Phase 2 — Input Injection (C++)
 1. `test_input_provider`: per-frame scheduled event queue.
@@ -637,8 +549,6 @@ When retries are enabled and a test fails then passes:
 5. Add `input_state()` and coordinate transform APIs.
 6. Optional: record/replay integration via `--record-input` / `--replay-input`.
 **Gate:** Lua script can press/hold/release keys, enter text, use gamepad, click reliably with frame-accurate timing.
-- Gate testability (SHOULD):
-  - Provide a deterministic input trace fixture that replays identically and asserts on input_state snapshots.
 
 ### Phase 3 — Lua Test Framework (Lua)
 1. `test_runner.lua`: `describe/it`, hooks, deterministic ordering (or deterministic shuffle), per-test results, timeouts, frame budgets.
@@ -660,8 +570,6 @@ When retries are enabled and a test fails then passes:
    - statuses: `pass|fail|skipped|xfail|xpass|flaky|quarantined`
 5. Sharding: `(test_index % total_shards) == (shard-1)` (stable enumeration required).
 **Gate:** one example E2E test runs and produces `report.json` + correct exit code.
-- Gate testability (SHOULD):
-  - Add a tiny example test that deterministically passes and includes at least one `step()` and one attachment, verifying report fields.
 
 ### Phase 4 — Verification Systems (C++ + Lua wiring)
 1. `lua_state_query`: robust traversal (dot + numeric + bracket) against Test API Surface.
@@ -679,10 +587,6 @@ When retries are enabled and a test fails then passes:
 11. `perf_tracker`: collect and optionally enforce performance budgets.
 12. `test_api_dump`: generate `test_api.json` descriptor for validation/tooling.
 **Gate:** `assert_state`, `assert_log_contains`, `assert_screenshot` work end-to-end and generate artifacts on failure; HTML gallery renders.
-- Clarification (to resolve ambiguity):
-  - `assert_state` and `assert_log_contains` are framework-level helpers (e.g., in `assertions.lua`) implemented on top of `get_state`/`wait_until_state` and `find_log`/`wait_until_log`.
-- Gate testability (SHOULD):
-  - Add a known-failing screenshot assertion run that produces: actual, baseline (if present), diff, and report entries with correct `failure_kind` (`baseline_missing` or `baseline_mismatch`).
 
 ### Phase 4.5 — Orchestrated Isolation
 1. Build orchestrator mode into `tools/e2e_supervisor`:
@@ -693,8 +597,6 @@ When retries are enabled and a test fails then passes:
 3. Add hang diagnostics: cooperative dump request before hard kill.
 4. Verify per-test forensics on crash/timeout.
 **Gate:** CI runs via orchestrator in `process-per-test` mode, merges reports, and produces per-test forensics on crash/timeout.
-- Gate testability (SHOULD):
-  - Induce a controlled crash in a single test process and verify only that test is marked `crash` and the suite continues.
 
 ### Phase 5 — Example Tests + Test Hooks (Game Lua/C++)
 1. Add minimal test-visible state hooks (test mode only):
@@ -1044,4 +946,3 @@ The test manifest (`tests/test_manifest.json`) provides centralized policy and p
 4. Appendix G added for changelog from v3.
 5. Report schema version bumped to 1.1.0 for structured artifacts.
 6. Forensics bundle expanded with new artifact types.
-```

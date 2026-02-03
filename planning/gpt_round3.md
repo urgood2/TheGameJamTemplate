@@ -1,753 +1,708 @@
-# Cass Memory Update Plan v2 — Review & Proposed Revisions (v3 draft)
 
-This document proposes concrete revisions to the plan you provided. Each revision includes:
+# Revisions to “Master Plan: End-to-End (E2E) Game Testing System — v2”
+**Goal:** make the plan *more deterministic, more diagnosable, safer to operate in CI, and easier for humans to use* without turning it into a giant UI automation product.
 
-- **Problem observed in v2**
-- **Proposed change**
-- **Why it improves the project** (robustness, reliability, performance, developer experience)
-- **Tradeoffs / risks**
-- **Git-diff style patch** showing the change against the original plan text
-
-> Notes on the diffs:
-> - Diffs are shown as if the original plan lived at `planning/cass_memory_update_plan_v2.md`.
-> - Hunks are intentionally **small and localized** so they’re easy to apply manually even if your file path differs.
+Below are targeted change proposals. Each includes:
+- **Rationale / tradeoffs**
+- **A focused git-diff** against the *original plan text* (assumed stored as `docs/e2e_testing_master_plan_v2.md`)
 
 ---
 
-## Overall read: what’s already strong vs what’s most risky
+## Quick diagnosis (what’s already strong vs. what’s missing)
 
-### Strong in v2
-- Clear **phase structure** and responsibility boundaries.
-- Correct instincts on **automation-first**, **schemas**, **determinism**, and **drift prevention**.
-- Good separation between:
-  - human-readable docs,
-  - machine-readable inventories,
-  - verification artifacts,
-  - and cm “memory” rules.
+### Already strong
+- Determinism contract is explicit and pragmatic (includes FP/env/fs/GPU sync).
+- Output layout + forensics bundle is a solid foundation for debugging.
+- Capabilities handshake + `null` renderer mode is the right flexibility.
+- Sharding + retries + quarantine are the right CI hygiene primitives.
 
-### Biggest risks / failure modes
-1. **Silent crash / hang** yields ambiguous CI failures (missing `status.json`, half-written results).
-2. **Drift from duplicated truths** (docs show Verified, registry maps doc→test, tests exist separately).
-3. **Tooling/environment drift** (extractors/validators depend on Python + tools with unspecified versions).
-4. Visual baseline management can **explode repo size**, and nondeterminism can turn the suite into noise.
-5. CI runtime will grow unless you add **impact-based selection** (sharding alone only parallelizes slowness).
-
-The revisions below target these risks while keeping the spirit and structure of v2.
+### Key gaps to close
+1. **There’s no “single source of truth” schema for `report.json` and `run_manifest.json`.** This will rot quickly across refactors and CI tooling.
+2. **Baseline updates are too easy to do accidentally** (or to do differently on different machines).
+3. **Timeouts/crashes are handled in-process only.** If the game deadlocks inside the watchdog mechanism or hard-hangs the render thread, you want an *external* supervisor.
+4. **No performance regression hooks** (frame time, memory/allocs, load time). E2E tests are where perf regressions hide.
+5. **Flake handling is policy-only, not diagnostic.** If you retry, you should auto-collect “why” signals.
+6. **Lua test scripts are powerful enough to accidentally cause nondeterminism** (filesystem access, `os.time`, etc.).
+7. **Order-dependence is common**; you want an optional “seeded shuffle” mode to detect hidden coupling.
 
 ---
 
-## Revision index (quick scan)
+# Proposed Changes
 
-| ID | Theme | Primary win |
-|---:|---|---|
-| R01 | Add Phase 0: Toolchain bootstrap + pinned dependencies | Reproducible automation & less CI flake |
-| R02 | Crash/hang detection via run sentinel + progress flushing | CI correctness + faster debugging |
-| R03 | Reporter architecture from one canonical result model | No drift between report/md/json/junit |
-| R04 | Reduce “triple truth” drift (docs/registry/tests) via synchronization tooling | Lower maintenance burden, higher trust |
-| R05 | Add schemas for inventories + cm candidates + validate in CI | Tool compatibility & future-proofing |
-| R06 | Generate Tier-0 docs skeletons from inventories (preserving manual blocks) | Massive labor reduction + consistency |
-| R07 | Token-aware frequency scanning + alias config | Fewer false counts + reproducibility |
-| R08 | Visual baseline storage policy + size governance (optionally Git LFS) | Prevent repo bloat + stable visuals |
-| R09 | Deterministic rendering config + richer environment capture | Less nondeterminism, better baseline routing |
-| R10 | Impact-based test selection for PR CI | Faster CI without reducing confidence |
-| R11 | Artifact bundling for CI (zip index) | Better failure triage |
-| R12 | Performance budgets + flake diagnostics (without hiding failures) | Keeps suite fast and actionable |
+## 1) Versioned schemas for reports + stable failure taxonomy (prevents tooling rot)
 
----
+### What
+- Add **versioned, documented schemas** for `report.json` and `run_manifest.json`.
+- Add a stable **failure taxonomy** (`failure_kind`) so CI and dashboards can classify failures reliably.
+- Add `engine_version` and `content_hash` (or “build/content fingerprint”) to the manifest so “same binary + content” is actually verifiable.
 
-## R01 — Add Phase 0: Toolchain bootstrap + pinned dependencies
+### Why this makes it better
+- **Robustness:** your CI parsing won’t silently break when fields move.
+- **Reliability:** you can compare runs across machines and know whether they were *actually comparable*.
+- **Usefulness:** consistent classification enables trend tracking (flake rate, crash rate, perf regression rate).
 
-### Problem in v2
-v2 introduces a lot of automation (`extract_*`, `validate_*`, `link_check_docs`, schema validation, etc.) but doesn’t define:
-- which languages/tools are mandatory (Python version, `ripgrep`, YAML libs, JSON schema validator),
-- how to install them consistently,
-- or how to fail fast with actionable errors.
+### Tradeoffs
+- Slight upfront work to define schemas, but it saves *months* of future glue-code churn.
 
-That’s a common “plan works on my machine” trap and a CI flake amplifier.
-
-### Proposed change
-Add **Phase 0** (“Toolchain & Repo Bootstrap”) with:
-- a pinned Python environment (or at least pinned requirements),
-- a “doctor” script that checks required tools and versions,
-- and a short dev setup section in `<TEST_ROOT>/README.md`.
-
-### Why it improves the project
-- **Reliability:** CI failures become “missing dependency X” instead of mysterious downstream breakage.
-- **Performance:** fewer wasted cycles in CI reruns.
-- **Developer experience:** onboarding is one command instead of tribal knowledge.
-- **Future-proofing:** you can upgrade toolchain intentionally with diffs.
-
-### Tradeoffs / risks
-- Slight up-front work (but it pays back quickly once multiple agents touch scripts).
-- If the repo is intentionally dependency-light, keep it minimal (Python stdlib only + a single jsonschema lib).
-
-### Git diff
+### Diff
 ```diff
-diff --git a/planning/cass_memory_update_plan_v2.md b/planning/cass_memory_update_plan_v2.md
---- a/planning/cass_memory_update_plan_v2.md
-+++ b/planning/cass_memory_update_plan_v2.md
-@@ -1,6 +1,31 @@
- # Cass Memory Update Plan v2 (Enhanced with Automation, CI-Grade Reporting & Developer Experience)
-
-+## Phase 0: Toolchain & Repo Bootstrap (New, required)
-+**Effort:** S (Small)
-+**Parallelizable:** No (foundation)
-+
-+Establish a reproducible toolchain for extractors/validators/reporters and fail fast when missing.
-+
-+**Deliverables:**
-+1. `scripts/requirements.txt` (or `scripts/pyproject.toml`) with pinned versions
-+2. `scripts/bootstrap_dev.(sh|ps1)` that creates/updates a local venv and installs deps
-+3. `scripts/doctor.(py|lua)` that validates required tooling:
-+   - Python version (if Python scripts exist)
-+   - `rg` availability (frequency scan)
-+   - `cm` availability and version (if Phase 8 depends on it)
-+   - optional: schema validator availability (or ship one in Python)
-+4. `<TEST_ROOT>/README.md` section: “Tooling setup”
-+
-+**CI requirement:**
-+- Run `scripts/doctor` before any other job steps to fail fast.
-+
-@@ -706,6 +731,7 @@ gantt
-     section Foundation
--    Phase 1: Test Infra    :p1, 0, 1
-+    Phase 0: Toolchain     :p0, 0, 1
-+    Phase 1: Test Infra    :p1, after p0, 1
-```
-
----
-
-## R02 — Crash/hang detection via run sentinel + progress flushing
-
-### Problem in v2
-If the engine crashes/hangs mid-run, you may never get:
-- `test_output/status.json`
-- a complete `results.json`
-- or even a coherent `report.md`
-
-CI then can’t distinguish “tests failed” from “runner died,” and you lose the last executed test context.
-
-### Proposed change
-Add a **run-state sentinel** and **progress flushing**:
-
-- Write `test_output/run_state.json` at start:
-  - `in_progress: true`
-  - `run_id`
-  - `started_at`
-  - optional `commit`, `platform`, etc.
-- After each test, flush:
-  - `last_test_started`
-  - `last_test_completed`
-  - partial counts
-- On graceful completion, mark:
-  - `in_progress: false`
-  - `completed_at`
-  - `passed`
-
-Wrapper scripts treat “missing run_state” or `in_progress:true` after timeout as a **crash**.
-
-### Why it improves the project
-- **Reliability:** CI correctly fails on crashes, not “missing file”.
-- **Debuggability:** you immediately see the last test that started.
-- **Performance:** fewer reruns because failures are obvious.
-
-### Tradeoffs / risks
-- Minor I/O overhead (tiny JSON file, flushed per test).
-- Requires a stable notion of “run_id” (just use a timestamp + random suffix).
-
-### Git diff
-```diff
-diff --git a/planning/cass_memory_update_plan_v2.md b/planning/cass_memory_update_plan_v2.md
---- a/planning/cass_memory_update_plan_v2.md
-+++ b/planning/cass_memory_update_plan_v2.md
-@@ -246,6 +246,8 @@ Create the verification pipeline that all subsequent phases depend on.
- 4b. **(New)** Per-test artifacts directory: `test_output/artifacts/<safe_test_id>/`
-+4c. **(New v3)** Run sentinel: `test_output/run_state.json` (crash/hang detection)
- 5. Log capture mechanism for error detection
-@@ -402,6 +404,12 @@
- > **(New v2) Schema validation deliverable (drift prevention):**
- > - Commit JSON Schemas under `planning/schemas/` (or `scripts/schemas/` if preferred):
- >   - `planning/schemas/status.schema.json`
- >   - `planning/schemas/results.schema.json`
- >   - `planning/schemas/capabilities.schema.json`
-+>   - **(New v3)** `planning/schemas/run_state.schema.json`
-+
-+> **Crash detection requirement (New v3):**
-+> - Runner writes `test_output/run_state.json` at start and updates it after every test.
-+> - CI treats “missing run_state” or `in_progress:true` after timeout as a crash.
-```
-
----
-
-## R03 — Reporter architecture from one canonical result model
-
-### Problem in v2
-You now require multiple outputs:
-- `report.md`
-- `status.json`
-- `results.json`
-- `junit.xml`
-
-If each is produced by separate code paths, drift is guaranteed (counts differ, ordering differs, missing tests differ).
-
-### Proposed change
-Make the harness produce a single **canonical in-memory run model**, then feed that into pluggable reporters:
-
-- `MarkdownReporter`
-- `JsonReporter` (writes status.json + results.json)
-- `JUnitReporter`
-- optional: `NdjsonEventReporter` (streaming)
-
-### Why it improves the project
-- **Correctness:** one source of truth for totals, ordering, and test statuses.
-- **Maintainability:** adding a new report format is “add reporter” not “copy logic”.
-- **Performance:** NDJSON streaming can support very large suites without huge memory.
-
-### Tradeoffs / risks
-- Slight refactor complexity in harness implementation.
-- Reporter interface needs to be stable (but that’s good).
-
-### Git diff
-```diff
-diff --git a/planning/cass_memory_update_plan_v2.md b/planning/cass_memory_update_plan_v2.md
---- a/planning/cass_memory_update_plan_v2.md
-+++ b/planning/cass_memory_update_plan_v2.md
-@@ -302,6 +302,18 @@ Test Harness Design:
- local TestRunner = {
-     tests = {},
-     results = {},
-     screenshots = {}
- }
-+
-+-- (New v3) Reporter pipeline
-+TestRunner.reporters = {
-+  -- MarkdownReporter, JsonReporter, JUnitReporter, (optional) NdjsonEventReporter
-+}
-+
-+function TestRunner:add_reporter(reporter)
-+  table.insert(self.reporters, reporter)
-+end
-+
-+function TestRunner:write_reports(run_model)
-+  for _, r in ipairs(self.reporters) do r:write(run_model) end
-+end
-@@ -341,6 +353,15 @@ function TestRunner:report()
-     -- Generate test report
- end
-+
-+-- (New v3) Optional streaming events for debugging/CI
-+-- Writes test lifecycle events as NDJSON:
-+-- test_output/events.ndjson
-```
-
----
-
-## R04 — Reduce “triple truth” drift (docs/registry/tests) via synchronization tooling
-
-### Problem in v2
-Today, the same fact is duplicated in three places:
-1. Docs say: `Verified: Test: file::id`
-2. Registry maps: `doc_id -> test_id`
-3. The test module registers: `test_id`
-
-This is the exact recipe for long-term drift.
-
-### Proposed change
-Keep the plan’s conceptual model, but reduce drift by making synchronization explicit:
-
-1. **Tests declare which doc_ids they verify**:
-   - `register(test_id, category, testFn, opts.doc_ids = {...})`
-2. Harness produces a **test manifest**:
-   - `test_output/test_manifest.json` containing all registered tests and their doc_ids.
-3. Add a sync tool:
-   - `scripts/sync_registry_from_manifest.py` (or Lua) generates/updates `<TEST_ROOT>/test_registry.lua` (deterministic ordering).
-4. Add a second sync tool:
-   - `scripts/sync_docs_evidence.py` ensures docs’ `Evidence:` blocks match the registry (check mode in CI; fix mode for dev).
-
-This preserves your v2 “registry is single source of truth” intent, but ensures it is **derived deterministically** instead of hand-maintained.
-
-### Why it improves the project
-- **Reliability:** evidence displayed in docs stays correct.
-- **Maintainability:** adding a test automatically updates coverage mapping.
-- **Parallel work:** agents can add tests without touching shared registry.
-- **Compelling:** reviewers can trust the docs, not treat them as aspirational.
-
-### Tradeoffs / risks
-- Requires stable markers in docs for the evidence block (easy).
-- Registry becomes partially generated. You still need a place for unverified reasons; keep those as an override file.
-
-### Git diff
-```diff
-diff --git a/planning/cass_memory_update_plan_v2.md b/planning/cass_memory_update_plan_v2.md
---- a/planning/cass_memory_update_plan_v2.md
-+++ b/planning/cass_memory_update_plan_v2.md
-@@ -327,6 +327,10 @@
- > **(New v2) Capability requirements per test (reliability across environments):**
- > - `register(test_id, category, testFn, opts)` supports `opts.requires = {"screenshot", "log_capture", ...}`.
- > - Harness checks `test_output/capabilities.json` (or in-memory equivalent) and emits `SKIP` with reason if requirements are missing.
-+>
-+> **(New v3) Doc coverage linking:**
-+> - `register(..., opts)` supports `opts.doc_ids = {"binding:...", "component:...", "pattern:..."}`.
-+> - Harness writes `test_output/test_manifest.json` listing registered tests + their `doc_ids`.
-@@ -463,6 +467,30 @@
- > **Registry schema requirement (testability):**
- > - `<TEST_ROOT>/test_registry.lua` must be the single source of truth for coverage mapping.
-+> - **(New v3)** Treat registry as *generated + overrides*:
-+>   - Generated from inventories + `test_manifest.json`
-+>   - Overrides file adds `unverified` reasons and any manual mapping exceptions
-+> - **(New v3)** Add:
-+>   - `scripts/sync_registry_from_manifest.(py|lua)` (deterministic generation)
-+>   - `scripts/sync_docs_evidence.(py|lua)` (check/fix docs Evidence blocks)
-@@ -911,6 +945,16 @@ Phase 7: Test Suite Finalization
- 4. **(New)** `scripts/validate_docs_and_registry.lua` (or `.py`) and a documented invocation
-+4b. **(New v3)** `scripts/sync_registry_from_manifest.(py|lua)` (inventory + manifest → registry)
-+4c. **(New v3)** `scripts/sync_docs_evidence.(py|lua)` (registry → docs evidence blocks)
-+4d. **(New v3)** `test_output/test_manifest.json` generated by harness every run
-```
-
----
-
-## R05 — Schemas for inventories + cm candidates (validate everything in CI)
-
-### Problem in v2
-Schemas exist for runner outputs (`status/results/capabilities`), but the automation also depends on:
-- `planning/inventory/bindings.*.json`
-- `planning/inventory/components.*.json`
-- `planning/inventory/patterns.*.json`
-- `planning/inventory/frequency.*.json`
-- `planning/cm_rules_candidates.yaml`
-
-Without schemas, tooling will break silently as fields evolve.
-
-### Proposed change
-Add and enforce schemas for:
-- binding inventory
-- component inventory
-- pattern inventory
-- frequency scan output
-- cm candidates (validate YAML by converting to JSON first)
-
-### Why it improves the project
-- **Robustness:** scripts fail early with clear “schema mismatch” errors.
-- **Cross-team reliability:** parallel agents can’t accidentally change structure.
-- **CI-grade:** contract-driven automation.
-
-### Tradeoffs / risks
-- Slight schema maintenance cost, but low compared to debugging broken toolchains.
-
-### Git diff
-```diff
-diff --git a/planning/cass_memory_update_plan_v2.md b/planning/cass_memory_update_plan_v2.md
---- a/planning/cass_memory_update_plan_v2.md
-+++ b/planning/cass_memory_update_plan_v2.md
-@@ -402,6 +402,13 @@
- > - Commit JSON Schemas under `planning/schemas/` (or `scripts/schemas/` if preferred):
- >   - `planning/schemas/status.schema.json`
- >   - `planning/schemas/results.schema.json`
- >   - `planning/schemas/capabilities.schema.json`
-+>   - **(New v3)** `planning/schemas/bindings_inventory.schema.json`
-+>   - **(New v3)** `planning/schemas/components_inventory.schema.json`
-+>   - **(New v3)** `planning/schemas/patterns_inventory.schema.json`
-+>   - **(New v3)** `planning/schemas/frequency.schema.json`
-+>   - **(New v3)** `planning/schemas/cm_rules_candidates.schema.json` (YAML validated via JSON conversion)
-@@ -920,6 +927,9 @@
- 7. **(New v2)** Schema validation step in CI that validates `status.json`, `results.json`, and `capabilities.json` against committed schemas
-+7b. **(New v3)** Schema validation also covers inventories and `cm_rules_candidates.yaml`
-```
-
----
-
-## R06 — Generate Tier-0 docs skeletons from inventories (preserving manual blocks)
-
-### Problem in v2
-You *require* every binding/component/pattern has Tier 0 docs, but you also:
-- introduce extractors that already know the tier-0 list,
-- and require machine-readable inventories.
-
-If humans copy/paste tier-0 lists into markdown, you’ll get omissions and drift.
-
-### Proposed change
-Make Tier 0 docs **generated** from inventories and keep humans focused on Tier 1/2 semantics.
-
-Add:
-- `scripts/generate_docs_skeletons.py`
-- “autogen sections” in docs that are replaced deterministically, while preserving manual text between stable markers.
-
-Example doc pattern:
-```md
-<!-- AUTOGEN:BEGIN binding_list -->
-<!-- AUTOGEN:END binding_list -->
-```
-
-### Why it improves the project
-- **Massive labor reduction** (especially for 390+ functions).
-- **Consistency:** doc_id, names, and source_ref match inventory.
-- **Maintainability:** when bindings move, regeneration updates source_ref everywhere.
-
-### Tradeoffs / risks
-- Requires stable markers and a discipline that humans don’t edit inside autogen blocks.
-- Some teams dislike generated docs; mitigate by making it *only Tier 0 scaffolding*, leaving rich docs human-authored.
-
-### Git diff
-```diff
-diff --git a/planning/cass_memory_update_plan_v2.md b/planning/cass_memory_update_plan_v2.md
---- a/planning/cass_memory_update_plan_v2.md
-+++ b/planning/cass_memory_update_plan_v2.md
-@@ -607,6 +607,15 @@ Deliverables per agent:
- 1. Binding list: `planning/bindings/{system}_bindings.md`
- 2. Test file: `<TEST_ROOT>/test_{system}_bindings.lua`
- 3. cm rules for high-frequency bindings
- 4. **(New)** Machine-readable binding inventory: `planning/inventory/bindings.{system}.json`
- 5. **(New v2, recommended)** Automated extractor: `scripts/extract_sol2_bindings.py` (single-owner, used by all agents)
-+6. **(New v3, recommended)** Doc skeleton generator: `scripts/generate_docs_skeletons.py`
-+   - Reads `planning/inventory/bindings.{system}.json`
-+   - Rewrites Tier-0 sections in `planning/bindings/{system}_bindings.md` inside AUTOGEN markers
-@@ -750,6 +759,12 @@ Deliverables:
- 1. Component reference: `planning/components/{category}_components.md`
- 2. Lua accessibility matrix (which components can be accessed from Lua)
- 3. cm rules for component access patterns
- 4. **(New)** Machine-readable component inventory: `planning/inventory/components.{category}.json`
- 5. **(New v2, recommended)** Automated extractor: `scripts/extract_components.py` (single-owner) that generates Tier 0 component lists and a matrix skeleton.
-+6. **(New v3)** Use `scripts/generate_docs_skeletons.py` to keep Tier-0 component lists synchronized with inventories.
-```
-
----
-
-## R07 — Token-aware frequency scanning + alias config
-
-### Problem in v2
-Frequency is defined by regex searching, which is easy but inaccurate:
-- Counts matches in comments or strings.
-- Misses aliases (`ui.box` vs `UIBox`) unless people remember to search variants.
-- Agents may use different patterns, leading to inconsistent “High-frequency” decisions.
-
-### Proposed change
-Provide a single scanner that:
-- lexes Lua and ignores comments/strings by default,
-- supports an alias map per system,
-- records scanner version and configuration in output.
-
-Add file:
-- `planning/frequency_aliases.yaml` (or JSON) defining:
-  - canonical name
-  - regex/aliases
-  - match mode (identifier-only vs raw text)
-
-### Why it improves the project
-- **Truthfulness:** “high-frequency” becomes evidence-based, not grep luck.
-- **Repeatability:** any agent can reproduce the same counts with the same tool.
-- **Better prioritization:** fewer false positives means you test what matters.
-
-### Tradeoffs / risks
-- A real Lua parser might be heavy. Mitigation: implement a simple lexer (tokenizer) sufficient to skip strings/comments.
-
-### Git diff
-```diff
-diff --git a/planning/cass_memory_update_plan_v2.md b/planning/cass_memory_update_plan_v2.md
---- a/planning/cass_memory_update_plan_v2.md
-+++ b/planning/cass_memory_update_plan_v2.md
-@@ -173,6 +173,17 @@
- > **Frequency automation (new, recommended):**
- > - Provide `scripts/frequency_scan.(py|lua)` that accepts:
- >   - an input list of Lua-facing names/patterns,
- >   - a set of search roots (default: `assets/scripts/`),
- >   - optional comment-ignore mode,
- > - and outputs `planning/inventory/frequency.{system}.json`.
-+> - **(New v3)** Default mode is *token-aware*:
-+>   - ignore comments and string literals when scanning Lua
-+>   - fall back to plain regex only if token scan fails
-+> - **(New v3)** Add `planning/frequency_aliases.yaml` to define canonical names and aliases.
-+>   - Scanner output must record which alias matched.
-```
-
----
-
-## R08 — Visual baseline storage policy + size governance (optionally Git LFS)
-
-### Problem in v2
-Visual baselines are valuable but dangerous:
-- PNG baselines can bloat the repo quickly.
-- Baseline provenance (which environment produced it) can be unclear.
-- Without guardrails, people may commit thousands of screenshots accidentally.
-
-### Proposed change
-Add a baseline storage policy and governance:
-
-- Define a canonical platform key:
-  - `os`, `arch`, `renderer`, `gpu_vendor` (best-effort), `resolution`
-- Store baselines as:
-  - `test_baselines/screenshots/<platform_key>/<renderer>/<resolution>/<safe_test_id>.png`
-- Add:
-  - `test_baselines/README.md` (rules, update workflow)
-  - `.gitattributes` + Git LFS for `*.png` (optional but recommended)
-  - `scripts/check_baseline_size.py` enforcing a PR size budget (e.g., warn at 50MB, fail at 200MB)
-
-### Why it improves the project
-- **Repo health:** avoids ballooning git history.
-- **Stability:** baseline routing becomes deterministic (no mixing environments).
-- **Better reviews:** size budget prevents “whoops I committed 2GB”.
-
-### Tradeoffs / risks
-- Git LFS requires developer setup. If that’s unacceptable, keep baselines small and only store critical ones.
-
-### Git diff
-```diff
-diff --git a/planning/cass_memory_update_plan_v2.md b/planning/cass_memory_update_plan_v2.md
---- a/planning/cass_memory_update_plan_v2.md
-+++ b/planning/cass_memory_update_plan_v2.md
-@@ -118,6 +118,18 @@
- > **Baseline management (new):**
- > - Add a harness flag `--record-baselines` (manual only) to write/update baseline images.
- > - CI must never run in record mode.
-+> - **(New v3)** Baseline storage policy:
-+>   - Store baselines under `test_baselines/screenshots/<platform_key>/<renderer>/<resolution>/`.
-+>   - Define `platform_key` in `test_output/capabilities.json` (or `run_state.json`) for deterministic routing.
-+> - **(New v3, recommended)** Add `test_baselines/README.md` and baseline size governance:
-+>   - `scripts/check_baseline_size.py` enforces a max PR delta budget for baseline images.
-+>   - Optional: use Git LFS for `*.png` baselines via `.gitattributes`.
-```
-
----
-
-## R09 — Deterministic rendering config + richer environment capture
-
-### Problem in v2
-You mention determinism, but visual nondeterminism often comes from:
-- window size / DPI scaling
-- font differences
-- vsync / frame pacing
-- renderer backend differences
-
-If you don’t standardize these, your “visual verified” path will be fragile.
-
-### Proposed change
-Make the test scene explicitly configure rendering:
-
-- `test_utils.configure_test_rendering({width=..., height=..., dpi_scale=1, vsync=false, fixed_font=...})`
-- record the resolved config in `capabilities.json` and `results.json`:
-  - width/height
-  - dpi scale
-  - renderer/backend
-  - font name/hash if possible
-
-### Why it improves the project
-- **Reliability:** fewer cross-machine diffs.
-- **Better baselines:** baseline routing can include resolution/backend.
-- **Developer experience:** visually debugging is consistent.
-
-### Tradeoffs / risks
-- Some engines can’t control DPI or font selection. Mitigation: record what you can and quarantine tests that can’t be stabilized.
-
-### Git diff
-```diff
-diff --git a/planning/cass_memory_update_plan_v2.md b/planning/cass_memory_update_plan_v2.md
---- a/planning/cass_memory_update_plan_v2.md
-+++ b/planning/cass_memory_update_plan_v2.md
-@@ -229,6 +229,13 @@
- > **Determinism checklist (specific + testable):** During pre-flight, record and enforce:
- > - RNG seeding: `math.randomseed(<fixed>)` (and any engine RNG seed if applicable)
- > - Fixed timestep / frame count driving for screenshot tests
- > - Disabling or accounting for frame-time-dependent animations (or waiting N frames deterministically)
- > - Explicit camera setup for rendering tests (if applicable)
-+> - **(New v3)** Explicit rendering config:
-+>   - window size/resolution (recorded)
-+>   - DPI scale (if controllable)
-+>   - vsync/frame pacing disabled for deterministic capture (if controllable)
-+>   - fixed font selection or font asset hash (if applicable)
-```
-
----
-
-## R10 — Impact-based test selection for PR CI
-
-### Problem in v2
-You add sharding (good), but on PR CI you’ll still end up running *everything* as the suite grows.
-
-That’s fine early, but it won’t scale.
-
-### Proposed change
-Add a test impact selection layer:
-
-- `planning/test_impact_map.yaml`:
-  - maps file globs to categories/tags/doc systems
-- `scripts/select_tests.(py|lua)`:
-  - inspects `git diff` and emits runner args (`--category`, `--tags-any`, shards)
-- PR CI:
-  - run impacted tests + smoke
-- Nightly:
-  - run full suite (including visual + slow)
-
-### Why it improves the project
-- **Performance:** PR CI becomes fast.
-- **Reliability:** full verification still happens on schedule.
-- **Compelling:** people won’t avoid running tests due to slowness.
-
-### Tradeoffs / risks
-- Impact mapping requires maintenance. Mitigation:
-  - start broad (UI changes run all UI tests),
-  - refine later.
-
-### Git diff
-```diff
-diff --git a/planning/cass_memory_update_plan_v2.md b/planning/cass_memory_update_plan_v2.md
---- a/planning/cass_memory_update_plan_v2.md
-+++ b/planning/cass_memory_update_plan_v2.md
-@@ -1296,6 +1296,20 @@ Maintenance Mode (new, post-Phase 8)
- ### CI enforcement:
- - CI should fail if inventories changed but:
-   - docs were not updated, or
-   - registry mappings are missing for previously verified doc_ids.
-+
-+### (New v3) PR CI impact selection:
-+- Add `planning/test_impact_map.yaml` mapping file globs → runner filters (categories/tags).
-+- Add `scripts/select_tests.(py|lua)`:
-+  - reads `git diff --name-only <base>`
-+  - outputs runner args (categories/tags/shards)
-+- PR CI runs:
-+  - impacted tests + a small `smoke` subset
-+- Nightly runs:
-+  - full suite (all shards + visual + slow)
-```
-
----
-
-## R11 — Artifact bundling & triage index for CI
-
-### Problem in v2
-When visual tests fail (or when a crash happens), the data you want is scattered:
-- screenshots
-- diffs
-- logs
-- report.md
-- results.json
-
-People waste time hunting.
-
-### Proposed change
-Add an artifact pack step:
-- `scripts/pack_test_artifacts.py` zips `test_output/` (or just failing tests)
-- writes `test_output/artifacts_index.md` with hyperlinks to key files/folders
-
-### Why it improves the project
-- **Developer experience:** debugging becomes “download one zip”.
-- **Reliability:** less guesswork means less repeated CI runs.
-
-### Tradeoffs / risks
-- Larger CI artifacts. Mitigation: pack only on failure or only failing tests.
-
-### Git diff
-```diff
-diff --git a/planning/cass_memory_update_plan_v2.md b/planning/cass_memory_update_plan_v2.md
---- a/planning/cass_memory_update_plan_v2.md
-+++ b/planning/cass_memory_update_plan_v2.md
-@@ -924,6 +924,11 @@ Deliverables:
- 11. **(New v2)** `scripts/link_check_docs.(py|lua)` that validates:
-     - no duplicate `doc_id` in docs,
+diff --git a/docs/e2e_testing_master_plan_v2.md b/docs/e2e_testing_master_plan_v2.md
+--- a/docs/e2e_testing_master_plan_v2.md
++++ b/docs/e2e_testing_master_plan_v2.md
 @@
- 12. **(New v2)** Generated reference index: `docs/reference/index.md` (or `planning/api_reference.md`)
-+13. **(New v3)** CI artifact bundling:
-+    - `scripts/pack_test_artifacts.(py|lua)` creates `test_output/test_artifacts.zip` (on failure)
-+    - `test_output/artifacts_index.md` provides an at-a-glance triage map
-```
-
----
-
-## R12 — Performance budgets + flake diagnostics (without hiding failures)
-
-### Problem in v2
-The suite will slow over time. Also, flaky tests kill trust.
-
-Sharding helps runtime, but you need:
-- a way to spot slow regressions,
-- and a policy for diagnosing flakes without masking them.
-
-### Proposed change
-Add:
-- per-test (optional) `opts.perf_budget_ms`
-- runner tracks durations and highlights:
-  - top 10 slow tests
-  - regressions vs last run (optional, if you store a baseline JSON)
-- for flaky diagnostics:
-  - a **manual** `--repeat N` runner mode that repeats selected tests for investigation
-  - CI never retries to convert fail→pass; at most it can re-run to attach extra evidence
-
-### Why it improves the project
-- **Performance:** you can prevent “test suite takes 40 minutes” creep.
-- **Trust:** flakes are surfaced and tracked, not silently retried away.
-
-### Tradeoffs / risks
-- Budgets take calibration. Mitigation: start with “warn-only” in PR CI, “fail budgets” in nightly.
-
-### Git diff
-```diff
-diff --git a/planning/cass_memory_update_plan_v2.md b/planning/cass_memory_update_plan_v2.md
---- a/planning/cass_memory_update_plan_v2.md
-+++ b/planning/cass_memory_update_plan_v2.md
-@@ -309,6 +309,8 @@ function TestRunner:register(name, category, testFn, opts)
-     -- opts may include: tags, source_ref, timeout_frames, requires, display_name
-+    -- (New v3) opts may include: perf_budget_ms, doc_ids
- end
-@@ -1412,6 +1414,15 @@ Appendix: Tag conventions for tests
- - `tags={"slow"}` - Tests taking >5 seconds
-+- **(New v3)** Prefer budgets over ad-hoc “slow” tags:
-+  - `opts.perf_budget_ms` allows thresholds per test
-+  - Runner reports slow tests even if they pass
+ ## 0) Outcomes & Non-Goals
+@@
+ ### Non-Goals (v1)
+@@
+ - Cross-GPU pixel-perfect equivalence (unless running a canonical software renderer / fixed backend in CI).
 +
-+### Flake diagnostics (New v3)
-+- Add runner flag `--repeat N` for manual investigation
-+- CI must not retry failures to convert them to pass; retries (if any) are for extra artifacts only
++---
++
++## 0.2 Report + Manifest Contracts (Versioned)
++
++### Goals
++- Make `report.json` and `run_manifest.json` machine-validated and forwards-compatible.
++- Stabilize failure classification so CI tooling can key off it reliably.
++
++### Additions
++- `report.json` includes:
++  - `schema_version` (semver)
++  - `failure_kind` (stable enum: `assertion|timeout|crash|harness_error|determinism_divergence|log_gating|baseline_missing|baseline_mismatch|capability_missing|unknown`)
++  - `engine_version` + `content_fingerprint` (hashes)
++  - per-test: `status`, `attempts`, `artifacts`, `timings_frames`, `timings_ms` (optional)
++- `run_manifest.json` includes:
++  - `schema_version`
++  - `engine_version`, `git_sha`, `build_id`
++  - `content_fingerprint` (hash of content pak / asset manifest)
++  - `renderer_fingerprint` (backend + device + driver + colorspace)
++  - `determinism_pins` (FTZ/DAZ, rounding, locale, TZ, thread mode, etc.)
++
++### Schemas (checked-in)
++- `tests/schemas/report.schema.json`
++- `tests/schemas/run_manifest.schema.json`
++The harness validates outputs against these schemas in `--test-mode` and exits `2` on schema violation.
+```
+
+```diff
+diff --git a/tests/schemas/report.schema.json b/tests/schemas/report.schema.json
+new file mode 100644
+--- /dev/null
++++ b/tests/schemas/report.schema.json
+@@
++{
++  "$schema": "https://json-schema.org/draft/2020-12/schema",
++  "title": "E2E test report",
++  "type": "object",
++  "required": ["schema_version", "run", "tests", "summary"],
++  "properties": {
++    "schema_version": { "type": "string" },
++    "run": {
++      "type": "object",
++      "required": ["run_id", "seed", "platform", "resolution", "baseline_key"],
++      "properties": {
++        "run_id": { "type": "string" },
++        "seed": { "type": "integer" },
++        "platform": { "type": "string" },
++        "engine_version": { "type": "string" },
++        "content_fingerprint": { "type": "string" },
++        "renderer_fingerprint": { "type": "string" },
++        "resolution": { "type": "string" },
++        "baseline_key": { "type": "string" }
++      },
++      "additionalProperties": true
++    },
++    "tests": {
++      "type": "array",
++      "items": {
++        "type": "object",
++        "required": ["name", "status"],
++        "properties": {
++          "name": { "type": "string" },
++          "status": { "type": "string" },
++          "failure_kind": { "type": "string" },
++          "attempts": { "type": "integer" },
++          "artifacts": { "type": "array", "items": { "type": "string" } }
++        },
++        "additionalProperties": true
++      }
++    },
++    "summary": {
++      "type": "object",
++      "required": ["passed", "failed", "skipped"],
++      "properties": {
++        "passed": { "type": "integer" },
++        "failed": { "type": "integer" },
++        "skipped": { "type": "integer" }
++      },
++      "additionalProperties": true
++    }
++  },
++  "additionalProperties": true
++}
 ```
 
 ---
 
-## Small but worthwhile editorial fixes (optional)
+## 2) Add an external supervisor/launcher (hardens timeouts + crash capture)
 
-These don’t change architecture, but they reduce ambiguity.
+### What
+Introduce a small **`e2e_supervisor` launcher** that can:
+- start the game in `--test-mode`
+- enforce *OS-level* timeouts (cannot be bypassed by in-process deadlocks)
+- capture exit status, stderr, and (optionally) core dumps/minidumps
+- support process-per-test isolation efficiently (especially on Linux via forkserver-like patterns)
 
-### 1) Fix duplicate numbering in Phase 1 deliverables
-You currently have “4.” and “4b.” (fine) but it’s easy to misread. Consider 4/5/6 style numbering or make 4 a “Outputs” section.
+Keep `./game --test-mode ...` working for local iteration, but **CI should call the supervisor**.
 
+### Why this makes it better
+- **Reliability:** in-process watchdogs fail exactly when you need them most (deadlocks, GPU hangs).
+- **Better crash forensics:** you can guarantee bundle collection even if the game can’t.
+- **CI survivability:** fewer “hung job until GitHub kills it”.
+
+### Tradeoffs
+- Adds a small tool and some wiring. Worth it.
+
+### Diff
 ```diff
-diff --git a/planning/cass_memory_update_plan_v2.md b/planning/cass_memory_update_plan_v2.md
---- a/planning/cass_memory_update_plan_v2.md
-+++ b/planning/cass_memory_update_plan_v2.md
-@@ -238,9 +238,11 @@ Deliverables:
--4. Screenshot output directory: `test_output/screenshots/`
--4b. **(New)** Per-test artifacts directory: `test_output/artifacts/<safe_test_id>/`
-+4. Output directories:
-+   - screenshots: `test_output/screenshots/`
-+   - artifacts: `test_output/artifacts/<safe_test_id>/`
+diff --git a/docs/e2e_testing_master_plan_v2.md b/docs/e2e_testing_master_plan_v2.md
+--- a/docs/e2e_testing_master_plan_v2.md
++++ b/docs/e2e_testing_master_plan_v2.md
+@@
+ ## 2) CLI Contract (Single Source of Truth)
+@@
+ ### Exit code contract
+@@
+ | `4`  | Crash (unhandled exception / fatal error) |
++
++---
++
++### Supervisor (recommended for CI)
++Add a thin launcher tool:
++- `./tools/e2e_supervisor -- <game args...>`
++Responsibilities:
++1. Spawn game process with the requested flags.
++2. Enforce hard wall-clock timeouts externally (SIGKILL / TerminateProcess).
++3. On crash/timeout, ensure `tests/out/<run_id>/forensics/` exists:
++   - if the game failed to write it, the supervisor writes a minimal manifest + tail of stderr.
++4. Optionally collect OS crash artifacts:
++   - Linux: core dump path if configured
++   - Windows: minidump (if enabled)
++5. Normalize exit codes to the same contract (0/1/2/3/4).
++
++CI should call the supervisor rather than invoking the game directly.
+@@
+ ### Crash containment (optional hardening)
+ - `--isolate-tests <mode>` (default: `none`; `none|process-per-file|process-per-test`)
++  - In CI, prefer `--isolate-tests=process-per-test` *via the supervisor* so a single crash only kills one test.
 ```
 
-### 2) Make “UBS” a required glossary entry
-You already require Phase 1 to identify it; making it a named glossary item reduces confusion.
-
 ```diff
-diff --git a/planning/cass_memory_update_plan_v2.md b/planning/cass_memory_update_plan_v2.md
---- a/planning/cass_memory_update_plan_v2.md
-+++ b/planning/cass_memory_update_plan_v2.md
-@@ -79,6 +79,10 @@ Definitions (for consistency + testability)
- - **"Binding"**: Any Lua-exposed type/function/constant created via Sol2, including methods on usertypes and free functions.
-+ - **"UBS"**: Repo-specific build/validation step. Phase 1 must define:
-+   - name expansion (what it stands for)
-+   - exact invocation command(s)
-+   - pass/fail signal and log location
+diff --git a/docs/e2e_testing_master_plan_v2.md b/docs/e2e_testing_master_plan_v2.md
+--- a/docs/e2e_testing_master_plan_v2.md
++++ b/docs/e2e_testing_master_plan_v2.md
+@@
+ ### 1.1 C++ (engine)
+ - `src/testing/`
+@@
+   - `determinism_audit.{hpp,cpp}`      — optional: repeat runs + divergence detection
++
++### 1.1.1 Tools (host-side)
++- `tools/e2e_supervisor/`
++  - `main.cpp` (spawn + timeout + crash/timeout salvage)
++  - `process_utils.*` (portable process management)
++  - `artifact_salvage.*` (write minimal forensics if game can’t)
 ```
 
 ---
 
-## Net effect: what v3 looks like
+## 3) Make snapshot/restore a *first-class* requirement (test isolation becomes real)
 
-If you apply these revisions, the “v3” plan has these high-level properties:
+### What
+Right now snapshotting is “preferred if supported”. For a serious E2E suite, **it should be a milestone gate**:
+- Define `snapshot_create`, `snapshot_restore`, and `reset_to_known_state` semantics clearly.
+- Require at least one reliable isolation mechanism by M2/M3 (or mark tests that require it).
 
-- **Reproducible toolchain** (Phase 0) so automation doesn’t rot.
-- **Crash-proof CI semantics** (run sentinel).
-- **One true run model** (reporters consume the same data).
-- **Far less drift** (sync tools tie together tests/registry/docs).
-- **More accurate prioritization** (token-aware frequency scanning).
-- **Scalable CI** (impact selection + sharding + budgets).
-- **Better visual discipline** (baseline policy + size governance).
-- **Better debugging** (artifact bundles + triage index).
+### Why this makes it better
+- **Stability:** most E2E flakes are state leakage between tests.
+- **Performance:** snapshot restore is faster than reloading content per test.
+- **Determinism:** resets are a determinism boundary.
 
-If you want, you can treat these revisions as a “v2.1 patchset” and keep the existing v2 numbering, or formally rename the plan to v3.
+### Tradeoffs
+- Implementing a snapshot system can be real work. But you can start with “coarse snapshot” (scene + entity state) and refine.
 
+### Diff
+```diff
+diff --git a/docs/e2e_testing_master_plan_v2.md b/docs/e2e_testing_master_plan_v2.md
+--- a/docs/e2e_testing_master_plan_v2.md
++++ b/docs/e2e_testing_master_plan_v2.md
+@@
+ ### Test isolation rules
+ Before each `it(...)`, runner performs deterministic cleanup:
+@@
+-3. Prefer snapshot restore if supported:
+-   - If `command("snapshot_restore", { name="suite_start" })` succeeds, use it.
+-   - Else call `command("reset_to_known_state")`.
++3. Isolation MUST be available:
++   - Required: either `snapshot_restore` OR a proven `reset_to_known_state` that fully resets gameplay + UI.
++   - If neither exists, tests that rely on isolation must be tagged `requires_isolation` and SKIP with a clear message.
++   - For performance and reliability, snapshot restore is strongly recommended for most suites.
+@@
+ Suite setup (recommended):
+ - At suite start: attempt `command("snapshot_create", { name="suite_start" })`.
++
++#### Snapshot semantics (contract)
++- `snapshot_create(name)`:
++  - Captures enough state to replay deterministically from that point (scene graph, ECS state, RNG streams, scripted timers).
++  - Must include any state visible to the Test API Surface.
++- `snapshot_restore(name)`:
++  - Restores the snapshot and guarantees the next frame begins from that exact state.
++  - Must flush async jobs or deterministically reinitialize them.
++- Errors:
++  - On unsupported: return explicit error `capability_missing:snapshot`.
++  - On corrupted/unavailable snapshot: return `snapshot_error:<reason>`.
+```
+
+```diff
+diff --git a/docs/e2e_testing_master_plan_v2.md b/docs/e2e_testing_master_plan_v2.md
+--- a/docs/e2e_testing_master_plan_v2.md
++++ b/docs/e2e_testing_master_plan_v2.md
+@@
+ ## 7) Milestones (Definition of Done)
+@@
+-3. **M2 (MVP E2E):** one real test drives input + asserts state + produces JSON report.
++3. **M2 (MVP E2E):** one real test drives input + asserts state + produces JSON report; isolation mechanism proven (`reset_to_known_state` or snapshot restore).
+@@
+-4. **M3 (Visual verification):** screenshot capture + baseline compare + diff artifacts + update-baselines; ROI/masks work; baseline_key works.
++4. **M3 (Visual verification):** screenshot capture + baseline compare + diff artifacts + update-baselines; ROI/masks work; baseline_key works; snapshot restore used for suite isolation on at least one suite.
+```
+
+---
+
+## 4) Determinism enforcement: runtime “tripwires” + static checks (find problems early)
+
+### What
+Add a `determinism_guard` layer that:
+- In `--test-mode`, **hard-errors** on banned nondeterministic calls (time, RNG, filesystem order) in gameplay paths.
+- Optionally logs stack traces for violations.
+- Add a lightweight **static check** (clang-tidy / ripgrep CI) to catch calls like `std::random_device`, `system_clock::now`, and unordered iteration in determinism-critical modules.
+
+### Why this makes it better
+- **Reliability:** determinism bugs are expensive when discovered via flaky tests.
+- **Performance:** finding the offender early prevents wasted CI.
+- **Developer UX:** violations become actionable (“here’s the stack”).
+
+### Tradeoffs
+- Some false positives at first; you’ll need a small allowlist for legitimate uses (e.g., logging timestamps that don’t affect sim).
+
+### Diff
+```diff
+diff --git a/docs/e2e_testing_master_plan_v2.md b/docs/e2e_testing_master_plan_v2.md
+--- a/docs/e2e_testing_master_plan_v2.md
++++ b/docs/e2e_testing_master_plan_v2.md
+@@
+ ## 0.1 Determinism Contract (Test Mode)
+@@
+ ### Diagnostics stance
+-- In `--test-mode`, determinism violations should produce an explicit warning/error category (easy to grep in CI).
++- In `--test-mode`, determinism violations should produce an explicit warning/error category (easy to grep in CI).
++- Additionally, the engine should provide determinism “tripwires”:
++  - fail-fast option: `--determinism-violation=fatal|warn` (default: `fatal` in CI, `warn` locally)
++  - each violation includes a stable code (`DET_TIME`, `DET_RNG`, `DET_FS_ORDER`, `DET_ASYNC_ORDER`, ...)
++  - optional stack trace when available
+@@
+ ### 1.1 C++ (engine)
+ - `src/testing/`
+@@
+   - `determinism_audit.{hpp,cpp}`      — optional: repeat runs + divergence detection
++  - `determinism_guard.{hpp,cpp}`      — runtime tripwires (time/RNG/fs/async checks)
++
++### CI linting (recommended)
++- Add a CI job that greps or clang-tidy checks determinism-critical modules for banned APIs:
++  - `std::random_device`, `system_clock::now`, `time()`, `rand()`, directory iteration without sort, etc.
+```
+
+---
+
+## 5) Baseline updates: make them safe + reviewable (avoid “oops I updated baselines”)
+
+### What
+Change baseline updating to be **explicitly opt-in and reviewable**:
+- `--update-baselines` writes to a **staging directory** by default (`tests/baselines_staging/...`)
+- A separate tool (or explicit flag) applies staged baselines into `tests/baselines/...`
+- Add `--baseline-write-mode <mode>`: `deny|stage|apply` (default `deny` in CI)
+- Add `--baseline-approve-token` environment gate to prevent accidental writes in CI.
+
+### Why this makes it better
+- **Robustness:** prevents accidental baseline churn and noisy diffs.
+- **Process:** reviewers can inspect staged diffs (gallery) before committing.
+- **Reliability:** avoids “local machine updated baseline with different renderer fingerprint”.
+
+### Tradeoffs
+- Slightly more steps when intentionally updating baselines (but that’s exactly when you want friction).
+
+### Diff
+```diff
+diff --git a/docs/e2e_testing_master_plan_v2.md b/docs/e2e_testing_master_plan_v2.md
+--- a/docs/e2e_testing_master_plan_v2.md
++++ b/docs/e2e_testing_master_plan_v2.md
+@@
+ ### Baselines
+-- `--update-baselines` (accept missing/mismatched baselines by copying actual → baseline)
++- `--update-baselines` (accept missing/mismatched baselines by writing actual → staging)
+ - `--fail-on-missing-baseline` (default: `true`; ignored if `--update-baselines`)
+ - `--baseline-key <key>` (default: auto-detected from renderer/colorspace)
++  - `--baseline-write-mode <mode>` (default: `deny`; `deny|stage|apply`)
++    - `deny`: never write to baselines (CI default)
++    - `stage`: write updated baselines under `tests/baselines_staging/...` (local default when `--update-baselines`)
++    - `apply`: write directly to `tests/baselines/...` (requires explicit opt-in)
++  - `--baseline-staging-dir <dir>` (default: `tests/baselines_staging`)
++  - `--baseline-approve-token <token>` (default: empty; if set, require matching env var `E2E_BASELINE_APPROVE=<token>` to write)
+@@
+ #### Baselines (versioned)
+ - `tests/baselines/<platform>/<baseline_key>/<WxH>/...png`
++  - Baseline updates should be created on canonical render stacks only.
++  - Non-canonical machines should default to staging updates to avoid poisoning baselines.
+```
+
+---
+
+## 6) Generate an HTML “diff gallery” index (makes failures instantly actionable)
+
+### What
+On every run, generate `tests/out/<run_id>/index.html` that links:
+- failing tests
+- expected/actual/diff images
+- log tail
+- repro commands
+- download link to `forensics.zip`
+
+### Why this makes it better
+- **Compelling/useful:** humans debug faster with a one-click artifact page.
+- **CI friendliness:** GitHub artifacts are painful to browse as raw folders.
+- **No new infra required:** just a static html file in artifacts.
+
+### Tradeoffs
+- Small implementation time, big UX win.
+
+### Diff
+```diff
+diff --git a/docs/e2e_testing_master_plan_v2.md b/docs/e2e_testing_master_plan_v2.md
+--- a/docs/e2e_testing_master_plan_v2.md
++++ b/docs/e2e_testing_master_plan_v2.md
+@@
+ #### Outputs (ignored by git)
+ - `tests/out/<run_id>/`
+   - `report.json`
+   - `report.junit.xml`
++  - `index.html`              — static run summary + artifact links (diff gallery)
+   - `artifacts/` (screenshots, diffs, logs, per-test debug)
+@@
+ ### Phase 4 — Verification Systems (C++ + Lua wiring)
+@@
+ 7. `test_forensics`: bundles with seed/args/trace/last frames/repro scripts.
++8. `artifact_index`: generate `index.html` linking per-test artifacts and repro commands.
+-8. Condition waits: `wait_until`, `wait_until_state`, `wait_until_log`.
++9. Condition waits: `wait_until`, `wait_until_state`, `wait_until_log`.
+```
+
+---
+
+## 7) Optional seeded test order shuffle (find order-dependence without losing reproducibility)
+
+### What
+Add:
+- `--shuffle-tests` (boolean)
+- `--shuffle-seed <u32>` (default: derived from run seed)
+
+Ordering stays deterministic and reproducible; it’s just a *different* deterministic order.
+
+### Why this makes it better
+- **Robustness:** exposes hidden coupling between tests.
+- **More compelling:** confidence increases when tests are order-independent.
+- **No downside by default:** keep stable order unless explicitly enabled.
+
+### Tradeoffs
+- When enabled, failures may look “new” because the order changed — but that’s the point.
+
+### Diff
+```diff
+diff --git a/docs/e2e_testing_master_plan_v2.md b/docs/e2e_testing_master_plan_v2.md
+--- a/docs/e2e_testing_master_plan_v2.md
++++ b/docs/e2e_testing_master_plan_v2.md
+@@
+ ### Suite control / hygiene
+@@
+ - `--max-failures <n>` (default: `0`; 0 means unlimited)
++  - `--shuffle-tests` (default: `false`; deterministic shuffle to detect order-dependence)
++  - `--shuffle-seed <u32>` (default: derived from `--seed`)
+@@
+ ### Phase 3 — Lua Test Framework (Lua)
+@@
+-1. `test_runner.lua`: `describe/it`, hooks, deterministic ordering, per-test results, timeouts, frame budgets.
++1. `test_runner.lua`: `describe/it`, hooks, deterministic ordering (or deterministic shuffle), per-test results, timeouts, frame budgets.
+```
+
+---
+
+## 8) Perf budgets + regression signals (E2E is the best place to catch perf cliffs)
+
+### What
+Add optional perf tracking that is cheap enough for CI:
+- per-test: total frames, total sim ms, max frame ms (in test mode), asset load ms, peak RSS, allocation counts (if instrumented)
+- CLI: `--perf-budget <path.json>` and `--perf-mode off|collect|enforce`
+- Lua API: `test_harness.perf_mark()` and `test_harness.assert_perf(metric, op, value)`
+
+### Why this makes it better
+- **Performance:** catches “menu test now loads 2GB of assets” immediately.
+- **Reliability:** perf regressions often correlate with timeouts/flakes.
+- **Compelling:** E2E suite becomes a “quality gate” not just correctness.
+
+### Tradeoffs
+- You need to decide which metrics are stable enough across machines. Prefer CPU-time in test mode and frame counts; use generous budgets where needed.
+
+### Diff
+```diff
+diff --git a/docs/e2e_testing_master_plan_v2.md b/docs/e2e_testing_master_plan_v2.md
+--- a/docs/e2e_testing_master_plan_v2.md
++++ b/docs/e2e_testing_master_plan_v2.md
+@@
+ ## 2) CLI Contract (Single Source of Truth)
+@@
+ ### Sharding + timeouts
+@@
+ - `--default-test-timeout-frames <int>` (default: `1800`; per-test timeout measured in frames)
++
++### Performance (optional but recommended)
++- `--perf-mode <mode>` (default: `off`; `off|collect|enforce`)
++- `--perf-budget <path>` (default: empty; JSON budget file)
++  - Example budgets: max frames for a test, max sim-ms, max asset-load-ms, max allocations, max peak memory.
+@@
+ ## 3) `test_harness` Lua API Contract (Stable Interface)
+@@
+ ### 3.6 Runtime args and capability handshake
+@@
+ - `test_harness.capabilities` (read-only), e.g. `{ screenshots=true, headless=true, render_hash=false, gamepad=true }`
++  - Add perf capability flags and metric availability:
++    - `{ perf=true, perf_allocs=false, perf_memory=true }`
+@@
++### 3.8 Performance hooks (optional)
++- `test_harness.perf_mark() -> token`
++- `test_harness.perf_since(token) -> table`
++  - returns collected metrics since the token (frames, sim_ms, max_frame_ms, asset_load_ms, peak_rss_mb, alloc_count, ...)
++- `test_harness.assert_perf(metric, op, value, opts?) -> true|error`
++  - `opts`: `{ since=token, fail_message="..." }`
+```
+
+---
+
+## 9) Flake triage automation (don’t just retry; learn why it flaked)
+
+### What
+When retries are enabled and a test fails then passes:
+- mark it `flaky`
+- automatically collect extra signals on the failing attempt:
+  - frame_hash trace around divergence window
+  - additional screenshot and log tail
+  - input trace (already)
+- optionally auto-run determinism audit on that test: `--auto-audit-on-flake`
+
+### Why this makes it better
+- **Reliability:** flakes don’t hide; they come with diagnosis breadcrumbs.
+- **Developer time:** fewer “can’t repro” dead ends.
+- **CI cost control:** audit only when needed.
+
+### Tradeoffs
+- Slight extra runtime on flake occurrences (rare, and worth it).
+
+### Diff
+```diff
+diff --git a/docs/e2e_testing_master_plan_v2.md b/docs/e2e_testing_master_plan_v2.md
+--- a/docs/e2e_testing_master_plan_v2.md
++++ b/docs/e2e_testing_master_plan_v2.md
+@@
+ ### Retries + flake policy
+ - `--retry-failures <n>` (default: `0`; rerun failing tests up to N times)
+ - `--allow-flaky` (default: `false`; if false, flaky tests still fail CI)
++  - `--auto-audit-on-flake` (default: `false`; run determinism audit for tests that flake)
++  - `--flake-artifacts` (default: `true`; preserve failing-attempt artifacts even if later pass)
+@@
+ ### Phase 3 — Lua Test Framework (Lua)
+@@
+ 4. Reporters: JSON + JUnit (TAP optional).
+@@
+-   - retries: mark flaky; if `--allow-flaky=false`, still fail CI even if passing after retries.
++   - retries: mark flaky and preserve first-failure attempt artifacts if `--flake-artifacts=true`.
++   - if `--auto-audit-on-flake`, re-run that test in determinism-audit mode and attach divergence info if found.
+```
+
+---
+
+## 10) Unified timeline event log (better forensics with less guessing)
+
+### What
+Add a single `timeline.jsonl` that merges:
+- frame index
+- injected input events
+- key logs (optional)
+- screenshot captures and comparison results
+- frame_hash at a chosen cadence
+
+This becomes the “one file to read first”.
+
+### Why this makes it better
+- **Forensics:** you can reconstruct what happened without correlating 4 different files manually.
+- **Tooling:** easy to build viewers later.
+- **Performance:** JSONL is streamable and append-only.
+
+### Tradeoffs
+- Slight duplication of data, but you can link to existing files as entries.
+
+### Diff
+```diff
+diff --git a/docs/e2e_testing_master_plan_v2.md b/docs/e2e_testing_master_plan_v2.md
+--- a/docs/e2e_testing_master_plan_v2.md
++++ b/docs/e2e_testing_master_plan_v2.md
+@@
+ #### Outputs (ignored by git)
+@@
+   - `forensics/`
+     - `run_manifest.json`   — args, seed, platform, renderer, git sha
+     - `input_trace.jsonl`   — frame-indexed injected inputs
+     - `logs.jsonl`          — structured logs (frame, level, category, message)
++    - `timeline.jsonl`      — merged frame timeline (inputs/logs/screenshot events/hashes)
+     - `last_logs.txt`       — tail of log buffer
+@@
+ ## Appendix B: Forensics Bundle Specification
+@@
+ | `input_trace.jsonl` | All injected inputs with frame numbers |
+ | `logs.jsonl` | Structured logs `{ frame, level, category, message }` |
++| `timeline.jsonl` | Merged events `{ frame, type, ... }` to correlate everything |
+```
+
+---
+
+## 11) Lua sandboxing + deterministic standard library (stop tests from creating nondeterminism)
+
+### What
+In test mode, load Lua scripts with a **restricted environment**:
+- disable `os.execute`, `io.popen`, arbitrary file writes
+- replace `os.time`, `os.clock` with deterministic stubs (or remove them)
+- restrict `require` paths to `assets/scripts/tests/**` and optionally readonly fixture dirs
+
+### Why this makes it better
+- **Determinism:** prevents accidental wall-clock or filesystem side-effects.
+- **Security:** stops tests from doing “oops, delete files” locally or in CI.
+- **Consistency:** the harness provides deterministic APIs; scripts should use those.
+
+### Tradeoffs
+- Some developers will want “power-user” access; you can add an opt-out flag for local runs only.
+
+### Diff
+```diff
+diff --git a/docs/e2e_testing_master_plan_v2.md b/docs/e2e_testing_master_plan_v2.md
+--- a/docs/e2e_testing_master_plan_v2.md
++++ b/docs/e2e_testing_master_plan_v2.md
+@@
+ ### 1.1 C++ (engine)
+ - `src/testing/`
+@@
+   - `test_harness_lua.{hpp,cpp}`       — Lua bindings; delegates to TestRuntime
++  - `lua_sandbox.{hpp,cpp}`            — restricted Lua stdlib + require path controls
+@@
+ ## 3) `test_harness` Lua API Contract (Stable Interface)
+@@
+ ### 3.6 Runtime args and capability handshake
+@@
+ - `test_harness.require(opts) -> true|error`
++ - `test_harness.require(opts) -> true|error`
++
++### 3.9 Script sandboxing (behavior)
++- In `--test-mode`, Lua runs in a restricted environment:
++  - `os.execute`, `io.popen` disabled
++  - `os.time`, `os.clock` removed or deterministic stubs
++  - `require` search path restricted to test framework + test suites
++- Optional local-only escape hatch:
++  - `--lua-sandbox=on|off` (default: `on`; CI should force `on`)
+```
+
+---
+
+## 12) Input system: add “authoritative input state” + coordinate-space clarity
+
+### What
+Input injection APIs are good, but E2E tests also need:
+- a way to read what the game thinks the input state is (for debugging and determinism)
+- explicit coordinate spaces (window pixels vs. logical UI coords vs. world coords)
+
+Add:
+- `test_harness.input_state()` returning key/mouse/gamepad states for the current frame
+- `test_harness.screen_to_ui(x,y)` and `ui_to_screen(x,y)` (or `query("ui.transform", ...)`)
+- define whether `move_mouse(x,y)` is in screen pixels at `--resolution` or logical units
+
+### Why this makes it better
+- **Reliability:** eliminates “click is off by UI scale factor” flakes.
+- **Debuggability:** input trace + authoritative state tells you if events were dropped.
+- **Portability:** makes tests less fragile across DPI/UI scaling.
+
+### Tradeoffs
+- Requires a small amount of UI/input plumbing, but it pays back immediately.
+
+### Diff
+```diff
+diff --git a/docs/e2e_testing_master_plan_v2.md b/docs/e2e_testing_master_plan_v2.md
+--- a/docs/e2e_testing_master_plan_v2.md
++++ b/docs/e2e_testing_master_plan_v2.md
+@@
+ ### 3.2 Input injection (applied at frame boundaries)
+ - `press_key`, `release_key`, `tap_key`
+ - `move_mouse`, `mouse_down`, `mouse_up`, `click`
+ - `text_input(str)`
+ - `gamepad_button_down/up`, `gamepad_set_axis`
++  - Input coordinate contract:
++    - `move_mouse(x,y)` uses **render target pixel coordinates** under `--resolution` (0..W-1, 0..H-1).
++    - UI scaling must be applied via helper transforms (below) rather than implicit guessing.
++
++### 3.2.1 Input state + transforms (new)
++- `test_harness.input_state() -> table`
++  - snapshot of effective input state for the current frame (keys down, mouse pos/buttons, gamepad).
++- `test_harness.screen_to_ui(x,y) -> ux, uy`
++- `test_harness.ui_to_screen(ux,uy) -> x, y`
++  - If the engine has no UI system, implement as `query("ui.transform", ...)` instead.
+```
+
+---
+
+# Extra “nice but high impact” additions (optional)
+
+These are not strictly required, but they tend to move a test system from “works” to “teams rely on it”.
+
+### A) Add a `tests/fixtures/` directory + a fixture API
+Use fixtures to load deterministic state (saves, configs, input traces). Prevent “tests depend on my local save file”.
+
+### B) Add a dedicated “logic-only” workflow
+Run `--renderer=null` on more platforms quickly, then run canonical screenshot workflow once.
+
+### C) Add sanitizer workflows
+ASan/UBSan/TSan builds catch the crashes before they become “random CI hangs”.
+
+---
+
+# Combined revised outline (v2.1 summary)
+
+If you apply the changes above, your “v2” plan essentially becomes “v2.1” with these upgrades:
+- schemas + failure taxonomy
+- external supervisor for CI
+- snapshot/restore elevated to milestone gate
+- determinism tripwires + linting
+- baseline staging + approval gate
+- HTML artifact index
+- seeded shuffle option
+- perf budgets
+- flake triage automation
+- unified timeline log
+- Lua sandboxing
+- input state + coordinate transforms
+
+That’s the set of changes that most directly increases **robustness**, **diagnosability**, and **team adoption** without turning the scope into “build Selenium for games”.
+
+---

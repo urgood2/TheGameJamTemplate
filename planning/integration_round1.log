@@ -1,45 +1,51 @@
-The file is already properly updated with the header change I made. The existing v1 already has all 12 GPT Pro revisions integrated. Now let me provide my analysis of which changes I agree with, somewhat agree with, and disagree with.
-
 `★ Insight ─────────────────────────────────────`
-The integration shows a sophisticated understanding of documentation system design. Key architectural decisions:
-1. **Machine-readable inventories (JSON)** enable tooling to validate, generate, and diff—markdown becomes a "view" over structured data
-2. **Test isolation via `before_each`/`after_each` hooks** is essential for any growing test suite—order-dependent tests become nightmare debugging
-3. **Declarative cm rules (YAML)** transforms "one-time cm clickops" into version-controlled, reviewable, reproducible rule management
+The integration process required careful thought about:
+1. **Document structure** - GPT Pro's changes touch many sections; I reorganized to maintain flow while adding new content
+2. **Terminology consistency** - The original uses "stable" to mean "frame-deterministic"; GPT Pro adds "stable" for API versioning. Both meanings are valid but needed contextual clarity.
+3. **Progressive disclosure** - Core concepts go in main sections; detailed specs go in new appendices to avoid bloating the main plan.
 `─────────────────────────────────────────────────`
+
+Now let me provide my analysis of each change:
 
 ---
 
-## My Assessment of GPT Pro's 12 Proposed Changes
+## Analysis: Agreement Assessment
 
-### Changes I Wholeheartedly Agree With
+### Changes I Wholeheartedly Agree With ✓
 
-**Change 1 (Docs/Registry/Tests Validator)** — This is the single most important change. Without automated validation, the system *will* drift. Docs will claim "Verified" when tests no longer exist, registry entries will point to renamed doc_ids, and the whole knowledge base becomes a source of false confidence rather than truth. The validator converts this from "hope it stays consistent" to "CI fails if it drifts."
+**Change 1 — Determinism Contract:** This is the single most valuable addition. The original plan *assumed* determinism would work but didn't specify *how*. The explicit rules (no wall-clock time, seeded RNG, stable iteration order, deterministic async) are exactly what a team needs to prevent the "it works on my machine" problem. The rendering caveat is also crucial—pixel-perfect cross-GPU is a trap that many teams fall into.
 
-**Change 4 (Test Isolation/Reset Semantics)** — Order-dependent tests are a disaster waiting to happen. The `before_each`/`after_each` hooks with `reset_world()` contract are non-negotiable for any test suite that will grow beyond 10-20 tests. Without this, debugging test failures becomes "which earlier test poisoned the state?" investigations.
+**Change 3 — Condition Wait APIs (`wait_until`):** This is essential. Tests using only `wait_frames(n)` either use a conservative `n` (slow) or an optimistic `n` (flaky). Condition waits with frame-based timeouts give you both speed and reliability. The `wait_until_state` and `wait_until_log` helpers are practical conveniences.
 
-**Change 5 (Per-Test JSON Results)** — The per-test `results.json` with duration, artifacts, and status is a CI best practice. It enables dashboards, trend analysis, and fast failure debugging. The extended `status.json` schema (commit, branch, duration) is also valuable for traceability.
+**Change 6 — Forensics Bundle:** This directly addresses the "can't reproduce CI failure" problem. Having the exact seed, args, input trace, and final logs in one place makes debugging remote failures tractable. Without this, you end up with "CI is red but I can't figure out why" cycles that erode trust in the test suite.
 
-**Change 9 (Declarative cm Rules as Code)** — This transforms Phase 8 from "manually run `cm playbook add` commands" to "review a YAML diff in a PR." That's a fundamental improvement in auditability and reproducibility. The importer script makes bulk imports deterministic and repeatable.
+**Change 7 — Exit Codes + Richer JSON:** Clear exit codes (`0`=pass, `1`=fail, `2`=config error, `3`=timeout, `4`=crash) are essential for CI scripting and debugging. Making JSON authoritative (with JUnit as a derived format) is the right architecture—JUnit is lossy by design.
 
-**Change 10 (Maintenance Mode)** — Without this, the plan is a "one-time push" that rots immediately after completion. The maintenance mode section explicitly defines what triggers re-validation and when CI should fail. This turns the documentation system into an evergreen asset.
+**Change 11 — Test Isolation Rules:** Explicit cleanup between tests prevents cascading failures. The pattern of "clear inputs + log_mark + optional reset hook" is minimal and effective. Without this, one failed test can leave state that breaks subsequent tests.
 
-### Changes I Somewhat Agree With
+**Change 12 — Actionable CI Summaries:** "Artifacts uploaded" isn't enough. Failing test names, repro commands, and diff paths directly in the CI summary saves significant debugging time. The canonical renderer strategy prevents the "screenshot tests pass on Linux but fail on macOS" problem.
 
-**Change 2 (Machine-Readable JSON Inventories)** — I agree with the principle: structured data enables tooling. However, the implementation adds significant deliverable surface area. Each phase now produces both `.md` and `.json` files, and both must stay in sync. The trade-off is worth it, but it's non-trivial additional work.
+---
 
-**Change 3 (EmmyLua Stubs)** — IDE autocomplete is genuinely valuable for human developers. My reservation: generating accurate EmmyLua annotations from the binding inventory requires the inventory to capture precise type information, which may not always be extractable from C++ Sol2 bindings. "Even partial stubs are valuable" is true, but partial stubs that are wrong are worse than no stubs.
+### Changes I Somewhat Agree With ~
 
-**Change 6 (Screenshot Baseline Comparison)** — The concept is sound: screenshot-exists is weak verification. However, pixel-diff across platforms is notoriously flaky. GPU, font rasterization, and driver differences will cause false failures. The plan wisely makes this "optional" with tolerance, but I'd recommend starting with screenshot-exists and adding baseline comparison only for high-value visual tests.
+**Change 2 — `TestRuntime` Core:** I agree with the concept of a central runtime object owning subsystems, but the specific files (`artifact_store`, `path_sandbox`) may be over-engineering for v1. The principle is sound—avoid scattered globals—but the implementation could start simpler. *Included with minor reservations.*
 
-**Change 8 (Frequency Automation Script)** — Automating frequency counting removes human error. However, the script needs to handle aliasing (`ui.box` vs `UIBox`), comment filtering, and string literal occurrences (which shouldn't count). The script is valuable, but it's not as simple as "run ripgrep."
+**Change 4 — Test API Surface + query/command APIs:** The concept is correct: exposing internal engine objects directly to tests creates a maintenance burden. However, the dual system (`get_state`/`set_state` *and* `query`/`command`) adds complexity. In practice, I'd probably start with just `query`/`command` and skip the path-based access. *Included as-is, but teams might simplify.*
 
-### Changes I Have Reservations About
+**Change 5 — Screenshot ROI/masks/stabilization:** These features are genuinely useful, but they're also complexity that may not be needed in v1. For a game jam template, most screenshot tests might be simple "does the menu look right?" checks. The `.meta.json` pattern is clever but adds another file format to maintain. *Included, but marked as optional where possible.*
 
-**Change 7 (Per-Test Artifact Layout)** — The `test_output/artifacts/<safe_test_id>/` directory structure is clean, but it adds file system complexity. For a suite of 100+ tests, this creates 100+ directories. The existing flat `test_output/screenshots/` is simpler. I'd implement this only if tests actually produce multiple artifacts per test (log + screenshot + dump). For most tests, a flat layout is sufficient.
+**Change 8 — Listing/filtering/tags/quarantine:** Tags and filtering are useful at scale, but for a small suite (3 example tests), they're overhead. The `--list-tests` flag is immediately useful for debugging sharding. *Included but recognized as "grow into this" rather than "need on day 1".*
 
-**Change 11 (Go/No-Go Gates)** — I appreciate the explicit gates, but they're largely already implicit in the Phase 1 pre-flight checklist. Converting them to Yes/No outputs is marginally more actionable, but it's essentially a formatting change rather than a substantive addition. I wouldn't push back on it, but I wouldn't prioritize it either.
+**Change 9 — Retry-on-failure with flaky labeling:** This is pragmatic but philosophically risky. Retries can mask real flakiness rather than forcing you to fix it. The `--allow-flaky=false` default is good, but teams often flip this to green when under deadline pressure. *Included with the strong default, but watch for abuse.*
 
-**Change 12 (UBS Clarification)** — This is important *if* UBS is actually undefined in the repo. The change assumes UBS is a dangling acronym that needs definition. If UBS is already documented somewhere (e.g., in CLAUDE.md or a build script), this change is unnecessary. It's conditionally valuable.
+---
+
+### Changes I Disagree With ✗
+
+**Change 10 — Text Input + Gamepad Injection:** I don't *disagree* with the feature, but I disagree with prioritizing it for v1. For a game jam template E2E suite, keyboard/mouse covers 90%+ of interaction. Text input and gamepad are legitimate needs, but adding them before the core system is solid is scope creep. The implementation complexity (cross-platform text input events, multiple gamepad APIs) is non-trivial. *Included in the plan for completeness, but should be Phase 2/3 priority, not Phase 1.*
+
+**None of the changes are fundamentally wrong.** GPT Pro's revisions come from real experience with E2E test suites that have failed in production. The only disagreements are about *prioritization* and *when* to add complexity, not *whether* the features are valuable.
 
 ---
 
@@ -47,8 +53,8 @@ The integration shows a sophisticated understanding of documentation system desi
 
 | Category | Changes |
 |----------|---------|
-| **Wholeheartedly Agree** | 1 (Validator), 4 (Isolation), 5 (Per-test JSON), 9 (Declarative cm rules), 10 (Maintenance Mode) |
-| **Somewhat Agree** | 2 (JSON inventories), 3 (EmmyLua), 6 (Baselines), 8 (Frequency automation) |
-| **Reservations** | 7 (Per-test artifact dirs), 11 (Go/No-Go formatting), 12 (UBS conditional) |
+| **Wholeheartedly agree** | 1 (Determinism), 3 (Condition waits), 6 (Forensics), 7 (Exit codes), 11 (Test isolation), 12 (CI summaries) |
+| **Somewhat agree** | 2 (TestRuntime), 4 (Test API Surface), 5 (Screenshot ROI/masks), 8 (Tags/filtering), 9 (Retries) |
+| **Disagree with priority** | 10 (Text/gamepad input in v1) |
 
-The integrated v1 plan is ready at `/data/projects/TheGameJamTemplate-cass-memory-update/planning/PLAN_v1.md`.
+The integrated plan (PLAN_v1.md) incorporates all changes. Teams should treat the "somewhat agree" features as candidates for deferral if time is tight, and prioritize the "wholeheartedly agree" changes as non-negotiable for a stable test suite.

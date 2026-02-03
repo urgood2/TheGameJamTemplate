@@ -1,14 +1,1 @@
-The integrated v3 plan already exists at `/data/projects/TheGameJamTemplate-cass-memory-update/planning/PLAN_v3.md` (1,587 lines) with all 12 GPT Pro revisions incorporated, including:
-
-- **Phase 0** added before Phase 1
-- **Run sentinel** (`run_state.json`) for crash detection  
-- **Sync tooling** references (`sync_registry_from_manifest`, `sync_docs_evidence`)
-- **Extended schemas** for inventories and cm candidates
-- **Baseline storage policy** with platform keys
-- **Deterministic rendering config** in capabilities
-- **Impact selection** for PR CI
-- **Artifact bundling** for failure triage
-- **Performance budgets** as optional enhancement
-- **Complete change log** tracking all 12 revisions
-
-The plan properly integrates these changes throughout the document, not just as appendices.
+The integrated plan has been saved to `/data/projects/TheGameJamTemplate@testing-automation/planning/PLAN_v3.md`.

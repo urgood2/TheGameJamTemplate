@@ -96,7 +96,7 @@ script:attach_ecs { create_new = false, existing_entity = eid }
 Why: `init()` runs during construction. If you need init to see data, pass it in or use `Node.quick()` / `EntityBuilder.validated()` to guarantee data exists before attach.
 
 <a id="ecs-attach-ecs-timing"></a>
-### attach_ecs Timing (Assign Data Before Attach)
+### ecs-attach-ecs-timing
 - doc_ids: pattern:ecs.attach_ecs.assign_before_attach, pattern:ecs.attach_ecs.assign_after_attach_fails
 - Tests: assets/scripts/tests/test_entity_lifecycle.lua::ecs.attach_ecs.assign_before_attach, assets/scripts/tests/test_entity_lifecycle.lua::ecs.attach_ecs.assign_after_attach_fails
 - Source: assets/scripts/core/entity_builder.lua, assets/scripts/monobehavior/behavior_script_v2.lua, docs/guides/entity-scripts.md
@@ -120,7 +120,7 @@ Why: attach-time hooks (`run_custom_func`, `addStateTag`, etc.) read fields imme
 Preferred: `Node.quick(entity, data)` or `EntityBuilder.validated(ScriptType, entity, data)` to enforce ordering.
 
 <a id="ecs-gameobject-restrictions"></a>
-### GameObject Component Restrictions
+### ecs-gameobject-restrictions
 - doc_ids: pattern:ecs.gameobject.no_data_storage, pattern:ecs.gameobject.script_table_usage
 - Tests: assets/scripts/tests/test_entity_lifecycle.lua::ecs.gameobject.no_data_storage, assets/scripts/tests/test_entity_lifecycle.lua::ecs.gameobject.script_table_usage
 - Source: CLAUDE.md
@@ -140,7 +140,7 @@ script.myData = { hp = 10 }
 Why: GameObject is a component wrapper. Script data must live on the script table to be discoverable via `safe_script_get`/`getScriptTableFromEntityID`.
 
 <a id="ecs-script-access"></a>
-### script_field and safe_script_get
+### ecs-script-access
 - doc_ids: pattern:ecs.access.script_field_default, pattern:ecs.access.script_field_nil, pattern:ecs.access.safe_script_get_valid, pattern:ecs.access.safe_script_get_invalid
 - Tests: assets/scripts/tests/test_entity_lifecycle.lua::ecs.access.script_field_default, assets/scripts/tests/test_entity_lifecycle.lua::ecs.access.script_field_nil, assets/scripts/tests/test_entity_lifecycle.lua::ecs.access.safe_script_get_valid, assets/scripts/tests/test_entity_lifecycle.lua::ecs.access.safe_script_get_invalid
 - Source: assets/scripts/util/util.lua
@@ -156,7 +156,7 @@ if not script then return end
 Why: `safe_script_get` returns nil on invalid/missing script. `script_field` safely returns the default (including nil) for missing fields.
 
 <a id="ecs-validation"></a>
-### Entity Validation (ensure_entity vs ensure_scripted_entity)
+### ecs-validation
 - doc_ids: pattern:ecs.validate.ensure_entity_valid, pattern:ecs.validate.ensure_entity_invalid, pattern:ecs.validate.ensure_scripted_entity_valid, pattern:ecs.validate.ensure_scripted_entity_invalid
 - Tests: assets/scripts/tests/test_entity_lifecycle.lua::ecs.validate.ensure_entity_valid, assets/scripts/tests/test_entity_lifecycle.lua::ecs.validate.ensure_entity_invalid, assets/scripts/tests/test_entity_lifecycle.lua::ecs.validate.ensure_scripted_entity_valid, assets/scripts/tests/test_entity_lifecycle.lua::ecs.validate.ensure_scripted_entity_invalid
 - Source: assets/scripts/util/util.lua
@@ -175,7 +175,7 @@ end
 Why: `ensure_entity` checks registry + cache validity. `ensure_scripted_entity` adds a ScriptComponent requirement.
 
 <a id="ecs-component-cache"></a>
-### Component Cache Usage
+### ecs-component-cache
 - doc_ids: pattern:ecs.cache.get_valid, pattern:ecs.cache.get_after_destroy, pattern:ecs.cache.invalidation, pattern:ecs.cache.performance
 - Tests: assets/scripts/tests/test_entity_lifecycle.lua::ecs.cache.get_valid, assets/scripts/tests/test_entity_lifecycle.lua::ecs.cache.get_after_destroy, assets/scripts/tests/test_entity_lifecycle.lua::ecs.cache.invalidation, assets/scripts/tests/test_entity_lifecycle.lua::ecs.cache.performance
 - Source: assets/scripts/core/component_cache.lua
@@ -190,7 +190,7 @@ component_cache.invalidate(eid, Transform)
 Why: cached lookups are fast but must be invalidated on destroy/remove to avoid stale data.
 
 <a id="ecs-destruction"></a>
-### Entity Destruction & Cleanup
+### ecs-destruction
 - doc_ids: pattern:ecs.destroy.no_stale_refs, pattern:ecs.destroy.then_recreate, pattern:ecs.destroy.cleanup_all_references, pattern:ecs.destroy.cache_cleared
 - Tests: assets/scripts/tests/test_entity_lifecycle.lua::ecs.destroy.no_stale_refs, assets/scripts/tests/test_entity_lifecycle.lua::ecs.destroy.then_recreate, assets/scripts/tests/test_entity_lifecycle.lua::ecs.destroy.cleanup_all_references, assets/scripts/tests/test_entity_lifecycle.lua::ecs.destroy.cache_cleared
 - Source: assets/scripts/combat/entity_cleanup.lua, assets/scripts/core/component_cache.lua
@@ -209,7 +209,7 @@ end
 Why: destruction must clear caches and references. Always re-validate before using old ids.
 
 <a id="ecs-luajit-locals"></a>
-### LuaJIT 200 Local Variable Limit
+### ecs-luajit-locals
 - doc_ids: pattern:ecs.luajit.200_local_limit
 - Tests: assets/scripts/tests/test_entity_lifecycle.lua::ecs.luajit.200_local_limit
 - Source: CLAUDE.md
@@ -307,7 +307,7 @@ ui.box.RenewAlignment(registry, gridContainer)
 ### State Tags and UIBox State Management
 
 <a id="addstatetagto-uibox-after-spawn"></a>
-#### AddStateTagToUIBox after spawn
+#### addstatetagto-uibox-after-spawn
 - doc_id: pattern:ui.statetag.add_after_spawn
 - Test: assets/scripts/tests/test_ui_patterns.lua::ui.statetag.add_after_spawn
 - Source: assets/scripts/ui/skills_panel.lua:initPanel
@@ -330,7 +330,7 @@ ui.box.AddStateTagToUIBox(registry, panelEntity, "default_state")
 - Verified: Test: assets/scripts/tests/test_ui_patterns.lua::ui.statetag.add_after_spawn
 
 <a id="addstatetagto-uibox-after-replacechildren"></a>
-#### AddStateTagToUIBox after ReplaceChildren
+#### addstatetagto-uibox-after-replacechildren
 - doc_id: pattern:ui.statetag.add_after_replacechildren
 - Test: assets/scripts/tests/test_ui_patterns.lua::ui.statetag.add_after_replacechildren
 - Source: assets/scripts/ui/player_inventory.lua:injectGridForTab
@@ -378,7 +378,7 @@ ui.box.AddStateTagToUIBox(entity, "default_state")
 ### Panel Visibility and uiRoot Coordination
 
 <a id="move-both-transform-and-uiboxcomponent-uiroot"></a>
-#### Move both Transform and UIBoxComponent.uiRoot
+#### move-both-transform-and-uiboxcomponent-uiroot
 - doc_id: pattern:ui.visibility.move_transform_and_uiroot
 - Test: assets/scripts/tests/test_ui_patterns.lua::ui.visibility.move_transform_and_uiroot
 - Source: assets/scripts/ui/stats_panel_v2.lua:setEntityVisible
@@ -666,7 +666,7 @@ end
 ### ObjectAttachedToUITag for Draggables
 
 <a id="never-use-objectattachedto-uitag-on-draggables"></a>
-#### Never use ObjectAttachedToUITag on draggables
+#### never-use-objectattachedto-uitag-on-draggables
 - doc_id: pattern:ui.attached.never_on_draggables
 - Test: assets/scripts/tests/test_ui_patterns.lua::ui.attached.never_on_draggables
 - Source: assets/scripts/ui/trigger_strip_ui.lua:createEntry
@@ -689,7 +689,7 @@ transform.set_space(entity, "screen")
 - Verified: Test: assets/scripts/tests/test_ui_patterns.lua::ui.attached.never_on_draggables
 
 <a id="objectattachedto-uitag-correct-usage"></a>
-#### ObjectAttachedToUITag correct usage
+#### objectattachedto-uitag-correct-usage
 - doc_id: pattern:ui.attached.correct_usage
 - Test: assets/scripts/tests/test_ui_patterns.lua::ui.attached.correct_usage
 - Source: assets/scripts/ui/message_queue_ui.lua:tryMakeIcon

@@ -26,12 +26,15 @@ This document consolidates all known quirks, gotchas, and ordering requirements 
   - [ChildBuilder.setOffset Patterns](#childbuildersetoffset-patterns)
   - [Slot Decorations and Sprite Panels](#slot-decorations-and-sprite-panels)
   - [ObjectAttachedToUITag for Draggables](#objectattachedtouitag-for-draggables)
+- [Lua / C++ Bindings](#lua--c-bindings)
 - [Physics System](#physics-system)
+- [Rendering & Layers](#rendering--layers)
 - [Shader System](#shader-system)
 - [Sound System](#sound-system)
 - [Camera System](#camera-system)
 - [Animation System](#animation-system)
 - [Combat System](#combat-system)
+- [Input System](#input-system)
 
 ---
 
@@ -712,31 +715,324 @@ end
 **Evidence:**
 - Verified: Test: assets/scripts/tests/test_ui_patterns.lua::ui.attached.correct_usage
 
+<a id="lua--c-bindings"></a>
+## Lua / C++ Bindings
+
+<a id="lua-globals-vs-modules"></a>
+### C++ globals are injected, not require() modules
+- doc_id: pattern:lua.bindings.globals_injected
+- Test: Unverified: Documentation guidance
+- Source: docs/guides/UI_PANEL_IMPLEMENTATION_GUIDE.md, CLAUDE.md
+
+**Problem:**
+`module not found` when trying to `require()` engine globals like `registry` or `layers`.
+
+**Root cause:**
+Many engine bindings are injected into the Lua VM as C++ globals, not Lua files.
+
+**Solution:**
+Use `_G` (or bare globals) for C++ bindings. Only `require()` actual Lua modules from `assets/scripts/`.
+
+```lua
+-- WRONG: will fail
+local registry = require("core.registry")
+
+-- RIGHT: access globals
+local registry = _G.registry
+```
+
+**Evidence:**
+- Unverified: Documentation guidance (docs/guides/UI_PANEL_IMPLEMENTATION_GUIDE.md)
+
+<a id="lua-userdata-newindex"></a>
+### Userdata newindex assignment failure
+- doc_id: pattern:lua.bindings.userdata_newindex
+- Test: Unverified: Documentation guidance
+- Source: docs/api/lua-cpp-documentation-guide.md
+
+**Problem:**
+Setting fields on C++ userdata throws `no new_index operation`.
+
+**Root cause:**
+Some bound userdata are read-only and do not support arbitrary field assignment.
+
+**Solution:**
+Guard assignments with `pcall` and store Lua-side data elsewhere.
+
+```lua
+local ok = pcall(function()
+    go.methods.onHover = function() end
+end)
+if not ok then
+    log_warn("Could not set userdata field")
+end
+```
+
+**Evidence:**
+- Unverified: Documentation guidance (docs/api/lua-cpp-documentation-guide.md)
+
+<a id="lua-color-userdata"></a>
+### Use Color.new, not Lua tables
+- doc_id: pattern:lua.bindings.color_userdata
+- Test: Unverified: Documentation guidance
+- Source: docs/api/lua-cpp-documentation-guide.md
+
+**Problem:**
+Passing `{r,g,b,a}` tables where a Color userdata is required.
+
+**Root cause:**
+C++ expects `Color` userdata, not a plain Lua table.
+
+**Solution:**
+Use `Color.new(r, g, b, a)` to construct a proper userdata.
+
+```lua
+-- WRONG
+local transparent = { r = 0, g = 0, b = 0, a = 0 }
+
+-- RIGHT
+local transparent = Color.new(0, 0, 0, 0)
+```
+
+**Evidence:**
+- Unverified: Documentation guidance (docs/api/lua-cpp-documentation-guide.md)
+
+<a id="lua-callback-signatures"></a>
+### Callback signature mismatches
+- doc_id: pattern:lua.bindings.callback_signature
+- Test: Unverified: Documentation guidance
+- Source: docs/api/lua-cpp-documentation-guide.md
+
+**Problem:**
+Callbacks silently fail or throw errors when invoked from C++.
+
+**Root cause:**
+Lua function signatures do not match the C++ binding expectations.
+
+**Solution:**
+Match the exact parameter order documented in the binding definition.
+
+```lua
+-- Example: expects (registry, entity, collisionList)
+local function onCollision(registry, entity, collisions)
+    -- ...
+end
+```
+
+**Evidence:**
+- Unverified: Documentation guidance (docs/api/lua-cpp-documentation-guide.md)
+
+<a id="lua-require-paths"></a>
+### Wrong require() paths cause module not found
+- doc_id: pattern:lua.bindings.require_paths
+- Test: Unverified: Documentation guidance
+- Source: docs/guides/COMMON_PITFALLS.md, docs/guides/implementation-summaries/PROJECTILE_TEST_INTEGRATION.md
+
+**Problem:**
+`module not found` when using long or absolute require paths.
+
+**Root cause:**
+Lua module paths are rooted at `assets/scripts/` and should use short `require("core.timer")` style paths.
+
+**Solution:**
+Use the documented module paths; avoid `require("assets.scripts.core.timer")`.
+
+```lua
+-- WRONG
+require("assets.scripts.core.timer")
+
+-- RIGHT
+require("core.timer")
+```
+
+**Evidence:**
+- Unverified: Documentation guidance (docs/guides/COMMON_PITFALLS.md)
+
+---
+
 <a id="physics-system"></a>
 ## Physics System
 
-<!-- Stub: Physics quirks will be documented here -->
-*No quirks documented yet. Add entries following the [Entry Template](#entry-template).*
+<a id="physics-collision-tags"></a>
+### Collisions not working without tags and masks
+- doc_id: pattern:physics.collision.tags_masks
+- Test: Unverified: Troubleshooting guide
+- Source: docs/TROUBLESHOOTING.md
 
-Potential areas:
-- Collision mask ordering
-- Physics body creation timing
-- Chipmunk shape lifecycle
-- Raycast vs segment query differences
+**Problem:**
+Physics bodies pass through each other without colliding.
+
+**Root cause:**
+Missing collision tags/masks or bodies on the wrong physics world.
+
+**Solution:**
+Use PhysicsBuilder to set tags and collision masks, and ensure the world exists.
+
+```lua
+local PhysicsManager = require("core.physics_manager")
+local PhysicsBuilder = require("core.physics_builder")
+
+local world = PhysicsManager.get_world("world")
+PhysicsBuilder.for_entity(entity)
+    :circle()
+    :tag("projectile")
+    :collideWith({ "enemy", "WORLD" })
+    :apply()
+```
+
+**Evidence:**
+- Unverified: Troubleshooting guide (docs/TROUBLESHOOTING.md)
+
+<a id="physics-world-nil"></a>
+### Physics world lookup returns nil
+- doc_id: pattern:physics.world.lookup
+- Test: Unverified: Troubleshooting guide
+- Source: docs/TROUBLESHOOTING.md
+
+**Problem:**
+`PhysicsManager.get_world("world")` returns nil.
+
+**Root cause:**
+Physics system not initialized or wrong world name; using legacy globals.
+
+**Solution:**
+Use PhysicsManager to fetch the world and guard nil results.
+
+```lua
+local PhysicsManager = require("core.physics_manager")
+local world = PhysicsManager.get_world("world")
+if not world then
+    log_warn("Physics world not available")
+    return
+end
+```
+
+**Evidence:**
+- Unverified: Troubleshooting guide (docs/TROUBLESHOOTING.md)
+
+<a id="physics-sync-mode"></a>
+### Body not moving due to sync mode
+- doc_id: pattern:physics.sync.mode
+- Test: Unverified: Troubleshooting guide
+- Source: docs/TROUBLESHOOTING.md
+
+**Problem:**
+Physics body exists but the entity doesn't move.
+
+**Root cause:**
+Sync mode pulls from Transform instead of physics (authoritative transform).
+
+**Solution:**
+Set sync mode to physics so Transform follows the body.
+
+```lua
+PhysicsBuilder.for_entity(entity)
+    :circle()
+    :syncMode("physics")
+    :apply()
+```
+
+**Evidence:**
+- Unverified: Troubleshooting guide (docs/TROUBLESHOOTING.md)
+
+<a id="physics-arbiter-lifetime"></a>
+### Arbiter data is only valid during callbacks
+- doc_id: pattern:physics.arbiter.lifetime
+- Test: Unverified: Documentation guidance
+- Source: docs/api/physics_docs.md, docs/guides/COMMON_PITFALLS.md
+
+**Problem:**
+Accessing arbiter data after a collision callback causes undefined behavior.
+
+**Root cause:**
+Chipmunk arbiters are transient; pointers become invalid outside the callback.
+
+**Solution:**
+Copy the data you need inside the callback and do not retain arbiter references.
+
+```lua
+function onCollision(arbiter)
+    local impulse = arbiter.totalImpulse
+    -- store impulse, do not store arbiter
+end
+```
+
+**Evidence:**
+- Unverified: Documentation guidance (docs/api/physics_docs.md)
+
+---
+
+<a id="rendering--layers"></a>
+## Rendering & Layers
+
+<a id="rendering-z-order-layer"></a>
+### Wrong layer or Z-order hides entities
+- doc_id: pattern:rendering.layer.z_order
+- Test: Unverified: Troubleshooting guide
+- Source: docs/TROUBLESHOOTING.md
+
+**Problem:**
+Entities render behind or above the wrong elements.
+
+**Root cause:**
+`Transform.actualZ` or `EntityLayer.layer` is not set to the expected values.
+
+**Solution:**
+Assign a Z order and layer for UI vs world entities.
+
+```lua
+local z_orders = require("core.z_orders")
+local transform = component_cache.get(entity, Transform)
+transform.actualZ = z_orders.ui_foreground
+
+local EntityLayer = _G.EntityLayer
+if EntityLayer and not registry:has(entity, EntityLayer) then
+    registry:emplace(entity, EntityLayer)
+end
+if EntityLayer then
+    registry:get(entity, EntityLayer).layer = "ui"
+end
+```
+
+**Evidence:**
+- Unverified: Troubleshooting guide (docs/TROUBLESHOOTING.md)
 
 ---
 
 <a id="shader-system"></a>
 ## Shader System
 
-<!-- Stub: Shader quirks will be documented here -->
-*No quirks documented yet. Add entries following the [Entry Template](#entry-template).*
+<a id="shader-not-applying"></a>
+### Shader not applying to entity
+- doc_id: pattern:rendering.shader.not_applying
+- Test: Unverified: Troubleshooting guide
+- Source: docs/TROUBLESHOOTING.md
 
-Potential areas:
-- Shader uniform timing
-- Multi-pass pipeline ordering
-- globalShaderUniforms lifecycle
-- ShaderBuilder attachment requirements
+**Problem:**
+Shader added to an entity but the effect is not visible.
+
+**Root cause:**
+Shader component missing, shader not present in library, or wrong render pass.
+
+**Solution:**
+Rebuild the shader chain with ShaderBuilder and validate the shader library.
+
+```lua
+local ShaderBuilder = require("core.shader_builder")
+
+ShaderBuilder.for_entity(entity)
+    :clear()
+    :add("3d_skew_holo", { sheen_strength = 1.5 })
+    :apply()
+
+local shaderComp = component_cache.get(entity, ShaderComponent)
+if not shaderComp then
+    log_warn("Entity missing ShaderComponent")
+end
+```
+
+**Evidence:**
+- Unverified: Troubleshooting guide (docs/TROUBLESHOOTING.md)
 
 ---
 
@@ -785,11 +1081,160 @@ Potential areas:
 <a id="combat-system"></a>
 ## Combat System
 
-<!-- Stub: Combat quirks will be documented here -->
-*No quirks documented yet. Add entries following the [Entry Template](#entry-template).*
+<a id="combat-projectile-collision-tags"></a>
+### Projectile collision tags must match targets
+- doc_id: pattern:combat.projectile.collision_tags
+- Test: Unverified: Documentation reference
+- Source: docs/projectile_reference.md
 
-Potential areas:
-- Damage calculation ordering
-- Projectile lifecycle
-- Status effect stacking
-- Card/ability timing
+**Problem:**
+Projectiles never hit targets.
+
+**Root cause:**
+Collision tags/masks are not configured for `"projectile"` ↔ target tags.
+
+**Solution:**
+Use default tags or explicitly set `collideWithTags`/`targetCollisionTag`.
+
+```lua
+ProjectileSystem.spawn({
+    movementType = "straight",
+    collideWithTags = { "enemy", "WORLD" },
+    targetCollisionTag = "enemy",
+})
+```
+
+**Evidence:**
+- Unverified: Documentation reference (docs/projectile_reference.md)
+
+<a id="combat-projectile-manual-gravity"></a>
+### Arc projectiles need manual gravity if world gravity is zero
+- doc_id: pattern:combat.projectile.manual_gravity
+- Test: Unverified: Documentation reference
+- Source: docs/projectile_reference.md
+
+**Problem:**
+Arc projectiles fly straight when physics world gravity is zero.
+
+**Root cause:**
+Arc movement relies on gravity; if the world has no gravity, the arc never bends.
+
+**Solution:**
+Enable manual gravity and optionally disable physics integration.
+
+```lua
+ProjectileSystem.spawn({
+    movementType = "arc",
+    forceManualGravity = true,
+    usePhysics = false,
+})
+```
+
+**Evidence:**
+- Unverified: Documentation reference (docs/projectile_reference.md)
+
+<a id="combat-homing-strength"></a>
+### Homing projectiles need non-zero homing_strength
+- doc_id: pattern:combat.projectile.homing_strength
+- Test: Unverified: Common pitfalls list
+- Source: docs/guides/COMMON_PITFALLS.md
+
+**Problem:**
+Homing projectiles ignore targets and fly straight.
+
+**Root cause:**
+`homing_strength` defaults to 0, so homing behavior never engages.
+
+**Solution:**
+Set `homingStrength` to a positive value.
+
+```lua
+ProjectileSystem.spawn({
+    movementType = "homing",
+    homingStrength = 0.8,
+})
+```
+
+**Evidence:**
+- Unverified: Common pitfalls list (docs/guides/COMMON_PITFALLS.md)
+
+<a id="combat-projectile-lifetime"></a>
+### Always set projectile lifetime
+- doc_id: pattern:combat.projectile.lifetime_required
+- Test: Unverified: Common pitfalls list
+- Source: docs/guides/COMMON_PITFALLS.md
+
+**Problem:**
+Projectiles never despawn and accumulate.
+
+**Root cause:**
+`lifetime` is unset; missed projectiles live forever.
+
+**Solution:**
+Always set `lifetime` on projectile spawns.
+
+```lua
+ProjectileSystem.spawn({
+    movementType = "straight",
+    lifetime = 2.5,
+})
+```
+
+**Evidence:**
+- Unverified: Common pitfalls list (docs/guides/COMMON_PITFALLS.md)
+
+---
+
+<a id="input-system"></a>
+## Input System
+
+<a id="input-handler-init-once"></a>
+### Initialize input handler once
+- doc_id: pattern:input.handler.init_once
+- Test: Unverified: Documentation guidance
+- Source: docs/guides/UI_PANEL_IMPLEMENTATION_GUIDE.md
+
+**Problem:**
+Input handlers run multiple times per frame or duplicate timers stack up.
+
+**Root cause:**
+Input setup is called repeatedly without a guard, creating multiple render-frame timers.
+
+**Solution:**
+Use a boolean guard (e.g., `state.inputHandlerInitialized`) before registering the handler.
+
+```lua
+if state.inputHandlerInitialized then return end
+state.inputHandlerInitialized = true
+timer.run_every_render_frame(function() ... end, nil, "panel_input", TIMER_GROUP)
+```
+
+**Evidence:**
+- Unverified: Documentation guidance (docs/guides/UI_PANEL_IMPLEMENTATION_GUIDE.md)
+
+<a id="input-handler-delay"></a>
+### Delay input setup until systems are ready
+- doc_id: pattern:input.handler.defer_setup
+- Test: Unverified: Documentation guidance
+- Source: docs/guides/UI_PANEL_IMPLEMENTATION_GUIDE.md
+
+**Problem:**
+Input handler runs before systems are ready, causing nil globals or missing state.
+
+**Root cause:**
+Input setup runs immediately on module load instead of after initialization.
+
+**Solution:**
+Defer setup with a short timer and a dedicated tag/group.
+
+```lua
+timer.after_opts({
+    delay = 0.1,
+    action = function() setupInputHandler() end,
+    tag = "panel_input_setup",
+    group = TIMER_GROUP,
+})
+```
+
+**Evidence:**
+- Unverified: Documentation guidance (docs/guides/UI_PANEL_IMPLEMENTATION_GUIDE.md)

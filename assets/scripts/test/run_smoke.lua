@@ -32,6 +32,9 @@ end
 -- Load self-tests if available
 pcall(dofile, "assets/scripts/test/test_selftest.lua")
 
+-- Load comprehensive harness self-tests (53 tests across 10 categories)
+pcall(dofile, "assets/scripts/test/test_harness_self_test.lua")
+
 -- Load smoke tests (this registers them)
 local smoke_ok, smoke_err = pcall(dofile, "assets/scripts/test/test_smoke.lua")
 if not smoke_ok then

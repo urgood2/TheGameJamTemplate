@@ -10,6 +10,9 @@ Canonical test root: `assets/scripts/test/`.
 # Setup toolchain (first time)
 ./scripts/bootstrap_dev.sh
 
+# Full verification pipeline (inventory + docs + tests)
+./scripts/check_all.sh
+
 # Run all tests (from project root)
 ./build/raylib-cpp-cmake-template --scene test
 
@@ -61,6 +64,7 @@ All outputs are written to `test_output/` in the project root:
 | `results.json` | Per-test details with timing |
 | `report.md` | Human-readable report |
 | `junit.xml` | CI integration format |
+| `coverage_report.md` | Doc/test coverage report |
 | `run_state.json` | Crash/hang detection sentinel |
 | `capabilities.json` | Environment Go/No-Go gates |
 | `test_manifest.json` | Test registration and doc_id mappings |
@@ -190,6 +194,20 @@ TestRunner.run({ record_baselines = true })
 ```
 
 Baselines are never deleted by the runner. Use `python3 scripts/check_baseline_size.py` to enforce size limits.
+
+## Full Verification Pipeline
+
+For a single-command verification pass (inventory regen + schemas + docs + tests):
+
+```bash
+./scripts/check_all.sh
+```
+
+For a fast subset (validators only, no regeneration/tests):
+
+```bash
+./scripts/check_fast.sh
+```
 
 ## Build Validation (UBS)
 
@@ -368,6 +386,22 @@ assets/scripts/test/
 ├── test_styled_localization.lua # Localization tests
 └── ...                    # Additional test modules
 ```
+
+## Full Verification Pipeline (check_all)
+
+Run the full verification pipeline from the repo root:
+
+- Unix/macOS: `./scripts/check_all.sh`
+- Windows: `.\scripts\check_all.ps1`
+
+Dry-run (logs steps without executing commands):
+
+- `python3 scripts/check_all.py --dry-run`
+
+The pipeline runs toolchain validation, inventory regeneration, scope stats,
+doc skeleton generation, schema validation, registry sync, docs consistency
+checks, evidence block checks, and the test suite (plus coverage report
+generation when available).
 
 ## Troubleshooting
 

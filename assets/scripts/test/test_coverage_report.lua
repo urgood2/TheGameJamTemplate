@@ -211,10 +211,10 @@ function CoverageReport.generate(results_path, output_path)
     table.insert(lines, "")
 
     table.insert(lines, "## Verified Docs")
-    table.insert(lines, "| doc_id | Test | Category |")
-    table.insert(lines, "|--------|------|----------|")
+    table.insert(lines, "| doc_id | Test | Category | Quirks Anchor |")
+    table.insert(lines, "|--------|------|----------|---------------|")
     if #verified_entries == 0 then
-        table.insert(lines, "| _none_ | - | - |")
+        table.insert(lines, "| _none_ | - | - | - |")
     else
         for _, entry in ipairs(verified_entries) do
             local test_label = "-"
@@ -225,11 +225,13 @@ function CoverageReport.generate(results_path, output_path)
                     test_label = entry.test_id
                 end
             end
+            local quirks_anchor = entry.quirks_anchor or "-"
             table.insert(lines, string.format(
-                "| %s | %s | %s |",
+                "| %s | %s | %s | %s |",
                 escape_md(entry.doc_id),
                 escape_md(test_label),
-                escape_md(entry.category or "unknown")
+                escape_md(entry.category or "unknown"),
+                escape_md(quirks_anchor)
             ))
         end
     end

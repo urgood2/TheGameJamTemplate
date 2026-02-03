@@ -226,6 +226,61 @@ def sync_once(aseprite_exe: str, verbose: bool, move: bool) -> Tuple[int, int]:
     return animations_processed, sprites_processed
 
 
+def watch_loop(aseprite_exe: str, verbose: bool, move: bool) -> None:
+    """Watch iCloud folders for changes using fswatch."""
+    print("\n=== Watching for Pixquare exports ===")
+    print("  Press Ctrl+C to stop\n")
+
+    # Initial sync
+    anims, sprites = sync_once(aseprite_exe, verbose, move)
+    if anims or sprites:
+        print(f"  Initial sync: {anims} animation(s), {sprites} sprite(s)\n")
+
+    # Start fswatch on both directories
+    try:
+        process = subprocess.Popen(
+            [
+                "fswatch",
+                "-l", "2.0",  # 2 second debounce
+                "-e", r"\.DS_Store$",
+                "-e", r"/processed/",  # Ignore processed folder
+                str(ANIMATIONS_ICLOUD),
+                str(SPRITES_ICLOUD),
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+
+        while True:
+            line = process.stdout.readline()
+            if not line:
+                break
+
+            changed_path = Path(line.strip())
+            if not changed_path.suffix == ".aseprite":
+                continue
+
+            print(f"\n=== Change detected: {changed_path.name} ===")
+            time.sleep(0.5)  # Brief delay for file to settle
+
+            # Determine which folder and process accordingly
+            if ANIMATIONS_ICLOUD in changed_path.parents or changed_path.parent == ANIMATIONS_ICLOUD:
+                if changed_path.exists():
+                    process_animation(changed_path, aseprite_exe, verbose, move)
+            elif SPRITES_ICLOUD in changed_path.parents or changed_path.parent == SPRITES_ICLOUD:
+                if changed_path.exists():
+                    process_sprite(changed_path, aseprite_exe, verbose, move)
+
+    except FileNotFoundError:
+        print("ERROR: fswatch not installed")
+        print("  Install with: brew install fswatch")
+        sys.exit(1)
+    except KeyboardInterrupt:
+        print("\n=== Stopping Pixquare watcher ===")
+        process.terminate()
+
+
 def main():
     parser = argparse.ArgumentParser(description="Sync Pixquare exports from iCloud")
     parser.add_argument("--once", action="store_true", help="Single sync without watching")
@@ -258,8 +313,7 @@ def main():
         anims, sprites = sync_once(aseprite_exe, args.verbose, not args.no_move)
         print(f"\n=== Sync complete: {anims} animation(s), {sprites} sprite(s) ===")
     else:
-        # Watch loop - implemented in Task 6
-        print("watch mode not yet implemented")
+        watch_loop(aseprite_exe, args.verbose, not args.no_move)
 
 
 if __name__ == "__main__":

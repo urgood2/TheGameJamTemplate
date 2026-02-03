@@ -72,9 +72,9 @@ Entity lifecycle has strict ordering and validation requirements. Violating thes
 
 <a id="ecs-init-order"></a>
 ### Script Initialization Order
-- doc_id: pattern:ecs.init.data_preserved
-- Test: assets/scripts/tests/test_entity_lifecycle.lua::ecs.init.data_preserved
-- Source: assets/scripts/monobehavior/behavior_script_v2.lua
+- doc_ids: pattern:ecs.init.data_preserved
+- Tests: assets/scripts/tests/test_entity_lifecycle.lua::ecs.init.data_preserved
+- Source: assets/scripts/monobehavior/behavior_script_v2.lua, docs/guides/entity-scripts.md
 
 Minimal reproducible snippet:
 ```lua
@@ -90,13 +90,13 @@ local script = ScriptType { data = { value = 99 } }
 script:attach_ecs { create_new = false, existing_entity = eid }
 ```
 
-Why: `init()` runs during construction. If you need init to see data, pass it in or use `Node.quick()`.
+Why: `init()` runs during construction. If you need init to see data, pass it in or use `Node.quick()` / `EntityBuilder.validated()` to guarantee data exists before attach.
 
 <a id="ecs-attach-ecs-timing"></a>
 ### attach_ecs Timing (Assign Data Before Attach)
-- doc_id: pattern:ecs.attach_ecs.assign_before_attach
-- Test: assets/scripts/tests/test_entity_lifecycle.lua::ecs.attach_ecs.assign_before_attach
-- Source: assets/scripts/core/entity_builder.lua, docs/guides/entity-scripts.md
+- doc_ids: pattern:ecs.attach_ecs.assign_before_attach, pattern:ecs.attach_ecs.assign_after_attach_fails
+- Tests: assets/scripts/tests/test_entity_lifecycle.lua::ecs.attach_ecs.assign_before_attach, assets/scripts/tests/test_entity_lifecycle.lua::ecs.attach_ecs.assign_after_attach_fails
+- Source: assets/scripts/core/entity_builder.lua, assets/scripts/monobehavior/behavior_script_v2.lua, docs/guides/entity-scripts.md
 
 Minimal reproducible snippet (correct):
 ```lua
@@ -113,12 +113,13 @@ script:attach_ecs { create_new = false, existing_entity = eid }
 script.data = { value = 42 }    -- WRONG: attach-time hooks miss data
 ```
 
-Why: attach-time hooks (`run_custom_func`, addStateTag, etc.) read fields immediately. Late data means hooks see nil.
+Why: attach-time hooks (`run_custom_func`, `addStateTag`, etc.) read fields immediately. Late data means hooks see nil.
+Preferred: `Node.quick(entity, data)` or `EntityBuilder.validated(ScriptType, entity, data)` to enforce ordering.
 
 <a id="ecs-gameobject-restrictions"></a>
 ### GameObject Component Restrictions
-- doc_id: pattern:ecs.gameobject.no_data_storage
-- Test: assets/scripts/tests/test_entity_lifecycle.lua::ecs.gameobject.no_data_storage
+- doc_ids: pattern:ecs.gameobject.no_data_storage, pattern:ecs.gameobject.script_table_usage
+- Tests: assets/scripts/tests/test_entity_lifecycle.lua::ecs.gameobject.no_data_storage, assets/scripts/tests/test_entity_lifecycle.lua::ecs.gameobject.script_table_usage
 - Source: CLAUDE.md
 
 Minimal reproducible snippet (wrong):
@@ -137,22 +138,24 @@ Why: GameObject is a component wrapper. Script data must live on the script tabl
 
 <a id="ecs-script-access"></a>
 ### script_field and safe_script_get
-- doc_id: pattern:ecs.access.safe_script_get_valid
-- Test: assets/scripts/tests/test_entity_lifecycle.lua::ecs.access.safe_script_get_valid
+- doc_ids: pattern:ecs.access.script_field_default, pattern:ecs.access.script_field_nil, pattern:ecs.access.safe_script_get_valid, pattern:ecs.access.safe_script_get_invalid
+- Tests: assets/scripts/tests/test_entity_lifecycle.lua::ecs.access.script_field_default, assets/scripts/tests/test_entity_lifecycle.lua::ecs.access.script_field_nil, assets/scripts/tests/test_entity_lifecycle.lua::ecs.access.safe_script_get_valid, assets/scripts/tests/test_entity_lifecycle.lua::ecs.access.safe_script_get_invalid
 - Source: assets/scripts/util/util.lua
 
 Minimal reproducible snippet:
 ```lua
-local script = safe_script_get(eid)
 local health = script_field(eid, "health", 100)
+local mana = script_field(eid, "mana", nil)
+local script = safe_script_get(eid)
+if not script then return end
 ```
 
-Why: `safe_script_get` returns nil on invalid/missing script. `script_field` safely returns a default.
+Why: `safe_script_get` returns nil on invalid/missing script. `script_field` safely returns the default (including nil) for missing fields.
 
 <a id="ecs-validation"></a>
 ### Entity Validation (ensure_entity vs ensure_scripted_entity)
-- doc_id: pattern:ecs.validate.ensure_entity_valid
-- Test: assets/scripts/tests/test_entity_lifecycle.lua::ecs.validate.ensure_entity_valid
+- doc_ids: pattern:ecs.validate.ensure_entity_valid, pattern:ecs.validate.ensure_entity_invalid, pattern:ecs.validate.ensure_scripted_entity_valid, pattern:ecs.validate.ensure_scripted_entity_invalid
+- Tests: assets/scripts/tests/test_entity_lifecycle.lua::ecs.validate.ensure_entity_valid, assets/scripts/tests/test_entity_lifecycle.lua::ecs.validate.ensure_entity_invalid, assets/scripts/tests/test_entity_lifecycle.lua::ecs.validate.ensure_scripted_entity_valid, assets/scripts/tests/test_entity_lifecycle.lua::ecs.validate.ensure_scripted_entity_invalid
 - Source: assets/scripts/util/util.lua
 
 Minimal reproducible snippet:
@@ -170,8 +173,8 @@ Why: `ensure_entity` checks registry + cache validity. `ensure_scripted_entity` 
 
 <a id="ecs-component-cache"></a>
 ### Component Cache Usage
-- doc_id: pattern:ecs.cache.get_valid
-- Test: assets/scripts/tests/test_entity_lifecycle.lua::ecs.cache.get_valid
+- doc_ids: pattern:ecs.cache.get_valid, pattern:ecs.cache.get_after_destroy, pattern:ecs.cache.invalidation, pattern:ecs.cache.performance
+- Tests: assets/scripts/tests/test_entity_lifecycle.lua::ecs.cache.get_valid, assets/scripts/tests/test_entity_lifecycle.lua::ecs.cache.get_after_destroy, assets/scripts/tests/test_entity_lifecycle.lua::ecs.cache.invalidation, assets/scripts/tests/test_entity_lifecycle.lua::ecs.cache.performance
 - Source: assets/scripts/core/component_cache.lua
 
 Minimal reproducible snippet:
@@ -181,20 +184,19 @@ local transform = component_cache.get(eid, Transform)
 component_cache.invalidate(eid, Transform)
 ```
 
-Related doc_ids: pattern:ecs.cache.get_after_destroy, pattern:ecs.cache.invalidation, pattern:ecs.cache.performance
-
 Why: cached lookups are fast but must be invalidated on destroy/remove to avoid stale data.
 
 <a id="ecs-destruction"></a>
 ### Entity Destruction & Cleanup
-- doc_id: pattern:ecs.destroy.no_stale_refs
-- Test: assets/scripts/tests/test_entity_lifecycle.lua::ecs.destroy.no_stale_refs
-- Source: assets/scripts/core/entity_cleanup.lua
+- doc_ids: pattern:ecs.destroy.no_stale_refs, pattern:ecs.destroy.then_recreate, pattern:ecs.destroy.cleanup_all_references, pattern:ecs.destroy.cache_cleared
+- Tests: assets/scripts/tests/test_entity_lifecycle.lua::ecs.destroy.no_stale_refs, assets/scripts/tests/test_entity_lifecycle.lua::ecs.destroy.then_recreate, assets/scripts/tests/test_entity_lifecycle.lua::ecs.destroy.cleanup_all_references, assets/scripts/tests/test_entity_lifecycle.lua::ecs.destroy.cache_cleared
+- Source: assets/scripts/combat/entity_cleanup.lua, assets/scripts/core/component_cache.lua
 
 Minimal reproducible snippet:
 ```lua
 local ref = eid
 registry:destroy(eid)
+component_cache.invalidate(eid)
 -- use safe_script_get or ensure_entity to avoid stale references
 if safe_script_get(ref) == nil then
     -- reference is stale
@@ -205,8 +207,8 @@ Why: destruction must clear caches and references. Always re-validate before usi
 
 <a id="ecs-luajit-locals"></a>
 ### LuaJIT 200 Local Variable Limit
-- doc_id: pattern:ecs.luajit.200_local_limit
-- Test: assets/scripts/tests/test_entity_lifecycle.lua::ecs.luajit.200_local_limit
+- doc_ids: pattern:ecs.luajit.200_local_limit
+- Tests: assets/scripts/tests/test_entity_lifecycle.lua::ecs.luajit.200_local_limit
 - Source: CLAUDE.md
 
 Minimal reproducible snippet (wrong):

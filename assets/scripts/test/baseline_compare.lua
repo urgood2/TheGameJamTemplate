@@ -151,6 +151,97 @@ end
 -- Quarantine
 --------------------------------------------------------------------------------
 
+local function escape_lua_pattern(text)
+    return tostring(text or ""):gsub("([%%%^%$%(%)%.%[%]%+%-%?])", "%%%1")
+end
+
+local function glob_to_pattern(glob)
+    local escaped = escape_lua_pattern(glob)
+    local pattern = escaped:gsub("%%%*", ".*")
+    return "^" .. pattern .. "$"
+end
+
+local function parse_iso_timestamp(value)
+    if type(value) ~= "string" then
+        return nil
+    end
+    local year, month, day, hour, min, sec = value:match("^(%d%d%d%d)%-(%d%d)%-(%d%d)T(%d%d):(%d%d):(%d%d)")
+    if not year then
+        year, month, day = value:match("^(%d%d%d%d)%-(%d%d)%-(%d%d)")
+        hour, min, sec = 0, 0, 0
+    end
+    if not year then
+        return nil
+    end
+    return os.time({
+        year = tonumber(year),
+        month = tonumber(month),
+        day = tonumber(day),
+        hour = tonumber(hour) or 0,
+        min = tonumber(min) or 0,
+        sec = tonumber(sec) or 0,
+        isdst = false,
+    })
+end
+
+local function matches_platform_value(value, platform_key, components)
+    if value == "*" then
+        return true
+    end
+    local pattern = glob_to_pattern(value)
+    if platform_key:match(pattern) then
+        return true
+    end
+    if components.os and tostring(components.os):match(pattern) then
+        return true
+    end
+    if components.renderer and tostring(components.renderer):match(pattern) then
+        return true
+    end
+    if components.resolution and tostring(components.resolution):match(pattern) then
+        return true
+    end
+    return false
+end
+
+local function entry_matches_platform(entry, platform_key, components)
+    local platforms = entry.platforms or {"*"}
+    if type(platforms) ~= "table" then
+        platforms = { platforms }
+    end
+    for _, value in ipairs(platforms) do
+        if matches_platform_value(tostring(value), platform_key, components) then
+            return true
+        end
+    end
+    return false
+end
+
+local function validate_quarantine_entry(entry)
+    if not entry.test_id or entry.test_id == "" then
+        return false, "missing test_id"
+    end
+    if not entry.reason or entry.reason == "" then
+        return false, "missing reason"
+    end
+    if not entry.owner or entry.owner == "" then
+        return false, "missing owner"
+    end
+    if not entry.issue_link or entry.issue_link == "" then
+        return false, "missing issue_link"
+    end
+    if not entry.quarantined_at or entry.quarantined_at == "" then
+        return false, "missing quarantined_at"
+    end
+    if not entry.expires_at and not entry.expires_date then
+        return false, "missing expires_at"
+    end
+    if not entry.platforms then
+        return false, "missing platforms"
+    end
+    return true, nil
+end
+
 --- Load quarantine from visual_quarantine.json.
 --- @return table quarantine { quarantined_tests = [] }
 function BaselineCompare.load_quarantine()
@@ -181,33 +272,93 @@ function BaselineCompare.load_quarantine()
     return quarantine_cache
 end
 
---- Check if a test is quarantined.
+--- Check a test quarantine status with expiry and platform filtering.
+--- @param test_id string Test identifier
+--- @return table status { quarantined, expired, entry, reason, owner, issue_link, expires_at, platforms }
+function BaselineCompare.get_quarantine_status(test_id)
+    local quarantine = BaselineCompare.load_quarantine()
+    local platform_key, components = BaselineCompare.compute_platform_key()
+    local now_ts = os.time()
+
+    for _, entry in ipairs(quarantine.quarantined_tests or {}) do
+        if entry.test_id == test_id then
+            local valid, err = validate_quarantine_entry(entry)
+            if not valid then
+                test_utils.log(string.format(
+                    "[BASELINE] Invalid quarantine entry for %s: %s",
+                    test_id, err or "unknown"
+                ))
+                return { quarantined = false, invalid = true, entry = entry }
+            end
+            if not entry_matches_platform(entry, platform_key, components) then
+                return { quarantined = false, entry = entry }
+            end
+            local expires_at = entry.expires_at or entry.expires_date
+            local expires_ts = parse_iso_timestamp(expires_at)
+            local expired = expires_ts and expires_ts < now_ts or false
+            test_utils.log(string.format(
+                "[BASELINE] Test %s is quarantined: %s (expires: %s)",
+                test_id, entry.reason or "no reason", expires_at or "unknown"
+            ))
+            return {
+                quarantined = not expired,
+                expired = expired,
+                entry = entry,
+                reason = entry.reason,
+                owner = entry.owner,
+                issue_link = entry.issue_link,
+                expires_at = expires_at,
+                platforms = entry.platforms,
+            }
+        end
+    end
+
+    return { quarantined = false }
+end
+
+--- Check if a test is quarantined (legacy boolean helper).
 --- @param test_id string Test identifier
 --- @return boolean is_quarantined
 --- @return table|nil entry Quarantine entry if quarantined
 function BaselineCompare.is_quarantined(test_id)
+    local status = BaselineCompare.get_quarantine_status(test_id)
+    if status.quarantined then
+        return true, status.entry
+    end
+    return false, nil
+end
+
+--- Return all quarantine entries with computed status for reporting.
+--- @return table entries
+function BaselineCompare.get_quarantine_entries()
     local quarantine = BaselineCompare.load_quarantine()
-    local today = os.date("%Y-%m-%d")
+    local platform_key, components = BaselineCompare.compute_platform_key()
+    local now_ts = os.time()
+    local entries = {}
 
     for _, entry in ipairs(quarantine.quarantined_tests or {}) do
-        if entry.test_id == test_id then
-            -- Check if expired
-            if entry.expires_date and entry.expires_date < today then
-                test_utils.log(string.format(
-                    "[BASELINE] Quarantine expired for %s (expired: %s)",
-                    test_id, entry.expires_date
-                ))
-                return false, nil
+        local valid, err = validate_quarantine_entry(entry)
+        if not valid then
+            table.insert(entries, { entry = entry, status = "invalid", error = err })
+        else
+            local matches = entry_matches_platform(entry, platform_key, components)
+            if not matches then
+                table.insert(entries, { entry = entry, status = "not_applicable" })
+            else
+                local expires_at = entry.expires_at or entry.expires_date
+                local expires_ts = parse_iso_timestamp(expires_at)
+                local expired = expires_ts and expires_ts < now_ts or false
+                table.insert(entries, {
+                    entry = entry,
+                    status = expired and "expired" or "active",
+                    expired = expired,
+                    expires_at = expires_at,
+                })
             end
-            test_utils.log(string.format(
-                "[BASELINE] Test %s is quarantined: %s (expires: %s)",
-                test_id, entry.reason or "no reason", entry.expires_date or "never"
-            ))
-            return true, entry
         end
     end
 
-    return false, nil
+    return entries
 end
 
 --------------------------------------------------------------------------------

@@ -6,6 +6,7 @@ local TestRunner = {}
 local TestUtils = require("test.test_utils")
 local TestRegistry = require("test.test_registry_runtime")
 local RunState = require("test.run_state")
+local BaselineCompare = require("test.baseline_compare")
 
 local RUNNER_VERSION = "1.0"
 
@@ -28,10 +29,12 @@ local config = {
     wipe_output = true,
     record_baselines = false,
     skip_self_tests = false,
+    quarantine_mode = os.getenv("TEST_QUARANTINE_MODE") or os.getenv("QUARANTINE_MODE") or "pr",
 }
 
 local artifacts_by_test = {}
 local screenshots_by_test = {}
+local quarantine_results = {}
 
 local function normalize_tags(tags)
     if not tags then
@@ -50,6 +53,97 @@ local function normalize_tags(tags)
     return nil
 end
 
+-- Quarantine system
+local quarantine_cache = nil
+
+local function load_quarantine()
+    if quarantine_cache then
+        return quarantine_cache
+    end
+
+    local path = "test_baselines/visual_quarantine.json"
+    local file = io.open(path, "r")
+    if not file then
+        quarantine_cache = { quarantined_tests = {} }
+        return quarantine_cache
+    end
+
+    local content = file:read("*all")
+    file:close()
+
+    local ok, data = pcall(function()
+        return TestUtils.parse_json(content)
+    end)
+
+    if ok and data then
+        quarantine_cache = data
+    else
+        quarantine_cache = { quarantined_tests = {} }
+    end
+
+    return quarantine_cache
+end
+
+local function parse_iso8601(str)
+    if not str then return nil end
+    local year, month, day, hour, min, sec = str:match("(%d+)-(%d+)-(%d+)T(%d+):(%d+):(%d+)")
+    if not year then return nil end
+    return os.time({
+        year = tonumber(year),
+        month = tonumber(month),
+        day = tonumber(day),
+        hour = tonumber(hour) or 0,
+        min = tonumber(min) or 0,
+        sec = tonumber(sec) or 0
+    })
+end
+
+local function check_quarantine(test_id)
+    local quarantine = load_quarantine()
+    local now = os.time()
+
+    for _, entry in ipairs(quarantine.quarantined_tests or {}) do
+        if entry.test_id == test_id then
+            local expires_ts = parse_iso8601(entry.expires_at)
+            local is_expired = expires_ts and now > expires_ts
+
+            return {
+                quarantined = true,
+                expired = is_expired,
+                reason = entry.reason,
+                owner = entry.owner,
+                issue_link = entry.issue_link,
+                expires_at = entry.expires_at,
+                platforms = entry.platforms or {"*"},
+                renewal_count = entry.renewal_count or 0,
+                max_renewals = entry.max_renewals or 2
+            }
+        end
+    end
+
+    return { quarantined = false }
+end
+
+local function log_quarantine_status()
+    local quarantine = load_quarantine()
+    local entries = quarantine.quarantined_tests or {}
+    local now = os.time()
+
+    TestUtils.log("[QUARANTINE] === Quarantine Status ===")
+    TestUtils.log(string.format("[QUARANTINE] Active quarantines: %d", #entries))
+
+    for _, entry in ipairs(entries) do
+        local expires_ts = parse_iso8601(entry.expires_at)
+        local is_expired = expires_ts and now > expires_ts
+        local status_suffix = is_expired and ", EXPIRED!" or ""
+        TestUtils.log(string.format("[QUARANTINE]   - %s (expires: %s%s)",
+            entry.test_id,
+            entry.expires_at or "unknown",
+            status_suffix
+        ))
+    end
+end
+
 local function has_tag(test, tag)
     if not test.tags then
         return false
@@ -60,6 +154,68 @@ local function has_tag(test, tag)
         end
     end
     return false
+end
+
+local function normalize_quarantine_mode(mode)
+    local value = tostring(mode or "pr"):lower()
+    if value == "nightly" or value == "full" or value == "scheduled" then
+        return "nightly"
+    end
+    return "pr"
+end
+
+local function quarantine_blocks(mode)
+    return normalize_quarantine_mode(mode) == "nightly"
+end
+
+local function is_visual_test(test)
+    return has_tag(test, "visual") or test.category == "visual"
+end
+
+local function log_quarantine_status(entries, mode)
+    TestUtils.log("[QUARANTINE] === Quarantine Status ===")
+    local active = {}
+    local expired = {}
+    local invalid = {}
+    for _, item in ipairs(entries or {}) do
+        if item.status == "active" then
+            table.insert(active, item)
+        elseif item.status == "expired" then
+            table.insert(expired, item)
+        elseif item.status == "invalid" then
+            table.insert(invalid, item)
+        end
+    end
+
+    TestUtils.log(string.format("[QUARANTINE] Active quarantines: %d", #active))
+    for _, item in ipairs(active) do
+        local entry = item.entry or {}
+        TestUtils.log(string.format(
+            "[QUARANTINE]   - %s (expires: %s)",
+            tostring(entry.test_id or "unknown"),
+            tostring(item.expires_at or entry.expires_at or entry.expires_date or "unknown")
+        ))
+    end
+
+    for _, item in ipairs(expired) do
+        local entry = item.entry or {}
+        TestUtils.log(string.format(
+            "[QUARANTINE]   - %s (expires: %s, EXPIRED!)",
+            tostring(entry.test_id or "unknown"),
+            tostring(item.expires_at or entry.expires_at or entry.expires_date or "unknown")
+        ))
+    end
+
+    for _, item in ipairs(invalid) do
+        local entry = item.entry or {}
+        TestUtils.log(string.format(
+            "[QUARANTINE]   - %s (INVALID: %s)",
+            tostring(entry.test_id or "unknown"),
+            tostring(item.error or "missing fields")
+        ))
+    end
+
+    TestUtils.log(string.format("[QUARANTINE] Mode: %s", normalize_quarantine_mode(mode)))
 end
 
 local function test_file_for(fn, opts)
@@ -100,25 +256,39 @@ local function log_report_write(path, write_fn)
     return ok
 end
 
-local function write_report(path, summary, results, screenshots)
+local function write_report(path, summary, results, screenshots, quarantine_entries, quarantine_mode)
     local lines = {}
     table.insert(lines, "# Test Report")
     table.insert(lines, "## Summary")
     table.insert(lines, "Generated: " .. TestUtils.get_iso8601())
+    local quarantine_failed = summary.quarantine_failed or 0
+    local quarantine_blocking = summary.quarantine_blocking or 0
+    local quarantine_expired = summary.quarantine_expired or 0
     table.insert(lines, string.format(
-        "Summary: %d passed, %d failed, %d skipped (%d total)",
+        "Summary: %d passed, %d failed, %d skipped, %d quarantined (%d total)",
         summary.passed,
         summary.failed,
         summary.skipped,
+        quarantine_failed,
         summary.total
     ))
+    if quarantine_blocking > 0 or quarantine_expired > 0 then
+        table.insert(lines, string.format(
+            "Quarantine blockers: %d failed (blocking), %d expired",
+            quarantine_blocking,
+            quarantine_expired
+        ))
+    end
     table.insert(lines, "")
     table.insert(lines, "## Results")
 
     local failure_lines = {}
     local skipped_lines = {}
     for _, result in ipairs(results) do
-        local status = result.status == "pass" and "PASS" or result.status == "fail" and "FAIL" or "SKIP"
+        local status = result.status == "pass" and "PASS"
+            or result.status == "fail" and "FAIL"
+            or result.status == "quarantine_fail" and "QUAR"
+            or "SKIP"
         local test_file = result.test_file or "unknown"
         local line = string.format("%s %s::%s", status, test_file, result.test_id)
         if result.status == "skip" then
@@ -150,6 +320,60 @@ local function write_report(path, summary, results, screenshots)
     else
         for _, line in ipairs(skipped_lines) do
             table.insert(lines, line)
+        end
+    end
+
+    table.insert(lines, "")
+    table.insert(lines, "## Quarantined Tests")
+    if not quarantine_entries or #quarantine_entries == 0 then
+        table.insert(lines, "None")
+    else
+        table.insert(lines, "| Test | Reason | Owner | Expires | Status |")
+        table.insert(lines, "|------|--------|-------|---------|--------|")
+        local results_by_id = {}
+        for _, result in ipairs(results) do
+            results_by_id[result.test_id] = result
+        end
+        local expired_count = 0
+        for _, item in ipairs(quarantine_entries) do
+            local entry = item.entry or {}
+            local test_id = tostring(entry.test_id or "unknown")
+            local reason = tostring(entry.reason or "unknown")
+            local owner = tostring(entry.owner or "unknown")
+            local expires = tostring(item.expires_at or entry.expires_at or entry.expires_date or "unknown")
+            local status = item.status or "unknown"
+            local res = results_by_id[test_id]
+            if res then
+                if res.status == "pass" then
+                    status = "PASSED"
+                elseif res.status == "quarantine_fail" then
+                    status = quarantine_blocks(quarantine_mode) and "FAILED (blocking)" or "FAILED (not blocking)"
+                elseif res.status == "fail" then
+                    if item.status == "expired" then
+                        status = "EXPIRED (blocking)"
+                    else
+                        status = "FAILED"
+                    end
+                elseif res.status == "skip" then
+                    status = "SKIPPED"
+                end
+            else
+                if item.status == "expired" then
+                    status = "EXPIRED (blocking)"
+                elseif item.status == "active" then
+                    status = "NOT RUN"
+                else
+                    status = tostring(item.status or "unknown"):upper()
+                end
+            end
+            if item.status == "expired" then
+                expired_count = expired_count + 1
+            end
+            table.insert(lines, string.format("| %s | %s | %s | %s | %s |", test_id, reason, owner, expires, status))
+        end
+        if expired_count > 0 then
+            table.insert(lines, "")
+            table.insert(lines, string.format("**Note:** %d quarantine(s) expired and are now blocking.", expired_count))
         end
     end
 
@@ -740,28 +964,77 @@ function TestRunner.run(self_or_opts, maybe_opts)
             err = string.format("perf budget exceeded: %.2fms > %.2fms", duration_ms, test.perf_budget_ms)
         end
 
-        local result_status = ok and "pass" or "fail"
-        if ok then
-            counts.passed = counts.passed + 1
-        else
-            counts.failed = counts.failed + 1
-        end
-
         local trace = nil
         if not ok and err and debug and debug.traceback then
             trace = debug.traceback(err, 2)
         end
 
-        RunState.test_end(test.test_id, ok and "passed" or "failed")
+        -- Check quarantine status for visual tests
+        local quarantine_status = check_quarantine(test.test_id)
+        local is_visual = has_tag(test, "visual")
+        local is_quarantine_fail = false
+        local result_status = ok and "pass" or "fail"
+
+        if not ok and is_visual and quarantine_status.quarantined then
+            if quarantine_status.expired then
+                -- Expired quarantine: still counts as real failure
+                TestUtils.log(string.format("[QUARANTINE] Test: %s", test.test_id))
+                TestUtils.log(string.format("[QUARANTINE]   Status: EXPIRED quarantine"))
+                TestUtils.log(string.format("[QUARANTINE]   Expired: %s", quarantine_status.expires_at or "unknown"))
+                TestUtils.log(string.format("[QUARANTINE]   Action: Blocking (expired quarantine)"))
+                counts.failed = counts.failed + 1
+            else
+                -- Active quarantine: treat as warning
+                result_status = "quarantine_fail"
+                is_quarantine_fail = true
+                TestUtils.log(string.format("[QUARANTINE] Test: %s", test.test_id))
+                TestUtils.log(string.format("[QUARANTINE]   Status: quarantine_fail"))
+                TestUtils.log(string.format("[QUARANTINE]   Reason: %s", quarantine_status.reason or "unknown"))
+                TestUtils.log(string.format("[QUARANTINE]   Owner: %s", quarantine_status.owner or "unknown"))
+                TestUtils.log(string.format("[QUARANTINE]   Issue: %s", quarantine_status.issue_link or "none"))
+                TestUtils.log(string.format("[QUARANTINE]   Expires: %s", quarantine_status.expires_at or "unknown"))
+                TestUtils.log(string.format("[QUARANTINE]   Action: Warning only (PR CI)"))
+                -- Quarantine failures don't count toward overall failure count
+                counts.passed = counts.passed + 1  -- counted as "not blocking"
+                table.insert(quarantine_results, {
+                    test_id = test.test_id,
+                    reason = quarantine_status.reason,
+                    owner = quarantine_status.owner,
+                    expires_at = quarantine_status.expires_at,
+                    issue_link = quarantine_status.issue_link,
+                    status = "failed"
+                })
+            end
+        elseif ok then
+            counts.passed = counts.passed + 1
+            -- Track passed quarantined tests
+            if quarantine_status.quarantined then
+                table.insert(quarantine_results, {
+                    test_id = test.test_id,
+                    reason = quarantine_status.reason,
+                    owner = quarantine_status.owner,
+                    expires_at = quarantine_status.expires_at,
+                    issue_link = quarantine_status.issue_link,
+                    status = "passed"
+                })
+            end
+        else
+            counts.failed = counts.failed + 1
+        end
+
+        RunState.test_end(test.test_id, ok and "passed" or (is_quarantine_fail and "quarantine_fail" or "failed"))
         TestUtils.log(string.format(
             "[TEST END] %s [%s] (%.2fms)",
             test.test_id,
-            ok and "PASS" or "FAIL",
+            ok and "PASS" or (is_quarantine_fail and "QUARANTINE_FAIL" or "FAIL"),
             duration_ms
         ))
 
         if ok then
             TestUtils.log(string.format("TEST_PASS: %s", test.test_id))
+        elseif is_quarantine_fail then
+            local err_text = tostring(err or "error")
+            TestUtils.log(string.format("[QUARANTINE_FAIL] %s: %s (not blocking)", test.test_id, err_text))
         else
             local err_text = tostring(err or "error")
             TestUtils.log(string.format("[FAIL DETAIL] %s: %s", test.test_id, err_text))
@@ -785,7 +1058,7 @@ function TestRunner.run(self_or_opts, maybe_opts)
         end
 
         local artifacts = artifacts_by_test[test.test_id] or {}
-        table.insert(results, {
+        local result_entry = {
             test_id = test.test_id,
             test_file = test.test_file,
             category = test.category,
@@ -797,13 +1070,29 @@ function TestRunner.run(self_or_opts, maybe_opts)
                 message = tostring(err or "error"),
                 stack_trace = trace,
             },
-        })
+        }
+
+        -- Add quarantine metadata if applicable
+        if quarantine_status.quarantined then
+            result_entry.quarantine = {
+                reason = quarantine_status.reason,
+                owner = quarantine_status.owner,
+                expires_at = quarantine_status.expires_at,
+                issue_link = quarantine_status.issue_link,
+                expired = quarantine_status.expired
+            }
+        end
+
+        table.insert(results, result_entry)
 
         return ok, err, result_status
     end
 
     TestUtils.set_screenshot_hook(record_screenshot)
     TestUtils.set_artifact_hook(record_artifact)
+
+    -- Log quarantine status before tests run
+    log_quarantine_status()
 
     local self_failed = false
     if #self_tests > 0 then

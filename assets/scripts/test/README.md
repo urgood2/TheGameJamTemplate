@@ -237,6 +237,14 @@ just test
 - Stdout/stderr from `just`/`cmake`
 - Unit test output from `./build/tests/unit_tests`
 
+## CM Playbook Backup
+
+Export the cm playbook after updates:
+
+```bash
+cm playbook export > planning/cm_rules_backup.json
+```
+
 ## Crash Detection
 
 The test harness uses `run_state.json` as a sentinel:

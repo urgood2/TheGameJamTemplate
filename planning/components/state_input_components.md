@@ -5,6 +5,7 @@ Scope: Draft aggregation of input and state components; generated while B5 files
 Key considerations:
 - StateTag/ActiveStates/InactiveTag live in entity_gamestate_management.hpp and drive active/inactive filtering; Lua functions wrap tag mutation and global state.
 - Input navigation components live in controller_nav.hpp; Lua access is via the global `controller_nav` table (NavManagerUD), not direct component access.
+- InputState is a Lua-exposed struct via `input.getState()` (not an ECS component).
 - ScriptComponent is bound in scripting_system.cpp and is initialized/released via init_script/release_script hooks.
 
 ## IInputProvider
@@ -24,7 +25,7 @@ Key considerations:
 ## NavSelectable
 **doc_id:** `component:NavSelectable`
 **Location:** `src/systems/input/controller_nav.hpp:21`
-**Lua Access:** Indirect (component used by controller_nav; no direct Lua binding)
+**Lua Access:** Partial (component_cache when registered); otherwise use controller_nav APIs
 
 **Fields:**
 
@@ -38,7 +39,7 @@ Key considerations:
 ## NavCallbacks
 **doc_id:** `component:NavCallbacks`
 **Location:** `src/systems/input/controller_nav.hpp:31`
-**Lua Access:** Indirect via `controller_nav.set_group_callbacks(group, tbl)`
+**Lua Access:** Indirect via `controller_nav.set_group_callbacks(group, tbl)` (no direct usertype)
 
 **Fields:**
 
@@ -112,7 +113,7 @@ Key considerations:
 ## InactiveTag
 **doc_id:** `component:InactiveTag`
 **Location:** `src/systems/entity_gamestate_management/entity_gamestate_management.hpp:15`
-**Lua Access:** None (auto-managed when state tags are inactive)
+**Lua Access:** None (auto-managed when state tags are inactive via applyStateEffectsToEntity)
 
 **Fields:** None
 
@@ -128,6 +129,10 @@ Key considerations:
 | --- | --- | --- | --- |
 | names | std::vector<std::string> | None | complex |
 | hashes | std::vector<std::size_t> | None | complex |
+
+**Patterns:**
+- Prefer `script:setState()` for script-driven entities (see `docs/guides/entity-scripts.md`).
+- For UI DSL boxes, use `ui.box.AddStateTagToUIBox` / `AssignStateTagsToUIBox`, then `remove_default_state_tag`.
 
 ## ActiveStates
 **doc_id:** `component:ActiveStates`

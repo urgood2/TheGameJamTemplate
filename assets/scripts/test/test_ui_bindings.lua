@@ -8,6 +8,13 @@ local function get_registry()
     return _G.registry or registry
 end
 
+local function get_screen_space_marker()
+    if _G.collision and _G.collision.ScreenSpaceCollisionMarker then
+        return _G.collision.ScreenSpaceCollisionMarker
+    end
+    return _G.ScreenSpaceCollisionMarker
+end
+
 local function ensure_ui_builders()
     TestUtils.assert_not_nil(_G.UIElementTemplateNodeBuilder, "UIElementTemplateNodeBuilder available")
     TestUtils.assert_not_nil(_G.UIConfigBuilder, "UIConfigBuilder available")
@@ -167,5 +174,70 @@ TestRunner.register("ui.box.replace_children.basic", "ui", function()
 end, {
     tags = {"ui", "bindings"},
     doc_ids = {"sol2_function_ui_box_replacechildren"},
+    requires = {"test_scene"},
+})
+
+TestRunner.register("ui.child_builder.set_offset.basic", "ui", function()
+    TestUtils.reset_world()
+    local registry = get_registry()
+    TestUtils.assert_not_nil(registry, "registry available")
+
+    local ui_box = init_uibox()
+    local child = _G.ui.box.GetUIEByID(registry, ui_box, "child")
+    TestUtils.assert_not_nil(child, "child element available")
+
+    local ok, ChildBuilder = pcall(require, "core.child_builder")
+    TestUtils.assert_true(ok and ChildBuilder, "ChildBuilder module loaded")
+    TestUtils.assert_true(type(ChildBuilder.setOffset) == "function", "ChildBuilder.setOffset exists")
+    local applied = pcall(ChildBuilder.setOffset, child, 12, 8)
+    TestUtils.assert_true(applied, "ChildBuilder.setOffset executed")
+
+    if _G.ui and _G.ui.box and _G.ui.box.RenewAlignment then
+        pcall(_G.ui.box.RenewAlignment, registry, ui_box)
+    end
+    TestUtils.reset_world()
+end, {
+    tags = {"ui", "bindings"},
+    doc_ids = {"helper:ChildBuilder.setOffset"},
+    requires = {"test_scene"},
+})
+
+TestRunner.register("ui.screen_space_collision_marker.toggle", "ui", function()
+    TestUtils.reset_world()
+    local registry = get_registry()
+    TestUtils.assert_not_nil(registry, "registry available")
+
+    local marker = get_screen_space_marker()
+    TestUtils.assert_not_nil(marker, "ScreenSpaceCollisionMarker available")
+
+    local ui_box = init_uibox()
+    TestUtils.assert_not_nil(_G.transform, "transform table available")
+    TestUtils.assert_true(type(_G.transform.set_space) == "function", "transform.set_space exists")
+
+    local ok_screen = pcall(_G.transform.set_space, ui_box, "screen")
+    TestUtils.assert_true(ok_screen, "set_space screen executed")
+    TestUtils.assert_true(registry:has(ui_box, marker), "marker added for screen space")
+
+    local ok_world = pcall(_G.transform.set_space, ui_box, "world")
+    TestUtils.assert_true(ok_world, "set_space world executed")
+    TestUtils.assert_true(not registry:has(ui_box, marker), "marker removed for world space")
+
+    TestUtils.reset_world()
+end, {
+    tags = {"ui", "bindings"},
+    doc_ids = {"component:ScreenSpaceCollisionMarker"},
+    requires = {"test_scene"},
+})
+
+TestRunner.register("ui.draw_command_space.enum", "ui", function()
+    TestUtils.reset_world()
+    TestUtils.assert_not_nil(_G.layer, "layer table available")
+    TestUtils.assert_not_nil(_G.layer.DrawCommandSpace, "DrawCommandSpace available")
+    TestUtils.assert_not_nil(_G.layer.DrawCommandSpace.Screen, "DrawCommandSpace.Screen available")
+    TestUtils.assert_not_nil(_G.layer.DrawCommandSpace.World, "DrawCommandSpace.World available")
+    TestUtils.reset_world()
+end, {
+    tags = {"ui", "bindings"},
+    doc_ids = {"binding:layer.DrawCommandSpace.Screen", "binding:layer.DrawCommandSpace.World"},
     requires = {"test_scene"},
 })

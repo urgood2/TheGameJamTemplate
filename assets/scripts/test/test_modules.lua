@@ -33,10 +33,10 @@ return {
 
     -- ==== Future test modules (uncomment as created) ====
     -- "test.test_physics_bindings",
-    -- "test.test_ui_bindings",
+    "test.test_ui_bindings",
     "test.test_timer_anim_bindings",
     -- "test.test_core_bindings",
-    -- "test.test_input_sound_ai_bindings",
+    "test.test_input_sound_ai_bindings",
     "test.test_shader_layer_bindings",
     -- "test.test_ui_patterns",
     -- "test.test_core_patterns",

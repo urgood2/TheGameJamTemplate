@@ -1,3 +1,26 @@
+set(TESTING_STUB_SOURCES
+    ${CMAKE_SOURCE_DIR}/src/testing/artifact_index.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/artifact_store.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/baseline_manager.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/determinism_audit.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/determinism_guard.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/log_capture.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/lua_sandbox.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/lua_state_query.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/path_sandbox.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/perf_tracker.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/screenshot_capture.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/screenshot_compare.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/test_api_dump.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/test_api_registry.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/test_forensics.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/test_harness_lua.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/test_input_provider.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/test_mode.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/test_runtime.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/timeline_writer.cpp
+)
+
 add_executable(unit_tests
     unit/test_animation_playback.cpp
     unit/test_engine_context.cpp
@@ -27,6 +50,7 @@ add_executable(unit_tests
     unit/test_scripting_bindings.cpp
     unit/test_scripting_lifecycle.cpp
     unit/test_globals_caches.cpp
+    unit/test_stubs_compile.cpp
     unit/test_telemetry.cpp
     unit/test_controller_nav.cpp
     unit/test_input_events.cpp
@@ -49,6 +73,7 @@ add_executable(unit_tests
     unit/test_save_file_io.cpp
     unit/test_replace_children.cpp
     unit/test_mode_config.cpp
+    unit/test_stubs_compile.cpp
     helpers/test_stubs.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_system.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_presets.cpp
@@ -77,6 +102,7 @@ add_executable(unit_tests
     ${CMAKE_SOURCE_DIR}/src/systems/input/input_focus.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/input/input_polling.cpp
     ${CMAKE_SOURCE_DIR}/src/testing/test_mode_config.cpp
+    ${TESTING_STUB_SOURCES}
     ${CMAKE_SOURCE_DIR}/src/systems/entity_gamestate_management/entity_gamestate_management.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/ai/ai_system.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/scripting/scripting_functions.cpp
@@ -156,6 +182,27 @@ target_link_libraries(test_mode_config_tests PRIVATE
 )
 
 gtest_discover_tests(test_mode_config_tests)
+
+# ======================================================================
+# Test Mode Stub Compile Tests (headers + stub .cpp files)
+# ======================================================================
+add_executable(test_stubs_compile
+    unit/test_stubs_compile.cpp
+    ${TESTING_STUB_SOURCES}
+)
+
+target_include_directories(test_stubs_compile PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(test_stubs_compile PRIVATE
+    gtest_main
+    CommonSettings
+)
+
+gtest_discover_tests(test_stubs_compile)
 
 # ======================================================================
 # Lua Backend Smoke Tests (minimal dependencies - just Sol2/Lua)

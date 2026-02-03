@@ -8,7 +8,7 @@ Run standalone: lua assets/scripts/tests/test_entity_lifecycle.lua
 
 package.path = package.path .. ";./assets/scripts/?.lua;./assets/scripts/?/init.lua"
 
-require("tests.mocks.engine_mock")
+local EngineMock = require("tests.mocks.engine_mock")
 
 local TestRunner = require("core.test.test_runner")
 local t = require("tests.test_runner")
@@ -156,12 +156,16 @@ end
 local function reset_world()
     _G.component_cache._reset()
     reset_registry()
+    EngineMock.clear_logs()
 end
 
 local function cleanup_world()
     _G.component_cache._reset()
     reset_registry()
+    EngineMock.clear_logs()
 end
+
+local PERF_BUDGET_MS = 50
 
 --------------------------------------------------------------------------------
 -- Logging helpers (required format)
@@ -212,7 +216,7 @@ local function register(test_id, setup, fn, tags)
     TestRunner.register(test_id, "ecs", function()
         local start = os.clock()
         log_start(test_id, setup, meta_tags)
-        local ok, err = pcall(fn)
+        local ok, err = xpcall(fn, debug.traceback)
         cleanup_world()
         if not ok then
             error(err)
@@ -412,10 +416,14 @@ register("ecs.cache.performance", "Repeated cache lookups", function()
     local eid = _G.registry:create()
     _G.component_cache.set(eid, _G.Transform, { actualX = 10 })
     log_action("Performing 1000 cache lookups")
+    local start_time = os.clock()
     for _ = 1, 1000 do
         local comp = _G.component_cache.get(eid, _G.Transform)
         t.assert_not_nil(comp, "cached lookup returns component")
     end
+    local elapsed_ms = (os.clock() - start_time) * 1000
+    log_action(string.format("Verifying perf budget: %.2fms < %dms", elapsed_ms, PERF_BUDGET_MS))
+    t.assert_true(elapsed_ms < PERF_BUDGET_MS, "cache lookup stays within perf budget")
 end, { "ecs", "lifecycle", "performance" })
 
 -- Destruction
@@ -426,7 +434,7 @@ register("ecs.destroy.no_stale_refs", "Creating entity then destroying", functio
     log_action("Calling safe_script_get(ref)")
 
     t.assert_nil(safe_script_get(eid), "safe_script_get returns nil after destroy")
-end, { "ecs", "cleanup" })
+end, { "ecs", "lifecycle", "cleanup" })
 
 register("ecs.destroy.then_recreate", "Destroy then recreate", function()
     local eid, _ = create_scripted_entity({ value = 5 })
@@ -440,7 +448,7 @@ register("ecs.destroy.then_recreate", "Destroy then recreate", function()
     t.assert_true(new_eid ~= eid, "new entity id differs")
     log_action("Verifying: old entity script gone")
     t.assert_nil(safe_script_get(eid), "old entity script gone")
-end, { "ecs", "cleanup" })
+end, { "ecs", "lifecycle", "cleanup" })
 
 register("ecs.destroy.cleanup_all_references", "Cleaning reference list", function()
     local eid_a, _ = create_scripted_entity({})
@@ -459,7 +467,7 @@ register("ecs.destroy.cleanup_all_references", "Cleaning reference list", functi
 
     t.assert_equals(1, #cleaned, "invalid references removed")
     t.assert_equals(eid_b, cleaned[1], "valid reference retained")
-end, { "ecs", "cleanup" })
+end, { "ecs", "lifecycle", "cleanup" })
 
 register("ecs.destroy.cache_cleared", "Destroy clears component_cache", function()
     local eid = _G.registry:create()
@@ -469,7 +477,7 @@ register("ecs.destroy.cache_cleared", "Destroy clears component_cache", function
 
     log_action("Verifying: cache cleared after destroy")
     t.assert_nil(_G.component_cache.get(eid, _G.Transform), "cache cleared after destroy")
-end, { "ecs", "cleanup" })
+end, { "ecs", "lifecycle", "cleanup" })
 
 -- LuaJIT
 register("ecs.luajit.200_local_limit", "LuaJIT local variable cap", function()

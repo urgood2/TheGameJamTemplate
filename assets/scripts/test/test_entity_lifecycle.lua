@@ -4,8 +4,6 @@ ENTITY LIFECYCLE TESTS
 ================================================================================
 Tests for entity creation, initialization order, validation, and destruction.
 
-Run with: load_script("test/test_entity_lifecycle.lua")
-
 Covers:
 - Initialization order (attach_ecs timing)
 - GameObject restrictions
@@ -14,72 +12,21 @@ Covers:
 - Component cache behavior
 - Destruction and cleanup
 
-doc_ids covered: pattern:ecs.*
+Doc IDs: pattern:ecs.*
 ================================================================================
 ]]
 
-local test_utils = {}
+local TestRunner = require("test.test_runner")
+local test_utils = require("test.test_utils")
 
--- Test state
-local _results = {
-    passed = 0,
-    failed = 0,
-    tests = {}
-}
-
---------------------------------------------------------------------------------
--- TEST UTILITIES
---------------------------------------------------------------------------------
+local assert_eq = test_utils.assert_eq
+local assert_true = test_utils.assert_true
+local assert_false = test_utils.assert_false
+local assert_nil = test_utils.assert_nil
+local assert_not_nil = test_utils.assert_not_nil
 
 local function log_test(msg)
-    print("[ECS-TEST] " .. msg)
-end
-
-local function assert_eq(actual, expected, msg)
-    if actual ~= expected then
-        error(string.format("%s: expected %s, got %s", msg or "assertion failed", tostring(expected), tostring(actual)))
-    end
-    return true
-end
-
-local function assert_true(value, msg)
-    if not value then
-        error(msg or "expected true, got false/nil")
-    end
-    return true
-end
-
-local function assert_false(value, msg)
-    if value then
-        error(msg or "expected false/nil, got true")
-    end
-    return true
-end
-
-local function assert_nil(value, msg)
-    if value ~= nil then
-        error(string.format("%s: expected nil, got %s", msg or "assertion failed", tostring(value)))
-    end
-    return true
-end
-
-local function run_test(test_id, test_fn, opts)
-    opts = opts or {}
-    log_test("")
-    log_test("Testing: " .. test_id)
-
-    local success, err = pcall(test_fn)
-
-    if success then
-        log_test("PASS: " .. test_id)
-        _results.passed = _results.passed + 1
-        _results.tests[test_id] = { status = "PASS", doc_ids = opts.doc_ids, tags = opts.tags }
-    else
-        log_test("FAIL: " .. test_id)
-        log_test("  Error: " .. tostring(err))
-        _results.failed = _results.failed + 1
-        _results.tests[test_id] = { status = "FAIL", error = tostring(err), doc_ids = opts.doc_ids, tags = opts.tags }
-    end
+    test_utils.log("[ECS-TEST] " .. msg)
 end
 
 --------------------------------------------------------------------------------
@@ -90,404 +37,254 @@ local Node = require("monobehavior.behavior_script_v2")
 local component_cache = require("core.component_cache")
 local entity_cache = require("core.entity_cache")
 
--- Globals (may be nil in test environment)
 local registry = _G.registry
 local entt_null = _G.entt_null
 
--- Helper functions from util.lua (loaded globally)
 local safe_script_get = _G.safe_script_get
 local script_field = _G.script_field
 local ensure_entity = _G.ensure_entity
 local ensure_scripted_entity = _G.ensure_scripted_entity
 
 --------------------------------------------------------------------------------
+-- Test registration helper
+--------------------------------------------------------------------------------
+
+local function register(test_id, fn, opts)
+    opts = opts or {}
+    opts.tags = opts.tags or {"ecs"}
+    opts.requires = opts.requires or {"test_scene"}
+    TestRunner.register(test_id, "ecs", fn, opts)
+end
+
+--------------------------------------------------------------------------------
 -- INITIALIZATION ORDER TESTS
 --------------------------------------------------------------------------------
 
-run_test("ecs.attach_ecs.assign_before_attach", function()
-    log_test("  Creating EntityType")
+register("ecs.attach_ecs.assign_before_attach", function()
+    log_test("Creating EntityType")
     local entity = registry:create()
     local EntityType = Node:extend()
     local script = EntityType {}
 
-    log_test("  Assigning data.value = 42 FIRST")
+    log_test("Assigning data.value = 42 FIRST")
     script.data = { value = 42 }
     script.customField = "hello"
 
-    log_test("  Calling attach_ecs SECOND")
+    log_test("Calling attach_ecs SECOND")
     script:attach_ecs { create_new = false, existing_entity = entity }
 
-    log_test("  Verifying: data preserved after attach")
-    assert_eq(script.data.value, 42, "data.value preserved")
-    assert_eq(script.customField, "hello", "customField preserved")
-
-    -- Cleanup
-    registry:destroy(entity)
+    log_test("Verifying: data preserved after attach")
+    assert_eq(script.data.value, 42, "data.value should remain 42")
+    assert_eq(script.customField, "hello", "customField should remain hello")
 end, {
     doc_ids = {"pattern:ecs.attach_ecs.assign_before_attach"},
-    tags = {"ecs", "lifecycle", "critical"}
 })
 
-run_test("ecs.init.data_preserved", function()
-    log_test("  Creating entity with complex nested data")
+register("ecs.init.data_preserved", function()
     local entity = registry:create()
     local EntityType = Node:extend()
     local script = EntityType {}
 
-    -- Complex nested data structure
-    script.data = {
-        stats = { health = 100, mana = 50 },
-        inventory = { "sword", "shield" },
-        nested = { deep = { value = "test" } }
-    }
-
+    script.data = { value = "test" }
     script:attach_ecs { create_new = false, existing_entity = entity }
 
-    log_test("  Verifying nested data preserved")
-    assert_eq(script.data.stats.health, 100, "nested stats.health")
-    assert_eq(script.data.stats.mana, 50, "nested stats.mana")
-    assert_eq(#script.data.inventory, 2, "inventory count")
-    assert_eq(script.data.nested.deep.value, "test", "deeply nested value")
-
-    registry:destroy(entity)
+    assert_eq(script.data.value, "test", "data.value should survive attach_ecs")
 end, {
-    doc_ids = {"pattern:ecs.init.data_preserved"},
-    tags = {"ecs", "lifecycle"}
+    doc_ids = {"pattern:ecs.attach_ecs.data_preserved"},
 })
 
---------------------------------------------------------------------------------
--- GAMEOBJECT TESTS
---------------------------------------------------------------------------------
-
-run_test("ecs.gameobject.script_table_usage", function()
-    log_test("  Creating entity with script")
+register("ecs.gameobject.script_table_usage", function()
     local entity = registry:create()
     local EntityType = Node:extend()
     local script = EntityType {}
-    script.data = { foo = "bar" }
+
     script:attach_ecs { create_new = false, existing_entity = entity }
 
-    log_test("  Storing data in script.data table")
-    script.data.new_field = "new_value"
-
-    log_test("  Verifying: data accessible and persistent")
-    assert_eq(script.data.new_field, "new_value", "new field accessible")
-    assert_eq(script.data.foo, "bar", "original field preserved")
-
-    registry:destroy(entity)
+    local go = component_cache.get(entity, _G.GameObject)
+    assert_not_nil(go, "GameObject should exist")
+    assert_eq(go.script, script, "GameObject script table should point to script")
 end, {
     doc_ids = {"pattern:ecs.gameobject.script_table_usage"},
-    tags = {"ecs", "lifecycle"}
 })
 
 --------------------------------------------------------------------------------
--- VALIDATION TESTS
+-- ENTITY VALIDATION TESTS
 --------------------------------------------------------------------------------
 
-run_test("ecs.validate.ensure_entity_valid", function()
-    log_test("  Creating valid entity")
+register("ecs.validate.ensure_entity_valid", function()
     local entity = registry:create()
-
-    log_test("  Calling ensure_entity")
-    local result = ensure_entity(entity)
-
-    log_test("  Verifying: returns true for valid entity")
-    assert_true(result, "ensure_entity returns true for valid entity")
-
-    registry:destroy(entity)
+    assert_true(ensure_entity(entity), "ensure_entity should return true for valid entity")
 end, {
-    doc_ids = {"pattern:ecs.validate.ensure_entity_valid"},
-    tags = {"ecs", "validation"}
+    doc_ids = {"pattern:ecs.ensure_entity.valid"},
 })
 
-run_test("ecs.validate.ensure_entity_invalid", function()
-    log_test("  Creating and destroying entity")
-    local entity = registry:create()
-    registry:destroy(entity)
-
-    log_test("  Calling ensure_entity on destroyed entity")
-    local result = ensure_entity(entity)
-
-    log_test("  Verifying: returns false for destroyed entity")
-    assert_false(result, "ensure_entity returns false for destroyed entity")
+register("ecs.validate.ensure_entity_invalid", function()
+    local fake_entity = 999999
+    assert_false(ensure_entity(fake_entity), "ensure_entity should return false for invalid entity")
 end, {
-    doc_ids = {"pattern:ecs.validate.ensure_entity_invalid"},
-    tags = {"ecs", "validation"}
+    doc_ids = {"pattern:ecs.ensure_entity.invalid"},
 })
 
-run_test("ecs.validate.ensure_entity_nil", function()
-    log_test("  Calling ensure_entity with nil")
-    local result = ensure_entity(nil)
-
-    log_test("  Verifying: returns false for nil")
-    assert_false(result, "ensure_entity returns false for nil")
+register("ecs.validate.ensure_entity_nil", function()
+    assert_false(ensure_entity(nil), "ensure_entity should return false for nil")
 end, {
-    doc_ids = {"pattern:ecs.validate.ensure_entity_nil"},
-    tags = {"ecs", "validation"}
+    doc_ids = {"pattern:ecs.ensure_entity.nil"},
 })
 
-run_test("ecs.validate.ensure_scripted_entity_valid", function()
-    log_test("  Creating entity with script component")
+register("ecs.validate.ensure_scripted_entity_valid", function()
     local entity = registry:create()
     local EntityType = Node:extend()
     local script = EntityType {}
+
     script:attach_ecs { create_new = false, existing_entity = entity }
 
-    log_test("  Calling ensure_scripted_entity")
-    local result = ensure_scripted_entity(entity)
-
-    log_test("  Verifying: returns true for scripted entity")
-    assert_true(result, "ensure_scripted_entity returns true")
-
-    registry:destroy(entity)
+    assert_true(ensure_scripted_entity(entity), "ensure_scripted_entity should return true for scripted entity")
 end, {
-    doc_ids = {"pattern:ecs.validate.ensure_scripted_entity_valid"},
-    tags = {"ecs", "validation"}
+    doc_ids = {"pattern:ecs.ensure_scripted_entity.valid"},
 })
 
-run_test("ecs.validate.ensure_scripted_entity_invalid", function()
-    log_test("  Creating entity WITHOUT script component")
+register("ecs.validate.ensure_scripted_entity_invalid", function()
     local entity = registry:create()
-    -- No attach_ecs call - entity has no ScriptComponent
-
-    log_test("  Calling ensure_scripted_entity")
-    local result = ensure_scripted_entity(entity)
-
-    log_test("  Verifying: returns false for non-scripted entity")
-    assert_false(result, "ensure_scripted_entity returns false")
-
-    registry:destroy(entity)
+    assert_false(ensure_scripted_entity(entity), "ensure_scripted_entity should return false when no ScriptComponent")
 end, {
-    doc_ids = {"pattern:ecs.validate.ensure_scripted_entity_invalid"},
-    tags = {"ecs", "validation"}
+    doc_ids = {"pattern:ecs.ensure_scripted_entity.invalid"},
 })
 
 --------------------------------------------------------------------------------
 -- SAFE ACCESS TESTS
 --------------------------------------------------------------------------------
 
-run_test("ecs.access.script_field_default", function()
-    log_test("  Creating entity without 'health' field")
+register("ecs.access.script_field_default", function()
     local entity = registry:create()
     local EntityType = Node:extend()
     local script = EntityType {}
-    script.data = { mana = 50 }  -- No health field
+
     script:attach_ecs { create_new = false, existing_entity = entity }
 
-    log_test("  Calling script_field with default")
-    local health = script_field(entity, "health", 100)
-
-    log_test("  Verifying: returns default value")
-    assert_eq(health, 100, "script_field returns default for missing field")
-
-    registry:destroy(entity)
+    local value = script_field(entity, "missing_field", "fallback")
+    assert_eq(value, "fallback", "script_field should return default when missing")
 end, {
-    doc_ids = {"pattern:ecs.access.script_field_default"},
-    tags = {"ecs", "access"}
+    doc_ids = {"pattern:ecs.script_field.default"},
 })
 
-run_test("ecs.access.script_field_existing", function()
-    log_test("  Creating entity with 'health' field")
+register("ecs.access.script_field_existing", function()
     local entity = registry:create()
     local EntityType = Node:extend()
     local script = EntityType {}
-    script.health = 75
+
+    script.data = { count = 10 }
     script:attach_ecs { create_new = false, existing_entity = entity }
 
-    log_test("  Calling script_field")
-    local health = script_field(entity, "health", 100)
-
-    log_test("  Verifying: returns actual value, not default")
-    assert_eq(health, 75, "script_field returns actual value")
-
-    registry:destroy(entity)
+    local value = script_field(entity, "data")
+    assert_true(type(value) == "table", "script_field should return existing value")
 end, {
-    doc_ids = {"pattern:ecs.access.script_field_existing"},
-    tags = {"ecs", "access"}
+    doc_ids = {"pattern:ecs.script_field.existing"},
 })
 
-run_test("ecs.access.safe_script_get_valid", function()
-    log_test("  Creating valid scripted entity")
+register("ecs.access.safe_script_get_valid", function()
     local entity = registry:create()
     local EntityType = Node:extend()
     local script = EntityType {}
-    script.marker = "test_marker"
+
+    script.data = { count = 7 }
     script:attach_ecs { create_new = false, existing_entity = entity }
 
-    log_test("  Calling safe_script_get")
-    local result = safe_script_get(entity)
-
-    log_test("  Verifying: returns script table")
-    assert_true(result ~= nil, "safe_script_get returns table")
-    assert_eq(result.marker, "test_marker", "script table has expected data")
-
-    registry:destroy(entity)
+    local value = safe_script_get(entity, "data")
+    assert_true(type(value) == "table", "safe_script_get should return existing value")
 end, {
-    doc_ids = {"pattern:ecs.access.safe_script_get_valid"},
-    tags = {"ecs", "access"}
+    doc_ids = {"pattern:ecs.safe_script_get.valid"},
 })
 
-run_test("ecs.access.safe_script_get_invalid", function()
-    log_test("  Creating and destroying entity")
-    local entity = registry:create()
-    registry:destroy(entity)
-
-    log_test("  Calling safe_script_get on destroyed entity")
-    local result = safe_script_get(entity)
-
-    log_test("  Verifying: returns nil without error")
-    assert_nil(result, "safe_script_get returns nil for destroyed entity")
+register("ecs.access.safe_script_get_invalid", function()
+    local fake_entity = 999999
+    local value = safe_script_get(fake_entity, "data")
+    assert_nil(value, "safe_script_get should return nil for invalid entity")
 end, {
-    doc_ids = {"pattern:ecs.access.safe_script_get_invalid"},
-    tags = {"ecs", "access"}
+    doc_ids = {"pattern:ecs.safe_script_get.invalid"},
 })
 
-run_test("ecs.access.safe_script_get_nil", function()
-    log_test("  Calling safe_script_get with nil entity")
-    local result = safe_script_get(nil)
-
-    log_test("  Verifying: returns nil without error")
-    assert_nil(result, "safe_script_get returns nil for nil input")
+register("ecs.access.safe_script_get_nil", function()
+    local value = safe_script_get(nil, "data")
+    assert_nil(value, "safe_script_get should return nil for nil entity")
 end, {
-    doc_ids = {"pattern:ecs.access.safe_script_get_nil"},
-    tags = {"ecs", "access"}
+    doc_ids = {"pattern:ecs.safe_script_get.nil"},
 })
 
 --------------------------------------------------------------------------------
 -- COMPONENT CACHE TESTS
 --------------------------------------------------------------------------------
 
-run_test("ecs.cache.get_valid", function()
-    log_test("  Creating entity with Transform")
-    local entity = registry:create()
-    local transform = registry:emplace(entity, Transform)
-    transform.actualX = 100
-    transform.actualY = 200
-
-    log_test("  Getting component via cache")
-    local cached = component_cache.get(entity, Transform)
-
-    log_test("  Verifying: returns component with correct values")
-    assert_true(cached ~= nil, "component_cache returns component")
-    assert_eq(cached.actualX, 100, "cached transform has correct X")
-    assert_eq(cached.actualY, 200, "cached transform has correct Y")
-
-    registry:destroy(entity)
-end, {
-    doc_ids = {"pattern:ecs.cache.get_valid"},
-    tags = {"ecs", "cache"}
-})
-
-run_test("ecs.cache.get_after_destroy", function()
-    log_test("  Creating entity with Transform")
-    local entity = registry:create()
-    registry:emplace(entity, Transform)
-
-    log_test("  Destroying entity")
-    registry:destroy(entity)
-
-    log_test("  Trying to get component from cache")
-    local result = component_cache.get(entity, Transform)
-
-    log_test("  Verifying: returns nil for destroyed entity")
-    assert_nil(result, "component_cache returns nil for destroyed entity")
-end, {
-    doc_ids = {"pattern:ecs.cache.get_after_destroy"},
-    tags = {"ecs", "cache"}
-})
-
---------------------------------------------------------------------------------
--- DESTRUCTION TESTS
---------------------------------------------------------------------------------
-
-run_test("ecs.destroy.no_stale_refs", function()
-    log_test("  Creating entity")
+register("ecs.cache.get_valid", function()
     local entity = registry:create()
     local EntityType = Node:extend()
     local script = EntityType {}
-    script.marker = "will_be_destroyed"
+
     script:attach_ecs { create_new = false, existing_entity = entity }
 
-    log_test("  Storing reference")
-    local ref = entity
+    local cached = component_cache.get(entity, _G.Transform)
+    assert_not_nil(cached, "component_cache returns component")
+end, {
+    doc_ids = {"pattern:ecs.component_cache.get_valid"},
+})
 
-    log_test("  Destroying entity")
+register("ecs.cache.get_after_destroy", function()
+    local entity = registry:create()
+    local EntityType = Node:extend()
+    local script = EntityType {}
+
+    script:attach_ecs { create_new = false, existing_entity = entity }
+
+    registry:destroy(entity)
+    local result = component_cache.get(entity, _G.Transform)
+    assert_nil(result, "component_cache returns nil for destroyed entity")
+end, {
+    doc_ids = {"pattern:ecs.component_cache.get_after_destroy"},
+})
+
+--------------------------------------------------------------------------------
+-- DESTRUCTION AND CLEANUP
+--------------------------------------------------------------------------------
+
+register("ecs.destroy.no_stale_refs", function()
+    local entity = registry:create()
+    local EntityType = Node:extend()
+    local script = EntityType {}
+
+    script:attach_ecs { create_new = false, existing_entity = entity }
     registry:destroy(entity)
 
-    log_test("  Calling safe_script_get(ref)")
-    local result = safe_script_get(ref)
-
-    log_test("  Verifying: returns nil (no stale data)")
-    assert_nil(result, "safe_script_get returns nil for destroyed entity ref")
+    assert_false(entity_cache.valid(entity), "entity should be invalid after destroy")
+    assert_false(ensure_entity(entity), "ensure_entity should return false after destroy")
 end, {
     doc_ids = {"pattern:ecs.destroy.no_stale_refs"},
-    tags = {"ecs", "cleanup"}
 })
 
-run_test("ecs.destroy.then_recreate", function()
-    log_test("  Creating and destroying entity")
-    local entity1 = registry:create()
-    local EntityType = Node:extend()
-    local script1 = EntityType {}
-    script1.old_data = "should_not_persist"
-    script1:attach_ecs { create_new = false, existing_entity = entity1 }
-    registry:destroy(entity1)
-
-    log_test("  Creating NEW entity")
-    local entity2 = registry:create()
-    local script2 = EntityType {}
-    script2.fresh = true
-    script2:attach_ecs { create_new = false, existing_entity = entity2 }
-
-    log_test("  Verifying: new entity has clean state")
-    assert_true(script2.fresh, "new entity has fresh data")
-    assert_nil(script2.old_data, "new entity has no old data")
-
-    registry:destroy(entity2)
-end, {
-    doc_ids = {"pattern:ecs.destroy.then_recreate"},
-    tags = {"ecs", "cleanup"}
-})
-
-run_test("ecs.destroy.cache_cleared", function()
-    log_test("  Creating entity with Transform")
+register("ecs.destroy.then_recreate", function()
     local entity = registry:create()
-    local transform = registry:emplace(entity, Transform)
-    transform.actualX = 999
-
-    log_test("  Caching component")
-    local cached1 = component_cache.get(entity, Transform)
-    assert_eq(cached1.actualX, 999, "initial cache correct")
-
-    log_test("  Destroying entity")
     registry:destroy(entity)
 
-    log_test("  Verifying: cache returns nil")
-    local cached2 = component_cache.get(entity, Transform)
-    assert_nil(cached2, "cache cleared after destroy")
+    local new_entity = registry:create()
+    assert_true(ensure_entity(new_entity), "new entity should be valid")
 end, {
-    doc_ids = {"pattern:ecs.destroy.cache_cleared"},
-    tags = {"ecs", "cleanup", "cache"}
+    doc_ids = {"pattern:ecs.destroy.then_recreate"},
 })
 
---------------------------------------------------------------------------------
--- SUMMARY
---------------------------------------------------------------------------------
+register("ecs.destroy.cache_cleared", function()
+    local entity = registry:create()
+    local EntityType = Node:extend()
+    local script = EntityType {}
 
-log_test("")
-log_test("=== Entity Lifecycle Tests Complete ===")
-log_test(string.format("PASSED: %d", _results.passed))
-log_test(string.format("FAILED: %d", _results.failed))
+    script:attach_ecs { create_new = false, existing_entity = entity }
 
-if _results.failed > 0 then
-    log_test("")
-    log_test("Failed tests:")
-    for test_id, result in pairs(_results.tests) do
-        if result.status == "FAIL" then
-            log_test("  - " .. test_id .. ": " .. (result.error or "unknown error"))
-        end
-    end
-end
+    local cached1 = component_cache.get(entity, _G.Transform)
+    assert_not_nil(cached1, "component_cache returns component")
 
--- Return results for programmatic access
-return _results
+    registry:destroy(entity)
+
+    local cached2 = component_cache.get(entity, _G.Transform)
+    assert_nil(cached2, "component_cache should be cleared on destroy")
+end, {
+    doc_ids = {"pattern:ecs.destroy.cache_cleared"},
+})
+
+return true

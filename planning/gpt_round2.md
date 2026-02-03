@@ -1,719 +1,807 @@
-# Master Implementation Plan — Demo Content Spec v3 (v2 Revision)
+# Cass Memory Update Plan v2 — Proposed Revisions (Review of v1)
 
-> **Revision Notes (v2):** This revision hardens determinism and debuggability, closes event-contract inconsistencies, and adds the missing half of “replay ready” (input capture + fixed-step sim). Key changes:
-> - EventBus semantics formalized (envelope-only, deterministic listener order, immutability rules)
-> - Fixed-step simulation + stable iteration ordering rules (Lua-safe determinism)
-> - Content registry now assigns **stable** `idx` (sorted by id) and emits `content_build` metadata for save/replay compatibility
-> - Added InputRecorder + ReplayRunner (dev-only acceptable for v3)
-> - Added DamageSystem to centralize damage math + canonical event emission
-> - Aura perf/fairness constraints (staggering, target cap, stable ordering)
-> - Skill trigger DSL is compiled; added optional cooldown/proc caps + explain tooling
-> - CardPipeline determinism guarantees (deck hash cache + deterministic modifier phases)
-> - Shop seed mixing uses hash combine; added “lock 1 item” option for rerolls
-> - Renamed god id `"nil"` → `"nihil"` (with deprecated alias mapping)
+This document reviews **“Cass Memory Update Plan v1 (Revised with Automation & Drift Prevention)”** and proposes targeted upgrades to make it:
 
----
+- **More reliable** (less flaky, fewer false positives, deterministic outputs)
+- **More maintainable** (less drift between docs/tests/registry/inventories/cm rules)
+- **More performant** (faster execution, CI sharding, fewer manual steps)
+- **More compelling/useful** (better discoverability, better CI reporting, better IDE integration)
 
-## 1) Goals & Deliverables
+For each proposed change you’ll get:
 
-Ship the complete Demo Content Spec v3 as a cohesive, data-driven feature set:
+1. **Analysis + rationale** (what v1 risks or leaves ambiguous, and why the change helps)
+2. A **git-diff style patch** against the v1 plan text (snippets, scoped to the impacted sections)
 
-- **Identity:** 4 gods + 2 classes selectable at run start
-- **Combat:** melee arc support + status stack decay
-- **Skills:** 32 skills (8 per element) with element-lock + multi-trigger support
-- **Forms:** 4 timed transformation forms with aura ticking
-- **Cards/Wands:** starter wands + 6 shop wands; ~40 cards (at minimum: 12 modifiers + 16 elemental actions + required starter actions)
-- **Items:** 15 artifacts + 12 equipment pieces
-- **Economy/Progression:** skill points by level + stage-based shop inventory (equipment → wands → artifacts)
-- **Engineering:** compiled content registry + deterministic simulation + replay/debug tooling
-  - seeded RNG streams
-  - fixed-step sim
-  - input capture + replay runner (dev-only OK)
-  - deterministic ordering rules enforced (Lua-safe)
+> Notes:
+> - I don’t have the repo, so anything repo-specific is expressed as a **Phase 1-resolved variable** (e.g., `<TEST_ROOT>`).
+> - Diffs are **intentionally scoped**. Apply them mechanically if you keep the plan as a file, or use them as patch guidance when rewriting v1 into v2.
 
 ---
 
-## 2) Canonical Contracts (Naming, IDs, Events, Update Order)
+## High-level diagnosis (what to fix)
 
-### 2.0 Content Registry + Schema Versioning
+v1 is already unusually strong for an execution plan. The remaining “sharp edges” are mostly about **scale** and **long-term hygiene**:
 
-All data modules (skills/cards/wands/items/statuses/avatars) declare `schema_version = 3` and are loaded through a single compiler:
+1. **Naming and path drift risk**
+   - `binding_tests.lua` is named like it only covers bindings, but the suite becomes broader by Phase 4/5/7.
+   - Appendix shows a `tests/` directory while most of the plan uses `test/`. That’s fine as an estimate, but it’s also a real way to get accidental split-brain directories.
 
-- `assets/scripts/core/content_registry.lua`
-  - builds `{ list, by_id, id_to_idx }` per content type
-  - **assigns stable integer `idx`: sort by string ID before assigning idx** (no file-order dependence)
-  - performs reference linking (wand templates → card defs, starter loadouts → items, etc.)
-  - hard-fails with actionable errors (no silent nil fall-through)
-  - emits `content_build = { schema_version, build_hash, id_maps }` for save/replay compatibility
-- Centralize authored ID strings in one place for code usage:
-  - `assets/scripts/core/ids.lua` (elements, events, status IDs, form IDs, equipment slots, tiers)
+2. **Too many “truth sources” without a strong generator story**
+   - v1 has docs, inventories, `test_registry.lua`, `cm_rules_candidates.yaml`, stubs… plus validators.
+   - Validators are great, but **generation** is better: drift prevention improves drastically when you generate derived artifacts instead of hand-editing them.
 
-**Save/replay rule:** store string IDs in persisted data; resolve to idx at runtime via registry mapping.
+3. **CI ergonomics & performance**
+   - Without **JUnit XML**, CI test UIs are worse; failures are harder to skim.
+   - Without **sharding**, the suite will become slow as coverage grows.
 
----
+4. **Visual testing still under-specified**
+   - You already mention baselines and tolerance, but you’ll want:
+     - per-platform baseline layout
+     - diff artifacts
+     - a quarantine mechanism for genuinely GPU-flaky tests (or you’ll disable them entirely later)
 
-### 2.1 Canonical IDs & Naming
-
-- IDs are string keys in data/UI, but runtime systems should prefer registry indices (`idx`) once content is compiled.
-- **Elements:** `fire`, `ice`, `lightning`, `void`, `physical`
-- **God IDs:** `pyr`, `glah`, `vix`, `nihil`
-  - allow `"nil"` as a deprecated alias resolved by ContentRegistry (backwards compatibility)
-- **Class IDs:** `channeler`, `seer`
-- **Statuses (stacking model):** `scorch`, `freeze`, `charge`, `doom`, `inflame`
-  - Each status definition includes: `max_stacks`, `stack_mode` (add/refresh/replace), `decay{interval, stacks_per_tick}`, `tags[]`
-- **Forms (timed):** `fireform`, `iceform`, `stormform`, `voidform`
-- **Cards:**
-  - Modifiers: `MOD_*`
-  - Actions: `ACTION_*`
-- **Wands:** `WandTemplates.*` keys are **UPPER_SNAKE_CASE**
-  - Starters: `VOID_EDGE`, `SIGHT_BEAM`
-  - Shop wands: `RAGE_FIST`, `STORM_WALKER`, `FROST_ANCHOR`, `SOUL_SIPHON`, `PAIN_ECHO`, `EMBER_PULSE`
+5. **Manual inventories are going to be expensive**
+   - Manually enumerating ~390 bindings is doable once, but maintaining it is where it gets painful.
+   - You’ll get better ROI by **automating Tier 0 extraction** (even if imperfect) and letting humans add Tier 1/2 semantics.
 
 ---
 
-### 2.2 Event Contract (SkillSystem + items depend on this)
+## Summary of proposed changes
 
-Define and emit a stable set of gameplay events via a thin EventBus adapter (can wrap existing `signal`).
+| # | Change | Primary win |
+|---:|---|---|
+| 01 | Rename harness + parameterize `<TEST_ROOT>` | Clarity, prevents directory drift |
+| 02 | Capability detection + SKIP semantics | Fewer false failures across environments |
+| 03 | Schema versioning + JSON Schemas + JUnit XML | CI friendliness + future-proofing |
+| 04 | Test sharding + enforced timeouts | Faster CI + no hung runs |
+| 05 | Visual baselines: per-platform + diffs + tolerance config + quarantine | Stable visual verification |
+| 06 | Automated Sol2 inventory extraction (Tier 0) | Massive labor reduction + drift control |
+| 07 | Automated ECS component extraction (Tier 0) | Same as above for components |
+| 08 | Auto-generated scope stats (single source) | Keeps counts consistent, kills stale tables |
+| 09 | One-command “check all” script + optional pre-commit | Makes hygiene cheap enough to run always |
+| 10 | cm rule governance: richer schema + idempotent importer | Prevents duplicate clutter + improves traceability |
+| 11 | Lua DX: `.luarc.json`, stub packaging, regen docs | Stubs actually get used |
+| 12 | Doc discoverability + link integrity checks | People can find and trust the knowledge base |
 
-#### 2.2.1 EventBus API (authoritative)
+---
 
-- `EventBus.begin_frame(frame, t)`
-  - resets `seq=0`
-  - resets per-frame buffers (if used)
-- `EventBus.emit(type, payload)`
-  - increments `seq`
-  - constructs `Event = { type, frame, seq, t, payload }`
-  - dispatches to listeners in deterministic order
-  - returns the `Event`
-- `EventBus.connect(type, handler, opts)`
-  - `opts.priority` (higher runs earlier), default `0`
-  - ties are stable by registration order
-  - **all connections must go through Lifecycle** (see 2.4), which enforces deterministic connect paths
+# Change 01 — Rename harness + parameterize `<TEST_ROOT>` to stop path drift
 
-**Rules:**
-- Events are **immutable facts**:
-  - listeners MUST NOT mutate `Event` or `payload`
-  - dev-only: freeze event/payload via metatable to error on writes
-- Events are **not cancellable** and do not support stop-propagation.
-- `emit()` during dispatch is allowed; ordering is deterministic by `(frame, seq)`.
+### What’s weak in v1
+- `assets/scripts/test/binding_tests.lua` becomes misleading the moment you add non-binding tests (UI patterns, entity lifecycle).
+- Appendix implies there’s already a `tests/` directory. Even if that’s just estimates, it highlights a real risk: people will create both `test/` and `tests/` over time.
+- Dozens of hardcoded paths in the plan create churn if Phase 1 discovers different conventions.
 
-#### 2.2.2 Event Envelope (all events use this structure)
+### Revision
+- Introduce a plan-level variable: **`<TEST_ROOT>`** determined in Phase 1 and used everywhere.
+- Rename `binding_tests.lua` → **`test_runner.lua`** to reflect that it’s the runner for *all* tests.
 
-```lua
-Event = {
-    type = "event_name",
-    frame = number,      -- sim frame number
-    seq = number,        -- per-frame sequence for deterministic ordering
-    t = number,          -- sim time (accumulated fixed-step time)
-    payload = { ... }    -- event-specific data
-}
+### Why this makes the project better
+- **Reduced confusion**: new contributors won’t assume “binding_tests” is irrelevant to them.
+- **Less churn**: Phase 1 can lock the test folder path once; the rest of the plan stays stable.
+- **Less accidental divergence**: fewer “why are there two test folders?” problems.
+
+### Tradeoffs
+- Small rename churn early, but *far* cheaper than later once many tests exist.
+
+### Git diff vs v1 plan
+```diff
+diff --git a/Cass_Memory_Update_Plan.md b/Cass_Memory_Update_Plan.md
+--- a/Cass_Memory_Update_Plan.md
++++ b/Cass_Memory_Update_Plan.md
+@@
+ ### Phase 1: Test Infrastructure Setup
+ **Effort:** M (Medium)
+ **Parallelizable:** No (Foundation for other phases)
+
++> **(New) Canonical test root (prevent directory drift):**
++> - Phase 1 must select the canonical test folder and record it once as `<TEST_ROOT>`.
++> - All references below use `<TEST_ROOT>` (e.g., `<TEST_ROOT>/test_runner.lua`).
++
+ Create the verification pipeline that all subsequent phases depend on.
+
+ **Deliverables:**
+-1. `assets/scripts/test/binding_tests.lua` - Main test harness
+-2. `assets/scripts/test/test_utils.lua` - Assertion helpers, screenshot capture
+-3. `assets/scripts/test/test_registry.lua` - Track which patterns have been tested
++1. `<TEST_ROOT>/test_runner.lua` - Main test harness (runner implementation)
++2. `<TEST_ROOT>/test_utils.lua` - Assertion helpers, screenshot capture
++3. `<TEST_ROOT>/test_registry.lua` - Track which patterns have been tested
+@@
+-6. Test run documentation update: `assets/scripts/test/README.md` (or closest existing test README referenced by Phase 1 "How-to-run capture")
++6. Test run documentation update: `<TEST_ROOT>/README.md` (or closest existing test README referenced by Phase 1 "How-to-run capture")
+@@
+ > **Test file layout convention (clarity + implementability):**
+-> - `assets/scripts/test/binding_tests.lua` provides the `TestRunner` implementation and shared runner logic.
+-> - `assets/scripts/test/test_*.lua` files are *modules* that only register tests (no direct execution side effects besides registration).
+-> - `assets/scripts/test/run_all_tests.lua` (Phase 7 deliverable) is the canonical execution entrypoint that requires `binding_tests.lua`, requires all `test_*.lua` modules, calls `TestRunner:run(...)`, and writes reports.
++> - `<TEST_ROOT>/test_runner.lua` provides the `TestRunner` implementation and shared runner logic.
++> - `<TEST_ROOT>/test_*.lua` files are *modules* that only register tests (no direct execution side effects besides registration).
++> - `<TEST_ROOT>/run_all_tests.lua` (Phase 7 deliverable) is the canonical execution entrypoint that requires `test_runner.lua`, requires all `test_*.lua` modules, calls `TestRunner:run(...)`, and writes reports.
 ```
 
-**Entity References:** Always use `source_eid` / `target_eid` (stable entity IDs), never live table references.
+---
 
-#### 2.2.3 Standard Payload Shapes
+# Change 02 — Add capability detection + SKIP semantics (make the suite portable)
 
-```lua
-payload.damage = {
-    amount = number,
-    element = string,
-    is_dot = bool,
-    is_crit = bool,
-    tags = {},           -- e.g., {"melee", "skill"} for filtering
-    damage_id = string,  -- unique per damage instance
-    source_kind = string -- "wand", "skill", "aura", "item", "reaction"
-}
+### What’s weak in v1
+- v1 has “Go/No-Go gates” but they’re human text only.
+- Missing screenshot capture, missing write permissions, or missing log interception can turn into confusing failures.
+- There’s no consistent SKIP definition: you need “skip with reason” to keep the suite runnable in multiple environments (dev machine vs CI).
 
-payload.status = {
-    id = string,
-    new_stacks = number,
-    old_stacks = number,
-    source_eid = entity_id
-}
+### Revision
+- Phase 1 writes a machine-readable **capabilities file**:
+  - `test_output/capabilities.json`
+- Each test can declare required capabilities (e.g., `requires={"screenshot"}`).
+- Harness uses SKIP status instead of FAIL when a required capability is missing.
 
-payload.hit = {
-    damage = { ... },    -- damage payload
-    position = vec2,
-    knockback = vec2 or nil
-}
+### Why this makes the project better
+- **Fewer false negatives**: tests won’t “fail” just because CI is headless or permissions differ.
+- **Better debugging**: capabilities are explicit; reviewers know why a test skipped.
+- **More realistic scaling**: you can still run non-visual tests in more environments, keeping signal high.
 
-payload.kill = {
-    final_damage = { ... },
-    overkill = number
-}
+### Tradeoffs
+- You must decide which missing features are “fail the suite” vs “skip the tests that need it”.
+  - Recommendation: missing “core determinism” should fail Phase 1 Go/No-Go; missing screenshot capture should skip visual tests but still allow non-visual CI.
+
+### Git diff vs v1 plan
+```diff
+diff --git a/Cass_Memory_Update_Plan.md b/Cass_Memory_Update_Plan.md
+--- a/Cass_Memory_Update_Plan.md
++++ b/Cass_Memory_Update_Plan.md
+@@
+ > **Go/No-Go gates (new, required outputs of Phase 1):**
+ > - Deterministic test scene runnable: Yes/No (with exact procedure)
+ > - `test_output/` writable: Yes/No (with constraints)
+ > - Screenshot capture callable: Yes/No (with safe call timing)
+ > - Log capture workable: Yes/No (engine hook or fallback)
+ > - World reset between tests: Yes/No (preferred) / Strategy documented
++> - **(New)** Write `test_output/capabilities.json` capturing the above gates in machine-readable form (so CI/tools can act on it).
+@@
+ > **Report/status schema requirement (testability + CI-friendliness):**
+ > - `test_output/status.json` must be machine-readable and stable. Minimum schema:
+->   - `{"passed": true/false, "failed": <int>, "passed_count": <int>, "total": <int>, "generated_at": "<iso8601>" }`
++>   - `{"passed": true/false, "failed": <int>, "skipped": <int>, "passed_count": <int>, "total": <int>, "generated_at": "<iso8601>" }`
+@@
+ > - **(New, required)** Write `test_output/results.json` with per-test objects:
+->   - `{"test_id": "...", "test_file": "...", "category": "...", "status":"pass|fail|skip", "duration_ms":123, "artifacts":[...], "error":{...}}`
++>   - `{"test_id": "...", "test_file": "...", "category": "...", "status":"pass|fail|skip", "duration_ms":123, "artifacts":[...], "skip_reason":"...", "error":{...}}`
+@@
+ > **Register API naming clarity (implementability):**
+ > - Treat `name` in the stub above as the canonical `test_id` (string) following `{system}.{feature}.{case}`.
+ > - If the repo prefers a human-friendly display name, add it as `opts.display_name` rather than changing the canonical `test_id`.
++>
++> **(New) Capability requirements per test (reliability across environments):**
++> - `register(test_id, category, testFn, opts)` supports `opts.requires = {"screenshot", "log_capture", ...}`.
++> - Harness checks `test_output/capabilities.json` (or in-memory equivalent) and emits `SKIP` with reason if requirements are missing.
 ```
 
-#### 2.2.4 Canonical Events (envelope-only)
-
-All emitted via `EventBus.emit(type, payload)`:
-
-- `player_hit_enemy` — `{ source_eid, target_eid, hit = { ... } }`
-- `damage_dealt` — `{ source_eid, target_eid, damage = { ... } }`
-- `enemy_killed` — `{ source_eid, target_eid, kill = { ... } }`  *(killer is source, enemy is target)*
-- `player_damaged` — `{ source_eid, target_eid, damage = { ... } }` *(damager is source, player is target)*
-- `status_applied` — `{ target_eid, status = { ... } }`
-- `status_stack_changed` — `{ target_eid, status = { ... } }`
-- `wave_start` — `{ wave_index = number }`
-- `frame_end` — `{ frame = number }`
-- `form_activated` — `{ target_eid = entity_id, form_id = string }`
-- `form_expired` — `{ target_eid = entity_id, form_id = string }`
-
-**Dev-Only Introspection Events (can be compiled out):**
-- `wand_triggered` — `{ wand_id, owner_eid, trigger_type }`
-- `skill_fired` — `{ skill_id, player_eid, reason = { ... } }`
-- `item_procced` — `{ item_id, owner_eid, reason = { ... } }`
-- `reaction_triggered` — `{ reaction_id, source_eid, target_eid, reason = { ... } }`
-
 ---
 
-### 2.3 Update Order (single source of truth in main loop) — CRITICAL
+# Change 03 — Add schema versioning + JSON Schemas + JUnit XML (CI-grade reporting)
 
-Wire the runtime to guarantee deterministic behavior. The order below is mandatory for correct multi-trigger skill resolution.
+### What’s weak in v1
+- v1 defines JSON output formats, but without schema versioning future changes become silent breaking changes.
+- CI visibility is limited without a standardized format like **JUnit XML**.
 
-#### 2.3.1 Determinism requirement: fixed-step simulation
+### Revision
+- Add `schema_version` + `runner_version` to all machine-readable outputs.
+- Commit JSON Schema files for validation.
+- Generate `test_output/junit.xml` on every run.
 
-- Gameplay systems run on fixed `sim_dt` (e.g. 1/60).
-- Render dt is accumulated and drives `N` sim steps per render frame.
-- `Event.frame` refers to **sim frame**, not render frame.
+### Why this makes the project better
+- **Forward-compatible outputs**: tools can handle schema evolution safely.
+- **Better CI UX**: JUnit gives first-class red/green, timing, and failure details in most CI systems.
+- **Harder to regress**: schema validation catches accidental format drift.
 
-#### 2.3.2 Stable iteration rule (critical in Lua)
+### Tradeoffs
+- Slight extra implementation, but you only do it once. Benefits continue forever.
 
-Any time gameplay applies effects to a set/map of entities, order MUST be deterministic:
-- sort by stable `eid` or registry `idx`, OR
-- accumulate into array then sort before applying.
-
-#### 2.3.3 Mandatory per-sim-frame order
-
-```
-0. Begin-frame: increment `frame`, EventBus.begin_frame(frame, t), reset per-frame buffers
-1. Movement/physics integration (produces collisions/overlaps but does not apply damage yet)
-2. TriggerSystem update (distance traveled / stand still / timers) → may enqueue wand triggers
-3. Combat resolution (melee arcs, projectiles, queued wand actions)
-4. Status tick/decay + Aura ticks (MUST occur BEFORE SkillSystem.end_frame)
-5. Skill event capture happens via EventBus listeners during steps 3–4
-6. Exactly once per sim frame: SkillSystem.end_frame() (consumes the sim frame EventBus buffer)
-7. Cleanup (despawn, unregister hooks tied to dead entities, end-of-frame assertions)
-8. UI (render-only)
-9. EventBus.emit("frame_end", { frame = frame }) if desired (or include in step 7)
-```
-
-**Invariant:** Any system that can cause `damage_dealt`, `status_*`, or `enemy_killed` MUST run before step 6.
-
----
-
-### 2.4 Effect Lifecycle Contract (required for reliability)
-
-All passives/triggers (skills, artifacts, equipment, wand triggers, forms) must register via a single lifecycle manager:
-
-- `assets/scripts/core/lifecycle.lua`
-  - `Lifecycle.bind(owner_eid, handle)` tracks subscriptions/timers/resources
-  - `Lifecycle.cleanup_owner(owner_eid)` runs automatically on death/despawn/unequip
-  - prevents double-register, supports idempotent re-grant
-  - provides helpers:
-    - `Lifecycle.on_event(owner_eid, event_type, fn, opts)`
-    - `Lifecycle.set_timer(owner_eid, timer_handle)`
-    - `Lifecycle.assert_no_raw_connects()` (dev-only)
-
-**Rule:** Content authors never call raw `signal.connect` / timer APIs directly; they go through Lifecycle.
-
----
-
-## 3) Multi-Agent Execution Plan (4–6 agents)
-
-### 3.1 Workstreams
-
-Recommended 6 agents (collapsible to 4):
-
-- **Agent 0 — Core Infrastructure (NEW)**
-  - ContentRegistry, EventBus, Lifecycle, SimClock wiring in `main.lua`
-  - Dev-only validators, replay tooling stubs, ordering assertions
-- **Agent A — Combat Runtime**
-  - `assets/scripts/combat/*` (MeleeArc, DamageSystem, AuraSystem, ReactionSystem integration points)
-  - `assets/scripts/wand/wand_actions.lua` (only combat action routing)
-- **Agent B — Identity + Run Start UI**
-  - `assets/scripts/data/avatars.lua`
-  - `assets/scripts/ui/god_select_panel.lua`
-  - minimal wiring hooks requested from Agent 0
-- **Agent C — SkillSystem Core**
-  - `assets/scripts/core/skill_system.lua`
-  - `assets/scripts/ui/skills_panel.lua` (lock messaging + point display)
-- **Agent D — Cards + Wands Content**
-  - `assets/scripts/data/cards/*`
-  - `assets/scripts/data/starter_wands.lua`
-  - `assets/scripts/core/card_pipeline.lua`
-  - `assets/scripts/core/card_eval_order_test.lua`
-- **Agent E — Items + Economy**
-  - `assets/scripts/data/artifacts.lua`, `assets/scripts/data/equipment.lua`
-  - shop core + UI
-  - `assets/scripts/core/progression.lua` or existing integration
-
-### 3.2 File Ownership to Avoid Conflicts
-
-- Heavy data edits split into submodules; original entry file is an aggregator:
-  - `assets/scripts/data/skills.lua` requires:
-    - `assets/scripts/data/skills/fire.lua`
-    - `assets/scripts/data/skills/ice.lua`
-    - `assets/scripts/data/skills/lightning.lua`
-    - `assets/scripts/data/skills/void.lua`
-  - `assets/scripts/data/cards.lua` requires:
-    - `assets/scripts/data/cards/modifiers.lua`
-    - `assets/scripts/data/cards/actions_fire.lua`
-    - `assets/scripts/data/cards/actions_ice.lua`
-    - `assets/scripts/data/cards/actions_lightning.lua`
-    - `assets/scripts/data/cards/actions_void.lua`
-    - `assets/scripts/data/cards/actions_physical.lua` (if `ACTION_MELEE_SWING` lives here)
-- Only **one** agent touches `assets/scripts/core/main.lua` at a time (Agent 0 owns wiring; others request hook points).
-
-### 3.3 Integration Gates
-
-- No merges until each workstream passes its local smoke checklist.
-- Run **UBS** as the final pre-merge gate (repo policy).
-
----
-
-## 4) Phases, Tasks, Dependencies, Acceptance Gates
-
-## Phase 0 — Audit & Alignment (must complete first)
-
-### 0.1 Combat/Status/Wand/UI Audit
-Identify:
-- existing StatusEngine API and status storage shape
-- wand action dispatch + card evaluation context shape
-- current signal/event names already emitted
-- shop/progression entrypoints and stage concepts
-- how entity IDs/handles work (or add them if missing)
-- whether we can inject a `run_seed` at run start
-
-**Output:** short “Integration Notes” doc + confirmed adapter plan (EventBus, DamageSystem use points).
-
-### 0.2 Lock Spec Interpretation (final rule)
-Element lock rule (authoritative):
-- Player may invest in **up to 3 distinct elements**
-- The **first skill learned** in an element marks that element as invested
-- After the **third distinct element** is invested, the element set is locked; learning skills from any other element fails with a clear reason
-
-### 0.3 Core Infrastructure (MUST land before Phase 1+)
-Implement and wire:
-- `content_registry.lua` compile step + hard-fail validation + stable `idx` assignment + `content_build`
-- `ids.lua` constants (or generated IDs if desired later)
-- `EventBus` adapter with deterministic ordering + `begin_frame()`
-- `lifecycle.lua` (bind/cleanup + helpers)
-- fixed-step sim runner:
-  - `assets/scripts/core/sim_clock.lua` with accumulator and `sim_dt`
-  - `main.lua` uses `SimClock.step(render_dt)` to run N sim frames
-- dev-only assertions:
-  - `SkillSystem.end_frame()` called exactly once per sim frame
-  - no raw `signal.connect()` usage in content directories (best-effort runtime checks)
-
-**Acceptance gate (Phase 0.3):**
-- Headless run of 300 sim frames:
-  - registry compiles
-  - EventBus seq increments deterministically
-  - Lifecycle cleanup runs on despawn without leaking handlers
-
----
-
-## Phase 1 — Combat Core (foundation)
-
-### 1.0 DamageSystem (NEW foundation)
-Add `assets/scripts/combat/damage_system.lua`:
-- `DamageSystem.apply(source_eid, target_eid, damageSpec)`:
-  - computes final amount (initially simple passthrough; supports future resist/crit)
-  - assigns `damage_id`
-  - applies HP changes
-  - emits canonical events:
-    - `damage_dealt`
-    - `player_damaged` if target is player
-    - `enemy_killed` if target dies
-- enforces stable ordering for AoE/multi-hit: sort target eids before applying.
-
-**Acceptance gate (Phase 1.0):**
-- All combat damage routes through DamageSystem; event emission consistent across melee/aura/projectile.
-
-### 1.1 Melee Arc System + ACTION_MELEE_SWING
-Add `assets/scripts/combat/melee_arc.lua` with `MeleeArc.execute(caster, config)`:
-- 8-step `physics.segment_query` arc sweep
-- de-dupe hits per swing (key by `eid`)
-- filters: ignore caster, ignore allies, only enemies/destructibles
-- stable ordering: after collecting hit set, sort by `eid` before applying damage
-
-Route `ACTION_MELEE_SWING` in `assets/scripts/wand/wand_actions.lua`:
-- for each target hit:
-  - `EventBus.emit("player_hit_enemy", ...)`
-  - `DamageSystem.apply(...)` with `physical` and tags `{"melee","wand"}` (or `{"melee","skill"}` if used elsewhere)
-
-**Acceptance gate (Phase 1.1):**
-- Channeler can hit 1–N enemies in a 90° arc; each enemy max once per swing; no crashes with empty arc.
-
-### 1.2 Status Stack Decay (centralized in StatusEngine)
-Implement decay for `scorch`, `freeze`, `doom`, `charge`, `inflame`:
-- accumulator (`decayTimer += dt`) with bounded tick loops for large `dt`
-- emit `status_stack_changed` on decay
-- remove status at 0 stacks; removal triggers cleanup
-- add per-status/per-entity opt-out flag (forms/skills use this)
-
-**Acceptance gate (Phase 1.2):**
-- decay timing matches config; stacks never negative; removal triggers cleanup.
-
-### 1.3 Starter Wands
-Create `assets/scripts/data/starter_wands.lua` with:
-- `VOID_EDGE` (0.3s trigger, 40 mana, 4 slots, includes `ACTION_MELEE_SWING`)
-- `SIGHT_BEAM` (1.0s trigger, 80 mana, 6 slots, includes a ranged starter action)
-
-Register into wand template registry + `assets/scripts/core/card_eval_order_test.lua`.
-
-**Acceptance gate (Phase 1.3):**
-- Both starter wands instantiate with correct starting cards and stats; class restriction enforced at grant time.
-
----
-
-## Phase 2 — Identity (Gods, Classes, Run Start)
-
-### 2.1 Avatars: Gods + Classes
-Implement in `assets/scripts/data/avatars.lua`:
-- `Avatars.gods[id] = { element, blessing{cooldown, execute}, passive{trigger, effect}, starter_equipment, starter_artifact }`
-- `Avatars.classes[id] = { starter_wand, passive, triggered }`
-
-Accessors:
-- `Avatars.get_god(id)` (supports `"nil"` alias mapping to `"nihil"`)
-- `Avatars.get_class(id)`
-
-### 2.2 Starter Loadout Grant
-Implement single idempotent grant function:
-- grants exactly:
-  - 1 starter wand
-  - 1 starter equipment
-  - 1 starter artifact
-- applies god/class runtime state and registers passives/triggers via Lifecycle
-
-### 2.3 God/Class Selection UI
-Add `assets/scripts/ui/god_select_panel.lua`:
-- 2×2 god grid + class selector + preview panel (blessing/passive + starter gear + starter wand)
-- confirm disabled until both selected
-- on confirm:
-  - stores chosen IDs as strings
-  - grants loadout
-  - transitions into gameplay
-
-**Acceptance gate (Phase 2):**
-- From fresh boot: player selects god+class, sees correct preview, starts run with correct loadout and passive behavior.
-
----
-
-## Phase 3 — Skill System Mechanics
-
-### 3.1 Element Lock Enforcement
-In `assets/scripts/core/skill_system.lua`:
-- `SkillSystem.can_learn(player, skillId)` checks:
-  - skill points
-  - prerequisites
-  - element lock rule
-- track `player.elements_invested`
-- after 3 distinct elements invested: lock set
-
-`assets/scripts/ui/skills_panel.lua` shows:
-- invested elements and lock state
-- clear failure messaging on blocked learn
-
-### 3.2 Multi-Trigger Resolution (same sim frame)
-Per-sim-frame event buffer:
-- SkillSystem listens to EventBus during steps 3–4 (combat + status/aura)
-- `SkillSystem.on_event(event)` stores event records by type
-- `SkillSystem.end_frame()`:
-  1. build frame snapshot (counts + first/last per type + per-element tallies)
-  2. compute which skills fire from snapshot (no execution yet)
-  3. execute fired skills in deterministic order:
-     - by `priority` then `skillId`
-  4. events emitted during skill execution are queued for NEXT frame by default (prevents feedback loops)
-
-**Performance + robustness additions:**
-- Trigger DSL is compiled at content compile time into predicate functions.
-- Optional per-skill fields:
-  - `cooldown_s` (default 0)
-  - `max_procs_per_frame` (default 1)
-- Dev-only debugging:
-  - `SkillSystem.explain_last_eval(skill_id)` returns which trigger clause passed/failed for last frame
-
-**Trigger DSL (explicit semantics):**
-```lua
-triggers = {
-    all = { "damage_dealt", "status_applied" },  -- AND: all must occur
-    any = { "enemy_killed", "player_damaged" },  -- OR: at least one
-    count = { event = "damage_dealt", n = 3, filter = { element = "fire" } }  -- threshold
-}
-filter = { element, status_id, source_kind, is_dot, tags[] }
+### Git diff vs v1 plan
+```diff
+diff --git a/Cass_Memory_Update_Plan.md b/Cass_Memory_Update_Plan.md
+--- a/Cass_Memory_Update_Plan.md
++++ b/Cass_Memory_Update_Plan.md
+@@
+ > **Report/status schema requirement (testability + CI-friendliness):**
+ > - `test_output/status.json` must be machine-readable and stable. Minimum schema:
+->   - `{"passed": true/false, "failed": <int>, "passed_count": <int>, "total": <int>, "generated_at": "<iso8601>" }`
++>   - `{"schema_version":"1.0", "runner_version":"<semver>", "passed": true/false, "failed": <int>, "skipped": <int>, "passed_count": <int>, "total": <int>, "generated_at": "<iso8601>" }`
+@@
+ > - **(New, required)** Write `test_output/results.json` with per-test objects:
+->   - `{"test_id": "...", "test_file": "...", "category": "...", "status":"pass|fail|skip", "duration_ms":123, "artifacts":[...], "error":{...}}`
++>   - `{"schema_version":"1.0", "runner_version":"<semver>", "tests":[{"test_id": "...", "test_file": "...", "category": "...", "status":"pass|fail|skip", "duration_ms":123, "artifacts":[...], "skip_reason":"...", "error":{...}}]}`
++>
++> **(New) Schema validation deliverable (drift prevention):**
++> - Commit JSON Schemas under `planning/schemas/` (or `scripts/schemas/` if preferred):
++>   - `planning/schemas/status.schema.json`
++>   - `planning/schemas/results.schema.json`
++>   - `planning/schemas/capabilities.schema.json`
+@@
+ ### Phase 7: Test Suite Finalization
+@@
+ **Deliverables:**
+ 1. `assets/scripts/test/run_all_tests.lua`
+ 2. `test_output/coverage_report.md`
+ 3. CI-friendly test script (exit codes)
+ 4. **(New)** `scripts/validate_docs_and_registry.lua` (or `.py`) and a documented invocation
+ 5. **(New)** Generated EmmyLua stubs: `docs/lua_stubs/` (generated, not hand-edited)
++6. **(New)** JUnit report: `test_output/junit.xml` generated every run for CI consumption
++7. **(New)** Schema validation step in CI that validates `status.json`, `results.json`, and `capabilities.json` against committed schemas
 ```
 
-**Acceptance gate (Phase 3):**
-- Single-trigger skills behave as before
-- multi-trigger skills only fire when all triggers occurred in the same sim frame
-- UI blocks locked elements correctly
+---
+
+# Change 04 — Add test sharding + enforced timeouts (scale the suite without slowing CI)
+
+### What’s weak in v1
+- As coverage grows, a single run becomes slow. Filtering exists, but sharding is not explicitly designed.
+- Hung tests are a real risk once you add UI timing, event waits, or entity lifecycle edge cases.
+
+### Revision
+- Add **deterministic sharding**: `--shard-count`, `--shard-index` (hash by `test_id`).
+- Enforce default timeouts (`timeout_frames` or `timeout_ms`) for every test.
+
+### Why this makes the project better
+- **CI gets faster** by parallelizing runs across workers.
+- **No “infinite loop” stalls**: timeouts turn hangs into actionable failures.
+- **Deterministic**: the same test always lands in the same shard.
+
+### Tradeoffs
+- Requires a small amount of “runner CLI” surface area (even if it’s just a Lua config table).
+
+### Git diff vs v1 plan
+```diff
+diff --git a/Cass_Memory_Update_Plan.md b/Cass_Memory_Update_Plan.md
+--- a/Cass_Memory_Update_Plan.md
++++ b/Cass_Memory_Update_Plan.md
+@@
+ > **Harness API specifics (so it is actually implementable):**
+ > - `register(name, category, testFn, opts)` where `opts` may include `tags`, `source_ref`, and `timeout_frames` (if frame-driven).
+ > - `run(filter)` where `filter` supports:
+ >   - `category` exact match OR list
+ >   - `name_substr` match
+ >   - `tags_any` / `tags_all` (optional but recommended)
++>   - **(New)** `shard_count` / `shard_index` (optional): deterministically shard by `test_id` hash
++> - **Timeout requirement:** Every test must have a timeout (default `timeout_frames = 600` unless overridden).
+@@
+ > **Phase 1 implementation checklist (specificity):**
+@@
+ > - Decide how failures are surfaced:
+ >   - report + `TEST_FAIL:` marker lines, plus a final pass/fail marker.
++> - **(New)** Decide and document sharding inputs:
++>   - how to pass `--shard-count` and `--shard-index` into Lua runner (CLI args / config file / env vars)
+@@
+ > **CI-friendly specifics (so it is actually implementable):**
+ > - The runner must return/emit a clear pass/fail signal:
+@@
+ > - Coverage report must include:
+@@
++> **(New) CI scaling recommendation:**
++> - Add CI jobs that run shards in parallel (e.g., 4 shards):
++>   - shard 0: `--shard-count 4 --shard-index 0`
++>   - shard 1: `--shard-count 4 --shard-index 1`
++>   - ...
++> - Merge `results.json` from shards for a unified coverage report (or generate per-shard coverage with a final aggregation step).
+```
 
 ---
 
-## Phase 4 — Skills Content (32 skills)
+# Change 05 — Visual testing: per-platform baselines + diff artifacts + tolerance config + quarantine
 
-### 4.1 Skills Data Modules
-Implement 32 skills as data-driven entries (8 per element) in split modules:
-- `assets/scripts/data/skills/fire.lua`
-- `assets/scripts/data/skills/ice.lua`
-- `assets/scripts/data/skills/lightning.lua`
-- `assets/scripts/data/skills/void.lua`
+### What’s weak in v1
+- Baselines are mentioned but the lifecycle is still fuzzy:
+  - where baselines live when multiple platforms/renderers exist
+  - what to do on mismatch (you need a diff image + metric, otherwise debugging is painful)
+- Without a quarantine mechanism, the likely “future outcome” is disabling visual tests entirely once they flake on a teammate’s GPU.
 
-Each skill defines:
-- `id`, `element`, `cost`, `display_name`, `description`
-- `triggers` DSL (as defined in 3.2)
-- `execute(player, frameSnapshot)`
-- optional `on_learn(player)` for passives
-- optional `cooldown_s`, `max_procs_per_frame`, `priority`
+### Revision
+- Standardize baseline layout:
+  - `test_baselines/screenshots/<platform>/<renderer>/<safe_test_id>.png`
+- Add a tolerance config:
+  - `test_baselines/visual_tolerances.json` (per test or per category)
+- On mismatch, emit diff artifacts:
+  - `test_output/artifacts/<safe_test_id>/baseline.png`
+  - `test_output/artifacts/<safe_test_id>/actual.png`
+  - `test_output/artifacts/<safe_test_id>/diff.png`
+  - plus a numeric metric in `results.json`
+- Add quarantine file for visual flakes:
+  - `test_baselines/visual_quarantine.json` with reasons + issue links
+  - Quarantined visual tests run and report, but do **not** fail PR CI (still fail on scheduled “full verification” runs).
 
-### 4.2 Event Coverage for Skills
-Ensure runtime emits enough events:
-- elemental damage events (`damage_dealt.damage.element`)
-- kill events (`enemy_killed`)
-- wave start (`wave_start`)
-- player damaged (`player_damaged`)
-- status applied/changed (`status_applied`, `status_stack_changed`)
+### Why this makes the project better
+- **Debuggability**: baseline diffs reduce “works on my machine” debates.
+- **Reality-proof**: per-platform storage avoids false failures due to rasterization differences.
+- **You keep signal**: quarantine keeps coverage visible without making PR CI unusable.
 
-**Acceptance gate (Phase 4):**
-- Exactly 32 skills load (unique IDs)
-- learn successfully
-- each can be triggered in a controlled smoke run without runtime errors
+### Tradeoffs
+- Slightly more structure and files in the repo.
+- You must set policy: who can quarantine, how long quarantine lasts, how to unquarantine (recommendation below).
 
----
+### Git diff vs v1 plan
+```diff
+diff --git a/Cass_Memory_Update_Plan.md b/Cass_Memory_Update_Plan.md
+--- a/Cass_Memory_Update_Plan.md
++++ b/Cass_Memory_Update_Plan.md
+@@
+ > **Stronger Visual Verified (recommended):**
+-> - If a baseline exists at `test_baselines/screenshots/<safe_test_id>.png` (or per-platform subfolder),
+->   the harness must compare and mark the test failed on mismatch (with tolerance).
++> - If a baseline exists at `test_baselines/screenshots/<platform>/<renderer>/<safe_test_id>.png`,
++>   the harness must compare and mark the test failed on mismatch (with tolerance).
+@@
+ > **Baseline management (new):**
+ > - Add a harness flag `--record-baselines` (manual only) to write/update baseline images.
+ > - CI must never run in record mode.
++> - **(New)** Store tolerance config in `test_baselines/visual_tolerances.json`:
++>   - default tolerance (pixel diff / SSIM threshold)
++>   - optional per-test overrides for known nondeterminism.
++> - **(New)** On mismatch, write diff artifacts to `test_output/artifacts/<safe_test_id>/` (baseline/actual/diff + metrics).
++> - **(New, recommended)** Maintain `test_baselines/visual_quarantine.json`:
++>   - quarantined tests run but do not fail PR CI; they still fail scheduled full runs.
+@@
+ > **Report/status schema requirement (testability + CI-friendliness):**
+@@
+ > - `test_output/report.md` must include:
+@@
+ >     - `test_output/artifacts/<safe_test_id>/`
++> - **(New)** For visual failures, report must link to diff artifacts (baseline/actual/diff) and include the tolerance used.
+```
 
-## Phase 5 — Forms + Aura System + Reactions
+Recommended quarantine policy (add this in the plan text near Phase 7 or Maintenance Mode):
 
-### 5.1 Form Status Definitions
-In `assets/scripts/data/status_effects.lua`, define:
-- `fireform`, `iceform`, `stormform`, `voidform`
-- each has:
-  - `type="buff"`
-  - `duration` (30–60s)
-  - `stat_mods`
-  - `aura{radius, tick_interval, effects[]}`
-  - `visuals`
-  - `immunities{ status_tags[] }`
-- `on_apply` emits `form_activated`
-- `on_expire/on_remove` emits `form_expired`
-
-### 5.2 AuraSystem Runtime
-Add `assets/scripts/combat/aura_system.lua`:
-- `register(entity, auraId, config)`, `unregister(entity, auraId)`, `update(sim_dt)`
-- tick applies damage + status stacks to enemies in radius
-- cleans up dead entities automatically
-
-**Perf + fairness constraints:**
-- tick staggering: each aura has `phase` so not all auras tick the same sim frame
-- cap targets per tick (configurable) + stable ordering by `eid`
-- if physics returns unordered results, AuraSystem sorts before applying effects
-- damage routed through `DamageSystem.apply(...)` (canonical events)
-
-**CRITICAL:** `AuraSystem.update()` must be called BEFORE `SkillSystem.end_frame()`.
-
-### 5.3 Form Threshold Tracking
-Threshold tracking driven by `damage_dealt` events:
-- per-element counters on player (e.g., `fire_damage_accum`)
-- form skill enables threshold behavior; when reached:
-  - applies form status
-  - resets counter
-
-### 5.4 ReactionSystem (small scope, big payoff)
-Add `assets/scripts/combat/reaction_system.lua`:
-- listens to `status_applied`, `status_stack_changed`, `damage_dealt`
-- applies 2–3 data-driven reactions:
-  - **Shatter:** freeze + heavy physical hit → bonus damage
-  - **Overload:** charge + lightning damage → extra damage tick
-  - **Detonate:** doom at max stacks → area damage
-- routes reaction damage through DamageSystem
-- emits dev-only `reaction_triggered`
-
-**Acceptance gate (Phase 5):**
-- at least one form triggers naturally via thresholds
-- aura ticks for full duration
-- cleanup occurs on expiry and player death
-- at least one reaction triggers in a controlled test
+- Quarantine entries require:
+  - a reason,
+  - an owner,
+  - and an issue/task link.
+- Quarantine expires after N days unless renewed (forces cleanup).
 
 ---
 
-## Phase 6 — Cards & Wands (full pool + triggers)
+# Change 06 — Automate Sol2 binding extraction (Tier 0) to reduce manual labor and drift
 
-### 6.1 Modifier Cards (12)
-Implement in `assets/scripts/data/cards/modifiers.lua`:
-- Chain 2, Pierce, Fork, Homing, Larger AoE, Concentrated, Delayed, Rapid, Empowered, Efficient, Lingering, Brittle
+### What’s weak in v1
+- Manually enumerating 390+ bindings is doable but:
+  - it’s slow,
+  - it’s error-prone,
+  - and it tends to drift after the first big pass.
+- “Maintenance Mode” wants to regenerate inventories, but v1 does not define how they’re generated (manual vs scripted).
 
-Validate stacking via `assets/scripts/core/card_eval_order_test.lua`.
+### Revision
+- Add a binding inventory extractor script:
+  - `scripts/extract_sol2_bindings.py` (or `.lua` if you prefer)
+- The extractor produces Tier 0 output for `planning/inventory/bindings.*.json`:
+  - lua_name, type, source_ref, inferred signature (best effort), plus an “extraction_confidence” field.
+- Humans then add Tier 1/2 semantics in docs, but the inventory baseline stays accurate and cheap to update.
 
-### 6.2 Action Cards (16 elemental)
-Implement 4 per element across:
-- `assets/scripts/data/cards/actions_fire.lua`
-- `assets/scripts/data/cards/actions_ice.lua`
-- `assets/scripts/data/cards/actions_lightning.lua`
-- `assets/scripts/data/cards/actions_void.lua`
+### Why this makes the project better
+- **Order-of-magnitude faster** to keep inventories current.
+- **Better correctness** on boring data (names, source locations).
+- **More robust maintenance**: changes to binding files automatically surface as inventory diffs in PRs.
 
-Ensure each action:
-- emits `damage_dealt` via DamageSystem
-- applies statuses via StatusEngine in a canonical way (so status events are consistent)
+### Tradeoffs
+- Extraction won’t be perfect (dynamic table assignments, computed names). That’s fine:
+  - mark those as `extraction_confidence: low` and require manual review.
 
-### 6.3 Findable (Shop) Wands (6) + Trigger Types
-Define 6 templates in wand registry with trigger metadata + shop pricing/stages:
-- `on_bump_enemy`
-- `on_distance_traveled(distance)`
-- `on_stand_still(duration)`
-- `on_enemy_killed`
-- `on_player_hit`
-- `every_N_seconds(interval)`
-
-Implement/extend trigger registration using Lifecycle handles (no raw connects/timers).
-
-Wand runtime uses compiled plans:
-- on equip / deck change: `CardPipeline.compile(wand)` → `wand.exec_plan`
-- on trigger: execute `wand.exec_plan` (no per-trigger rebuild)
-
-**CardPipeline determinism requirements:**
-- compilation cached by `deck_hash` (cards + order + wand base stats)
-- modifiers have explicit ordering:
-  - by `phase` (e.g., `target_select`, `shape`, `timing`, `damage_scale`), then by `card_id`
-  - never rely on Lua table iteration order
-- pipeline emits IR snapshot (dev-only) for diff tests
-
-**Acceptance gate (Phase 6):**
-- modifiers affect action execution deterministically
-- 6 shop wands fire under triggers and do not leak timers/handlers when swapped
-- compile caching prevents unnecessary rebuilds on no-op changes
-
----
-
-## Phase 7 — Artifacts & Equipment
-
-### 7.1 Artifacts (15 across 3 tiers)
-In `assets/scripts/data/artifacts.lua` define:
-- 5 common + 5 uncommon + 5 rare
-
-Rules:
-- every artifact effect must be:
-  - stat-mod based OR event-hook based registered through Lifecycle (auto-cleaned)
-- prefer canonical events over bespoke timers where possible
-
-### 7.2 Equipment (12 across 3 slots)
-In `assets/scripts/data/equipment.lua` define:
-- 4 chest, 4 gloves, 4 boots
-
-Ensure equipment system:
-- applies stat mods
-- registers hooks through Lifecycle (auto-cleaned)
-
-**Acceptance gate (Phase 7):**
-- all items load
-- equipping/unequipping never stacks permanently
-- starter equipment references are valid
+### Git diff vs v1 plan
+```diff
+diff --git a/Cass_Memory_Update_Plan.md b/Cass_Memory_Update_Plan.md
+--- a/Cass_Memory_Update_Plan.md
++++ b/Cass_Memory_Update_Plan.md
+@@
+ ### Phase 2: Sol2 Binding Inventory
+@@
+ **Deliverables per agent:**
+ 1. Binding list: `planning/bindings/{system}_bindings.md`
+ 2. Test file: `assets/scripts/test/test_{system}_bindings.lua`
+ 3. cm rules for high-frequency bindings
+ 4. **(New)** Machine-readable binding inventory: `planning/inventory/bindings.{system}.json`
++5. **(New, recommended)** Automated extractor: `scripts/extract_sol2_bindings.py` (single-owner, used by all agents)
+@@
+ **Binding extraction requirements (specific + repeatable):**
+-- For each source C++ file listed, enumerate:
+-  - usertypes (types), methods, properties, constants, and free functions.
++**Automation-first rule (reduce drift):**
++- First, run `scripts/extract_sol2_bindings.py` to generate/update `planning/inventory/bindings.{system}.json`.
++- Then, humans validate and enrich the output (Tier 1/2 docs + tests).
++- Any binding not captured by the extractor must be documented under **“Extractor gaps”** with `source_ref` so the script can be improved later.
+@@
+ **Machine-readable inventory schema (new):**
+@@
+   "bindings": [
+     {
+       "lua_name": "physics.segment_query",
+       "type": "function",
+       "signature": "physics.segment_query(world, start_point, end_point, callback)",
+       "doc_id": "binding:physics.segment_query",
+       "source_ref": "src/systems/physics/physics_lua_bindings.cpp:segment_query",
++      "extraction_confidence": "high",  // high | medium | low
+       "frequency": {
+@@
+       "tier": 2,
+       "verified": true,
+       "test_id": "physics.segment_query.hit_entity"
+     }
+   ]
+ }
+```
 
 ---
 
-## Phase 8 — Economy & Progression
+# Change 07 — Automate ECS component extraction (Tier 0) + generate the matrix skeleton
 
-### 8.1 Skill Points by Level
-Integrate into existing level-up flow:
-- Level 1: 0 points
-- Levels 2–6: +2 points each (10 total by level 6)
+### What’s weak in v1
+- Component docs are large and easy to get subtly wrong (field lists and types drift).
+- The accessibility matrix is manual; it will drift unless derived from a single source.
 
-UI shows current available points immediately on grant.
+### Revision
+- Add `scripts/extract_components.py` that:
+  - parses the component definitions file(s) (regex or clang-based)
+  - produces `planning/inventory/components.*.json`
+  - optionally emits a **matrix skeleton** (markdown) listing all components discovered, ready for agents to fill Lua accessibility.
 
-### 8.2 Shop Stage Timeline (SHOP ONLY; loot handled separately)
-Stage-based shop inventory generation:
-- Stage 1: equipment only
-- Stage 2: equipment + 1–2 wands
-- Stage 3: equipment + 1–2 wands
-- Stage 4: equipment + 1–2 wands + 1 artifact (guaranteed)
-- Stage 5: boss (no shop)
+### Why this makes the project better
+- Completeness becomes cheap to verify.
+- Drift becomes obvious: changes in `components.hpp` immediately change the extracted inventory in PRs.
 
-Loot table (separate from shop):
-- elite enemies can drop an artifact at Stage 3+ (chance-based)
+### Tradeoffs
+- Type extraction might be imperfect. That’s OK; treat extraction as Tier 0 baseline and let humans refine.
 
-**Deterministic generation:**
-- use hashed seed mixing (supports independent RNG streams):
-  - `shop_seed = Hash.combine(run_seed, stageIndex, shopVisitIndex)`
-- avoid simple addition to reduce collisions and improve future extensibility
-
-**Player agency:**
-- add 1 reroll option per shop (cost scales, e.g., 10g then 20g)
-- add “lock 1 item” before reroll (keep one offer, reroll the rest)
-
-Enforce:
-- starter wands never appear for sale
-- shop wands priced 25–50g
-
-**Acceptance gate (Phase 8):**
-- shop contents follow stage table
-- purchasing deducts gold correctly
-- no empty-inventory softlocks (fallbacks applied)
-- reroll + lock works and is deterministic for same seed
-
----
-
-## 5) Validation, QA, and Definition of Done
-
-### 5.1 Automated Validation (dev-only script)
-Add a lightweight validator asserting:
-- unique IDs across skills/cards/wands/items/statuses
-- all references exist (starter cards, starter gear, form status IDs, shop wand IDs)
-- no missing required fields
-- registry compilation succeeds (no dangling references, no duplicate IDs, no invalid trigger names)
-
-**Determinism smoke (dev-only):**
-- fixed seed → run N sim frames headless → checksum key counters (kills, damage totals, gold)
-
-**Replay smoke (dev-only, HIGH VALUE):**
-- record a 600-frame replay (input stream + run_seed + content_build hash)
-- re-run the replay headless:
-  - assert identical checksums
-  - assert identical event trace hash (optional, dev-only)
-
-**Replay format versioning:**
-- `replay_version = 1`
-- replay invalid if `content_build.build_hash` mismatches (fail fast with message)
-
-**Hook leak checks (dev-only):**
-- equip/unequip wands repeatedly → assert no growth in active subscriptions/timers
-- equip/unequip artifacts/equipment repeatedly → same assertion
-
-### 5.2 Manual Smoke Checklist (must pass)
-- Start run for all 8 god/class combinations (4×2) and confirm correct loadout
-- Verify status decay visually and numerically (scorch/freeze/charge/doom/inflame)
-- Learn skills across up to 3 elements; confirm 4th element is blocked with message
-- Trigger at least one multi-trigger skill successfully
-- Trigger at least one form and observe aura ticks + expiry cleanup
-- Enable event trace logging for one run; confirm trace is stable for same seed + same replay input
-- Buy and use at least 2 shop wands; confirm triggers work and stop after unequip
-- Equip 3 equipment slots + 2 artifacts; confirm stats/effects apply and remove cleanly
-- Run UBS before merging final workstreams
+### Git diff vs v1 plan
+```diff
+diff --git a/Cass_Memory_Update_Plan.md b/Cass_Memory_Update_Plan.md
+--- a/Cass_Memory_Update_Plan.md
++++ b/Cass_Memory_Update_Plan.md
+@@
+ ### Phase 3: ECS Component Documentation
+@@
+ **Deliverables:**
+ 1. Component reference: `planning/components/{category}_components.md`
+ 2. Lua accessibility matrix (which components can be accessed from Lua)
+ 3. cm rules for component access patterns
+ 4. **(New)** Machine-readable component inventory: `planning/inventory/components.{category}.json`
++5. **(New, recommended)** Automated extractor: `scripts/extract_components.py` (single-owner) that generates Tier 0 component lists and a matrix skeleton.
+@@
+ **Lua accessibility matrix requirements (testable + explicit):**
+ - For each component:
+   - Mark `Lua Access: Yes/No/Partial`.
+@@
+ > **Matrix artifact specificity (implementability):**
+ > - The "Lua accessibility matrix" must have a concrete file destination. Default recommendation:
+ >   - `planning/components/lua_accessibility_matrix.md`
++> - **(New)** Generate the initial `lua_accessibility_matrix.md` skeleton from the extractor so it always lists all discovered components.
+```
 
 ---
 
-## Appendix A: Summary of v2 Changes
+# Change 08 — Auto-generate scope stats to eliminate stale tables and inconsistent counts
 
-| Change | Impact |
-|--------|--------|
-| Formal EventBus API + envelope-only canonical events + immutability rules | Correctness, determinism, fewer “ghost triggers” |
-| Fixed-step simulation + stable iteration ordering rule | True determinism across machines |
-| Registry stable idx assignment + content_build hash/id_maps | Save/replay stability, safer optimization |
-| InputRecorder + ReplayRunner | Real reproducibility, CI regression protection |
-| DamageSystem centralization | Consistent damage events/math, easier balancing |
-| Aura tick staggering + target caps + stable ordering | Performance and fairness |
-| Skill trigger compilation + cooldown/proc caps + explain tooling | Performance and robustness |
-| CardPipeline cache by deck_hash + deterministic modifier phases + IR snapshot | Deterministic card behavior + testability |
-| Shop seed hashing + “lock 1 item” | Better agency, more robust determinism |
-| `"nil"` → `"nihil"` with alias support | Removes Lua-footgun and log ambiguity |
+### What’s weak in v1
+- The plan includes multiple count tables (Scope, Acceptance Criteria, Appendix), and they already don’t fully match (Lua script counts).
+- v1 introduces reconciliation rules, but that still relies on humans to update several places correctly.
+
+### Revision
+- Add a stats generator script:
+  - `scripts/recount_scope_stats.py`
+- Output:
+  - `planning/inventory/stats.json`
+  - `planning/stats.md`
+- Replace in-plan numeric tables with:
+  - “Generated from `planning/inventory/stats.json` on <date>”
+  - and keep the Appendix as a *snapshot* or remove it entirely to avoid duplication.
+
+### Why this makes the project better
+- **Truthfulness**: counts don’t drift.
+- **Less busywork**: no one has to remember to update three tables in sync.
+- **Better CI drift detection**: if stats change, CI can require a doc update.
+
+### Tradeoffs
+- You lose “static plan numbers” inside the plan, but you gain correctness.
+
+### Git diff vs v1 plan
+```diff
+diff --git a/Cass_Memory_Update_Plan.md b/Cass_Memory_Update_Plan.md
+--- a/Cass_Memory_Update_Plan.md
++++ b/Cass_Memory_Update_Plan.md
+@@
+ ### Scope
+-| Category | Count | Status |
+-|----------|-------|--------|
+-| Sol2 Bindings | ~58 types, ~390 functions | To document |
+-| ECS Components | ~128 components | To document |
+-| Lua Scripts | ~280 files | To mine for patterns |
+-| Existing Docs | 30+ markdown files | To verify/update |
++| Category | Count | Status |
++|----------|-------|--------|
++| Sol2 Bindings | **Generated** (see `planning/inventory/stats.json`) | To document |
++| ECS Components | **Generated** (see `planning/inventory/stats.json`) | To document |
++| Lua Scripts | **Generated** (see `planning/inventory/stats.json`) | To mine for patterns |
++| Existing Docs | **Generated** (see `planning/inventory/stats.json`) | To verify/update |
+@@
+ > **Scope validation requirement (for completeness + truthfulness):** The counts above are *estimates* and must be validated during Phase 2/3 inventory passes.
++>
++> **(New) Automation requirement (stop stale counts):**
++> - Add `scripts/recount_scope_stats.py` that writes:
++>   - `planning/inventory/stats.json` (machine-readable)
++>   - `planning/stats.md` (human summary)
++> - CI should fail if `stats.json` changes but the derived docs (inventories/stubs/index) are not regenerated.
+@@
+ ## Appendix: Codebase Statistics
+-### Sol2 Bindings by File
++### Codebase Statistics (generated snapshot)
++These figures must be treated as *generated output* from `scripts/recount_scope_stats.py` to prevent drift.
+```
 
 ---
 
-## Appendix B: Deferred Items (Not in v3 Scope)
+# Change 09 — Add a one-command “check all” workflow (make hygiene cheap)
 
-Explicitly deferred:
-- Daily Seed / Shareable Run Code
-- Wand Upgrade Sink (gold sink)
+### What’s weak in v1
+- v1 defines many moving pieces:
+  - inventories, stubs, validator, tests, cm rules importer
+- Without a single “do the right thing” command, people will run subsets and drift will creep in.
 
-Candidate post-v3 follow-ups (if time):
-- Separate RNG streams for combat/projectiles/AI/loot (same Hash.combine approach)
-- More reaction types and cross-element synergies (balance pass)
-- Save/load of mid-run state (requires broader serialization contracts)
+### Revision
+- Add `scripts/check_all.(sh|ps1)` (or `justfile`/`Makefile`) that runs:
+  1. regenerate inventories
+  2. regenerate stubs
+  3. run validator(s)
+  4. run tests (optionally shard-aware)
+  5. validate schemas
+  6. regenerate index docs
+- Optionally add pre-commit hook to call a subset (fast checks only).
+
+### Why this makes the project better
+- **Human behavior**: people do the easy thing. Make the correct process easy.
+- **Less CI churn**: fewer “why did CI fail?” because local checks match CI checks.
+
+### Tradeoffs
+- Some cross-platform scripting work (sh + ps1). Keep it minimal.
+
+### Git diff vs v1 plan
+```diff
+diff --git a/Cass_Memory_Update_Plan.md b/Cass_Memory_Update_Plan.md
+--- a/Cass_Memory_Update_Plan.md
++++ b/Cass_Memory_Update_Plan.md
+@@
+ ### Phase 7: Test Suite Finalization
+@@
+ **Deliverables:**
+@@
+ 5. **(New)** Generated EmmyLua stubs: `docs/lua_stubs/` (generated, not hand-edited)
++6. **(New)** One-command developer workflow:
++   - `scripts/check_all.(sh|ps1)` that regenerates inventories/stubs, runs validators, runs tests, and validates schemas.
+@@
+ ## Maintenance Mode (new, post-Phase 8)
+@@
+ ### CI enforcement:
+ - CI should fail if inventories changed but:
+   - docs were not updated, or
+   - registry mappings are missing for previously verified doc_ids.
++  
++### Developer workflow enforcement (new):
++- Recommend running `scripts/check_all` before opening a PR.
++- Optional: install a pre-commit hook that runs a **fast subset** (validators + schema checks, no visual tests).
+```
+
+---
+
+# Change 10 — Strengthen cm rule governance: richer schema + idempotent importer + dedupe
+
+### What’s weak in v1
+- `cm_rules_candidates.yaml` is a good start but:
+  - `rule_id` isn’t guaranteed unique (no enforcement described)
+  - importer behavior isn’t specified (add vs update vs skip)
+  - rule text can duplicate across categories and slowly clutter cm.
+
+### Revision
+- Expand schema to support:
+  - unique `rule_id` (enforced)
+  - `severity` (info/warn/error)
+  - `tags`
+  - `rationale` (short, human explanation)
+  - `example_good` / `example_bad` (optional)
+  - `last_verified_commit` (helps decide if rule needs re-verification)
+- Importer becomes **idempotent**:
+  - same `rule_id` updates existing rule (or replaces it deterministically)
+  - avoids duplicates by hashing normalized rule_text + category
+- Export becomes reproducible from YAML too (cm export remains useful but not the only source).
+
+### Why this makes the project better
+- **No playbook clutter**: duplicates are eliminated at the source.
+- **Traceability improves**: you know which commit last verified the rule’s test.
+- **Long-term maintenance**: rules become manageable as the project grows.
+
+### Tradeoffs
+- Slightly larger YAML file, but it’s still the best place for this metadata.
+
+### Git diff vs v1 plan
+```diff
+diff --git a/Cass_Memory_Update_Plan.md b/Cass_Memory_Update_Plan.md
+--- a/Cass_Memory_Update_Plan.md
++++ b/Cass_Memory_Update_Plan.md
+@@
+ > **Declarative rules file schema (new):**
+ ```yaml
+ # planning/cm_rules_candidates.yaml
+ rules:
+   - rule_id: "ui-gotcha-001"
+     category: "ui-gotchas"
+     rule_text: "When using ChildBuilder.setOffset on UIBox containers, always call ui.box.RenewAlignment(registry, container) afterward to force child layout update"
+     doc_id: "pattern:ui.uibox_alignment.renew_after_offset"
+     test_ref: "test_ui_patterns.lua::ui.uibox_alignment.renew_after_offset"
+     quirks_anchor: "uibox-alignment"
+-    status: "verified"  # verified | unverified | pending
++    status: "verified"  # verified | unverified | pending
++    severity: "error"   # info | warn | error
++    tags: ["ui", "layout", "ordering"]
++    rationale: "UIBox does not recompute child layout after offset changes unless RenewAlignment is called."
++    example_good: |
++      ChildBuilder.setOffset(...)
++      ui.box.RenewAlignment(registry, container)
++    example_bad: |
++      ChildBuilder.setOffset(...) -- missing RenewAlignment, children remain stale
++    last_verified_commit: "<git_sha>"
+@@
+ > **(New)** Deterministic importer script: `scripts/import_cm_rules.(py|lua)`
++> - **Idempotency requirement:** importer must treat `rule_id` as the primary key:
++>   - if rule exists, update/replace deterministically
++>   - if rule does not exist, add
++> - **Dedupe requirement:** importer must prevent duplicates by normalized (category + rule_text) fingerprint.
++> - **Safety requirement:** importer must import only `status: verified` rules (same as v1), but may optionally emit a report listing pending/unverified rules.
+```
+
+---
+
+# Change 11 — Lua developer experience: integrate stubs into LSP, document regen, and enforce in CI
+
+### What’s weak in v1
+- “Generate EmmyLua stubs” is great, but adoption depends on:
+  - a Lua language server config pointing at `docs/lua_stubs/`
+  - regen docs so developers know how to update stubs
+  - CI enforcement so stubs don’t drift silently
+
+### Revision
+- Add `.luarc.json` (or project LSP config) that includes:
+  - `docs/lua_stubs/` in workspace library
+- Add `docs/lua_stubs/README.md` describing regeneration command.
+- Enforce stub regen + diff check in CI.
+
+### Why this makes the project better
+- **Stubs become used**, not just generated.
+- **Autocomplete and signature help** reduces mistakes and speeds up dev.
+- **Drift detection** keeps IDE hints accurate.
+
+### Tradeoffs
+- Minor config maintenance. Worth it.
+
+### Git diff vs v1 plan
+```diff
+diff --git a/Cass_Memory_Update_Plan.md b/Cass_Memory_Update_Plan.md
+--- a/Cass_Memory_Update_Plan.md
++++ b/Cass_Memory_Update_Plan.md
+@@
+ ## Executive Summary
+@@
+ **New developer-facing output (high leverage):**
+ - Generate IDE stubs (EmmyLua) for Lua-facing API from the binding inventory so humans get autocomplete and signatures.
++ - **(New)** Ship Lua language-server config pointing at generated stubs so the stubs are actually used (`.luarc.json` or repo-equivalent).
+@@
+ ### Phase 7: Test Suite Finalization
+@@
+ **Deliverables:**
+@@
+ 5. **(New)** Generated EmmyLua stubs: `docs/lua_stubs/` (generated, not hand-edited)
++6. **(New)** Lua LSP configuration file (recommended):
++   - `.luarc.json` (or repo standard) referencing `docs/lua_stubs/`
++7. **(New)** `docs/lua_stubs/README.md` documenting stub regeneration and expected CI behavior
+@@
+ > **EmmyLua stub generation (new):**
+@@
+ > - Even partial stubs are valuable; CI should regenerate stubs and fail if they differ from committed version (drift detection).
++> - **(New)** CI should also validate `.luarc.json` (or equivalent) continues to reference the stub path so developer tooling remains functional.
+```
+
+---
+
+# Change 12 — Make docs easy to find + enforce link integrity (prevent “knowledge rot”)
+
+### What’s weak in v1
+- You will end up with many docs:
+  - `planning/bindings/*.md`
+  - `planning/components/*.md`
+  - `planning/patterns/*.md`
+  - `docs/quirks.md`
+- Without a *generated* index and link checker, people won’t find the right doc, and anchors/test references will drift.
+
+### Revision
+- Add a generated “reference index”:
+  - `docs/reference/index.md` (or `planning/api_reference.md`) that links to everything and groups by system.
+- Add link integrity checks:
+  - `scripts/link_check_docs.py` (or `.lua`)
+  - checks:
+    - `doc_id` uniqueness
+    - `Test:` references point to real tests
+    - `quirks_anchor` exists
+    - markdown links resolve within repo
+
+### Why this makes the project better
+- **Compelling/useful**: developers can actually navigate the knowledge base.
+- **Trustworthiness**: links are correct; evidence references are real.
+- **Cheaper maintenance**: CI catches broken anchors before merge.
+
+### Tradeoffs
+- Slight build-time overhead; trivial compared to the value.
+
+### Git diff vs v1 plan
+```diff
+diff --git a/Cass_Memory_Update_Plan.md b/Cass_Memory_Update_Plan.md
+--- a/Cass_Memory_Update_Plan.md
++++ b/Cass_Memory_Update_Plan.md
+@@
+ > **API reference deliverable clarification (completeness + implementability):**
+@@
+ > as the "API Reference" output. Optionally add `planning/api_reference.md` as a stable index linking to those files.
++>
++> **(New) Discoverability requirement (make docs usable):**
++> - Add a generated index file:
++>   - `docs/reference/index.md` (preferred if docs are user-facing) OR `planning/api_reference.md` (if planning area is preferred)
++> - Index must group by system and include links to:
++>   - bindings docs, component docs, pattern docs, quirks sections, and stubs.
+@@
+ ### Phase 7: Test Suite Finalization
+@@
+ **Deliverables:**
+@@
+ 4. **(New)** `scripts/validate_docs_and_registry.lua` (or `.py`) and a documented invocation
+ 5. **(New)** Generated EmmyLua stubs: `docs/lua_stubs/` (generated, not hand-edited)
++6. **(New)** `scripts/link_check_docs.(py|lua)` that validates:
++   - no duplicate `doc_id` in docs,
++   - all `Test:` references exist in the harness registration,
++   - all `quirks_anchor` targets exist in `docs/quirks.md`,
++   - and no broken intra-repo markdown links.
++7. **(New)** Generated reference index: `docs/reference/index.md` (or `planning/api_reference.md`)
+```
+
+---
+
+## Optional “v2 polish” add-ons (if you want even more robustness)
+
+These are not strictly necessary, but are high leverage if you want the system to age well:
+
+1. **“Fast PR vs Full Verification” CI split**
+   - PR CI runs: non-visual + no slow tests + validators.
+   - Nightly runs: visual + slow + full suite.
+
+2. **Quirk scope metadata**
+   - Add `Applies to:` fields with engine version / commit ranges, so outdated quirks get pruned.
+
+3. **Binding deprecations**
+   - Add `deprecated: true` and `replacement: ...` in inventories; stubs can mark `---@deprecated`.
+
+If you want these, they fit naturally into the earlier changes (schemas + index + stubs + maintenance).
+
+---
+
+## Implementation order (recommendation)
+
+These changes are designed to be additive. A practical order:
+
+1. **Change 01 + 02** in Phase 1 (naming, TEST_ROOT, capabilities)
+2. **Change 03 + 04** in Phase 1/7 (schemas, junit, sharding, timeouts)
+3. **Change 05** once screenshots work
+4. **Change 06 + 07 + 08** before large-scale documentation authoring (automation pays immediately)
+5. **Change 09 + 12** to keep the repo healthy as files multiply
+6. **Change 10 + 11** in Phase 7/8 once pipelines exist
+
+---
+
+## What you get if you apply all 12 changes
+
+A project where:
+- inventories are **cheap to regenerate**, and drift is caught immediately
+- tests are **portable** (SKIP with reason), **scalable** (shards), and **CI-friendly** (JUnit)
+- visual verification is **debuggable** (diff artifacts) instead of frustrating
+- docs are **discoverable** and **trustworthy** (index + link checks)
+- cm rules are **governed** and **traceable** (idempotent importer + metadata)
+- dev UX is **meaningfully improved** (stubs + LSP config used by default)

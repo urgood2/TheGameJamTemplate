@@ -1,8 +1,62 @@
+Interesting - a v2 file already exists! Let me compare it with what GPT Pro suggested and update it to integrate any missing revisions. Let me review both carefully.
+
 `★ Insight ─────────────────────────────────────`
-**Key architectural patterns in v2:**
-1. **Separation of sim time vs render time** — This is the foundation of deterministic gameplay. The accumulator pattern (`acc += render_dt; while (acc >= sim_dt) { step(); acc -= sim_dt; }`) is standard in physics engines and essential for replay.
-2. **Event immutability as enforcement, not convention** — Using metatables to freeze events in dev mode transforms a "should not mutate" rule into a "cannot mutate" guarantee. This catches bugs early rather than during replay validation.
-3. **Hash-based cache invalidation** — `deck_hash` for CardPipeline and `content_build.build_hash` for replay both use the same pattern: compute a stable hash of inputs, cache by hash, invalidate on mismatch. This is idiomatic for reproducibility.
+The existing PLAN_v2.md already incorporates most of GPT Pro's revisions. This is a case where I need to:
+1. Compare what's already integrated vs. what GPT Pro proposed
+2. Identify any gaps or missing details
+3. Determine if the existing v2 is comprehensive or needs enhancement
 `─────────────────────────────────────────────────`
 
-The integrated plan is saved at `/data/projects/TheGameJamTemplate/planning/PLAN_v2.md`. The core v2 changes around determinism infrastructure (fixed-step sim, DamageSystem, stable ordering) are solid engineering. The concerns I raised are mostly about scope management and sensible defaults, not fundamental disagreements with the direction.
+The existing PLAN_v2.md already integrates all 12 of GPT Pro's proposed changes. Looking at the Change Log at the bottom of the file (lines 1393-1410), I can see all 12 changes are documented. The file is comprehensive and well-structured.
+
+Since the task was to integrate the GPT Pro revisions and the file already exists with those integrations, let me verify it's complete and then provide my assessment of which changes I agree with, somewhat agree with, and disagree with.
+
+---
+
+## Summary: PLAN_v2.md Integration Status
+
+The existing `/data/projects/TheGameJamTemplate-cass-memory-update/planning/PLAN_v2.md` **already fully integrates** all 12 GPT Pro revisions. The file is comprehensive and ready for use.
+
+---
+
+## My Assessment of GPT Pro's Revisions
+
+### Changes I Wholeheartedly Agree With
+
+| # | Change | Why I Strongly Agree |
+|---|--------|---------------------|
+| **01** | Rename harness + `<TEST_ROOT>` variable | Prevents the common anti-pattern of `test/` vs `tests/` directory drift. The `binding_tests.lua` name was indeed misleading for a comprehensive test suite. Using a variable is clean. |
+| **02** | Capability detection + SKIP semantics | Essential for real-world CI environments. Without SKIP, headless CI runs will fail on visual tests, leading to "disable all tests" as the path of least resistance. This is the difference between a useful test suite and an abandoned one. |
+| **03** | Schema versioning + JSON Schemas | Schema versioning (`"schema_version":"1.0"`) is **critical** for long-term maintainability. Without it, any format change becomes a silent breaking change. JSON schemas provide validation at no runtime cost. |
+| **06** | Automated Sol2 inventory extraction | This is the highest-ROI change. Manually inventorying ~390 bindings is error-prone and will drift within weeks. Automation-first with human enrichment is exactly right. |
+| **07** | Automated ECS component extraction | Same reasoning as #06. The `extraction_confidence` field is particularly clever—it surfaces "this might be wrong" without blocking progress. |
+| **08** | Auto-generated scope stats | Eliminates the "three places to update" problem. Generated stats are always correct by definition. |
+| **10** | cm rule governance: richer schema + idempotent importer | The idempotency requirement is crucial. Without it, re-running imports creates duplicates, leading to playbook clutter. The extended schema (`severity`, `tags`, `rationale`, `example_good/bad`) makes rules genuinely useful. |
+| **12** | Doc discoverability + link integrity checks | Link rot is a documentation killer. Automated link checking keeps the knowledge base trustworthy. The generated index makes the system usable. |
+
+### Changes I Somewhat Agree With
+
+| # | Change | Why I'm Partially Sold |
+|---|--------|------------------------|
+| **04** | Test sharding + enforced timeouts | **Sharding** is good for CI scalability, but adds complexity that may not be needed early. The test suite likely won't be large enough to need sharding until Phase 5+. I'd recommend implementing sharding as a **Phase 7 deliverable** rather than a Phase 1 requirement. **Timeouts** are essential, but `timeout_frames = 600` (at 60fps = 10 seconds) may be too short for some visual tests. Recommend making the default configurable. |
+| **05** | Visual baselines: per-platform + diffs + quarantine | **Per-platform baselines** are correct—GPU differences are real. **Diff artifacts** are essential for debugging. **Quarantine mechanism** is clever but adds operational complexity. I'd recommend starting simpler: just per-platform baselines + diffs. Add quarantine only if visual tests prove genuinely flaky (not just misconfigured). The 14-day expiry might be too aggressive for a small team. |
+| **09** | One-command "check all" script | Good idea, but the scope is ambitious: "regenerates inventories/stubs, runs validators, runs tests, and validates schemas." This could take minutes. I'd prefer two scripts: `scripts/check_quick.sh` (validators + schema checks, ~5 seconds) and `scripts/check_all.sh` (full suite). Pre-commit hooks should only run the quick version. |
+| **11** | Lua DX: `.luarc.json`, stub packaging | `.luarc.json` is the right approach, but it assumes developers use lua-language-server specifically. Worth noting that Luau LSP (Roblox tooling) is increasingly common. The stubs should be generated in a format that works with both. Minor concern: stub regeneration + CI drift detection adds friction if stubs change frequently. |
+
+### Changes I Disagree With (or Would Modify)
+
+| # | Change | My Concern |
+|---|--------|-----------|
+| **03** (partial) | JUnit XML | JUnit XML is indeed CI-friendly, but it's **additional** to the existing JSON outputs, not a replacement. The plan already requires `status.json`, `results.json`, and `report.md`. Adding `junit.xml` means the harness now writes **four** output formats. This feels over-engineered for a game jam template. I'd recommend making JUnit output **optional** (a flag) rather than mandatory. Many modern CI systems (GitHub Actions, GitLab CI) can parse JSON directly. |
+| **05** (partial) | Visual quarantine expiry | The 14-day (or "N days") expiry mechanism requires a recurring process: someone must check quarantined tests and either fix them or renew. For a small team or solo developer, this becomes another task that gets ignored. I'd prefer **no expiry** with a quarterly review prompt, or simply use tags (`visual`, `flaky`) without a formal quarantine system. |
+
+---
+
+## Implementation Priority Recommendation
+
+Based on my assessment, if implementing these changes in order of impact:
+
+1. **Must-have before Phase 2**: Changes 01, 02, 03 (schema versioning only), 06, 07, 08
+2. **Should-have before Phase 7**: Changes 10, 12, 04 (timeouts only)
+3. **Nice-to-have for polish**: Changes 09, 11, 04 (sharding), 05 (full visual system)
+4. **Consider deferring**: JUnit XML (03 partial), quarantine expiry (05 partial)

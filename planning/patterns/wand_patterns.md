@@ -1,152 +1,44 @@
-# Wand Patterns
+# Wand Patterns (Working Code)
+
+Scope: Wand/card system patterns under assets/scripts/wand/.
+Each pattern includes a doc_id, source_ref(s), and verification status.
 
 ## pattern:wand.registry.lazy_load
-**doc_id:** `pattern:wand.registry.lazy_load`
-**Source:** `assets/scripts/wand/card_registry.lua:10`
-**Frequency:** Found in 1 file
-
-**Pattern:**
-```lua
-local cards_cache = nil
-local trigger_cards_cache = nil
-
-local function load_data()
-    if cards_cache then return end
-    local data = require("data.cards")
-    cards_cache = data.Cards or {}
-    trigger_cards_cache = data.TriggerCards or {}
-end
-```
-
-**Preconditions:**
-- `data.cards` module defines `Cards` and `TriggerCards`.
-- Registry accessors call `load_data()` before reading caches.
-
-**Unverified:** No direct tests for registry cache behavior.
-
----
+- Name: Card registry lazy-load caching
+- Description: CardRegistry lazily requires data.cards on first access, caches cards and trigger cards, and provides helper getters by id and tag.
+- Source refs:
+  - assets/scripts/wand/card_registry.lua:8 (load_data + caches)
+- Recommended: Yes
+- Unverified: Reason: no direct tests for registry cache behavior
 
 ## pattern:wand.behavior_registry.register_execute
-**doc_id:** `pattern:wand.behavior_registry.register_execute`
-**Source:** `assets/scripts/wand/card_behavior_registry.lua:62`
-**Frequency:** Found in 1 file
-
-**Pattern:**
-```lua
-BehaviorRegistry.behaviors[behaviorId] = {
-    func = behaviorFunc,
-    description = description or ""
-}
-
-local success, result = pcall(behavior.func, context)
-if not success then
-    return false, nil
-end
-return true, result
-```
-
-**Preconditions:**
-- `BehaviorRegistry.behaviors` is initialized.
-- Callers handle `false, nil` when execution fails.
-
-**Unverified:** No direct tests for behavior registry execution.
-
----
+- Name: Behavior registry register/execute with pcall
+- Description: BehaviorRegistry stores behavior functions keyed by id, and executes them with pcall while returning success and result.
+- Source refs:
+  - assets/scripts/wand/card_behavior_registry.lua:33 (register/execute)
+- Recommended: Yes
+- Unverified: Reason: no direct tests for behavior registry execution
 
 ## pattern:wand.modifiers.joker_effect_schema
-**doc_id:** `pattern:wand.modifiers.joker_effect_schema`
-**Source:** `assets/scripts/wand/wand_modifiers.lua:166`
-**Frequency:** Found in 1 file
-
-**Pattern:**
-```lua
-WandModifiers.JOKER_EFFECT_SCHEMA = {
-    extra_pierce = { mode = "add", target = "pierceCount" },
-}
-
-function WandModifiers.applyJokerEffects(modifiers, jokerEffects)
-    for field, value in pairs(jokerEffects) do
-        local schema = WandModifiers.JOKER_EFFECT_SCHEMA[field]
-        if schema then
-            -- mutate modifiers in place using schema.target/mode
-        end
-    end
-end
-```
-
-**Preconditions:**
-- `createAggregate()` initializes all target fields with defaults.
-- `applyJokerEffects()` runs before `WandActions.execute()` reads modifiers.
-
-**Unverified:** No isolated tests for joker effect pipeline.
-
----
+- Name: Joker effects mutate modifier table in place
+- Description: Joker effects are mapped via a schema to modifier fields; applyJokerEffects mutates the shared modifiers table before wand_actions reads it.
+- Source refs:
+  - assets/scripts/wand/wand_modifiers.lua:1 (JOKER_EFFECT_SCHEMA and flow comments)
+- Recommended: Yes
+- Unverified: Reason: no isolated tests for joker effect pipeline
 
 ## pattern:wand.executor.subcast_trace
-**doc_id:** `pattern:wand.executor.subcast_trace`
-**Source:** `assets/scripts/wand/wand_executor.lua:47`
-**Frequency:** Found in 1 file
-
-**Pattern:**
-```lua
-local function makeSubcastTraceId(context, parent, triggerType)
-    local wandId = context and (context.wandId or context.wandDefinition and context.wandDefinition.id) or "wand"
-    local blockIdx = parent and parent.blockIndex or "?"
-    local cardIdx = parent and parent.cardIndex or "?"
-    local trigger = triggerType or "sub"
-    return string.format("%s-%s-%s-%s-%.3f", tostring(wandId), tostring(blockIdx), tostring(cardIdx), tostring(trigger), os.clock())
-end
-
-local function emitSubcastDebug(stage, payload)
-    if not DEBUG_SUBCAST then return end
-    payload.stage = stage
-    payload.timestamp = os.clock()
-    if okSignal and signal and signal.emit then
-        signal.emit("debug_subcast", payload)
-    end
-end
-```
-
-**Preconditions:**
-- `DEBUG_SUBCAST` global defaults to true or is set by caller.
-- `external.hump.signal` is optional; debug emits only when available.
-
-**Unverified:** No tests for debug tracing pipeline.
-
----
+- Name: Sub-cast tracing with stable ids
+- Description: WandExecutor builds a trace id using wand id, block index, card index, trigger, and os.clock; emitSubcastDebug logs and optionally signals debug events.
+- Source refs:
+  - assets/scripts/wand/wand_executor.lua:24 (makeSubcastTraceId, emitSubcastDebug)
+- Recommended: Yes
+- Unverified: Reason: no tests for debug tracing pipeline
 
 ## pattern:wand.triggers.register_cleanup
-**doc_id:** `pattern:wand.triggers.register_cleanup`
-**Source:** `assets/scripts/wand/wand_triggers.lua:63`
-**Frequency:** Found in 1 file
-
-**Pattern:**
-```lua
-function WandTriggers.cleanup()
-    for _, registration in pairs(WandTriggers.registrations) do
-        if registration.timerTag then
-            timer.cancel(registration.timerTag)
-        end
-    end
-    for eventName, handler in pairs(WandTriggers.eventSubscriptions) do
-        signal.remove(eventName, handler)
-    end
-end
-
-function WandTriggers.register(wandId, triggerDef, executor, opts)
-    WandTriggers.unregister(wandId)
-    local registration = {
-        wandId = wandId,
-        triggerType = triggerDef.id or triggerDef.type,
-        triggerDef = triggerDef,
-        executor = executor,
-        timerTag = nil,
-    }
-end
-```
-
-**Preconditions:**
-- `core.timer` and `external.hump.signal` are available.
-- `WandTriggers.unregister` cancels prior timers for the wand.
-
-**Unverified:** No automated tests for trigger registration/cleanup.
+- Name: Trigger registration with timer/signal cleanup
+- Description: WandTriggers registers triggers per wand, sets timer tags or event types, and cleanup cancels timers and removes signal listeners.
+- Source refs:
+  - assets/scripts/wand/wand_triggers.lua:46 (register + cleanup)
+- Recommended: Yes
+- Unverified: Reason: no automated tests for trigger registration

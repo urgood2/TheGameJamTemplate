@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "patterns_inventory.schema.json",
+  "title": "Code Patterns Inventory",
+  "description": "Documented code patterns for an area",
+  "type": "object",
+  "required": ["schema_version", "generated_at", "area", "patterns"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "area": {
+      "type": "string",
+      "description": "Pattern area (ui, ecs, physics, etc.)"
+    },
+    "patterns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["pattern_id", "name", "doc_id"],
+        "properties": {
+          "pattern_id": {
+            "type": "string",
+            "description": "Unique pattern identifier"
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable pattern name"
+          },
+          "doc_id": {
+            "type": "string",
+            "description": "Documentation identifier"
+          },
+          "category": {
+            "type": "string",
+            "description": "Pattern category within area"
+          },
+          "description": {
+            "type": "string",
+            "description": "Brief pattern description"
+          },
+          "source_refs": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Source files demonstrating pattern"
+          },
+          "recommended": {
+            "type": "boolean",
+            "description": "Whether pattern is recommended"
+          },
+          "verified": {
+            "type": "boolean",
+            "description": "Whether pattern is verified by tests"
+          },
+          "test_id": {
+            "type": ["string", "null"],
+            "description": "Test that verifies this pattern"
+          },
+          "cm_rule_id": {
+            "type": ["string", "null"],
+            "description": "Associated cm playbook rule ID"
+          },
+          "anti_patterns": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Related anti-patterns to avoid"
+          }
+        }
+      }
+    }
+  }
+}

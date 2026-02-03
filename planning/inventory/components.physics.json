@@ -1,0 +1,753 @@
+{
+  "category": "physics",
+  "count": 18,
+  "components": [
+    {
+      "name": "ObjectLayerTag",
+      "category": "physics",
+      "file_path": "src/systems/physics/physics_components.hpp",
+      "line_number": 15,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "name",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "hash",
+          "type": "std::size_t",
+          "default": null,
+          "is_complex": false
+        }
+      ]
+    },
+    {
+      "name": "PhysicsLayer",
+      "category": "physics",
+      "file_path": "src/systems/physics/physics_components.hpp",
+      "line_number": 23,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "tag",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "tag_hash",
+          "type": "std::size_t",
+          "default": null,
+          "is_complex": false
+        }
+      ]
+    },
+    {
+      "name": "PhysicsWorldRef",
+      "category": "physics",
+      "file_path": "src/systems/physics/physics_components.hpp",
+      "line_number": 31,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "name",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "hash",
+          "type": "std::size_t",
+          "default": null,
+          "is_complex": false
+        }
+      ]
+    },
+    {
+      "name": "WorldStateBinding",
+      "category": "physics",
+      "file_path": "src/systems/physics/physics_components.hpp",
+      "line_number": 39,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "state_name",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "state_hash",
+          "type": "std::size_t",
+          "default": null,
+          "is_complex": false
+        }
+      ]
+    },
+    {
+      "name": "CraneState",
+      "category": "physics",
+      "file_path": "src/systems/physics/crane_system.hpp",
+      "line_number": 6,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "dollyBody",
+          "type": "cpBody*",
+          "default": "nullptr",
+          "is_complex": false
+        },
+        {
+          "name": "hookBody",
+          "type": "cpBody*",
+          "default": "nullptr",
+          "is_complex": false
+        },
+        {
+          "name": "dollyServo",
+          "type": "cpConstraint*",
+          "default": "nullptr",
+          "is_complex": false
+        },
+        {
+          "name": "winchServo",
+          "type": "cpConstraint*",
+          "default": "nullptr",
+          "is_complex": false
+        },
+        {
+          "name": "hookJoint",
+          "type": "cpConstraint*",
+          "default": "nullptr",
+          "is_complex": false
+        }
+      ]
+    },
+    {
+      "name": "BodyComponent",
+      "category": "physics",
+      "file_path": "src/systems/physics/steering.hpp",
+      "line_number": 19,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": []
+    },
+    {
+      "name": "SteerableComponent",
+      "category": "physics",
+      "file_path": "src/systems/physics/steering.hpp",
+      "line_number": 26,
+      "is_tag": false,
+      "extraction_confidence": 0.9,
+      "notes": [
+        "1 complex types need manual review"
+      ],
+      "fields": [
+        {
+          "name": "enabled",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "mass",
+          "type": "float",
+          "default": "1.0f",
+          "is_complex": false
+        },
+        {
+          "name": "maxSpeed",
+          "type": "float",
+          "default": "4000.0f",
+          "is_complex": false
+        },
+        {
+          "name": "maxForce",
+          "type": "float",
+          "default": "4000.0f",
+          "is_complex": false
+        },
+        {
+          "name": "maxTurnRate",
+          "type": "float",
+          "default": "2.0f * float(M_PI)",
+          "is_complex": false
+        },
+        {
+          "name": "turnMultiplier",
+          "type": "float",
+          "default": "2.0f",
+          "is_complex": false
+        },
+        {
+          "name": "steeringForce",
+          "type": "cpVect",
+          "default": "0, 0",
+          "is_complex": false
+        },
+        {
+          "name": "timedForce",
+          "type": "cpVect",
+          "default": "0, 0",
+          "is_complex": false
+        },
+        {
+          "name": "timedForceTimeLeft",
+          "type": "float",
+          "default": "0.f, timedForceDuration = 0.f",
+          "is_complex": false
+        },
+        {
+          "name": "timedImpulsePerSec",
+          "type": "cpVect",
+          "default": "0, 0",
+          "is_complex": false
+        },
+        {
+          "name": "timedImpulseTimeLeft",
+          "type": "float",
+          "default": "0.f, timedImpulseDuration = 0.f",
+          "is_complex": false
+        },
+        {
+          "name": "isSeeking",
+          "type": "bool",
+          "default": "false, isFleeing = false, isPursuing = false,\n       isEvading = false",
+          "is_complex": false
+        },
+        {
+          "name": "isWandering",
+          "type": "bool",
+          "default": "false, isPathFollowing = false",
+          "is_complex": false
+        },
+        {
+          "name": "isSeparating",
+          "type": "bool",
+          "default": "false, isAligning = false, isCohesing = false",
+          "is_complex": false
+        },
+        {
+          "name": "wanderTarget",
+          "type": "cpVect",
+          "default": "0, 0",
+          "is_complex": false
+        },
+        {
+          "name": "wanderRadius",
+          "type": "float",
+          "default": "40.f, wanderDistance = 40.f, wanderJitter = 20.f",
+          "is_complex": false
+        },
+        {
+          "name": "path",
+          "type": "std::vector<cpVect>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "pathIndex",
+          "type": "int",
+          "default": "0",
+          "is_complex": false
+        },
+        {
+          "name": "pathArriveRadius",
+          "type": "float",
+          "default": "16.f",
+          "is_complex": false
+        },
+        {
+          "name": "disableArrival",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "arriveRadius",
+          "type": "float",
+          "default": "0.0f",
+          "is_complex": false
+        }
+      ]
+    },
+    {
+      "name": "StickyConfig",
+      "category": "physics",
+      "file_path": "src/systems/physics/physics_world.hpp",
+      "line_number": 57,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "impulseThreshold",
+          "type": "cpFloat",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "maxForce",
+          "type": "cpFloat",
+          "default": null,
+          "is_complex": false
+        }
+      ]
+    },
+    {
+      "name": "TankController",
+      "category": "physics",
+      "file_path": "src/systems/physics/physics_world.hpp",
+      "line_number": 281,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "body",
+          "type": "cpBody*",
+          "default": "nullptr",
+          "is_complex": false
+        },
+        {
+          "name": "control",
+          "type": "cpBody*",
+          "default": "nullptr",
+          "is_complex": false
+        },
+        {
+          "name": "pivot",
+          "type": "cpConstraint*",
+          "default": "nullptr",
+          "is_complex": false
+        },
+        {
+          "name": "gear",
+          "type": "cpConstraint*",
+          "default": "nullptr",
+          "is_complex": false
+        },
+        {
+          "name": "driveSpeed",
+          "type": "float",
+          "default": "30.0f",
+          "is_complex": false
+        },
+        {
+          "name": "stopRadius",
+          "type": "float",
+          "default": "30.0f",
+          "is_complex": false
+        },
+        {
+          "name": "gearMaxBias",
+          "type": "float",
+          "default": "1.2f",
+          "is_complex": false
+        },
+        {
+          "name": "gearMaxForce",
+          "type": "float",
+          "default": "50000.0f",
+          "is_complex": false
+        },
+        {
+          "name": "pivotMaxForce",
+          "type": "float",
+          "default": "10000.0f",
+          "is_complex": false
+        },
+        {
+          "name": "target",
+          "type": "cpVect",
+          "default": "cpvzero",
+          "is_complex": false
+        },
+        {
+          "name": "hasTarget",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        }
+      ]
+    },
+    {
+      "name": "CollisionEvent",
+      "category": "physics",
+      "file_path": "src/systems/physics/physics_world.hpp",
+      "line_number": 643,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": []
+    },
+    {
+      "name": "CollisionPair",
+      "category": "physics",
+      "file_path": "src/systems/physics/physics_world.hpp",
+      "line_number": 651,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "a",
+          "type": "void*",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "b",
+          "type": "void*",
+          "default": null,
+          "is_complex": false
+        }
+      ]
+    },
+    {
+      "name": "CollisionPairHash",
+      "category": "physics",
+      "file_path": "src/systems/physics/physics_world.hpp",
+      "line_number": 663,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": []
+    },
+    {
+      "name": "ColliderComponent",
+      "category": "physics",
+      "file_path": "src/systems/physics/physics_world.hpp",
+      "line_number": 670,
+      "is_tag": false,
+      "extraction_confidence": 0.9,
+      "notes": [
+        "1 complex types need manual review"
+      ],
+      "fields": [
+        {
+          "name": "body",
+          "type": "std::shared_ptr<cpBody>",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "shape",
+          "type": "std::shared_ptr<cpShape>",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "isSensor",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "isDynamic",
+          "type": "bool",
+          "default": "true",
+          "is_complex": false
+        },
+        {
+          "name": "debugDraw",
+          "type": "bool",
+          "default": "true",
+          "is_complex": false
+        },
+        {
+          "name": "shapeType",
+          "type": "ColliderShapeType",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "tag",
+          "type": "std::string",
+          "default": "\"default\"",
+          "is_complex": false
+        },
+        {
+          "name": "sensor",
+          "type": "bool",
+          "default": "false,\n                    ColliderShapeType shapeType = ColliderShapeType::Rectangle)\n      : body(std::move(body)), shape(std::move(shape)), isSensor(sensor),\n        shapeType(shapeType) {}\n\n  // NEW: extra shapes in the same body\n  struct SubShape {\n    std::shared_ptr<cpShape> shape",
+          "is_complex": false
+        },
+        {
+          "name": "type",
+          "type": "ColliderShapeType",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "tag",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "isSensor",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "extraShapes",
+          "type": "std::vector<SubShape>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "prevRot",
+          "type": "float",
+          "default": "0.0f, bodyRot = 0.0f",
+          "is_complex": false
+        }
+      ]
+    },
+    {
+      "name": "CollisionTag",
+      "category": "physics",
+      "file_path": "src/systems/physics/physics_world.hpp",
+      "line_number": 703,
+      "is_tag": false,
+      "extraction_confidence": 0.8,
+      "notes": [
+        "2 complex types need manual review"
+      ],
+      "fields": [
+        {
+          "name": "category",
+          "type": "int",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "masks",
+          "type": "std::vector<int>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "triggers",
+          "type": "std::vector<int>",
+          "default": null,
+          "is_complex": true
+        }
+      ]
+    },
+    {
+      "name": "RaycastHit",
+      "category": "physics",
+      "file_path": "src/systems/physics/physics_world.hpp",
+      "line_number": 709,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "fraction",
+          "type": "float",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "normal",
+          "type": "cpVect",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "point",
+          "type": "cpVect",
+          "default": null,
+          "is_complex": false
+        }
+      ]
+    },
+    {
+      "name": "UFNode",
+      "category": "physics",
+      "file_path": "src/systems/physics/physics_world.hpp",
+      "line_number": 721,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "parent",
+          "type": "cpBody*",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "size",
+          "type": "int",
+          "default": "1",
+          "is_complex": false
+        }
+      ]
+    },
+    {
+      "name": "GravityField",
+      "category": "physics",
+      "file_path": "src/systems/physics/physics_world.hpp",
+      "line_number": 1235,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "mode",
+          "type": "Mode",
+          "default": "Mode::None",
+          "is_complex": false
+        },
+        {
+          "name": "GM",
+          "type": "cpFloat",
+          "default": "0",
+          "is_complex": false
+        },
+        {
+          "name": "point",
+          "type": "cpVect",
+          "default": "0,0",
+          "is_complex": false
+        },
+        {
+          "name": "centerBody",
+          "type": "cpBody*",
+          "default": "nullptr",
+          "is_complex": false
+        },
+        {
+          "name": "softening",
+          "type": "cpFloat",
+          "default": "25.0f",
+          "is_complex": false
+        },
+        {
+          "name": "a_max",
+          "type": "cpFloat",
+          "default": "10000000.0f",
+          "is_complex": false
+        },
+        {
+          "name": "customDamping",
+          "type": "cpFloat",
+          "default": "1.0f",
+          "is_complex": false
+        }
+      ]
+    },
+    {
+      "name": "PlatformerCtrl",
+      "category": "physics",
+      "file_path": "src/systems/physics/physics_world.hpp",
+      "line_number": 1269,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "body",
+          "type": "cpBody*",
+          "default": "nullptr",
+          "is_complex": false
+        },
+        {
+          "name": "feet",
+          "type": "cpShape*",
+          "default": "nullptr",
+          "is_complex": false
+        },
+        {
+          "name": "maxVel",
+          "type": "float",
+          "default": "500.0f",
+          "is_complex": false
+        },
+        {
+          "name": "groundAccel",
+          "type": "float",
+          "default": "500.0f / 0.1f",
+          "is_complex": false
+        },
+        {
+          "name": "airAccel",
+          "type": "float",
+          "default": "500.0f / 0.25f",
+          "is_complex": false
+        },
+        {
+          "name": "jumpHeight",
+          "type": "float",
+          "default": "50.0f",
+          "is_complex": false
+        },
+        {
+          "name": "jumpBoostH",
+          "type": "float",
+          "default": "55.0f",
+          "is_complex": false
+        },
+        {
+          "name": "fallVel",
+          "type": "float",
+          "default": "900.0f",
+          "is_complex": false
+        },
+        {
+          "name": "gravityY",
+          "type": "float",
+          "default": "2000.0f",
+          "is_complex": false
+        },
+        {
+          "name": "remainingBoost",
+          "type": "float",
+          "default": "0.f",
+          "is_complex": false
+        },
+        {
+          "name": "grounded",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "lastJumpHeld",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "moveX",
+          "type": "float",
+          "default": "0.f",
+          "is_complex": false
+        },
+        {
+          "name": "jumpHeld",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        }
+      ]
+    }
+  ]
+}

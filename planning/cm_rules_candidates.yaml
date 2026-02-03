@@ -1,0 +1,329 @@
+rules:
+  - rule_id: "ui-gotcha-001"
+    category: "ui-gotchas"
+    rule_text: "When calling ChildBuilder.setOffset on UIBox children, always call ui.box.RenewAlignment afterward to recompute layout."
+    doc_id: "pattern:ui.uibox_alignment.renew_after_offset"
+    test_ref: "test_ui_patterns.lua::ui.uibox_alignment.renew_after_offset"
+    quirks_anchor: "renewalignment-after-setoffset"
+    status: "unverified"
+    severity: "error"
+    tags: ["ui", "layout", "ordering"]
+    rationale: "Offsets update InheritedProperties only; layout does not reflow until RenewAlignment."
+    example_good: |
+      ChildBuilder.setOffset(child, 100, 50)
+      ui.box.RenewAlignment(registry, container)
+    example_bad: |
+      ChildBuilder.setOffset(child, 100, 50) -- missing RenewAlignment
+    last_verified_commit: "pending"
+
+  - rule_id: "ui-gotcha-002"
+    category: "ui-gotchas"
+    rule_text: "After ui.box.ReplaceChildren, call ui.box.RenewAlignment to reflow the new child layout."
+    doc_id: "pattern:ui.uibox_alignment.renew_after_replacechildren"
+    test_ref: "test_ui_patterns.lua::ui.uibox_alignment.renew_after_replacechildren"
+    quirks_anchor: "renewalignment-after-replacechildren"
+    status: "unverified"
+    severity: "error"
+    tags: ["ui", "layout", "ordering"]
+    rationale: "ReplaceChildren invalidates cached alignment for the UIBox tree."
+    example_good: |
+      ui.box.ReplaceChildren(container, newChildren)
+      ui.box.RenewAlignment(registry, container)
+    example_bad: |
+      ui.box.ReplaceChildren(container, newChildren) -- missing RenewAlignment
+    last_verified_commit: "pending"
+
+  - rule_id: "ui-gotcha-003"
+    category: "ui-gotchas"
+    rule_text: "After spawning a UIBox, add the default state tag using ui.box.AddStateTagToUIBox."
+    doc_id: "pattern:ui.statetag.add_after_spawn"
+    test_ref: "test_ui_patterns.lua::ui.statetag.add_after_spawn"
+    quirks_anchor: "addstatetagto-uibox-after-spawn"
+    status: "unverified"
+    severity: "warn"
+    tags: ["ui", "state"]
+    rationale: "State tags are not assigned automatically on spawn."
+    example_good: |
+      ui.box.AddStateTagToUIBox(registry, entity, "default_state")
+    example_bad: |
+      -- no state tags added after spawn
+    last_verified_commit: "pending"
+
+  - rule_id: "ui-gotcha-004"
+    category: "ui-gotchas"
+    rule_text: "After ui.box.ReplaceChildren, reapply state tags with ui.box.AddStateTagToUIBox."
+    doc_id: "pattern:ui.statetag.add_after_replacechildren"
+    test_ref: "test_ui_patterns.lua::ui.statetag.add_after_replacechildren"
+    quirks_anchor: "addstatetagto-uibox-after-replacechildren"
+    status: "unverified"
+    severity: "error"
+    tags: ["ui", "state", "ordering"]
+    rationale: "ReplaceChildren clears state tags from the UIBox tree."
+    example_good: |
+      ui.box.ReplaceChildren(container, newChildren)
+      ui.box.AddStateTagToUIBox(registry, container, "default_state")
+    example_bad: |
+      ui.box.ReplaceChildren(container, newChildren) -- missing AddStateTagToUIBox
+    last_verified_commit: "pending"
+
+  - rule_id: "ui-gotcha-005"
+    category: "ui-gotchas"
+    rule_text: "If UI state tags stop responding, reapply tags after any UI tree rebuild."
+    doc_id: "pattern:ui.statetag.persistence_check"
+    test_ref: "test_ui_patterns.lua::ui.statetag.persistence_check"
+    quirks_anchor: "state-tag-persistence-check"
+    status: "unverified"
+    severity: "warn"
+    tags: ["ui", "state"]
+    rationale: "Rebuilds can silently clear state tags."
+    example_good: |
+      ui.box.AddStateTagToUIBox(registry, panel, "default_state")
+    example_bad: |
+      -- rely on previous tags after ReplaceChildren
+    last_verified_commit: "pending"
+
+  - rule_id: "ui-gotcha-006"
+    category: "ui-gotchas"
+    rule_text: "When moving a UI panel, update both Transform and UIBoxComponent.uiRoot, then RenewAlignment."
+    doc_id: "pattern:ui.visibility.move_transform_and_uiroot"
+    test_ref: "test_ui_patterns.lua::ui.visibility.move_transform_and_uiroot"
+    quirks_anchor: "move-both-transform-and-uiboxcomponent-uiroot"
+    status: "unverified"
+    severity: "error"
+    tags: ["ui", "visibility"]
+    rationale: "Children align to uiRoot, not the panel Transform alone."
+    example_good: |
+      t.actualX, t.actualY = x, y
+      root_t.actualX, root_t.actualY = x, y
+      ui.box.RenewAlignment(registry, entity)
+    example_bad: |
+      t.actualX, t.actualY = x, y -- uiRoot not moved
+    last_verified_commit: "pending"
+
+  - rule_id: "ui-gotcha-007"
+    category: "ui-gotchas"
+    rule_text: "Moving only the panel Transform does not move UIBox children; always move uiRoot too."
+    doc_id: "pattern:ui.visibility.transform_only_fails"
+    test_ref: "test_ui_patterns.lua::ui.visibility.transform_only_fails"
+    quirks_anchor: "transform-only-move-fails"
+    status: "unverified"
+    severity: "error"
+    tags: ["ui", "visibility"]
+    rationale: "uiRoot remains at old coordinates, so children stay behind."
+    example_good: |
+      root_t.actualX, root_t.actualY = x, y
+    example_bad: |
+      t.actualX, t.actualY = x, y -- children stay at old position
+    last_verified_commit: "pending"
+
+  - rule_id: "ui-gotcha-008"
+    category: "ui-gotchas"
+    rule_text: "Clickable UI elements must include ScreenSpaceCollisionMarker."
+    doc_id: "pattern:ui.collision.screenspace_marker_required"
+    test_ref: "test_ui_patterns.lua::ui.collision.screenspace_marker_required"
+    quirks_anchor: "marker-required-for-clicks"
+    status: "unverified"
+    severity: "error"
+    tags: ["ui", "input"]
+    rationale: "Input system ignores entities without the marker."
+    example_good: |
+      registry:emplace(entity, ScreenSpaceCollisionMarker {})
+    example_bad: |
+      -- no ScreenSpaceCollisionMarker
+    last_verified_commit: "pending"
+
+  - rule_id: "ui-gotcha-009"
+    category: "ui-gotchas"
+    rule_text: "After UI rebuilds, ensure ScreenSpaceCollisionMarker is still attached for click detection."
+    doc_id: "pattern:ui.collision.click_detection_with_marker"
+    test_ref: "test_ui_patterns.lua::ui.collision.click_detection_with_marker"
+    quirks_anchor: "click-detection-with-marker"
+    status: "unverified"
+    severity: "warn"
+    tags: ["ui", "input"]
+    rationale: "Markers can be lost when rebuilding UI trees."
+    example_good: |
+      registry:emplace(button, ScreenSpaceCollisionMarker {})
+    example_bad: |
+      ui.box.ReplaceChildren(container, children) -- marker lost
+    last_verified_commit: "pending"
+
+  - rule_id: "ui-gotcha-010"
+    category: "ui-gotchas"
+    rule_text: "Without ScreenSpaceCollisionMarker, clicks should be treated as no-ops."
+    doc_id: "pattern:ui.collision.click_fails_without_marker"
+    test_ref: "test_ui_patterns.lua::ui.collision.click_fails_without_marker"
+    quirks_anchor: "click-fails-without-marker"
+    status: "unverified"
+    severity: "warn"
+    tags: ["ui", "input"]
+    rationale: "No marker means no screen-space collision."
+    example_good: |
+      -- expect no click callbacks without marker
+    example_bad: |
+      -- assume click will work without marker
+    last_verified_commit: "pending"
+
+  - rule_id: "ui-gotcha-011"
+    category: "ui-gotchas"
+    rule_text: "Grid teardown must clear itemRegistry, call grid:destroy(), and dsl.cleanupGrid."
+    doc_id: "pattern:ui.grid.cleanup_all_three_registries"
+    test_ref: "test_ui_patterns.lua::ui.grid.cleanup_all_three_registries"
+    quirks_anchor: "cleanup-all-three-registries"
+    status: "unverified"
+    severity: "error"
+    tags: ["ui", "grid", "cleanup"]
+    rationale: "Partial cleanup leaves orphaned items or stale state."
+    example_good: |
+      itemRegistry = {}
+      grid:destroy()
+      dsl.cleanupGrid(registry)
+    example_bad: |
+      grid:destroy() -- registry cleanup skipped
+    last_verified_commit: "pending"
+
+  - rule_id: "ui-gotcha-012"
+    category: "ui-gotchas"
+    rule_text: "Destroying a grid without clearing itemRegistry leaves stale items."
+    doc_id: "pattern:ui.grid.cleanup_partial_fails"
+    test_ref: "test_ui_patterns.lua::ui.grid.cleanup_partial_fails"
+    quirks_anchor: "partial-cleanup-fails"
+    status: "unverified"
+    severity: "warn"
+    tags: ["ui", "grid", "cleanup"]
+    rationale: "itemRegistry still points to destroyed grid slots."
+    example_good: |
+      itemRegistry = {}
+    example_bad: |
+      grid:destroy() -- itemRegistry still populated
+    last_verified_commit: "pending"
+
+  - rule_id: "ui-gotcha-013"
+    category: "ui-gotchas"
+    rule_text: "HUD elements must use DrawCommandSpace.Screen to stay fixed."
+    doc_id: "pattern:ui.drawspace.screen_fixed_hud"
+    test_ref: "test_ui_patterns.lua::ui.drawspace.screen_fixed_hud"
+    quirks_anchor: "screen-draw-space-stays-fixed"
+    status: "unverified"
+    severity: "error"
+    tags: ["ui", "rendering"]
+    rationale: "World draw space follows camera movement."
+    example_good: |
+      command_buffer.queueDraw(layers.ui, fn, z, layer.DrawCommandSpace.Screen)
+    example_bad: |
+      command_buffer.queueDraw(layers.ui, fn, z, layer.DrawCommandSpace.World)
+    last_verified_commit: "pending"
+
+  - rule_id: "ui-gotcha-014"
+    category: "ui-gotchas"
+    rule_text: "DrawCommandSpace.World will make UI elements follow camera movement."
+    doc_id: "pattern:ui.drawspace.world_follows_camera"
+    test_ref: "test_ui_patterns.lua::ui.drawspace.world_follows_camera"
+    quirks_anchor: "world-draw-space-follows-camera"
+    status: "unverified"
+    severity: "warn"
+    tags: ["ui", "rendering"]
+    rationale: "World space coordinates are camera-relative."
+    example_good: |
+      -- use World only for diegetic UI
+    example_bad: |
+      -- using World for HUD
+    last_verified_commit: "pending"
+
+  - rule_id: "ui-gotcha-015"
+    category: "ui-gotchas"
+    rule_text: "Never add ObjectAttachedToUITag to draggable UI elements."
+    doc_id: "pattern:ui.attached.never_on_draggables"
+    test_ref: "test_ui_patterns.lua::ui.attached.never_on_draggables"
+    quirks_anchor: "never-use-objectattachedto-uitag-on-draggables"
+    status: "unverified"
+    severity: "error"
+    tags: ["ui", "drag"]
+    rationale: "The tag forces attachment behavior that conflicts with drag logic."
+    example_good: |
+      -- leave draggables without ObjectAttachedToUITag
+    example_bad: |
+      registry:emplace(card, ObjectAttachedToUITag {})
+    last_verified_commit: "pending"
+
+  - rule_id: "ui-gotcha-016"
+    category: "ui-gotchas"
+    rule_text: "ObjectAttachedToUITag is safe for non-draggable attachments that should follow a parent."
+    doc_id: "pattern:ui.attached.correct_usage"
+    test_ref: "test_ui_patterns.lua::ui.attached.correct_usage"
+    quirks_anchor: "objectattachedto-uitag-correct-usage"
+    status: "unverified"
+    severity: "info"
+    tags: ["ui", "attachment"]
+    rationale: "Static attachments can use the tag without conflicting drag behavior."
+    example_good: |
+      registry:emplace(badge, ObjectAttachedToUITag {})
+    example_bad: |
+      -- missing tag for static attachment
+    last_verified_commit: "pending"
+
+  - rule_id: "ui-gotcha-017"
+    category: "ui-gotchas"
+    rule_text: "ChildBuilder.setOffset should be followed by RenewAlignment even for small offsets."
+    doc_id: "pattern:ui.childbuilder.setoffset_requires_renew"
+    test_ref: "test_ui_patterns.lua::ui.uibox_alignment.renew_after_offset"
+    quirks_anchor: "setoffset-requires-renewalignment"
+    status: "unverified"
+    severity: "warn"
+    tags: ["ui", "layout"]
+    rationale: "Layout caches do not update on offset change alone."
+    example_good: |
+      ChildBuilder.setOffset(child, 5, 5)
+      ui.box.RenewAlignment(registry, container)
+    example_bad: |
+      ChildBuilder.setOffset(child, 5, 5) -- no RenewAlignment
+    last_verified_commit: "pending"
+
+  - rule_id: "ui-gotcha-018"
+    category: "ui-gotchas"
+    rule_text: "ReplaceChildren on nested UI trees requires reapplying state tags on the new root."
+    doc_id: "pattern:ui.statetag.add_after_replacechildren"
+    test_ref: "test_ui_patterns.lua::ui.statetag.add_after_replacechildren"
+    quirks_anchor: "addstatetagto-uibox-after-replacechildren"
+    status: "unverified"
+    severity: "warn"
+    tags: ["ui", "state"]
+    rationale: "Nested trees inherit state tags from the root UIBox."
+    example_good: |
+      ui.box.AddStateTagToUIBox(registry, root, "default_state")
+    example_bad: |
+      ui.box.ReplaceChildren(root, children) -- missing tag reapply
+    last_verified_commit: "pending"
+
+  - rule_id: "ui-gotcha-019"
+    category: "ui-gotchas"
+    rule_text: "Slot decorations on sprite panels must be scaled with ui_scale.SPRITE_SCALE."
+    doc_id: "pattern:ui.slot_decorations.sprite_panel_scaling"
+    test_ref: "manual"
+    quirks_anchor: "slot-decorations-and-sprite-panels"
+    status: "unverified"
+    severity: "info"
+    tags: ["ui", "decorations"]
+    rationale: "Decorations are applied in sprite-space and must use sprite scale."
+    example_good: |
+      gridConfig.slotDecorations = { { sprite = "decor.png" } }
+    example_bad: |
+      -- decorations applied without sprite scaling
+    last_verified_commit: "pending"
+
+  - rule_id: "ui-gotcha-020"
+    category: "ui-gotchas"
+    rule_text: "UIBox creation should add default state tags immediately after spawn."
+    doc_id: "pattern:ui.uibox_creation.basic"
+    test_ref: "test_ui_patterns.lua::ui.statetag.add_after_spawn"
+    quirks_anchor: "uibox-creation-and-configuration"
+    status: "unverified"
+    severity: "warn"
+    tags: ["ui", "state"]
+    rationale: "UIBoxes do not auto-assign state tags on spawn."
+    example_good: |
+      local box = dsl.spawn(pos, def)
+      ui.box.AddStateTagToUIBox(registry, box, "default_state")
+    example_bad: |
+      local box = dsl.spawn(pos, def) -- missing state tag
+    last_verified_commit: "pending"

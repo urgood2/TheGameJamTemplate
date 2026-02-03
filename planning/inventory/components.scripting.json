@@ -1,0 +1,179 @@
+{
+  "category": "scripting",
+  "count": 5,
+  "components": [
+    {
+      "name": "CallStats",
+      "category": "scripting",
+      "file_path": "src/systems/scripting/lua_profiler.hpp",
+      "line_number": 33,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "call_count",
+          "type": "uint64_t",
+          "default": "0",
+          "is_complex": false
+        },
+        {
+          "name": "total_ns",
+          "type": "uint64_t",
+          "default": "0",
+          "is_complex": false
+        }
+      ]
+    },
+    {
+      "name": "MethodDef",
+      "category": "scripting",
+      "file_path": "src/systems/scripting/binding_recorder.hpp",
+      "line_number": 19,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "name",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "signature",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "doc",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "is_static",
+          "type": "bool",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "is_overload",
+          "type": "bool",
+          "default": null,
+          "is_complex": false
+        }
+      ]
+    },
+    {
+      "name": "PropDef",
+      "category": "scripting",
+      "file_path": "src/systems/scripting/binding_recorder.hpp",
+      "line_number": 27,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "name",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "value",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "doc",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        }
+      ]
+    },
+    {
+      "name": "TypeDef",
+      "category": "scripting",
+      "file_path": "src/systems/scripting/binding_recorder.hpp",
+      "line_number": 33,
+      "is_tag": false,
+      "extraction_confidence": 0.7,
+      "notes": [
+        "3 complex types need manual review"
+      ],
+      "fields": [
+        {
+          "name": "name",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "version",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "doc",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "base_classes",
+          "type": "std::vector<std::string>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "methods",
+          "type": "std::vector<MethodDef>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "properties",
+          "type": "std::vector<PropDef>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "is_data_class",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        }
+      ]
+    },
+    {
+      "name": "ModuleNode",
+      "category": "scripting",
+      "file_path": "src/systems/scripting/binding_recorder.hpp",
+      "line_number": 43,
+      "is_tag": false,
+      "extraction_confidence": 0.8,
+      "notes": [
+        "2 complex types need manual review"
+      ],
+      "fields": [
+        {
+          "name": "children",
+          "type": "std::map<std::string, ModuleNode>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "functions",
+          "type": "std::vector<MethodDef>",
+          "default": null,
+          "is_complex": true
+        }
+      ]
+    }
+  ]
+}

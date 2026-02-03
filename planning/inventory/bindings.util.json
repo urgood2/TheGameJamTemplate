@@ -1,0 +1,257 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-02-03T02:59:38.414483+00:00",
+  "system": "util",
+  "source_files": [
+    "/data/projects/TheGameJamTemplate@cass-memory-update/src/util/utilities.cpp",
+    "/data/projects/TheGameJamTemplate@cass-memory-update/src/util/perf_overlay.cpp"
+  ],
+  "summary": {
+    "usertypes": 1,
+    "functions": 12,
+    "constants": 0,
+    "enums": 0,
+    "methods": 0,
+    "properties": 7,
+    "low_confidence": 0,
+    "unrecognized_patterns": 1
+  },
+  "bindings": {
+    "usertypes": [
+      {
+        "lua_name": "util",
+        "type": "usertype",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_usertype_util",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/util/utilities.cpp:106",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      }
+    ],
+    "functions": [
+      {
+        "lua_name": "util_tbl.getRawAssetPathNoUUID",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_util_tbl_getrawassetpathnouuid",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/util/utilities.cpp:109",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "util_tbl.getColor",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_util_tbl_getcolor",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/util/utilities.cpp:118",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "util_tbl.getAssetPathUUIDVersion",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_util_tbl_getassetpathuuidversion",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/util/utilities.cpp:129",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "util_tbl.raylibColorToImVec",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_util_tbl_raylibcolortoimvec",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/util/utilities.cpp:138",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "util_tbl.getRandomSynonymFor",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_util_tbl_getrandomsynonymfor",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/util/utilities.cpp:147",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "util_tbl.toUnsignedChar",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_util_tbl_tounsignedchar",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/util/utilities.cpp:156",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "util_tbl.getRawAssetPathNoUUID",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_util_tbl_getrawassetpathnouuid",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/util/utilities.cpp:170",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "util_tbl.getColor",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_util_tbl_getcolor",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/util/utilities.cpp:171",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "util_tbl.getAssetPathUUIDVersion",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_util_tbl_getassetpathuuidversion",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/util/utilities.cpp:172",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "util_tbl.raylibColorToImVec",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_util_tbl_raylibcolortoimvec",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/util/utilities.cpp:173",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "util_tbl.getRandomSynonymFor",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_util_tbl_getrandomsynonymfor",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/util/utilities.cpp:174",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "util_tbl.toUnsignedChar",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_util_tbl_tounsignedchar",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/util/utilities.cpp:175",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      }
+    ],
+    "constants": [],
+    "enums": [],
+    "methods": [],
+    "properties": [
+      {
+        "lua_name": "perf_overlay.toggle",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_perf_overlay_toggle",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/util/perf_overlay.cpp:244",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "perf_overlay.show",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_perf_overlay_show",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/util/perf_overlay.cpp:245",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "perf_overlay.hide",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_perf_overlay_hide",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/util/perf_overlay.cpp:246",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "perf_overlay.is_enabled",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_perf_overlay_is_enabled",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/util/perf_overlay.cpp:247",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "perf_overlay.set_position",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_perf_overlay_set_position",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/util/perf_overlay.cpp:248",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "perf_overlay.set_opacity",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_perf_overlay_set_opacity",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/util/perf_overlay.cpp:249",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "perf_overlay.get_stats",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_perf_overlay_get_stats",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/util/perf_overlay.cpp:250",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      }
+    ]
+  },
+  "unrecognized_patterns": [
+    {
+      "line": 58,
+      "snippet": "sol::protected_function_result result = ai_system::masterStateLua.script(\"return collectgarbage('count')\");",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/util/perf_overlay.cpp"
+    }
+  ]
+}

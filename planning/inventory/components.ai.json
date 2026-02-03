@@ -1,0 +1,49 @@
+{
+  "category": "ai",
+  "count": 1,
+  "components": [
+    {
+      "name": "TraceEvent",
+      "category": "ai",
+      "file_path": "src/systems/ai/goap_utils.hpp",
+      "line_number": 41,
+      "is_tag": false,
+      "extraction_confidence": 0.9,
+      "notes": [
+        "1 complex types need manual review"
+      ],
+      "fields": [
+        {
+          "name": "type",
+          "type": "TraceEventType",
+          "default": "TraceEventType::GOAL_SELECTED",
+          "is_complex": false
+        },
+        {
+          "name": "message",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "timestamp",
+          "type": "double",
+          "default": "0.0",
+          "is_complex": false
+        },
+        {
+          "name": "entity_id",
+          "type": "uint32_t",
+          "default": "0",
+          "is_complex": false
+        },
+        {
+          "name": "extra_data",
+          "type": "std::unordered_map<std::string, std::string>",
+          "default": null,
+          "is_complex": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "results.schema.json",
+  "title": "Test Results",
+  "description": "Per-test execution results",
+  "type": "object",
+  "required": ["schema_version", "tests"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "runner_version": {
+      "type": "string"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "tests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["test_id", "test_file", "status"],
+        "properties": {
+          "test_id": {
+            "type": "string",
+            "description": "Unique test identifier"
+          },
+          "test_file": {
+            "type": "string",
+            "description": "Path to test file"
+          },
+          "category": {
+            "type": "string",
+            "description": "Test category (smoke, visual, etc.)"
+          },
+          "status": {
+            "enum": ["pass", "fail", "skip"],
+            "description": "Test execution result"
+          },
+          "duration_ms": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Test duration in milliseconds"
+          },
+          "artifacts": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Paths to generated artifacts (screenshots, logs)"
+          },
+          "skip_reason": {
+            "type": "string",
+            "description": "Reason for skipping test"
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "message": {"type": "string"},
+              "stack_trace": {"type": "string"},
+              "line": {"type": "integer"}
+            },
+            "description": "Error details for failed tests"
+          },
+          "doc_ids": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Documentation IDs this test verifies"
+          }
+        }
+      }
+    }
+  }
+}

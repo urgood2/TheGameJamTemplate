@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-02-03T02:59:38.417444+00:00",
+  "system": "mechanics",
+  "source_files": [
+    "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/composable_mechanics/example_usage.cpp",
+    "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/composable_mechanics/loader_lua.cpp"
+  ],
+  "summary": {
+    "usertypes": 0,
+    "functions": 0,
+    "constants": 0,
+    "enums": 0,
+    "methods": 0,
+    "properties": 0,
+    "low_confidence": 0,
+    "unrecognized_patterns": 4
+  },
+  "bindings": {
+    "usertypes": [],
+    "functions": [],
+    "constants": [],
+    "enums": [],
+    "methods": [],
+    "properties": []
+  },
+  "unrecognized_patterns": [
+    {
+      "line": 38,
+      "snippet": "sol::state lua; lua.open_libraries(sol::lib::base, sol::lib::math, sol::lib::table);",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/composable_mechanics/example_usage.cpp"
+    },
+    {
+      "line": 38,
+      "snippet": "sol::state lua; lua.open_libraries(sol::lib::base, sol::lib::math, sol::lib::table);",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/composable_mechanics/example_usage.cpp"
+    },
+    {
+      "line": 38,
+      "snippet": "sol::state lua; lua.open_libraries(sol::lib::base, sol::lib::math, sol::lib::table);",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/composable_mechanics/example_usage.cpp"
+    },
+    {
+      "line": 50,
+      "snippet": "sol::optional<int> nopt = def[\"target\"][\"n\"];",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/composable_mechanics/loader_lua.cpp"
+    }
+  ]
+}

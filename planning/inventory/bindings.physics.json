@@ -1,0 +1,1659 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-02-03T02:59:38.415770+00:00",
+  "system": "physics",
+  "source_files": [
+    "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+  ],
+  "summary": {
+    "usertypes": 15,
+    "functions": 98,
+    "constants": 0,
+    "enums": 3,
+    "methods": 0,
+    "properties": 16,
+    "low_confidence": 0,
+    "unrecognized_patterns": 35
+  },
+  "bindings": {
+    "usertypes": [
+      {
+        "lua_name": "RaycastHit",
+        "type": "usertype",
+        "cpp_type": "LuaRaycastHit",
+        "signature": "",
+        "doc_id": "sol2_usertype_raycasthit",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:66",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "CollisionEvent",
+        "type": "usertype",
+        "cpp_type": "LuaCollisionEvent",
+        "signature": "",
+        "doc_id": "sol2_usertype_collisionevent",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:89",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "PhysicsWorld",
+        "type": "usertype",
+        "cpp_type": "PhysicsWorld",
+        "signature": "",
+        "doc_id": "sol2_usertype_physicsworld",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:119",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "Arbiter",
+        "type": "usertype",
+        "cpp_type": "LuaArbiter",
+        "signature": "",
+        "doc_id": "sol2_usertype_arbiter",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1787",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "PhysicsManagerUD",
+        "type": "usertype",
+        "cpp_type": "PhysicsManager",
+        "signature": "",
+        "doc_id": "sol2_usertype_physicsmanagerud",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2003",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics",
+        "type": "usertype",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_usertype_physics",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:56",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics.RaycastHit",
+        "type": "usertype",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_usertype_physics_raycasthit",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:77",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics.CollisionEvent",
+        "type": "usertype",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_usertype_physics_collisionevent",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:100",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics.ColliderShapeType",
+        "type": "usertype",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_usertype_physics_collidershapetype",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:113",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics.PhysicsWorld",
+        "type": "usertype",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_usertype_physics_physicsworld",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:139",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics.PhysicsSyncMode",
+        "type": "usertype",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_usertype_physics_physicssyncmode",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1020",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics.RotationSyncMode",
+        "type": "usertype",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_usertype_physics_rotationsyncmode",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1028",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics.Arbiter",
+        "type": "usertype",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_usertype_physics_arbiter",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1812",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "steering",
+        "type": "usertype",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_usertype_steering",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1835",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "PhysicsManager",
+        "type": "usertype",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_usertype_physicsmanager",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2133",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      }
+    ],
+    "functions": [
+      {
+        "lua_name": "physics_table.set_collision_tags",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_set_collision_tags",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:170",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.enable_collision_between_many",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_enable_collision_between_many",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:182",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.disable_collision_between_many",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_disable_collision_between_many",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:191",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.enable_collision_between",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_enable_collision_between",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:201",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.disable_collision_between",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_disable_collision_between",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:211",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.enable_trigger_between_many",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_enable_trigger_between_many",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:224",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.disable_trigger_between_many",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_disable_trigger_between_many",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:233",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.enable_trigger_between",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_enable_trigger_between",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:243",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.disable_trigger_between",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_disable_trigger_between",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:253",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.update_collision_masks_for",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_update_collision_masks_for",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:266",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.reapply_all_filters",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_reapply_all_filters",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:276",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "t.arb_set_number",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_t_arb_set_number",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:776",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "t.arb_get_number",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_t_arb_get_number",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:788",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "t.arb_set_bool",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_t_arb_set_bool",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:804",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "t.arb_get_bool",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_t_arb_get_bool",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:816",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "t.arb_set_ptr",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_t_arb_set_ptr",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:832",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "t.arb_get_ptr",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_t_arb_get_ptr",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:844",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.clear_all_worlds",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_clear_all_worlds",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:861",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.on_pair_begin",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_on_pair_begin",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:872",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.on_pair_separate",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_on_pair_separate",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:883",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.on_wildcard_begin",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_on_wildcard_begin",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:894",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.on_wildcard_separate",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_on_wildcard_separate",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:905",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.on_pair_presolve",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_on_pair_presolve",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:916",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.on_pair_postsolve",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_on_pair_postsolve",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:927",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.on_wildcard_presolve",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_on_wildcard_presolve",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:938",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.on_wildcard_postsolve",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_on_wildcard_postsolve",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:949",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.clear_pair_handlers",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_clear_pair_handlers",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:960",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.clear_wildcard_handlers",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_clear_wildcard_handlers",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:969",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.enforce_rotation_policy",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_enforce_rotation_policy",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1038",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.use_transform_fixed_rotation",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_use_transform_fixed_rotation",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1050",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.use_physics_free_rotation",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_use_physics_free_rotation",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1064",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.set_sync_mode",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_set_sync_mode",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1082",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.get_sync_mode",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_get_sync_mode",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1103",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.set_sensor",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_set_sensor",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1110",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.set_rotation_mode",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_set_rotation_mode",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1127",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.get_rotation_mode",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_get_rotation_mode",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1146",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.register_fluid_volume",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_register_fluid_volume",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1216",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.add_fluid_sensor_aabb",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_add_fluid_sensor_aabb",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1227",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.add_one_way_platform",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_add_one_way_platform",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1239",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.enable_sticky_between",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_enable_sticky_between",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1256",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.disable_sticky_between",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_disable_sticky_between",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1268",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.create_platformer_player",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_create_platformer_player",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1280",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.set_platformer_input",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_set_platformer_input",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1292",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.create_topdown_controller",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_create_topdown_controller",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1303",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.enable_tank_controller",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_enable_tank_controller",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1314",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.remove_physics",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_remove_physics",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1326",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.command_tank_to",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_command_tank_to",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1342",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.update_tanks",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_update_tanks",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1353",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.enable_inverse_square_gravity_to_point",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_enable_inverse_square_gravity_to_point",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1363",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.enable_inverse_square_gravity_to_body",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_enable_inverse_square_gravity_to_body",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1374",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.disable_custom_gravity",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_disable_custom_gravity",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1385",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.create_planet",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_create_planet",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1394",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.spawn_orbiting_box",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_spawn_orbiting_box",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1407",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.set_circular_orbit_velocity",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_set_circular_orbit_velocity",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1413",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.segment_query_first",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_segment_query_first",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1431",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.point_query_nearest",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_point_query_nearest",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1451",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.shatter_nearest",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_shatter_nearest",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1471",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.slice_first_hit",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_slice_first_hit",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1482",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.add_smooth_segment_chain",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_add_smooth_segment_chain",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1494",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.add_bar_segment",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_add_bar_segment",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1505",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.add_screen_bounds",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_add_screen_bounds",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1516",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.cull_entities_outside_bounds",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_cull_entities_outside_bounds",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1528",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.create_tilemap_colliders",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_create_tilemap_colliders",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1540",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.touching_entities",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_touching_entities",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1567",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.total_force_on",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_total_force_on",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1578",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.weight_on",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_weight_on",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1587",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.crush_on",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_crush_on",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1596",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.start_mouse_drag",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_start_mouse_drag",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1612",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.update_mouse_drag",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_update_mouse_drag",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1621",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.end_mouse_drag",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_end_mouse_drag",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1630",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.add_pin_joint",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_add_pin_joint",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1640",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.add_slide_joint",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_add_slide_joint",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1651",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.add_pivot_joint_world",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_add_pivot_joint_world",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1662",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.add_damped_spring",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_add_damped_spring",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1673",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.add_damped_rotary_spring",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_add_damped_rotary_spring",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1686",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.set_constraint_limits",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_set_constraint_limits",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1697",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.add_upright_spring",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_add_upright_spring",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1710",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.make_breakable_slide_joint",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_make_breakable_slide_joint",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1720",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.make_constraint_breakable",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_make_constraint_breakable",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1738",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.enable_collision_grouping",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_enable_collision_grouping",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1754",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.enable_collision_grouping",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_enable_collision_grouping",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1776",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.disable_collision_grouping",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_physics_table_disable_collision_grouping",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1783",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "pm.get_world",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_pm_get_world",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2137",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "pm.has_world",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_pm_has_world",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2151",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "pm.is_world_active",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_pm_is_world_active",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2164",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "pm.add_world",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_pm_add_world",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2178",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "pm.enable_step",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_pm_enable_step",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2194",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "pm.enable_debug_draw",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_pm_enable_debug_draw",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2205",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "pm.step_all",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_pm_step_all",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2216",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "pm.draw_all",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_pm_draw_all",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2226",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "pm.move_entity_to_world",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_pm_move_entity_to_world",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2236",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "pm.get_nav_config",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_pm_get_nav_config",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2247",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "pm.set_nav_config",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_pm_set_nav_config",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2266",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "pm.mark_navmesh_dirty",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_pm_mark_navmesh_dirty",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2284",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "pm.rebuild_navmesh",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_pm_rebuild_navmesh",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2295",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "pm.find_path",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_pm_find_path",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2306",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "pm.vision_fan",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_pm_vision_fan",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2331",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "pm.set_nav_obstacle",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_pm_set_nav_obstacle",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2355",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      }
+    ],
+    "constants": [],
+    "enums": [
+      {
+        "lua_name": "physics_table.ColliderShapeType",
+        "type": "enum",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_enum_physics_table_collidershapetype",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:107",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.PhysicsSyncMode",
+        "type": "enum",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_enum_physics_table_physicssyncmode",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1014",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "physics_table.RotationSyncMode",
+        "type": "enum",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_enum_physics_table_rotationsyncmode",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1024",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      }
+    ],
+    "methods": [],
+    "properties": [
+      {
+        "lua_name": "PhysicsManagerUD.get_world",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_physicsmanagerud_get_world",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2098",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "PhysicsManagerUD.has_world",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_physicsmanagerud_has_world",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2100",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "PhysicsManagerUD.is_world_active",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_physicsmanagerud_is_world_active",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2102",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "PhysicsManagerUD.add_world",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_physicsmanagerud_add_world",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2104",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "PhysicsManagerUD.enable_step",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_physicsmanagerud_enable_step",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2106",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "PhysicsManagerUD.enable_debug_draw",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_physicsmanagerud_enable_debug_draw",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2108",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "PhysicsManagerUD.step_all",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_physicsmanagerud_step_all",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2110",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "PhysicsManagerUD.draw_all",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_physicsmanagerud_draw_all",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2112",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "PhysicsManagerUD.move_entity_to_world",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_physicsmanagerud_move_entity_to_world",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2114",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "PhysicsManagerUD.get_nav_config",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_physicsmanagerud_get_nav_config",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2116",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "PhysicsManagerUD.set_nav_config",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_physicsmanagerud_set_nav_config",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2118",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "PhysicsManagerUD.mark_navmesh_dirty",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_physicsmanagerud_mark_navmesh_dirty",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2120",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "PhysicsManagerUD.rebuild_navmesh",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_physicsmanagerud_rebuild_navmesh",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2122",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "PhysicsManagerUD.find_path",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_physicsmanagerud_find_path",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2124",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "PhysicsManagerUD.vision_fan",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_physicsmanagerud_vision_fan",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2126",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "PhysicsManagerUD.set_nav_obstacle",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_physicsmanagerud_set_nav_obstacle",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:2128",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      }
+    ]
+  },
+  "unrecognized_patterns": [
+    {
+      "line": 121,
+      "snippet": "sol::constructors<PhysicsWorld(entt::registry*, float, float, float)>(),",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 346,
+      "snippet": "return sol::as_table(out);",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 373,
+      "snippet": "return sol::as_table(out);",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 392,
+      "snippet": "return sol::as_table(out);",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 789,
+      "snippet": "[](PhysicsWorld& world, void* arbPtr, const std::string& key, sol::optional<double> def) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 817,
+      "snippet": "[](PhysicsWorld& world, void* arbPtr, const std::string& key, sol::optional<bool> def) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 873,
+      "snippet": "[](PhysicsWorld& W, const std::string& a, const std::string& b, sol::protected_function fn) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 884,
+      "snippet": "[](PhysicsWorld& W, const std::string& a, const std::string& b, sol::protected_function fn) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 895,
+      "snippet": "[](PhysicsWorld& W, const std::string& tag, sol::protected_function fn) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 906,
+      "snippet": "[](PhysicsWorld& W, const std::string& tag, sol::protected_function fn) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 917,
+      "snippet": "[](PhysicsWorld& W, const std::string& a, const std::string& b, sol::protected_function fn) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 928,
+      "snippet": "[](PhysicsWorld& W, const std::string& a, const std::string& b, sol::protected_function fn) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 939,
+      "snippet": "[](PhysicsWorld& W, const std::string& tag, sol::protected_function fn) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 950,
+      "snippet": "[](PhysicsWorld& W, const std::string& tag, sol::protected_function fn) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 1166,
+      "snippet": "lua[\"physics\"][\"create_physics_for_transform\"] = sol::overload(",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 1167,
+      "snippet": "lua[\"physics\"][\"create_physics_for_transform\"].get<sol::protected_function>(),",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 1316,
+      "snippet": "sol::optional<double> drive, sol::optional<double> stopR,",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 1316,
+      "snippet": "sol::optional<double> drive, sol::optional<double> stopR,",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 1317,
+      "snippet": "sol::optional<double> pivotF, sol::optional<double> gearF, sol::optional<double> gearB){",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 1317,
+      "snippet": "sol::optional<double> pivotF, sol::optional<double> gearF, sol::optional<double> gearB){",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 1317,
+      "snippet": "sol::optional<double> pivotF, sol::optional<double> gearF, sol::optional<double> gearB){",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 1432,
+      "snippet": "[&lua](const physics::PhysicsWorld& W, sol::table A, sol::table B, sol::optional<double> r){",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 1452,
+      "snippet": "[&lua](const physics::PhysicsWorld& W, sol::table P, sol::optional<double> md){",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 1472,
+      "snippet": "[](physics::PhysicsWorld& W, double x, double y, sol::optional<double> gridDiv){",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 1506,
+      "snippet": "[](physics::PhysicsWorld& W, sol::table a, sol::table b, double thickness, const std::string& tag, sol::optional<int64_t> group){",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 1569,
+      "snippet": "return sol::as_table(W.TouchingEntities(e));",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 1698,
+      "snippet": "[](physics::PhysicsWorld& W, void* c, sol::optional<double> maxF, sol::optional<double> maxB){",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 1698,
+      "snippet": "[](physics::PhysicsWorld& W, void* c, sol::optional<double> maxF, sol::optional<double> maxB){",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 1757,
+      "snippet": "sol::function lua_cb)",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 1851,
+      "snippet": "sol::overload(",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 2005,
+      "snippet": "sol::no_constructor,",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 2020,
+      "snippet": "sol::optional<string> bindsToState) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 2045,
+      "snippet": "if (auto v = cfg.get<sol::optional<int>>(\"default_inflate_px\")) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 2181,
+      "snippet": "sol::optional<string> bindsToState) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    },
+    {
+      "line": 2269,
+      "snippet": "if (auto v = cfg.get<sol::optional<int>>(\"default_inflate_px\")) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
+    }
+  ]
+}

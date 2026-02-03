@@ -1,0 +1,258 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-02-03T04:36:56Z",
+  "area": "ui",
+  "patterns": [
+    {
+      "pattern_id": "ui.uibox_alignment.renew_after_offset",
+      "name": "RenewAlignment after ChildBuilder offset changes",
+      "doc_id": "pattern:ui.uibox_alignment.renew_after_offset",
+      "category": "uibox_alignment",
+      "description": "Call ui.box.RenewAlignment after adjusting ChildBuilder offsets so UIBox children reposition.",
+      "source_refs": [
+        "assets/scripts/ui/wand_panel.lua:positionTabs"
+      ],
+      "recommended": true,
+      "verified": true,
+      "test_id": "test_ui_patterns.lua::ui.uibox_alignment.renew_after_offset",
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "ui.uibox_alignment.renew_after_replacechildren",
+      "name": "RenewAlignment after ReplaceChildren",
+      "doc_id": "pattern:ui.uibox_alignment.renew_after_replacechildren",
+      "category": "uibox_alignment",
+      "description": "After ui.box.ReplaceChildren, call ui.box.RenewAlignment on the parent UIBox.",
+      "source_refs": [
+        "assets/scripts/ui/player_inventory.lua:injectGridForTab"
+      ],
+      "recommended": true,
+      "verified": true,
+      "test_id": "test_ui_patterns.lua::ui.uibox_alignment.renew_after_replacechildren",
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "ui.statetag.add_after_spawn",
+      "name": "AddStateTag after UIBox spawn",
+      "doc_id": "pattern:ui.statetag.add_after_spawn",
+      "category": "statetag",
+      "description": "Immediately add state tags (default_state) after spawning a UIBox.",
+      "source_refs": [
+        "assets/scripts/ui/skills_panel.lua:initPanel"
+      ],
+      "recommended": true,
+      "verified": true,
+      "test_id": "test_ui_patterns.lua::ui.statetag.add_after_spawn",
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "ui.statetag.add_after_replacechildren",
+      "name": "Reapply state tags after ReplaceChildren",
+      "doc_id": "pattern:ui.statetag.add_after_replacechildren",
+      "category": "statetag",
+      "description": "ReplaceChildren clears tags; reapply state tags so new UI elements render.",
+      "source_refs": [
+        "assets/scripts/ui/player_inventory.lua:injectGridForTab"
+      ],
+      "recommended": true,
+      "verified": true,
+      "test_id": "test_ui_patterns.lua::ui.statetag.add_after_replacechildren",
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "ui.statetag.persistence_check",
+      "name": "Clear/reapply state tags on state change",
+      "doc_id": "pattern:ui.statetag.persistence_check",
+      "category": "statetag",
+      "description": "Clear existing state tags before applying new ones to avoid stale visibility states.",
+      "source_refs": [
+        "assets/scripts/ui/stats_panel_v2.lua:_createPanel"
+      ],
+      "recommended": true,
+      "verified": true,
+      "test_id": "test_ui_patterns.lua::ui.statetag.persistence_check",
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "ui.visibility.move_transform_and_uiroot",
+      "name": "Move Transform and uiRoot together",
+      "doc_id": "pattern:ui.visibility.move_transform_and_uiroot",
+      "category": "visibility",
+      "description": "Update Transform, InheritedProperties offset, and UIBoxComponent.uiRoot when moving/hiding UI boxes.",
+      "source_refs": [
+        "assets/scripts/ui/stats_panel_v2.lua:setEntityVisible"
+      ],
+      "recommended": true,
+      "verified": true,
+      "test_id": "test_ui_patterns.lua::ui.visibility.move_transform_and_uiroot",
+      "cm_rule_id": null,
+      "anti_patterns": [
+        "pattern:ui.visibility.transform_only_fails"
+      ]
+    },
+    {
+      "pattern_id": "ui.visibility.transform_only_fails",
+      "name": "Avoid moving only Transform (anti-pattern)",
+      "doc_id": "pattern:ui.visibility.transform_only_fails",
+      "category": "visibility",
+      "description": "Moving only the UIBox Transform leaves uiRoot/offsets stale and breaks alignment.",
+      "source_refs": [
+        "assets/scripts/ui/stats_panel_v2.lua:setEntityVisible"
+      ],
+      "recommended": false,
+      "verified": true,
+      "test_id": "test_ui_patterns.lua::ui.visibility.transform_only_fails",
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "ui.collision.screenspace_marker_required",
+      "name": "ScreenSpaceCollisionMarker for screen-space UI",
+      "doc_id": "pattern:ui.collision.screenspace_marker_required",
+      "category": "collision",
+      "description": "Screen-space UI should include ScreenSpaceCollisionMarker for correct hit testing.",
+      "source_refs": [
+        "assets/scripts/ui/trigger_strip_ui.lua:createEntry"
+      ],
+      "recommended": true,
+      "verified": true,
+      "test_id": "test_ui_patterns.lua::ui.collision.screenspace_marker_required",
+      "cm_rule_id": null,
+      "anti_patterns": [
+        "pattern:ui.collision.click_fails_without_marker"
+      ]
+    },
+    {
+      "pattern_id": "ui.collision.click_detection_with_marker",
+      "name": "Add ScreenSpaceCollisionMarker for clicks",
+      "doc_id": "pattern:ui.collision.click_detection_with_marker",
+      "category": "collision",
+      "description": "Clickable UI boxes should add ScreenSpaceCollisionMarker explicitly.",
+      "source_refs": [
+        "assets/scripts/ui/stats_panel_v2.lua:_createTabMarker"
+      ],
+      "recommended": true,
+      "verified": true,
+      "test_id": "test_ui_patterns.lua::ui.collision.click_detection_with_marker",
+      "cm_rule_id": null,
+      "anti_patterns": [
+        "pattern:ui.collision.click_fails_without_marker"
+      ]
+    },
+    {
+      "pattern_id": "ui.collision.click_fails_without_marker",
+      "name": "Missing ScreenSpaceCollisionMarker breaks clicks (anti-pattern)",
+      "doc_id": "pattern:ui.collision.click_fails_without_marker",
+      "category": "collision",
+      "description": "Without ScreenSpaceCollisionMarker, screen-space UI clicks can fail.",
+      "source_refs": [
+        "assets/scripts/ui/trigger_strip_ui.lua:createEntry"
+      ],
+      "recommended": false,
+      "verified": true,
+      "test_id": "test_ui_patterns.lua::ui.collision.click_fails_without_marker",
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "ui.grid.cleanup_all_three_registries",
+      "name": "Clean up item registry, grid, and DSL entry",
+      "doc_id": "pattern:ui.grid.cleanup_all_three_registries",
+      "category": "grid_cleanup",
+      "description": "Cleanup must clear itemRegistry, call grid.cleanup, and dsl.cleanupGrid to avoid leaks.",
+      "source_refs": [
+        "assets/scripts/ui/player_inventory.lua:cleanupGridEntity"
+      ],
+      "recommended": true,
+      "verified": true,
+      "test_id": "test_ui_patterns.lua::ui.grid.cleanup_all_three_registries",
+      "cm_rule_id": null,
+      "anti_patterns": [
+        "pattern:ui.grid.cleanup_partial_fails"
+      ]
+    },
+    {
+      "pattern_id": "ui.grid.cleanup_partial_fails",
+      "name": "Partial grid cleanup fails (anti-pattern)",
+      "doc_id": "pattern:ui.grid.cleanup_partial_fails",
+      "category": "grid_cleanup",
+      "description": "Only cleaning one registry leaves dangling grid/item state.",
+      "source_refs": [
+        "assets/scripts/ui/player_inventory.lua:cleanupGridEntity"
+      ],
+      "recommended": false,
+      "verified": true,
+      "test_id": "test_ui_patterns.lua::ui.grid.cleanup_partial_fails",
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "ui.drawspace.world_follows_camera",
+      "name": "World-space draw follows camera",
+      "doc_id": "pattern:ui.drawspace.world_follows_camera",
+      "category": "drawspace",
+      "description": "Use transform.set_space(entity, 'world') for board entities that follow camera.",
+      "source_refs": [
+        "assets/scripts/ui/card_space_converter.lua:toWorldSpace"
+      ],
+      "recommended": true,
+      "verified": true,
+      "test_id": "test_ui_patterns.lua::ui.drawspace.world_follows_camera",
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "ui.drawspace.screen_fixed_hud",
+      "name": "Screen-space draw fixed to HUD",
+      "doc_id": "pattern:ui.drawspace.screen_fixed_hud",
+      "category": "drawspace",
+      "description": "Use transform.set_space(entity, 'screen') for HUD/inventory UI fixed to screen.",
+      "source_refs": [
+        "assets/scripts/ui/card_space_converter.lua:toScreenSpace"
+      ],
+      "recommended": true,
+      "verified": true,
+      "test_id": "test_ui_patterns.lua::ui.drawspace.screen_fixed_hud",
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "ui.attached.never_on_draggables",
+      "name": "Avoid ObjectAttachedToUITag on draggables",
+      "doc_id": "pattern:ui.attached.never_on_draggables",
+      "category": "attached_tags",
+      "description": "ObjectAttachedToUITag excludes entities from shader pipeline; do not use on draggable UI items.",
+      "source_refs": [
+        "assets/scripts/ui/trigger_strip_ui.lua:createEntry",
+        "assets/scripts/ui/player_inventory.lua:addItemToGrid"
+      ],
+      "recommended": false,
+      "verified": true,
+      "test_id": "test_ui_patterns.lua::ui.attached.never_on_draggables",
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "ui.attached.correct_usage",
+      "name": "Use ObjectAttachedToUITag for static UI icons",
+      "doc_id": "pattern:ui.attached.correct_usage",
+      "category": "attached_tags",
+      "description": "Apply ObjectAttachedToUITag for UI-only icons rendered outside the world pass.",
+      "source_refs": [
+        "assets/scripts/ui/message_queue_ui.lua:tryMakeIcon"
+      ],
+      "recommended": true,
+      "verified": true,
+      "test_id": "test_ui_patterns.lua::ui.attached.correct_usage",
+      "cm_rule_id": null,
+      "anti_patterns": [
+        "pattern:ui.attached.never_on_draggables"
+      ]
+    }
+  ]
+}

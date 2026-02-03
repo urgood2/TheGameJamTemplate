@@ -114,6 +114,7 @@ def build_index(output_dir: Path) -> Path:
         message = error.get("message", "Error")
         artifacts = entry.get("artifacts", []) or []
         screenshot = next((p for p in artifacts if "screenshots/" in p), "")
+        screenshot = normalize_artifact_path(screenshot)
         artifact_dir = f"artifacts/{safe_filename(test_id)}/"
         screenshot_link = f"[screenshot]({screenshot})" if screenshot else "-"
         artifacts_link = f"[artifacts]({artifact_dir})" if (output_dir / artifact_dir).exists() else "-"
@@ -140,6 +141,12 @@ def build_index(output_dir: Path) -> Path:
 
 def safe_filename(name: str) -> str:
     return "".join(ch if ch.isalnum() or ch in ("-", "_") else "_" for ch in name)
+
+
+def normalize_artifact_path(path: str) -> str:
+    if path.startswith("test_output/"):
+        return path[len("test_output/") :]
+    return path
 
 
 def create_zip(output_dir: Path, zip_path: Path, files: list[Path]) -> int:
@@ -171,18 +178,23 @@ def main() -> int:
     index_path = build_index(output_dir)
 
     log("Creating artifacts_index.md...")
-    screenshots_count = len(list((output_dir / "screenshots").glob("*.png"))) if (output_dir / "screenshots").exists() else 0
-    artifacts_count = len(list((output_dir / "artifacts").rglob("*"))) if (output_dir / "artifacts").exists() else 0
+    screenshots_root = output_dir / "screenshots"
+    artifacts_root = output_dir / "artifacts"
+    screenshots_count = len(list(screenshots_root.glob("*.png"))) if screenshots_root.exists() else 0
+    diff_images_count = len(list(artifacts_root.rglob("*.png"))) if artifacts_root.exists() else 0
     log(f"  Screenshots: {screenshots_count}")
-    log(f"  Diff images: {artifacts_count}")
+    log(f"  Diff images: {diff_images_count}")
     log("  Log files: 1" if (output_dir / "test_log.txt").exists() else "  Log files: 0")
 
     files = collect_artifacts(output_dir)
     log("Bundling for CI upload...")
+    artifact_dirs = len([p for p in artifacts_root.iterdir() if p.is_dir()]) if artifacts_root.exists() else 0
+    log(f"  test_output/artifacts/ ({artifact_dirs} dirs)")
+    log(f"  test_output/screenshots/ ({screenshots_count} files)")
     for path in files:
         log(f"  {path.relative_to(output_dir.parent)}")
 
-    size = create_zip(output_dir, zip_path, files + [index_path])
+    size = create_zip(output_dir, zip_path, files)
     log(f"Creating {zip_path}...")
     log(f"  Size: {size} bytes")
     log(f"Done. Upload {zip_path} to CI.")

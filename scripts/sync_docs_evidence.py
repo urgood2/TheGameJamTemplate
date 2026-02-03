@@ -15,7 +15,7 @@ Modes:
 - --check: Report mismatches, exit non-zero if any
 - --fix: Update docs Evidence blocks to match registry
 
-Logging prefix: [SYNC]
+Logging prefix: [DOC-SYNC]
 """
 from __future__ import annotations
 
@@ -65,9 +65,9 @@ class Mismatch:
 
 
 def log(message: str, verbose: bool = True) -> None:
-    """Log a message with [SYNC] prefix."""
+    """Log a message with [DOC-SYNC] prefix."""
     if verbose:
-        print(f"[SYNC] {message}")
+        print(f"[DOC-SYNC] {message}")
 
 
 def get_git_root() -> Path | None:

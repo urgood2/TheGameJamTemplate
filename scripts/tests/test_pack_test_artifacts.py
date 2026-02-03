@@ -70,6 +70,7 @@ def test_artifacts_index_contains_links(tmp_path: Path) -> None:
 
     assert "ui.click.missing_marker" in content
     assert "screenshots/ui.click.missing_marker.png" in content
+    assert "test_output/screenshots/" not in content
     assert "artifacts/" in content
 
 

@@ -347,325 +347,486 @@ Each entry includes a doc_id for traceability and a test reference where applica
 
 <a id="uibox-creation-and-configuration"></a>
 ### UIBox Creation and Configuration
-Doc ID: pattern:ui.uibox_creation.basic
+- doc_id: pattern:ui.uibox_creation.basic
+- Test: assets/scripts/tests/test_ui_patterns.lua::ui.statetag.add_after_spawn
+- Source: docs/guides/UI_PANEL_IMPLEMENTATION_GUIDE.md
 
-Symptom:
-- UI elements render but never receive clicks or layout does not update after spawn.
+**Problem:**
+UI elements render but never receive clicks or layout does not update after spawn.
 
-Root cause:
-- UIBox created without required components or missing post-spawn alignment/state setup.
+**Root cause:**
+UIBox created without required components or missing post-spawn alignment or state setup.
 
-Fix:
-- Use DSL spawn helpers and follow UI Panel Implementation Guide.
-- Add state tags after spawn and call RenewAlignment when replacing children.
+**Solution:**
+Use DSL spawn helpers, add state tags after spawn, and realign after rebuilds.
 
-Test:
-- Covered indirectly by ui.statetag.add_after_spawn and ui.uibox_alignment.* tests.
+```lua
+local panelEntity = dsl.spawn({ x = panelX, y = panelY }, panelDef, "ui", PANEL_Z)
+ui.box.AddStateTagToUIBox(registry, panelEntity, "default_state")
+ui.box.RenewAlignment(registry, panelEntity)
+```
+
+**Evidence:**
+- Verified: Test: assets/scripts/tests/test_ui_patterns.lua::ui.statetag.add_after_spawn
 
 ### UIBox Alignment and RenewAlignment
 
 <a id="renewalignment-after-setoffset"></a>
 #### RenewAlignment after setOffset
-Doc ID: pattern:ui.uibox_alignment.renew_after_offset
+- doc_id: pattern:ui.uibox_alignment.renew_after_offset
+- Test: assets/scripts/tests/test_ui_patterns.lua::ui.uibox_alignment.renew_after_offset
+- Source: assets/scripts/ui/wand_panel.lua:positionTabs
 
-Symptom:
-- Child elements stay at old positions after ChildBuilder.setOffset.
+**Problem:**
+Child elements stay at old positions after ChildBuilder.setOffset.
 
-Root cause:
-- InheritedProperties offsets update, but layout is not recomputed until RenewAlignment.
+**Root cause:**
+InheritedProperties offsets update, but layout is not recomputed until RenewAlignment.
 
-Fix:
-- Call ui.box.RenewAlignment(registry, container) after ChildBuilder.setOffset.
+**Solution:**
+Call ui.box.RenewAlignment after changing child offsets.
 
-Test:
-- assets/scripts/tests/test_ui_patterns.lua::ui.uibox_alignment.renew_after_offset
+```lua
+ChildBuilder.setOffset(container, x, y)
+ui.box.RenewAlignment(registry, container)
+```
+
+**Evidence:**
+- Verified: Test: assets/scripts/tests/test_ui_patterns.lua::ui.uibox_alignment.renew_after_offset
 
 <a id="renewalignment-after-replacechildren"></a>
 #### RenewAlignment after ReplaceChildren
-Doc ID: pattern:ui.uibox_alignment.renew_after_replacechildren
+- doc_id: pattern:ui.uibox_alignment.renew_after_replacechildren
+- Test: assets/scripts/tests/test_ui_patterns.lua::ui.uibox_alignment.renew_after_replacechildren
+- Source: assets/scripts/ui/player_inventory.lua:injectGridForTab
 
-Symptom:
-- Newly replaced children appear at incorrect positions or overlap.
+**Problem:**
+Newly replaced children appear at incorrect positions or overlap.
 
-Root cause:
-- ReplaceChildren invalidates cached layout; alignment is not recalculated.
+**Root cause:**
+ReplaceChildren invalidates cached layout; alignment is not recalculated.
 
-Fix:
-- Call ui.box.RenewAlignment(registry, container) after ReplaceChildren.
+**Solution:**
+Call ui.box.RenewAlignment after ReplaceChildren.
 
-Test:
-- assets/scripts/tests/test_ui_patterns.lua::ui.uibox_alignment.renew_after_replacechildren
+```lua
+ui.box.ReplaceChildren(gridContainer, gridDef)
+ui.box.RenewAlignment(registry, gridContainer)
+```
+
+**Evidence:**
+- Verified: Test: assets/scripts/tests/test_ui_patterns.lua::ui.uibox_alignment.renew_after_replacechildren
 
 ### State Tags and UIBox State Management
 
 <a id="addstatetagto-uibox-after-spawn"></a>
 #### AddStateTagToUIBox after spawn
-Doc ID: pattern:ui.statetag.add_after_spawn
+- doc_id: pattern:ui.statetag.add_after_spawn
+- Test: assets/scripts/tests/test_ui_patterns.lua::ui.statetag.add_after_spawn
+- Source: assets/scripts/ui/skills_panel.lua:initPanel
 
-Symptom:
-- UI states never activate (hover/pressed/disabled visuals never appear).
+**Problem:**
+UI states never activate (hover, pressed, disabled visuals never appear).
 
-Root cause:
-- State tags are not assigned after spawn.
+**Root cause:**
+State tags are not assigned after spawn.
 
-Fix:
-- Call ui.box.AddStateTagToUIBox(registry, entity, "default_state") after spawn.
+**Solution:**
+Add default state tags immediately after spawn.
 
-Test:
-- assets/scripts/tests/test_ui_patterns.lua::ui.statetag.add_after_spawn
+```lua
+local panelEntity = dsl.spawn({ x = panelX, y = panelY }, panelDef, "ui", PANEL_Z)
+ui.box.AddStateTagToUIBox(registry, panelEntity, "default_state")
+```
+
+**Evidence:**
+- Verified: Test: assets/scripts/tests/test_ui_patterns.lua::ui.statetag.add_after_spawn
 
 <a id="addstatetagto-uibox-after-replacechildren"></a>
 #### AddStateTagToUIBox after ReplaceChildren
-Doc ID: pattern:ui.statetag.add_after_replacechildren
+- doc_id: pattern:ui.statetag.add_after_replacechildren
+- Test: assets/scripts/tests/test_ui_patterns.lua::ui.statetag.add_after_replacechildren
+- Source: assets/scripts/ui/player_inventory.lua:injectGridForTab
 
-Symptom:
-- State tags disappear after ReplaceChildren, causing styling regressions.
+**Problem:**
+State tags disappear after ReplaceChildren, causing styling regressions.
 
-Root cause:
-- ReplaceChildren wipes state tags from the UIBox tree.
+**Root cause:**
+ReplaceChildren wipes state tags from the UIBox tree.
 
-Fix:
-- Re-apply state tags with ui.box.AddStateTagToUIBox after ReplaceChildren.
+**Solution:**
+Re-apply state tags after ReplaceChildren.
 
-Test:
-- assets/scripts/tests/test_ui_patterns.lua::ui.statetag.add_after_replacechildren
+```lua
+ui.box.ReplaceChildren(gridContainer, gridDef)
+ui.box.AddStateTagToUIBox(registry, panelEntity, "default_state")
+```
+
+**Evidence:**
+- Verified: Test: assets/scripts/tests/test_ui_patterns.lua::ui.statetag.add_after_replacechildren
 
 <a id="state-tag-persistence-check"></a>
 #### State tag persistence check
-Doc ID: pattern:ui.statetag.persistence_check
+- doc_id: pattern:ui.statetag.persistence_check
+- Test: assets/scripts/tests/test_ui_patterns.lua::ui.statetag.persistence_check
+- Source: assets/scripts/ui/stats_panel_v2.lua:_createPanel
 
-Symptom:
-- State tags appear briefly, then stop responding to state transitions.
+**Problem:**
+State tags appear briefly, then stop responding to state transitions.
 
-Root cause:
-- State tag list is mutated or cleared during subsequent UI operations.
+**Root cause:**
+State tag list is mutated or cleared during subsequent UI operations.
 
-Fix:
-- Reapply tags whenever the UI tree is rebuilt or replaced.
+**Solution:**
+Clear and reapply tags whenever the UI tree is rebuilt or replaced.
 
-Test:
-- assets/scripts/tests/test_ui_patterns.lua::ui.statetag.persistence_check
+```lua
+ui.box.ClearStateTagsFromUIBox(entity)
+ui.box.AddStateTagToUIBox(entity, "default_state")
+```
+
+**Evidence:**
+- Verified: Test: assets/scripts/tests/test_ui_patterns.lua::ui.statetag.persistence_check
 
 ### Panel Visibility and uiRoot Coordination
 
 <a id="move-both-transform-and-uiboxcomponent-uiroot"></a>
 #### Move both Transform and UIBoxComponent.uiRoot
-Doc ID: pattern:ui.visibility.move_transform_and_uiroot
+- doc_id: pattern:ui.visibility.move_transform_and_uiroot
+- Test: assets/scripts/tests/test_ui_patterns.lua::ui.visibility.move_transform_and_uiroot
+- Source: assets/scripts/ui/stats_panel_v2.lua:setEntityVisible
 
-Symptom:
-- Panel container moves but children stay in the old position.
+**Problem:**
+Panel container moves but children stay in the old position.
 
-Root cause:
-- uiRoot Transform is not moved alongside the UIBox Transform.
+**Root cause:**
+uiRoot Transform is not moved alongside the UIBox Transform.
 
-Fix:
-- Update Transform and UIBoxComponent.uiRoot, then call RenewAlignment.
+**Solution:**
+Update Transform, uiRoot Transform, and then realign.
 
-Test:
-- assets/scripts/tests/test_ui_patterns.lua::ui.visibility.move_transform_and_uiroot
+```lua
+local t = component_cache.get(entity, Transform)
+t.actualX = targetX
+t.actualY = targetY
+
+local boxComp = component_cache.get(entity, UIBoxComponent)
+local rt = component_cache.get(boxComp.uiRoot, Transform)
+rt.actualX = targetX
+rt.actualY = targetY
+
+ui.box.RenewAlignment(registry, entity)
+```
+
+**Evidence:**
+- Verified: Test: assets/scripts/tests/test_ui_patterns.lua::ui.visibility.move_transform_and_uiroot
 
 <a id="transform-only-move-fails"></a>
 #### Transform-only move fails
-Doc ID: pattern:ui.visibility.transform_only_fails
+- doc_id: pattern:ui.visibility.transform_only_fails
+- Test: assets/scripts/tests/test_ui_patterns.lua::ui.visibility.transform_only_fails
+- Source: assets/scripts/ui/stats_panel_v2.lua:setEntityVisible
 
-Symptom:
-- Children remain at original coordinates after moving only the panel Transform.
+**Problem:**
+Children remain at original coordinates after moving only the panel Transform.
 
-Root cause:
-- UIBox children align to uiRoot, not the panel Transform alone.
+**Root cause:**
+UIBox children align to uiRoot, not the panel Transform alone.
 
-Fix:
-- Always move uiRoot in addition to the panel Transform.
+**Solution:**
+Always update uiRoot along with the main Transform.
 
-Test:
-- assets/scripts/tests/test_ui_patterns.lua::ui.visibility.transform_only_fails
+```lua
+local t = component_cache.get(entity, Transform)
+t.actualX = targetX
+t.actualY = targetY
+
+local boxComp = component_cache.get(entity, UIBoxComponent)
+local rt = component_cache.get(boxComp.uiRoot, Transform)
+rt.actualX = targetX
+rt.actualY = targetY
+```
+
+**Evidence:**
+- Verified: Test: assets/scripts/tests/test_ui_patterns.lua::ui.visibility.transform_only_fails
 
 ### Grid Management and Cleanup
 
 <a id="cleanup-all-three-registries"></a>
 #### Cleanup all three registries
-Doc ID: pattern:ui.grid.cleanup_all_three_registries
+- doc_id: pattern:ui.grid.cleanup_all_three_registries
+- Test: assets/scripts/tests/test_ui_patterns.lua::ui.grid.cleanup_all_three_registries
+- Source: assets/scripts/ui/player_inventory.lua:cleanupGridEntity
 
-Symptom:
-- Orphaned items or ghost slots remain after grid teardown.
+**Problem:**
+Orphaned items or ghost slots remain after grid teardown.
 
-Root cause:
-- Only partial cleanup is performed.
+**Root cause:**
+Only partial cleanup is performed.
 
-Fix:
-- Clear itemRegistry, call grid:destroy(), and dsl.cleanupGrid(registry).
+**Solution:**
+Clear the item registry, cleanup the grid entity, and cleanup the DSL grid.
 
-Test:
-- assets/scripts/tests/test_ui_patterns.lua::ui.grid.cleanup_all_three_registries
+```lua
+itemRegistry.clearGrid(gridEntity)
+grid.cleanup(gridEntity)
+dsl.cleanupGrid(cfg.id)
+```
+
+**Evidence:**
+- Verified: Test: assets/scripts/tests/test_ui_patterns.lua::ui.grid.cleanup_all_three_registries
 
 <a id="partial-cleanup-fails"></a>
 #### Partial cleanup fails
-Doc ID: pattern:ui.grid.cleanup_partial_fails
+- doc_id: pattern:ui.grid.cleanup_partial_fails
+- Test: assets/scripts/tests/test_ui_patterns.lua::ui.grid.cleanup_partial_fails
+- Source: assets/scripts/ui/player_inventory.lua:cleanupGridEntity
 
-Symptom:
-- Old items remain registered even after grid is destroyed.
+**Problem:**
+Old items remain registered even after grid is destroyed.
 
-Root cause:
-- itemRegistry or DSL cleanup is skipped.
+**Root cause:**
+itemRegistry or DSL cleanup is skipped.
 
-Fix:
-- Always perform all three cleanup steps.
+**Solution:**
+Always perform all three cleanup steps.
 
-Test:
-- assets/scripts/tests/test_ui_patterns.lua::ui.grid.cleanup_partial_fails
+```lua
+itemRegistry.clearGrid(gridEntity)
+grid.cleanup(gridEntity)
+dsl.cleanupGrid(cfg.id)
+```
+
+**Evidence:**
+- Verified: Test: assets/scripts/tests/test_ui_patterns.lua::ui.grid.cleanup_partial_fails
 
 ### ScreenSpaceCollisionMarker for Click Detection
 
 <a id="marker-required-for-clicks"></a>
 #### Marker required for clicks
-Doc ID: pattern:ui.collision.screenspace_marker_required
+- doc_id: pattern:ui.collision.screenspace_marker_required
+- Test: assets/scripts/tests/test_ui_patterns.lua::ui.collision.screenspace_marker_required
+- Source: assets/scripts/ui/trigger_strip_ui.lua:createEntry
 
-Symptom:
-- UI buttons do not respond to clicks.
+**Problem:**
+UI buttons do not respond to clicks.
 
-Root cause:
-- ScreenSpaceCollisionMarker is missing, so input system ignores the UI entity.
+**Root cause:**
+ScreenSpaceCollisionMarker is missing, so the input system ignores the UI entity.
 
-Fix:
-- Add ScreenSpaceCollisionMarker {} to all clickable UI entities.
+**Solution:**
+Attach ScreenSpaceCollisionMarker for screen-space UI.
 
-Test:
-- assets/scripts/tests/test_ui_patterns.lua::ui.collision.screenspace_marker_required
+```lua
+if registry and registry.valid and collision and collision.ScreenSpaceCollisionMarker and registry:valid(entity) then
+    if not registry:has(entity, collision.ScreenSpaceCollisionMarker) then
+        registry:emplace(entity, collision.ScreenSpaceCollisionMarker)
+    end
+end
+```
+
+**Evidence:**
+- Verified: Test: assets/scripts/tests/test_ui_patterns.lua::ui.collision.screenspace_marker_required
 
 <a id="click-detection-with-marker"></a>
 #### Click detection with marker
-Doc ID: pattern:ui.collision.click_detection_with_marker
+- doc_id: pattern:ui.collision.click_detection_with_marker
+- Test: assets/scripts/tests/test_ui_patterns.lua::ui.collision.click_detection_with_marker
+- Source: assets/scripts/ui/stats_panel_v2.lua:_createTabMarker
 
-Symptom:
-- Clicks are not routed to callbacks even though the UI is visible.
+**Problem:**
+Clicks are not routed to callbacks even though the UI is visible.
 
-Root cause:
-- Marker was never attached or was removed during rebuild.
+**Root cause:**
+Marker was never attached or was removed during rebuild.
 
-Fix:
-- Ensure marker is attached at spawn and preserved after ReplaceChildren.
+**Solution:**
+Ensure marker is attached at spawn and preserved after ReplaceChildren.
 
-Test:
-- assets/scripts/tests/test_ui_patterns.lua::ui.collision.click_detection_with_marker
+```lua
+if registry.emplace and ScreenSpaceCollisionMarker then
+    pcall(function()
+        registry:emplace(entity, ScreenSpaceCollisionMarker {})
+    end)
+end
+```
+
+**Evidence:**
+- Verified: Test: assets/scripts/tests/test_ui_patterns.lua::ui.collision.click_detection_with_marker
 
 <a id="click-fails-without-marker"></a>
 #### Click fails without marker
-Doc ID: pattern:ui.collision.click_fails_without_marker
+- doc_id: pattern:ui.collision.click_fails_without_marker
+- Test: assets/scripts/tests/test_ui_patterns.lua::ui.collision.click_fails_without_marker
+- Source: assets/scripts/ui/trigger_strip_ui.lua:createEntry
 
-Symptom:
-- Clicking UI does nothing despite valid callbacks.
+**Problem:**
+Clicking UI does nothing despite valid callbacks.
 
-Root cause:
-- Input system rejects entities without the marker.
+**Root cause:**
+Input system rejects entities without the marker.
 
-Fix:
-- Attach ScreenSpaceCollisionMarker before registering callbacks.
+**Solution:**
+Attach ScreenSpaceCollisionMarker before registering callbacks.
 
-Test:
-- assets/scripts/tests/test_ui_patterns.lua::ui.collision.click_fails_without_marker
+```lua
+if registry and registry.valid and collision and collision.ScreenSpaceCollisionMarker then
+    if not registry:has(entity, collision.ScreenSpaceCollisionMarker) then
+        registry:emplace(entity, collision.ScreenSpaceCollisionMarker)
+    end
+end
+```
+
+**Evidence:**
+- Verified: Test: assets/scripts/tests/test_ui_patterns.lua::ui.collision.click_fails_without_marker
 
 ### DrawCommandSpace (World vs Screen)
 
 <a id="world-draw-space-follows-camera"></a>
 #### World draw space follows camera
-Doc ID: pattern:ui.drawspace.world_follows_camera
+- doc_id: pattern:ui.drawspace.world_follows_camera
+- Test: assets/scripts/tests/test_ui_patterns.lua::ui.drawspace.world_follows_camera
+- Source: assets/scripts/ui/card_space_converter.lua:toWorldSpace
 
-Symptom:
-- HUD elements drift with the camera.
+**Problem:**
+HUD elements drift with the camera.
 
-Root cause:
-- DrawCommandSpace.World is used for screen-space UI.
+**Root cause:**
+DrawCommandSpace.World is used for screen-space UI.
 
-Fix:
-- Use DrawCommandSpace.Screen for HUD elements.
+**Solution:**
+Use world space only for board elements that should track camera.
 
-Test:
-- assets/scripts/tests/test_ui_patterns.lua::ui.drawspace.world_follows_camera
+```lua
+transform.set_space(cardEntity, "world")
+```
+
+**Evidence:**
+- Verified: Test: assets/scripts/tests/test_ui_patterns.lua::ui.drawspace.world_follows_camera
 
 <a id="screen-draw-space-stays-fixed"></a>
 #### Screen draw space stays fixed
-Doc ID: pattern:ui.drawspace.screen_fixed_hud
+- doc_id: pattern:ui.drawspace.screen_fixed_hud
+- Test: assets/scripts/tests/test_ui_patterns.lua::ui.drawspace.screen_fixed_hud
+- Source: assets/scripts/ui/card_space_converter.lua:toScreenSpace
 
-Symptom:
-- HUD elements still move with the camera.
+**Problem:**
+HUD elements still move with the camera.
 
-Root cause:
-- DrawCommandSpace was not set explicitly or uses World by default.
+**Root cause:**
+DrawCommandSpace was not set explicitly or uses World by default.
 
-Fix:
-- Set DrawCommandSpace.Screen when queuing UI draws.
+**Solution:**
+Use screen space for HUD elements that must remain fixed.
 
-Test:
-- assets/scripts/tests/test_ui_patterns.lua::ui.drawspace.screen_fixed_hud
+```lua
+transform.set_space(cardEntity, "screen")
+```
+
+**Evidence:**
+- Verified: Test: assets/scripts/tests/test_ui_patterns.lua::ui.drawspace.screen_fixed_hud
 
 ### ChildBuilder.setOffset Patterns
 
 <a id="setoffset-requires-renewalignment"></a>
 #### setOffset requires RenewAlignment
-Doc ID: pattern:ui.childbuilder.setoffset_requires_renew
+- doc_id: pattern:ui.childbuilder.setoffset_requires_renew
+- Test: assets/scripts/tests/test_ui_patterns.lua::ui.uibox_alignment.renew_after_offset
+- Source: assets/scripts/ui/wand_panel.lua:positionTabs
 
-Symptom:
-- Child elements remain at old coordinates after setOffset.
+**Problem:**
+Child elements remain at old coordinates after setOffset.
 
-Root cause:
-- InheritedProperties offset changes do not reflow UI layout automatically.
+**Root cause:**
+InheritedProperties offset changes do not reflow UI layout automatically.
 
-Fix:
-- Call ui.box.RenewAlignment after setOffset.
+**Solution:**
+Call ui.box.RenewAlignment after setOffset.
 
-Test:
-- assets/scripts/tests/test_ui_patterns.lua::ui.uibox_alignment.renew_after_offset
+```lua
+ChildBuilder.setOffset(container, x, y)
+ui.box.RenewAlignment(registry, container)
+```
+
+**Evidence:**
+- Verified: Test: assets/scripts/tests/test_ui_patterns.lua::ui.uibox_alignment.renew_after_offset
 
 <a id="slot-decorations-and-sprite-panels"></a>
 ### Slot Decorations and Sprite Panels
+- doc_id: pattern:ui.slot_decorations.sprite_panel_scaling
+- Test: Unverified: manual visual check
+- Source: assets/scripts/ui/ui_syntax_sugar.lua:buildGridDefinition
 
-Doc ID: pattern:ui.slot_decorations.sprite_panel_scaling
+**Problem:**
+Decorations render misaligned or scaled incorrectly relative to slots.
 
-Symptom:
-- Decorations render misaligned or scaled incorrectly relative to slots.
+**Root cause:**
+Decorations are not scaled using sprite scale or slot config.
 
-Root cause:
-- Decorations are not scaled using ui_scale.SPRITE_SCALE or the slot config.
+**Solution:**
+Use slotConfig.decorations or gridConfig.slotDecorations and apply sprite scaling.
 
-Fix:
-- Use slotConfig.decorations or gridConfig.slotDecorations for sprite panels.
+```lua
+local slotDecorations = slotConfig.decorations or gridConfig.slotDecorations
+if slotDecorations and type(slotDecorations) == "table" and next(slotDecorations) then
+    slotNodeConfig._decorations = scaleSlotDecorations(slotDecorations, spriteScale)
+end
+```
 
-Test:
-- Manual verification (visual).
+**Evidence:**
+- Unverified: Manual visual check
 
 ### ObjectAttachedToUITag for Draggables
 
 <a id="never-use-objectattachedto-uitag-on-draggables"></a>
 #### Never use ObjectAttachedToUITag on draggables
-Doc ID: pattern:ui.attached.never_on_draggables
+- doc_id: pattern:ui.attached.never_on_draggables
+- Test: assets/scripts/tests/test_ui_patterns.lua::ui.attached.never_on_draggables
+- Source: assets/scripts/ui/trigger_strip_ui.lua:createEntry
 
-Symptom:
-- Draggable UI elements become stuck or cannot move.
+**Problem:**
+Draggable UI elements become stuck or cannot move.
 
-Root cause:
-- ObjectAttachedToUITag forces attachment behavior that conflicts with drag logic.
+**Root cause:**
+ObjectAttachedToUITag forces attachment behavior that conflicts with drag logic.
 
-Fix:
-- Do not add ObjectAttachedToUITag to draggable UI elements.
+**Solution:**
+Do not add ObjectAttachedToUITag to draggable UI elements.
 
-Test:
-- assets/scripts/tests/test_ui_patterns.lua::ui.attached.never_on_draggables
+```lua
+transform.set_space(entity, "screen")
+-- Do not add ObjectAttachedToUITag on draggables
+```
+
+**Evidence:**
+- Verified: Test: assets/scripts/tests/test_ui_patterns.lua::ui.attached.never_on_draggables
 
 <a id="objectattachedto-uitag-correct-usage"></a>
 #### ObjectAttachedToUITag correct usage
-Doc ID: pattern:ui.attached.correct_usage
+- doc_id: pattern:ui.attached.correct_usage
+- Test: assets/scripts/tests/test_ui_patterns.lua::ui.attached.correct_usage
+- Source: assets/scripts/ui/message_queue_ui.lua:tryMakeIcon
 
-Symptom:
-- Non-draggable attachments fail to follow parent if tag missing.
+**Problem:**
+Non-draggable attachments fail to follow parent if tag is missing.
 
-Root cause:
-- Attachment tag not applied for static attachments.
+**Root cause:**
+Attachment tag not applied for static attachments.
 
-Fix:
-- Use ObjectAttachedToUITag only for non-draggable attachments.
+**Solution:**
+Use ObjectAttachedToUITag only for non-draggable attachments.
 
-Test:
-- assets/scripts/tests/test_ui_patterns.lua::ui.attached.correct_usage
+```lua
+transform.set_space(entity, "screen")
+if registry and registry.valid and ObjectAttachedToUITag and registry:valid(entity) then
+    if not registry:has(entity, ObjectAttachedToUITag) then
+        registry:emplace(entity, ObjectAttachedToUITag)
+    end
+end
+```
+
+**Evidence:**
+- Verified: Test: assets/scripts/tests/test_ui_patterns.lua::ui.attached.correct_usage
 
 ### UI Rule Candidates
 

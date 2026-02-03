@@ -134,8 +134,72 @@ def process_animation(source: Path, aseprite_exe: str, verbose: bool, move: bool
 
 
 def process_sprite(source: Path, aseprite_exe: str, verbose: bool, move: bool) -> bool:
-    """Process a sprite file - merge into auto_export_assets.aseprite."""
-    raise NotImplementedError("Task 4")
+    """Process a sprite file - merge layers into auto_export_assets.aseprite."""
+    if verbose:
+        print(f"  Processing sprite: {source.name}")
+
+    # Wait for file to be fully synced
+    if not is_file_stable(source):
+        print(f"  Skipping {source.name} - still syncing")
+        return False
+
+    # Run merge script
+    try:
+        result = subprocess.run(
+            [
+                aseprite_exe,
+                "-b",
+                "--script-param", f"source={source}",
+                "--script-param", f"target={SPRITES_TARGET}",
+                "--script", str(MERGE_SCRIPT),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+
+        # Parse JSON output from script
+        output = result.stdout.strip()
+        if verbose:
+            print(f"  Script output: {output}")
+
+        try:
+            response = json.loads(output)
+        except json.JSONDecodeError:
+            print(f"ERROR: Invalid JSON from merge script: {output}")
+            print(f"  stderr: {result.stderr}")
+            return False
+
+        status = response.get("status")
+
+        if status == "success":
+            layers = response.get("layers_added", 0)
+            move_to_processed(source, move)
+            notify("Pixquare Sync", f"Sprite '{source.stem}' merged ({layers} layers)")
+            return True
+
+        elif status == "skipped":
+            reason = response.get("reason", "unknown")
+            if reason == "layers_exist":
+                prefix = response.get("prefix", source.stem)
+                print(f"  Skipped: layers '{prefix}_*' already exist")
+                notify("Pixquare Sync", f"Sprite '{source.stem}' exists, skipping")
+            else:
+                print(f"  Skipped: {reason}")
+            return False
+
+        else:
+            reason = response.get("reason", "unknown error")
+            print(f"ERROR: Merge failed - {reason}")
+            notify("Pixquare Sync Error", f"Failed: {source.name}")
+            return False
+
+    except subprocess.TimeoutExpired:
+        print(f"ERROR: Merge script timed out for {source.name}")
+        return False
+    except Exception as e:
+        print(f"ERROR processing {source.name}: {e}")
+        return False
 
 
 def main():

@@ -84,6 +84,7 @@ Component accessibility from Lua. Status: skeleton - needs manual verification.
 | AchievementCategory | other | ❓ Unknown | TBD | Needs verification |
 | AchievementItem | other | ❓ Unknown | TBD | Needs verification |
 | ActiveStates | other | ❓ Unknown | TBD | Needs verification |
+| InactiveTag | other | ❓ Unknown | TBD | Needs verification |
 | Annotation | other | ❓ Unknown | TBD | Needs verification |
 | AsmDesc | other | ❓ Unknown | TBD | Needs verification |
 | AsmDesc | other | ❓ Unknown | TBD | Needs verification |
@@ -304,6 +305,7 @@ Component accessibility from Lua. Status: skeleton - needs manual verification.
 | SpringPool | other | ❓ Unknown | TBD | Needs verification |
 | SpriteFrameData | other | ❓ Unknown | TBD | Needs verification |
 | StateTag | other | ❓ Unknown | TBD | Needs verification |
+| ScriptComponent | other | ❓ Unknown | TBD | Needs verification |
 | StringIdxComparator | other | ❓ Unknown | TBD | Needs verification |
 | StringIdxHasher | other | ❓ Unknown | TBD | Needs verification |
 | StringKey | other | ❓ Unknown | TBD | Needs verification |

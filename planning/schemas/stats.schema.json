@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "stats.schema.json",
+  "title": "Codebase Statistics",
+  "description": "Codebase statistics from recount_scope_stats.py",
+  "type": "object",
+  "required": ["schema_version", "generated_at", "stats"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "stats": {
+      "type": "object",
+      "required": ["sol2_bindings", "ecs_components", "lua_scripts", "existing_docs"],
+      "properties": {
+        "sol2_bindings": {
+          "$ref": "#/$defs/category_stats"
+        },
+        "ecs_components": {
+          "$ref": "#/$defs/category_stats"
+        },
+        "lua_scripts": {
+          "$ref": "#/$defs/category_stats"
+        },
+        "existing_docs": {
+          "$ref": "#/$defs/category_stats"
+        }
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/category_stats"
+      }
+    },
+    "scan_config": {
+      "type": "object",
+      "properties": {
+        "root_path": {"type": "string"},
+        "exclude_patterns": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "total_items": {"type": "integer", "minimum": 0},
+        "documented_count": {"type": "integer", "minimum": 0},
+        "undocumented_count": {"type": "integer", "minimum": 0},
+        "coverage_percent": {"type": "number", "minimum": 0, "maximum": 100}
+      }
+    }
+  },
+  "$defs": {
+    "category_stats": {
+      "type": "object",
+      "required": ["count"],
+      "properties": {
+        "count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total count of items in category"
+        },
+        "documented": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of documented items"
+        },
+        "undocumented": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of undocumented items"
+        },
+        "by_tier": {
+          "type": "object",
+          "properties": {
+            "tier0": {"type": "integer", "minimum": 0},
+            "tier1": {"type": "integer", "minimum": 0},
+            "tier2": {"type": "integer", "minimum": 0}
+          },
+          "description": "Breakdown by documentation tier"
+        },
+        "by_subcategory": {
+          "type": "object",
+          "additionalProperties": {"type": "integer"},
+          "description": "Breakdown by subcategory (e.g., by file, by system)"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["to_document", "in_progress", "complete"],
+          "description": "Documentation status for category"
+        },
+        "sample_items": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Sample item names"
+        }
+      }
+    }
+  }
+}

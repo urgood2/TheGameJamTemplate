@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bindings_inventory.schema.json",
+  "title": "Sol2 Bindings Inventory",
+  "description": "Sol2 binding inventory for a system",
+  "type": "object",
+  "required": ["schema_version", "system", "generated_at"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "system": {
+      "type": "string",
+      "description": "System name (physics, ui, etc.)"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source_files": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Source files scanned"
+    },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "usertypes": {"type": "integer", "minimum": 0},
+        "functions": {"type": "integer", "minimum": 0},
+        "constants": {"type": "integer", "minimum": 0},
+        "enums": {"type": "integer", "minimum": 0},
+        "methods": {"type": "integer", "minimum": 0},
+        "properties": {"type": "integer", "minimum": 0},
+        "low_confidence": {"type": "integer", "minimum": 0},
+        "unrecognized_patterns": {"type": "integer", "minimum": 0}
+      }
+    },
+    "bindings": {
+      "type": "object",
+      "properties": {
+        "usertypes": {"type": "array", "items": {"$ref": "#/$defs/binding"}},
+        "functions": {"type": "array", "items": {"$ref": "#/$defs/binding"}},
+        "constants": {"type": "array", "items": {"$ref": "#/$defs/binding"}},
+        "enums": {"type": "array", "items": {"$ref": "#/$defs/binding"}},
+        "methods": {"type": "array", "items": {"$ref": "#/$defs/binding"}},
+        "properties": {"type": "array", "items": {"$ref": "#/$defs/binding"}}
+      }
+    },
+    "unrecognized_patterns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "line": {"type": "integer"},
+          "snippet": {"type": "string"},
+          "file": {"type": "string"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "binding": {
+      "type": "object",
+      "required": ["lua_name", "type", "doc_id", "source_ref"],
+      "properties": {
+        "lua_name": {
+          "type": "string",
+          "description": "Lua-accessible name"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["function", "usertype", "constant", "enum", "method", "property"],
+          "description": "Binding type"
+        },
+        "cpp_type": {
+          "type": "string",
+          "description": "C++ type (for usertypes)"
+        },
+        "signature": {
+          "type": "string",
+          "description": "Function signature"
+        },
+        "doc_id": {
+          "type": "string",
+          "description": "Documentation identifier"
+        },
+        "source_ref": {
+          "type": "string",
+          "description": "Source file:line reference"
+        },
+        "extraction_confidence": {
+          "type": "string",
+          "enum": ["high", "medium", "low"],
+          "description": "Extraction confidence level"
+        },
+        "tier": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2,
+          "description": "Documentation tier"
+        },
+        "verified": {
+          "type": "boolean",
+          "description": "Whether binding is verified by tests"
+        },
+        "test_id": {
+          "type": ["string", "null"],
+          "description": "Test that verifies this binding"
+        }
+      }
+    }
+  }
+}

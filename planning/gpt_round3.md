@@ -1,787 +1,753 @@
-# Proposed Revisions to “Master Implementation Plan — Demo Content Spec v3 (v2 Revision)”
+# Cass Memory Update Plan v2 — Review & Proposed Revisions (v3 draft)
 
-This is a blunt review focused on making the project **more deterministic, more replayable, easier to debug, harder to break**, and **more scalable** when you inevitably add more content after v3.
+This document proposes concrete revisions to the plan you provided. Each revision includes:
 
-The original plan is already strong. The biggest remaining risk areas are:
+- **Problem observed in v2**
+- **Proposed change**
+- **Why it improves the project** (robustness, reliability, performance, developer experience)
+- **Tradeoffs / risks**
+- **Git-diff style patch** showing the change against the original plan text
 
-- **Replay fragility:** “raw input capture” often breaks the moment UI/layout timing changes. You want **semantic commands**, not keystates.
-- **Event re-entrancy hazards:** immediate `emit()` while dispatching can create subtle ordering surprises even if “deterministic”.
-- **One-frame latency in skills:** “skill execution events go to next frame” keeps you safe, but can make combat feel mushy and creates design constraints.
-- **RNG discipline:** you’ll end up with accidental “global RNG state” coupling between systems unless you formalize streams/context now.
-- **Physics determinism assumptions:** sorting results helps, but you still need **budgeting**, **clamps**, and an explicit “determinism tier” contract.
-
-Below are proposed changes. Each change includes:
-- what to change,
-- why it improves the project,
-- what it costs / risks,
-- and a unified **git-diff style patch** against the plan document.
+> Notes on the diffs:
+> - Diffs are shown as if the original plan lived at `planning/cass_memory_update_plan_v2.md`.
+> - Hunks are intentionally **small and localized** so they’re easy to apply manually even if your file path differs.
 
 ---
 
-## Change 01 — Add a CommandStream (semantic commands) and make Replay resistant to UI changes
+## Overall read: what’s already strong vs what’s most risky
 
-### Why this makes the project better
-Your replay plan currently reads as “record input stream”. That’s usually a trap:
-- **Raw inputs** (keys/mouse) are low-level and tied to UI layout, frame timing, and platform quirks.
-- The moment you reorder UI focus or add a new button, old replays can desync.
-- Determinism tests become flaky because the same physical input can map to different actions if UI changes.
+### Strong in v2
+- Clear **phase structure** and responsibility boundaries.
+- Correct instincts on **automation-first**, **schemas**, **determinism**, and **drift prevention**.
+- Good separation between:
+  - human-readable docs,
+  - machine-readable inventories,
+  - verification artifacts,
+  - and cm “memory” rules.
 
-A **CommandStream** solves this by recording **intent**:
-- `move_axis`, `aim_vector`, `cast_wand`, `buy_shop_offer(slot)`, `learn_skill(skill_id)`, `reroll_shop(lock_idx)` …
-- UI changes can be refactored without invalidating replays as long as they emit the same commands.
+### Biggest risks / failure modes
+1. **Silent crash / hang** yields ambiguous CI failures (missing `status.json`, half-written results).
+2. **Drift from duplicated truths** (docs show Verified, registry maps doc→test, tests exist separately).
+3. **Tooling/environment drift** (extractors/validators depend on Python + tools with unspecified versions).
+4. Visual baseline management can **explode repo size**, and nondeterminism can turn the suite into noise.
+5. CI runtime will grow unless you add **impact-based selection** (sharding alone only parallelizes slowness).
 
-This also improves architecture:
-- Input mapping becomes a thin adapter that produces commands.
-- Simulation consumes commands deterministically (with sequence numbers).
-- Replays become a first-class regression tool.
+The revisions below target these risks while keeping the spirit and structure of v2.
 
-### Risks / costs
-- Requires designing a small command schema.
-- You must route “menu interactions” (shop purchases, selection confirmation) through commands too.
+---
 
-### Git-diff patch
+## Revision index (quick scan)
+
+| ID | Theme | Primary win |
+|---:|---|---|
+| R01 | Add Phase 0: Toolchain bootstrap + pinned dependencies | Reproducible automation & less CI flake |
+| R02 | Crash/hang detection via run sentinel + progress flushing | CI correctness + faster debugging |
+| R03 | Reporter architecture from one canonical result model | No drift between report/md/json/junit |
+| R04 | Reduce “triple truth” drift (docs/registry/tests) via synchronization tooling | Lower maintenance burden, higher trust |
+| R05 | Add schemas for inventories + cm candidates + validate in CI | Tool compatibility & future-proofing |
+| R06 | Generate Tier-0 docs skeletons from inventories (preserving manual blocks) | Massive labor reduction + consistency |
+| R07 | Token-aware frequency scanning + alias config | Fewer false counts + reproducibility |
+| R08 | Visual baseline storage policy + size governance (optionally Git LFS) | Prevent repo bloat + stable visuals |
+| R09 | Deterministic rendering config + richer environment capture | Less nondeterminism, better baseline routing |
+| R10 | Impact-based test selection for PR CI | Faster CI without reducing confidence |
+| R11 | Artifact bundling for CI (zip index) | Better failure triage |
+| R12 | Performance budgets + flake diagnostics (without hiding failures) | Keeps suite fast and actionable |
+
+---
+
+## R01 — Add Phase 0: Toolchain bootstrap + pinned dependencies
+
+### Problem in v2
+v2 introduces a lot of automation (`extract_*`, `validate_*`, `link_check_docs`, schema validation, etc.) but doesn’t define:
+- which languages/tools are mandatory (Python version, `ripgrep`, YAML libs, JSON schema validator),
+- how to install them consistently,
+- or how to fail fast with actionable errors.
+
+That’s a common “plan works on my machine” trap and a CI flake amplifier.
+
+### Proposed change
+Add **Phase 0** (“Toolchain & Repo Bootstrap”) with:
+- a pinned Python environment (or at least pinned requirements),
+- a “doctor” script that checks required tools and versions,
+- and a short dev setup section in `<TEST_ROOT>/README.md`.
+
+### Why it improves the project
+- **Reliability:** CI failures become “missing dependency X” instead of mysterious downstream breakage.
+- **Performance:** fewer wasted cycles in CI reruns.
+- **Developer experience:** onboarding is one command instead of tribal knowledge.
+- **Future-proofing:** you can upgrade toolchain intentionally with diffs.
+
+### Tradeoffs / risks
+- Slight up-front work (but it pays back quickly once multiple agents touch scripts).
+- If the repo is intentionally dependency-light, keep it minimal (Python stdlib only + a single jsonschema lib).
+
+### Git diff
 ```diff
-diff --git a/implementation_plan.md b/implementation_plan.md
---- a/implementation_plan.md
-+++ b/implementation_plan.md
-@@
- ## 1) Goals & Deliverables
-@@
- - **Engineering:** compiled content registry + deterministic simulation + replay/debug tooling
-   - seeded RNG streams
-   - fixed-step sim
--  - input capture + replay runner (dev-only OK)
-+  - semantic command capture + replay runner (dev-only OK)
-   - deterministic ordering rules enforced (Lua-safe)
+diff --git a/planning/cass_memory_update_plan_v2.md b/planning/cass_memory_update_plan_v2.md
+--- a/planning/cass_memory_update_plan_v2.md
++++ b/planning/cass_memory_update_plan_v2.md
+@@ -1,6 +1,31 @@
+ # Cass Memory Update Plan v2 (Enhanced with Automation, CI-Grade Reporting & Developer Experience)
+
++## Phase 0: Toolchain & Repo Bootstrap (New, required)
++**Effort:** S (Small)
++**Parallelizable:** No (foundation)
 +
-+### 1.1 Determinism Tier (explicit)
-+Define determinism tier up front to avoid false expectations:
-+- **Tier A (required for v3):** deterministic within the same engine build + same content_build + same replay_version
-+- **Tier B (nice-to-have later):** deterministic across engine builds (requires stricter floating/physics constraints)
-@@
- ## 2) Canonical Contracts (Naming, IDs, Events, Update Order)
++Establish a reproducible toolchain for extractors/validators/reporters and fail fast when missing.
 +
-+### 2.5 Command Contract (NEW, replay-critical)
-+Introduce a semantic command stream consumed by simulation:
-+- `assets/scripts/core/command_stream.lua`
-+  - `CommandStream.begin_frame(frame)`
-+  - `CommandStream.push(cmd)` assigns `(frame, seq)` and stores in per-frame buffer
-+  - `CommandStream.get_frame_commands()` returns stable-ordered list (by seq)
++**Deliverables:**
++1. `scripts/requirements.txt` (or `scripts/pyproject.toml`) with pinned versions
++2. `scripts/bootstrap_dev.(sh|ps1)` that creates/updates a local venv and installs deps
++3. `scripts/doctor.(py|lua)` that validates required tooling:
++   - Python version (if Python scripts exist)
++   - `rg` availability (frequency scan)
++   - `cm` availability and version (if Phase 8 depends on it)
++   - optional: schema validator availability (or ship one in Python)
++4. `<TEST_ROOT>/README.md` section: “Tooling setup”
 +
-+Commands are plain tables with a strict schema (validated dev-only):
-+```lua
-+cmd = { type="move", x=number, y=number }
-+cmd = { type="aim", x=number, y=number }
-+cmd = { type="trigger_wand", slot=number }
-+cmd = { type="learn_skill", skill_id=string }
-+cmd = { type="shop_buy", offer_index=number }
-+cmd = { type="shop_reroll", lock_offer_index=number|nil }
-+cmd = { type="select_god_class", god_id=string, class_id=string }
-+```
++**CI requirement:**
++- Run `scripts/doctor` before any other job steps to fail fast.
 +
-+**Replay rule:** record CommandStream (plus run_seed + content_build + sim_dt), not raw input device states.
-@@
- ### 2.3 Update Order (single source of truth in main loop) — CRITICAL
-@@
- 0. Begin-frame: increment `frame`, EventBus.begin_frame(frame, t), reset per-frame buffers
-+0.5 CommandStream.begin_frame(frame); map raw input/UI → semantic commands; store in command buffer
- 1. Movement/physics integration (produces collisions/overlaps but does not apply damage yet)
-@@
- 7. Cleanup (despawn, unregister hooks tied to dead entities, end-of-frame assertions)
-@@
- ## Phase 0 — Audit & Alignment (must complete first)
-@@
- ### 0.3 Core Infrastructure (MUST land before Phase 1+)
- Implement and wire:
-@@
- - fixed-step sim runner:
-@@
- - dev-only assertions:
-@@
-+ - CommandStream (semantic commands) + validator
-@@
- ### 5.1 Automated Validation (dev-only script)
-@@
- **Replay smoke (dev-only, HIGH VALUE):**
--- record a 600-frame replay (input stream + run_seed + content_build hash)
-+- record a 600-frame replay (CommandStream + run_seed + content_build hash + sim_dt)
- - re-run the replay headless:
-   - assert identical checksums
-   - assert identical event trace hash (optional, dev-only)
+@@ -706,6 +731,7 @@ gantt
+     section Foundation
+-    Phase 1: Test Infra    :p1, 0, 1
++    Phase 0: Toolchain     :p0, 0, 1
++    Phase 1: Test Infra    :p1, after p0, 1
 ```
 
 ---
 
-## Change 02 — Harden SimClock against “spiral of death” + store sim config in replay/build
+## R02 — Crash/hang detection via run sentinel + progress flushing
 
-### Why this makes the project better
-Fixed-step is good; fixed-step **without clamps** is how you end up with:
-- runaway catch-up when the game stalls (GC spikes, debugger, OS hitch),
-- non-obvious desync because you run “too many” sim steps in one render frame,
-- inconsistent behavior when pausing/unpausing.
+### Problem in v2
+If the engine crashes/hangs mid-run, you may never get:
+- `test_output/status.json`
+- a complete `results.json`
+- or even a coherent `report.md`
 
-Also, determinism is not just “seed + input”; it’s also **sim_dt, max_steps, and timebase**. If those change, replays should fail fast.
+CI then can’t distinguish “tests failed” from “runner died,” and you lose the last executed test context.
 
-### Risks / costs
-- Very low. This is mostly guardrails.
+### Proposed change
+Add a **run-state sentinel** and **progress flushing**:
 
-### Git-diff patch
+- Write `test_output/run_state.json` at start:
+  - `in_progress: true`
+  - `run_id`
+  - `started_at`
+  - optional `commit`, `platform`, etc.
+- After each test, flush:
+  - `last_test_started`
+  - `last_test_completed`
+  - partial counts
+- On graceful completion, mark:
+  - `in_progress: false`
+  - `completed_at`
+  - `passed`
+
+Wrapper scripts treat “missing run_state” or `in_progress:true` after timeout as a **crash**.
+
+### Why it improves the project
+- **Reliability:** CI correctly fails on crashes, not “missing file”.
+- **Debuggability:** you immediately see the last test that started.
+- **Performance:** fewer reruns because failures are obvious.
+
+### Tradeoffs / risks
+- Minor I/O overhead (tiny JSON file, flushed per test).
+- Requires a stable notion of “run_id” (just use a timestamp + random suffix).
+
+### Git diff
 ```diff
-diff --git a/implementation_plan.md b/implementation_plan.md
---- a/implementation_plan.md
-+++ b/implementation_plan.md
-@@
- ### 2.3.1 Determinism requirement: fixed-step simulation
-@@
- - Render dt is accumulated and drives `N` sim steps per render frame.
-+ - Render dt is accumulated and drives `N` sim steps per render frame.
-+ - Clamp catch-up to avoid spiral-of-death:
-+   - `max_sim_steps_per_render = 4` (tunable)
-+   - `max_accumulator = sim_dt * max_sim_steps_per_render`
-+   - if exceeded: drop excess with a dev warning counter (and optionally pause replay determinism checks)
- - `Event.frame` refers to **sim frame**, not render frame.
+diff --git a/planning/cass_memory_update_plan_v2.md b/planning/cass_memory_update_plan_v2.md
+--- a/planning/cass_memory_update_plan_v2.md
++++ b/planning/cass_memory_update_plan_v2.md
+@@ -246,6 +246,8 @@ Create the verification pipeline that all subsequent phases depend on.
+ 4b. **(New)** Per-test artifacts directory: `test_output/artifacts/<safe_test_id>/`
++4c. **(New v3)** Run sentinel: `test_output/run_state.json` (crash/hang detection)
+ 5. Log capture mechanism for error detection
+@@ -402,6 +404,12 @@
+ > **(New v2) Schema validation deliverable (drift prevention):**
+ > - Commit JSON Schemas under `planning/schemas/` (or `scripts/schemas/` if preferred):
+ >   - `planning/schemas/status.schema.json`
+ >   - `planning/schemas/results.schema.json`
+ >   - `planning/schemas/capabilities.schema.json`
++>   - **(New v3)** `planning/schemas/run_state.schema.json`
 +
-+**Replay/build invariants:**
-+- replay stores `{ sim_dt, max_sim_steps_per_render }`
-+- replay invalid if these mismatch current build config
-@@
- ### 0.3 Core Infrastructure (MUST land before Phase 1+)
-@@
- - fixed-step sim runner:
-   - `assets/scripts/core/sim_clock.lua` with accumulator and `sim_dt`
-   - `main.lua` uses `SimClock.step(render_dt)` to run N sim frames
-+  - add clamp configuration + instrumentation counters for dropped time
++> **Crash detection requirement (New v3):**
++> - Runner writes `test_output/run_state.json` at start and updates it after every test.
++> - CI treats “missing run_state” or `in_progress:true` after timeout as a crash.
 ```
 
 ---
 
-## Change 03 — Make entity identity explicit: eid allocation, non-reuse, and “entity_kind”
+## R03 — Reporter architecture from one canonical result model
 
-### Why this makes the project better
-A lot of “determinism” and “debuggability” quietly depends on entity identity rules. Right now, you say “stable entity IDs”, but not:
-- how they’re assigned,
-- whether they can be reused,
-- whether replay expects the same spawn order,
-- what an eid refers to after despawn.
+### Problem in v2
+You now require multiple outputs:
+- `report.md`
+- `status.json`
+- `results.json`
+- `junit.xml`
 
-Define it now, or you’ll invent three different eid schemes later.
+If each is produced by separate code paths, drift is guaranteed (counts differ, ordering differs, missing tests differ).
 
-### Recommended contract
-- `eid` is **monotonic** within a run (never reused).
-- `eid` includes `spawn_seq` (or is the spawn_seq).
-- Entities have `entity_kind` string (`"player"`, `"enemy"`, `"projectile"`, `"pickup"`, …) for trace readability.
-- All event payloads that reference entities include `source_eid` / `target_eid` plus optional `source_kind` / `target_kind`.
+### Proposed change
+Make the harness produce a single **canonical in-memory run model**, then feed that into pluggable reporters:
 
-### Git-diff patch
+- `MarkdownReporter`
+- `JsonReporter` (writes status.json + results.json)
+- `JUnitReporter`
+- optional: `NdjsonEventReporter` (streaming)
+
+### Why it improves the project
+- **Correctness:** one source of truth for totals, ordering, and test statuses.
+- **Maintainability:** adding a new report format is “add reporter” not “copy logic”.
+- **Performance:** NDJSON streaming can support very large suites without huge memory.
+
+### Tradeoffs / risks
+- Slight refactor complexity in harness implementation.
+- Reporter interface needs to be stable (but that’s good).
+
+### Git diff
 ```diff
-diff --git a/implementation_plan.md b/implementation_plan.md
---- a/implementation_plan.md
-+++ b/implementation_plan.md
-@@
- #### 2.2.2 Event Envelope (all events use this structure)
-@@
- Event = {
-     type = "event_name",
-     frame = number,      -- sim frame number
-     seq = number,        -- per-frame sequence for deterministic ordering
-     t = number,          -- sim time (accumulated fixed-step time)
-     payload = { ... }    -- event-specific data
+diff --git a/planning/cass_memory_update_plan_v2.md b/planning/cass_memory_update_plan_v2.md
+--- a/planning/cass_memory_update_plan_v2.md
++++ b/planning/cass_memory_update_plan_v2.md
+@@ -302,6 +302,18 @@ Test Harness Design:
+ local TestRunner = {
+     tests = {},
+     results = {},
+     screenshots = {}
  }
-@@
--**Entity References:** Always use `source_eid` / `target_eid` (stable entity IDs), never live table references.
-+**Entity References:** Always use `source_eid` / `target_eid` (stable entity IDs), never live table references.
-+**Entity ID Contract (NEW):**
-+- `eid` is a monotonic integer assigned at spawn; **never reused within a run**
-+- despawned eids are never reassigned
-+- payload may include `source_kind` / `target_kind` for trace readability
-```
-
----
-
-## Change 04 — Fix EventBus re-entrancy: defer nested emits until current dispatch completes + add “phase”
-
-### Why this makes the project better
-Your current EventBus rule:
-> “emit() during dispatch is allowed; ordering is deterministic by (frame, seq).”
-
-That’s deterministic, but it is still a **footgun**: nested `emit()` can interleave with remaining listeners of the current event, causing:
-- subtle dependencies on listener registration order,
-- “half-updated state” observers,
-- hard-to-debug cascade behavior.
-
-Safer semantics:
-- If an event handler emits another event, that emitted event is queued and only dispatched **after** the current event finishes dispatching to all listeners.
-
-Also, adding an event `phase` makes trace analysis much easier:
-- `"movement"`, `"combat"`, `"status"`, `"skills"`, `"cleanup"` …
-
-### Risks / costs
-- Any current code relying on immediate nested dispatch will need small adjustments.
-- This reduces accidental coupling and makes behavior more intuitive.
-
-### Git-diff patch
-```diff
-diff --git a/implementation_plan.md b/implementation_plan.md
---- a/implementation_plan.md
-+++ b/implementation_plan.md
-@@
- #### 2.2.1 EventBus API (authoritative)
-@@
- - `EventBus.emit(type, payload)`
-   - increments `seq`
-   - constructs `Event = { type, frame, seq, t, payload }`
--  - dispatches to listeners in deterministic order
-+  - dispatches to listeners in deterministic order
-   - returns the `Event`
-+ - `EventBus.emit_deferred(type, payload)`
-+   - same as emit, but guarantees dispatch occurs after the current dispatch completes
-+   - EventBus may internally treat *all emits during dispatch* as deferred for safety
-@@
- **Rules:**
-@@
--- `emit()` during dispatch is allowed; ordering is deterministic by `(frame, seq)`.
-+- `emit()` during dispatch is allowed but **dispatch is deferred** until current event completes.
-+- Add `phase` metadata for debugging (dev-only optional):
-+  - EventBus.set_phase("combat"|"status"|"skills"|...)
-@@
- Event = {
-     type = "event_name",
-     frame = number,      -- sim frame number
-     seq = number,        -- per-frame sequence for deterministic ordering
-     t = number,          -- sim time (accumulated fixed-step time)
-+    phase = string,      -- optional: system phase for trace/debug
-     payload = { ... }    -- event-specific data
- }
-```
-
----
-
-## Change 05 — Status events need one more canonical event + tighter payload shapes
-
-### Why this makes the project better
-Right now you have `status_applied` and `status_stack_changed`, but no explicit “removed”.
-You *can* infer removal from `new_stacks == 0`, but that breaks down when:
-- non-stacking statuses exist,
-- you “refresh duration” without stack changes,
-- forms/immunities remove statuses without stack math.
-
-A dedicated `status_removed` event reduces ambiguity and makes skills/items more expressive.
-
-Also, your payload shapes inconsistently include `source_eid`. Make it present everywhere it matters.
-
-### Git-diff patch
-```diff
-diff --git a/implementation_plan.md b/implementation_plan.md
---- a/implementation_plan.md
-+++ b/implementation_plan.md
-@@
- #### 2.2.3 Standard Payload Shapes
-@@
- payload.status = {
-     id = string,
-     new_stacks = number,
-     old_stacks = number,
--    source_eid = entity_id
-+    source_eid = entity_id,   -- who caused the change (or nil if system/decay)
-+    reason = string           -- "apply"|"refresh"|"decay"|"cleanse"|"expire"
- }
-@@
- #### 2.2.4 Canonical Events (envelope-only)
-@@
- - `status_applied` — `{ target_eid, status = { ... } }`
- - `status_stack_changed` — `{ target_eid, status = { ... } }`
-+- `status_removed` — `{ target_eid, status = { id, old_stacks, source_eid, reason } }`
-```
-
----
-
-## Change 06 — Make DamageSystem a “pipeline” now (without forcing complexity)
-
-### Why this makes the project better
-You already centralized damage, which is the right move. The mistake would be treating `apply()` as a monolith that you’ll later have to rip apart.
-
-A lightweight pipeline buys you long-term flexibility without forcing you to implement resistances today:
-- `build_context()` (construct immutable context)
-- `run_modifiers()` (stats, crit, resist, tags)
-- `apply_hp()`
-- `emit_events()`
-
-It also allows deterministic “damage modifiers” from equipment/artifacts without ad-hoc patching.
-
-### What to add
-- A `DamageContext` table with stable fields.
-- A “damage modifier registry” with deterministic ordering (priority + id).
-- A `damage_taken` event (target-side view). This helps passives like “when you take damage”.
-
-### Git-diff patch
-```diff
-diff --git a/implementation_plan.md b/implementation_plan.md
---- a/implementation_plan.md
-+++ b/implementation_plan.md
-@@
- ### 1.0 DamageSystem (NEW foundation)
- Add `assets/scripts/combat/damage_system.lua`:
- - `DamageSystem.apply(source_eid, target_eid, damageSpec)`:
--  - computes final amount (initially simple passthrough; supports future resist/crit)
-+  - computes final amount via pipeline (initially passthrough; resist/crit are future fields)
-+  - builds an immutable `DamageContext` for deterministic modifiers
-   - assigns `damage_id`
-   - applies HP changes
-   - emits canonical events:
-     - `damage_dealt`
-+    - `damage_taken` (NEW) `{ source_eid, target_eid, damage = { ... } }`
-     - `player_damaged` if target is player
-     - `enemy_killed` if target dies
- - enforces stable ordering for AoE/multi-hit: sort target eids before applying.
 +
-+**Damage modifier hooks (deterministic):**
-+- `DamageSystem.register_modifier(id, fn, opts)` ordered by `(opts.priority, id)`
-+- used by equipment/artifacts/forms; always registered via Lifecycle
-```
-
----
-
-## Change 07 — Formalize RNG Streams now (and pass RNG into Cards/Skills)
-
-### Why this makes the project better
-You mention seeded RNG streams, but the plan doesn’t define:
-- what RNG algorithm you use,
-- how you split streams,
-- how you avoid “global RNG state” coupling.
-
-If you don’t lock this down, random behavior will accidentally depend on unrelated systems (“shop reroll changes projectile spread”).
-
-### Recommended approach
-- Add `core/rng.lua` using a deterministic algorithm (e.g., PCG32 / xoroshiro) implemented in Lua or C.
-- Create **named streams** derived from `run_seed` and context:
-  - `rng_shop`, `rng_loot`, `rng_combat`, `rng_ai`, `rng_visual` (visual can be non-deterministic if desired)
-- When executing a wand plan or skill, derive a local RNG:
-  - `rng = Rng.derive("wand", frame, wand_id, trigger_seq)`
-- Card actions and skills take `rng` explicitly. No hidden `math.random`.
-
-### Git-diff patch
-```diff
-diff --git a/implementation_plan.md b/implementation_plan.md
---- a/implementation_plan.md
-+++ b/implementation_plan.md
-@@
- ## 1) Goals & Deliverables
-@@
- - seeded RNG streams
-@@
- ## Phase 0 — Audit & Alignment (must complete first)
-@@
- ### 0.3 Core Infrastructure (MUST land before Phase 1+)
- Implement and wire:
-@@
-+ - deterministic RNG module + stream policy:
-+   - `assets/scripts/core/rng.lua`
-+   - forbid `math.random` in gameplay code (dev-only runtime check)
-@@
- ## Phase 6 — Cards & Wands (full pool + triggers)
-@@
- Wand runtime uses compiled plans:
-@@
- - on trigger: execute `wand.exec_plan` (no per-trigger rebuild)
-+ - on trigger: execute `wand.exec_plan(rng)` where rng is derived from `(run_seed, frame, wand_id, trigger_seq)`
-@@
- **CardPipeline determinism requirements:**
-@@
- - pipeline emits IR snapshot (dev-only) for diff tests
-+ - card actions/modifiers must take an explicit `rng` object for any randomness
-```
-
----
-
-## Change 08 — Remove the “skill feels delayed” problem without reintroducing feedback loops
-
-### Why this makes the project better
-Your current SkillSystem rule:
-> “events emitted during skill execution are queued for NEXT frame by default”
-
-This avoids feedback loops, but it also creates:
-- one-frame “lag” in reactive skills,
-- confusing frame semantics (“I killed an enemy; why didn’t my on-kill skill do anything until later?”),
-- design limitations (skills that should modify *this* hit).
-
-Better model:
-- Skills still evaluate triggers from a snapshot of **pre-skill events**.
-- Skill execution happens immediately in the same frame, but events emitted during skill execution are tagged with `origin="skill"` and excluded from the snapshot that caused them.
-
-This gives you responsiveness *and* safety.
-
-Also: allow optional multi-frame windows for triggers. Same-frame triggers are strict and can feel unintuitive at 60 FPS. Making it configurable (`within_frames`) lets you tune for fun.
-
-### Git-diff patch
-```diff
-diff --git a/implementation_plan.md b/implementation_plan.md
---- a/implementation_plan.md
-+++ b/implementation_plan.md
-@@
- ### 3.2 Multi-Trigger Resolution (same sim frame)
-@@
- - `SkillSystem.end_frame()`:
-+ - `SkillSystem.end_frame()`:
-   1. build frame snapshot (counts + first/last per type + per-element tallies)
-   2. compute which skills fire from snapshot (no execution yet)
-   3. execute fired skills in deterministic order:
-      - by `priority` then `skillId`
--  4. events emitted during skill execution are queued for NEXT frame by default (prevents feedback loops)
-+  4. events emitted during skill execution are allowed immediately but are tagged `origin="skill"`
-+     - snapshot that triggered evaluation excludes `origin="skill"` events (prevents feedback loops)
-+     - optional: keep `defer_skill_events=true` toggle for ultra-safe mode
-@@
- **Trigger DSL (explicit semantics):**
-@@
- triggers = {
-@@
- }
- filter = { element, status_id, source_kind, is_dot, tags[] }
++-- (New v3) Reporter pipeline
++TestRunner.reporters = {
++  -- MarkdownReporter, JsonReporter, JUnitReporter, (optional) NdjsonEventReporter
++}
 +
-+Optional trigger window for better feel (default is 1 frame):
-+```lua
-+trigger_window = { within_frames = 1 } -- or 3..10 for ~50–150ms windows
-+```
-```
-
----
-
-## Change 09 — CardPipeline: include pipeline versioning + deck hash must include content_build
-
-### Why this makes the project better
-Your deck hash caching is good, but it will bite you unless you include:
-- the pipeline algorithm version,
-- the content build hash (card definitions changed but deck list didn’t),
-- the wand base template version.
-
-Otherwise you’ll reuse stale compiled plans.
-
-### Git-diff patch
-```diff
-diff --git a/implementation_plan.md b/implementation_plan.md
---- a/implementation_plan.md
-+++ b/implementation_plan.md
-@@
- **CardPipeline determinism requirements:**
- - compilation cached by `deck_hash` (cards + order + wand base stats)
-+ - `deck_hash` must include:
-+   - ordered card IDs
-+   - wand template ID + relevant base stats
-+   - `content_build.build_hash`
-+   - `card_pipeline_version` (bump when modifier phase logic changes)
-```
-
----
-
-## Change 10 — AuraSystem: add an explicit performance budget + optional overlap caching
-
-### Why this makes the project better
-Aura ticking can become your hidden performance killer:
-- N auras × radius query × sorting × applying
-- In Lua, allocations and table churn will spike and create GC hitches (which then stress determinism).
-
-Add two things:
-1. **Budgeting:** cap work per frame deterministically (targets processed), carry remainder to next tick.
-2. **Optional overlap caching:** track aura → nearby enemies based on movement/overlap notifications, so aura tick iterates a cached list instead of querying physics every time.
-
-### Risks / costs
-- Overlap caching is optional; implement later if profiling shows need.
-- Budgeting must be deterministic (same ordering of who gets processed when under cap).
-
-### Git-diff patch
-```diff
-diff --git a/implementation_plan.md b/implementation_plan.md
---- a/implementation_plan.md
-+++ b/implementation_plan.md
-@@
- ### 5.2 AuraSystem Runtime
- Add `assets/scripts/combat/aura_system.lua`:
-@@
- **Perf + fairness constraints:**
-@@
- - cap targets per tick (configurable) + stable ordering by `eid`
-+ - add deterministic perf budget:
-+   - `max_targets_processed_per_frame` (global) to avoid GC spikes
-+   - if over budget: continue next frame in stable round-robin order
-+ - optional optimization hook (if needed after profiling):
-+   - cache overlaps from physics step (enter/exit) to avoid repeated radius queries
-```
-
----
-
-## Change 11 — ReactionSystem: add proc guards to prevent infinite loops and “reaction storms”
-
-### Why this makes the project better
-Reactions are a “small scope, big payoff” feature, but they are also a classic infinite-loop vector:
-- reaction causes damage → damage applies status → status triggers reaction → etc.
-
-Even if you intend it, you need guardrails for performance and stability:
-- per-reaction cooldown in frames,
-- per-target “max reactions per frame” cap,
-- stable ordering (reaction_id then target_eid).
-
-### Git-diff patch
-```diff
-diff --git a/implementation_plan.md b/implementation_plan.md
---- a/implementation_plan.md
-+++ b/implementation_plan.md
-@@
- ### 5.4 ReactionSystem (small scope, big payoff)
- Add `assets/scripts/combat/reaction_system.lua`:
-@@
- - routes reaction damage through DamageSystem
- - emits dev-only `reaction_triggered`
-+ - proc guards (deterministic safety):
-+   - `max_reactions_per_target_per_frame` (default 1–2)
-+   - per-reaction `cooldown_frames` (default 1–10)
-+   - stable reaction evaluation order: by `reaction_id`, then `target_eid`
-```
-
----
-
-## Change 12 — ContentRegistry: add explicit migrations + warnings (not just hard fails)
-
-### Why this makes the project better
-Hard-failing on invalid data is correct. But you also want:
-- **warnings** for suspicious-but-valid content (missing description, no icon, unreachable skill, unused card),
-- explicit **migrations** for renamed/removed IDs beyond just `"nil" → "nihil"`.
-
-This makes content iteration faster and avoids “soft breaks” of replays/saves when you rename something.
-
-### Git-diff patch
-```diff
-diff --git a/implementation_plan.md b/implementation_plan.md
---- a/implementation_plan.md
-+++ b/implementation_plan.md
-@@
- ### 2.0 Content Registry + Schema Versioning
-@@
- - emits `content_build = { schema_version, build_hash, id_maps }` for save/replay compatibility
-+ - emits `content_build = { schema_version, build_hash, id_maps, sim_dt, engine_build }`
-+ - supports migrations:
-+   - `assets/scripts/core/content_migrations.lua`
-+   - maps deprecated IDs → canonical IDs (skills/cards/items/statuses)
-+   - supports “deleted” IDs with actionable errors ("replay references removed content: ...")
-+ - emits warnings list (dev-only) for non-fatal authoring issues
-```
-
----
-
-## Change 13 — Lifecycle: add scoping + debug names to make leak hunting actually doable
-
-### Why this makes the project better
-“Auto-cleaned via Lifecycle” is great, but leak hunting still sucks unless:
-- every handle has a name (what registered it?),
-- you can group handles by “domain” (wand, artifact, equipment, skill),
-- you can dump active handles per owner.
-
-Otherwise, your leak test will tell you “counts increased” and you’ll spend hours chasing it.
-
-### Git-diff patch
-```diff
-diff --git a/implementation_plan.md b/implementation_plan.md
---- a/implementation_plan.md
-+++ b/implementation_plan.md
-@@
- ### 2.4 Effect Lifecycle Contract (required for reliability)
-@@
- - `Lifecycle.bind(owner_eid, handle)` tracks subscriptions/timers/resources
-+ - `Lifecycle.bind(owner_eid, handle, opts)` where opts supports:
-+   - `name` (string) for debugging
-+   - `domain` ("wand"|"artifact"|"equipment"|"skill"|"form")
-@@
-   - provides helpers:
-@@
-     - `Lifecycle.assert_no_raw_connects()` (dev-only)
-+    - `Lifecycle.dump(owner_eid)` (dev-only): list live handles grouped by domain/name
-```
-
----
-
-## Change 14 — Determinism tooling: standardize trace hashing + add a diff viewer script
-
-### Why this makes the project better
-You already plan a replay smoke and optional event trace hash. Make it concrete:
-- Define exactly what goes into the hash (event type + key payload fields).
-- Provide a “trace diff” tool that prints the first divergence with context.
-- Store a small set of “golden replays” in the repo and run them in CI.
-
-This turns determinism from a vibe into a hard guarantee.
-
-### Git-diff patch
-```diff
-diff --git a/implementation_plan.md b/implementation_plan.md
---- a/implementation_plan.md
-+++ b/implementation_plan.md
-@@
- ### 5.1 Automated Validation (dev-only script)
-@@
- **Replay smoke (dev-only, HIGH VALUE):**
-@@
- - re-run the replay headless:
--  - assert identical checksums
--  - assert identical event trace hash (optional, dev-only)
-+ - re-run the replay headless:
-+   - assert identical checksums
-+   - assert identical event trace hash (required, dev-only)
++function TestRunner:add_reporter(reporter)
++  table.insert(self.reporters, reporter)
++end
 +
-+**Event trace hash spec (NEW):**
-+- hash a canonical string per event:
-+  - `(frame, seq, type, source_eid, target_eid, damage_id, status.id, damage.amount, damage.element, kill.overkill, ...)`
-+- exclude non-deterministic/visual fields (positions if float noise is expected)
++function TestRunner:write_reports(run_model)
++  for _, r in ipairs(self.reporters) do r:write(run_model) end
++end
+@@ -341,6 +353,15 @@ function TestRunner:report()
+     -- Generate test report
+ end
 +
-+**Trace diff tool (NEW):**
-+- `assets/scripts/dev/trace_diff.lua` loads two traces and prints the first mismatch with N events of context
++-- (New v3) Optional streaming events for debugging/CI
++-- Writes test lifecycle events as NDJSON:
++-- test_output/events.ndjson
 ```
 
 ---
 
-## Change 15 — Player-facing value: add a Codex + surface the run seed + simple “why can’t I learn this?” UX
+## R04 — Reduce “triple truth” drift (docs/registry/tests) via synchronization tooling
 
-### Why this makes the project better
-If you want “compelling/useful”, the engineering-only wins aren’t enough. Two cheap additions pay off hard:
-1. **Codex** (skills/cards/items/statuses/forms) driven by ContentRegistry. This makes content legible and reduces confusion.
-2. **Seed surfaced** in UI with copy-to-clipboard (even if daily seeds are deferred). Players and testers can share runs.
+### Problem in v2
+Today, the same fact is duplicated in three places:
+1. Docs say: `Verified: Test: file::id`
+2. Registry maps: `doc_id -> test_id`
+3. The test module registers: `test_id`
 
-Also, your element lock will frustrate players unless the UI is explicit about:
-- which elements are invested,
-- what counts toward lock,
-- and why a learn is blocked.
+This is the exact recipe for long-term drift.
 
-### Git-diff patch
+### Proposed change
+Keep the plan’s conceptual model, but reduce drift by making synchronization explicit:
+
+1. **Tests declare which doc_ids they verify**:
+   - `register(test_id, category, testFn, opts.doc_ids = {...})`
+2. Harness produces a **test manifest**:
+   - `test_output/test_manifest.json` containing all registered tests and their doc_ids.
+3. Add a sync tool:
+   - `scripts/sync_registry_from_manifest.py` (or Lua) generates/updates `<TEST_ROOT>/test_registry.lua` (deterministic ordering).
+4. Add a second sync tool:
+   - `scripts/sync_docs_evidence.py` ensures docs’ `Evidence:` blocks match the registry (check mode in CI; fix mode for dev).
+
+This preserves your v2 “registry is single source of truth” intent, but ensures it is **derived deterministically** instead of hand-maintained.
+
+### Why it improves the project
+- **Reliability:** evidence displayed in docs stays correct.
+- **Maintainability:** adding a test automatically updates coverage mapping.
+- **Parallel work:** agents can add tests without touching shared registry.
+- **Compelling:** reviewers can trust the docs, not treat them as aspirational.
+
+### Tradeoffs / risks
+- Requires stable markers in docs for the evidence block (easy).
+- Registry becomes partially generated. You still need a place for unverified reasons; keep those as an override file.
+
+### Git diff
 ```diff
-diff --git a/implementation_plan.md b/implementation_plan.md
---- a/implementation_plan.md
-+++ b/implementation_plan.md
-@@
- ## 1) Goals & Deliverables
-@@
- - **Engineering:** compiled content registry + deterministic simulation + replay/debug tooling
-@@
-+ - **UX:** Codex UI (skills/cards/items/statuses/forms) + surfaced run_seed for sharing/debug
-@@
- ## Phase 2 — Identity (Gods, Classes, Run Start)
-@@
- **Acceptance gate (Phase 2):**
- - From fresh boot: player selects god+class, sees correct preview, starts run with correct loadout and passive behavior.
-+ - Run seed is visible in UI (and stored for replay); copy button works (dev-only OK).
-@@
- ## Phase 3 — Skill System Mechanics
-@@
- `assets/scripts/ui/skills_panel.lua` shows:
- - invested elements and lock state
- - clear failure messaging on blocked learn
-+ - “why blocked” help text that names the locked element set and the attempted element
+diff --git a/planning/cass_memory_update_plan_v2.md b/planning/cass_memory_update_plan_v2.md
+--- a/planning/cass_memory_update_plan_v2.md
++++ b/planning/cass_memory_update_plan_v2.md
+@@ -327,6 +327,10 @@
+ > **(New v2) Capability requirements per test (reliability across environments):**
+ > - `register(test_id, category, testFn, opts)` supports `opts.requires = {"screenshot", "log_capture", ...}`.
+ > - Harness checks `test_output/capabilities.json` (or in-memory equivalent) and emits `SKIP` with reason if requirements are missing.
++>
++> **(New v3) Doc coverage linking:**
++> - `register(..., opts)` supports `opts.doc_ids = {"binding:...", "component:...", "pattern:..."}`.
++> - Harness writes `test_output/test_manifest.json` listing registered tests + their `doc_ids`.
+@@ -463,6 +467,30 @@
+ > **Registry schema requirement (testability):**
+ > - `<TEST_ROOT>/test_registry.lua` must be the single source of truth for coverage mapping.
++> - **(New v3)** Treat registry as *generated + overrides*:
++>   - Generated from inventories + `test_manifest.json`
++>   - Overrides file adds `unverified` reasons and any manual mapping exceptions
++> - **(New v3)** Add:
++>   - `scripts/sync_registry_from_manifest.(py|lua)` (deterministic generation)
++>   - `scripts/sync_docs_evidence.(py|lua)` (check/fix docs Evidence blocks)
+@@ -911,6 +945,16 @@ Phase 7: Test Suite Finalization
+ 4. **(New)** `scripts/validate_docs_and_registry.lua` (or `.py`) and a documented invocation
++4b. **(New v3)** `scripts/sync_registry_from_manifest.(py|lua)` (inventory + manifest → registry)
++4c. **(New v3)** `scripts/sync_docs_evidence.(py|lua)` (registry → docs evidence blocks)
++4d. **(New v3)** `test_output/test_manifest.json` generated by harness every run
+```
+
+---
+
+## R05 — Schemas for inventories + cm candidates (validate everything in CI)
+
+### Problem in v2
+Schemas exist for runner outputs (`status/results/capabilities`), but the automation also depends on:
+- `planning/inventory/bindings.*.json`
+- `planning/inventory/components.*.json`
+- `planning/inventory/patterns.*.json`
+- `planning/inventory/frequency.*.json`
+- `planning/cm_rules_candidates.yaml`
+
+Without schemas, tooling will break silently as fields evolve.
+
+### Proposed change
+Add and enforce schemas for:
+- binding inventory
+- component inventory
+- pattern inventory
+- frequency scan output
+- cm candidates (validate YAML by converting to JSON first)
+
+### Why it improves the project
+- **Robustness:** scripts fail early with clear “schema mismatch” errors.
+- **Cross-team reliability:** parallel agents can’t accidentally change structure.
+- **CI-grade:** contract-driven automation.
+
+### Tradeoffs / risks
+- Slight schema maintenance cost, but low compared to debugging broken toolchains.
+
+### Git diff
+```diff
+diff --git a/planning/cass_memory_update_plan_v2.md b/planning/cass_memory_update_plan_v2.md
+--- a/planning/cass_memory_update_plan_v2.md
++++ b/planning/cass_memory_update_plan_v2.md
+@@ -402,6 +402,13 @@
+ > - Commit JSON Schemas under `planning/schemas/` (or `scripts/schemas/` if preferred):
+ >   - `planning/schemas/status.schema.json`
+ >   - `planning/schemas/results.schema.json`
+ >   - `planning/schemas/capabilities.schema.json`
++>   - **(New v3)** `planning/schemas/bindings_inventory.schema.json`
++>   - **(New v3)** `planning/schemas/components_inventory.schema.json`
++>   - **(New v3)** `planning/schemas/patterns_inventory.schema.json`
++>   - **(New v3)** `planning/schemas/frequency.schema.json`
++>   - **(New v3)** `planning/schemas/cm_rules_candidates.schema.json` (YAML validated via JSON conversion)
+@@ -920,6 +927,9 @@
+ 7. **(New v2)** Schema validation step in CI that validates `status.json`, `results.json`, and `capabilities.json` against committed schemas
++7b. **(New v3)** Schema validation also covers inventories and `cm_rules_candidates.yaml`
+```
+
+---
+
+## R06 — Generate Tier-0 docs skeletons from inventories (preserving manual blocks)
+
+### Problem in v2
+You *require* every binding/component/pattern has Tier 0 docs, but you also:
+- introduce extractors that already know the tier-0 list,
+- and require machine-readable inventories.
+
+If humans copy/paste tier-0 lists into markdown, you’ll get omissions and drift.
+
+### Proposed change
+Make Tier 0 docs **generated** from inventories and keep humans focused on Tier 1/2 semantics.
+
+Add:
+- `scripts/generate_docs_skeletons.py`
+- “autogen sections” in docs that are replaced deterministically, while preserving manual text between stable markers.
+
+Example doc pattern:
+```md
+<!-- AUTOGEN:BEGIN binding_list -->
+<!-- AUTOGEN:END binding_list -->
+```
+
+### Why it improves the project
+- **Massive labor reduction** (especially for 390+ functions).
+- **Consistency:** doc_id, names, and source_ref match inventory.
+- **Maintainability:** when bindings move, regeneration updates source_ref everywhere.
+
+### Tradeoffs / risks
+- Requires stable markers and a discipline that humans don’t edit inside autogen blocks.
+- Some teams dislike generated docs; mitigate by making it *only Tier 0 scaffolding*, leaving rich docs human-authored.
+
+### Git diff
+```diff
+diff --git a/planning/cass_memory_update_plan_v2.md b/planning/cass_memory_update_plan_v2.md
+--- a/planning/cass_memory_update_plan_v2.md
++++ b/planning/cass_memory_update_plan_v2.md
+@@ -607,6 +607,15 @@ Deliverables per agent:
+ 1. Binding list: `planning/bindings/{system}_bindings.md`
+ 2. Test file: `<TEST_ROOT>/test_{system}_bindings.lua`
+ 3. cm rules for high-frequency bindings
+ 4. **(New)** Machine-readable binding inventory: `planning/inventory/bindings.{system}.json`
+ 5. **(New v2, recommended)** Automated extractor: `scripts/extract_sol2_bindings.py` (single-owner, used by all agents)
++6. **(New v3, recommended)** Doc skeleton generator: `scripts/generate_docs_skeletons.py`
++   - Reads `planning/inventory/bindings.{system}.json`
++   - Rewrites Tier-0 sections in `planning/bindings/{system}_bindings.md` inside AUTOGEN markers
+@@ -750,6 +759,12 @@ Deliverables:
+ 1. Component reference: `planning/components/{category}_components.md`
+ 2. Lua accessibility matrix (which components can be accessed from Lua)
+ 3. cm rules for component access patterns
+ 4. **(New)** Machine-readable component inventory: `planning/inventory/components.{category}.json`
+ 5. **(New v2, recommended)** Automated extractor: `scripts/extract_components.py` (single-owner) that generates Tier 0 component lists and a matrix skeleton.
++6. **(New v3)** Use `scripts/generate_docs_skeletons.py` to keep Tier-0 component lists synchronized with inventories.
+```
+
+---
+
+## R07 — Token-aware frequency scanning + alias config
+
+### Problem in v2
+Frequency is defined by regex searching, which is easy but inaccurate:
+- Counts matches in comments or strings.
+- Misses aliases (`ui.box` vs `UIBox`) unless people remember to search variants.
+- Agents may use different patterns, leading to inconsistent “High-frequency” decisions.
+
+### Proposed change
+Provide a single scanner that:
+- lexes Lua and ignores comments/strings by default,
+- supports an alias map per system,
+- records scanner version and configuration in output.
+
+Add file:
+- `planning/frequency_aliases.yaml` (or JSON) defining:
+  - canonical name
+  - regex/aliases
+  - match mode (identifier-only vs raw text)
+
+### Why it improves the project
+- **Truthfulness:** “high-frequency” becomes evidence-based, not grep luck.
+- **Repeatability:** any agent can reproduce the same counts with the same tool.
+- **Better prioritization:** fewer false positives means you test what matters.
+
+### Tradeoffs / risks
+- A real Lua parser might be heavy. Mitigation: implement a simple lexer (tokenizer) sufficient to skip strings/comments.
+
+### Git diff
+```diff
+diff --git a/planning/cass_memory_update_plan_v2.md b/planning/cass_memory_update_plan_v2.md
+--- a/planning/cass_memory_update_plan_v2.md
++++ b/planning/cass_memory_update_plan_v2.md
+@@ -173,6 +173,17 @@
+ > **Frequency automation (new, recommended):**
+ > - Provide `scripts/frequency_scan.(py|lua)` that accepts:
+ >   - an input list of Lua-facing names/patterns,
+ >   - a set of search roots (default: `assets/scripts/`),
+ >   - optional comment-ignore mode,
+ > - and outputs `planning/inventory/frequency.{system}.json`.
++> - **(New v3)** Default mode is *token-aware*:
++>   - ignore comments and string literals when scanning Lua
++>   - fall back to plain regex only if token scan fails
++> - **(New v3)** Add `planning/frequency_aliases.yaml` to define canonical names and aliases.
++>   - Scanner output must record which alias matched.
+```
+
+---
+
+## R08 — Visual baseline storage policy + size governance (optionally Git LFS)
+
+### Problem in v2
+Visual baselines are valuable but dangerous:
+- PNG baselines can bloat the repo quickly.
+- Baseline provenance (which environment produced it) can be unclear.
+- Without guardrails, people may commit thousands of screenshots accidentally.
+
+### Proposed change
+Add a baseline storage policy and governance:
+
+- Define a canonical platform key:
+  - `os`, `arch`, `renderer`, `gpu_vendor` (best-effort), `resolution`
+- Store baselines as:
+  - `test_baselines/screenshots/<platform_key>/<renderer>/<resolution>/<safe_test_id>.png`
+- Add:
+  - `test_baselines/README.md` (rules, update workflow)
+  - `.gitattributes` + Git LFS for `*.png` (optional but recommended)
+  - `scripts/check_baseline_size.py` enforcing a PR size budget (e.g., warn at 50MB, fail at 200MB)
+
+### Why it improves the project
+- **Repo health:** avoids ballooning git history.
+- **Stability:** baseline routing becomes deterministic (no mixing environments).
+- **Better reviews:** size budget prevents “whoops I committed 2GB”.
+
+### Tradeoffs / risks
+- Git LFS requires developer setup. If that’s unacceptable, keep baselines small and only store critical ones.
+
+### Git diff
+```diff
+diff --git a/planning/cass_memory_update_plan_v2.md b/planning/cass_memory_update_plan_v2.md
+--- a/planning/cass_memory_update_plan_v2.md
++++ b/planning/cass_memory_update_plan_v2.md
+@@ -118,6 +118,18 @@
+ > **Baseline management (new):**
+ > - Add a harness flag `--record-baselines` (manual only) to write/update baseline images.
+ > - CI must never run in record mode.
++> - **(New v3)** Baseline storage policy:
++>   - Store baselines under `test_baselines/screenshots/<platform_key>/<renderer>/<resolution>/`.
++>   - Define `platform_key` in `test_output/capabilities.json` (or `run_state.json`) for deterministic routing.
++> - **(New v3, recommended)** Add `test_baselines/README.md` and baseline size governance:
++>   - `scripts/check_baseline_size.py` enforces a max PR delta budget for baseline images.
++>   - Optional: use Git LFS for `*.png` baselines via `.gitattributes`.
+```
+
+---
+
+## R09 — Deterministic rendering config + richer environment capture
+
+### Problem in v2
+You mention determinism, but visual nondeterminism often comes from:
+- window size / DPI scaling
+- font differences
+- vsync / frame pacing
+- renderer backend differences
+
+If you don’t standardize these, your “visual verified” path will be fragile.
+
+### Proposed change
+Make the test scene explicitly configure rendering:
+
+- `test_utils.configure_test_rendering({width=..., height=..., dpi_scale=1, vsync=false, fixed_font=...})`
+- record the resolved config in `capabilities.json` and `results.json`:
+  - width/height
+  - dpi scale
+  - renderer/backend
+  - font name/hash if possible
+
+### Why it improves the project
+- **Reliability:** fewer cross-machine diffs.
+- **Better baselines:** baseline routing can include resolution/backend.
+- **Developer experience:** visually debugging is consistent.
+
+### Tradeoffs / risks
+- Some engines can’t control DPI or font selection. Mitigation: record what you can and quarantine tests that can’t be stabilized.
+
+### Git diff
+```diff
+diff --git a/planning/cass_memory_update_plan_v2.md b/planning/cass_memory_update_plan_v2.md
+--- a/planning/cass_memory_update_plan_v2.md
++++ b/planning/cass_memory_update_plan_v2.md
+@@ -229,6 +229,13 @@
+ > **Determinism checklist (specific + testable):** During pre-flight, record and enforce:
+ > - RNG seeding: `math.randomseed(<fixed>)` (and any engine RNG seed if applicable)
+ > - Fixed timestep / frame count driving for screenshot tests
+ > - Disabling or accounting for frame-time-dependent animations (or waiting N frames deterministically)
+ > - Explicit camera setup for rendering tests (if applicable)
++> - **(New v3)** Explicit rendering config:
++>   - window size/resolution (recorded)
++>   - DPI scale (if controllable)
++>   - vsync/frame pacing disabled for deterministic capture (if controllable)
++>   - fixed font selection or font asset hash (if applicable)
+```
+
+---
+
+## R10 — Impact-based test selection for PR CI
+
+### Problem in v2
+You add sharding (good), but on PR CI you’ll still end up running *everything* as the suite grows.
+
+That’s fine early, but it won’t scale.
+
+### Proposed change
+Add a test impact selection layer:
+
+- `planning/test_impact_map.yaml`:
+  - maps file globs to categories/tags/doc systems
+- `scripts/select_tests.(py|lua)`:
+  - inspects `git diff` and emits runner args (`--category`, `--tags-any`, shards)
+- PR CI:
+  - run impacted tests + smoke
+- Nightly:
+  - run full suite (including visual + slow)
+
+### Why it improves the project
+- **Performance:** PR CI becomes fast.
+- **Reliability:** full verification still happens on schedule.
+- **Compelling:** people won’t avoid running tests due to slowness.
+
+### Tradeoffs / risks
+- Impact mapping requires maintenance. Mitigation:
+  - start broad (UI changes run all UI tests),
+  - refine later.
+
+### Git diff
+```diff
+diff --git a/planning/cass_memory_update_plan_v2.md b/planning/cass_memory_update_plan_v2.md
+--- a/planning/cass_memory_update_plan_v2.md
++++ b/planning/cass_memory_update_plan_v2.md
+@@ -1296,6 +1296,20 @@ Maintenance Mode (new, post-Phase 8)
+ ### CI enforcement:
+ - CI should fail if inventories changed but:
+   - docs were not updated, or
+   - registry mappings are missing for previously verified doc_ids.
 +
-+## NEW: Phase 3.3 — Codex (small UI, big clarity)
-+- `assets/scripts/ui/codex_panel.lua`
-+- reads directly from ContentRegistry lists (skills/cards/items/statuses/forms)
-+- searchable + shows trigger text and tags
++### (New v3) PR CI impact selection:
++- Add `planning/test_impact_map.yaml` mapping file globs → runner filters (categories/tags).
++- Add `scripts/select_tests.(py|lua)`:
++  - reads `git diff --name-only <base>`
++  - outputs runner args (categories/tags/shards)
++- PR CI runs:
++  - impacted tests + a small `smoke` subset
++- Nightly runs:
++  - full suite (all shards + visual + slow)
 ```
 
 ---
 
-## Change 16 — Add a minimal gold sink (otherwise shop + reroll collapses into “always reroll”)
+## R11 — Artifact bundling & triage index for CI
 
-### Why this makes the project better
-Your economy adds reroll + lock (good). But if players can stockpile gold with no long-term sink, optimal play becomes:
-- buy only the best offer,
-- reroll repeatedly,
-- ignore “good enough” upgrades,
-- pacing gets weird.
+### Problem in v2
+When visual tests fail (or when a crash happens), the data you want is scattered:
+- screenshots
+- diffs
+- logs
+- report.md
+- results.json
 
-A minimal sink keeps tension without needing a whole upgrade system:
-- **Card Removal Service** in shop: pay gold to remove 1 card from a wand’s deck (or from inventory).
-- Or **Wand Polish**: +small stat bump on current wand (mana efficiency, cooldown, etc.) with escalating cost and capped tiers.
+People waste time hunting.
 
-This improves:
-- meaningful decisions,
-- build shaping,
-- and prevents gold from being “dead” late-run.
+### Proposed change
+Add an artifact pack step:
+- `scripts/pack_test_artifacts.py` zips `test_output/` (or just failing tests)
+- writes `test_output/artifacts_index.md` with hyperlinks to key files/folders
 
-### Risks / costs
-- Small UI + pricing.
-- Must be deterministic: the action is just a command + state change.
+### Why it improves the project
+- **Developer experience:** debugging becomes “download one zip”.
+- **Reliability:** less guesswork means less repeated CI runs.
 
-### Git-diff patch
+### Tradeoffs / risks
+- Larger CI artifacts. Mitigation: pack only on failure or only failing tests.
+
+### Git diff
 ```diff
-diff --git a/implementation_plan.md b/implementation_plan.md
---- a/implementation_plan.md
-+++ b/implementation_plan.md
+diff --git a/planning/cass_memory_update_plan_v2.md b/planning/cass_memory_update_plan_v2.md
+--- a/planning/cass_memory_update_plan_v2.md
++++ b/planning/cass_memory_update_plan_v2.md
+@@ -924,6 +924,11 @@ Deliverables:
+ 11. **(New v2)** `scripts/link_check_docs.(py|lua)` that validates:
+     - no duplicate `doc_id` in docs,
 @@
- ## Phase 8 — Economy & Progression
-@@
- **Player agency:**
- - add 1 reroll option per shop (cost scales, e.g., 10g then 20g)
- - add "lock 1 item" before reroll (keep one offer, reroll the rest)
-+ - add minimal gold sink (choose one):
-+   - **Card Removal Service:** remove 1 card from a chosen wand deck (cost scales)
-+   - **Wand Polish:** small permanent stat bump on a chosen wand (tiered, capped)
-@@
- **Acceptance gate (Phase 8):**
-@@
- - reroll + lock works and is deterministic for same seed
-+ - gold sink works, is deterministic, and cannot softlock the shop UI
+ 12. **(New v2)** Generated reference index: `docs/reference/index.md` (or `planning/api_reference.md`)
++13. **(New v3)** CI artifact bundling:
++    - `scripts/pack_test_artifacts.(py|lua)` creates `test_output/test_artifacts.zip` (on failure)
++    - `test_output/artifacts_index.md` provides an at-a-glance triage map
 ```
 
 ---
 
-## Change 17 — Strengthen multi-agent integration: add a dedicated “Tools/QA” owner and make interfaces explicit
+## R12 — Performance budgets + flake diagnostics (without hiding failures)
 
-### Why this makes the project better
-Your “6 agents” plan is good, but tooling tends to become “everyone’s job” → nobody’s job.
-If determinism, replay, and validators are critical, you want one owner driving:
-- trace hashing,
-- replay format and migration,
-- validation scripts,
-- CI gates.
+### Problem in v2
+The suite will slow over time. Also, flaky tests kill trust.
 
-Also, define “interface contracts” early:
-- which modules are stable APIs,
-- which tables are internal.
+Sharding helps runtime, but you need:
+- a way to spot slow regressions,
+- and a policy for diagnosing flakes without masking them.
 
-### Git-diff patch
+### Proposed change
+Add:
+- per-test (optional) `opts.perf_budget_ms`
+- runner tracks durations and highlights:
+  - top 10 slow tests
+  - regressions vs last run (optional, if you store a baseline JSON)
+- for flaky diagnostics:
+  - a **manual** `--repeat N` runner mode that repeats selected tests for investigation
+  - CI never retries to convert fail→pass; at most it can re-run to attach extra evidence
+
+### Why it improves the project
+- **Performance:** you can prevent “test suite takes 40 minutes” creep.
+- **Trust:** flakes are surfaced and tracked, not silently retried away.
+
+### Tradeoffs / risks
+- Budgets take calibration. Mitigation: start with “warn-only” in PR CI, “fail budgets” in nightly.
+
+### Git diff
 ```diff
-diff --git a/implementation_plan.md b/implementation_plan.md
---- a/implementation_plan.md
-+++ b/implementation_plan.md
-@@
- ## 3) Multi-Agent Execution Plan (4–6 agents)
-@@
- Recommended 6 agents (collapsible to 4):
-@@
- - **Agent E — Items + Economy**
-   - `assets/scripts/data/artifacts.lua`, `assets/scripts/data/equipment.lua`
-   - shop core + UI
-   - `assets/scripts/core/progression.lua` or existing integration
+diff --git a/planning/cass_memory_update_plan_v2.md b/planning/cass_memory_update_plan_v2.md
+--- a/planning/cass_memory_update_plan_v2.md
++++ b/planning/cass_memory_update_plan_v2.md
+@@ -309,6 +309,8 @@ function TestRunner:register(name, category, testFn, opts)
+     -- opts may include: tags, source_ref, timeout_frames, requires, display_name
++    -- (New v3) opts may include: perf_budget_ms, doc_ids
+ end
+@@ -1412,6 +1414,15 @@ Appendix: Tag conventions for tests
+ - `tags={"slow"}` - Tests taking >5 seconds
++- **(New v3)** Prefer budgets over ad-hoc “slow” tags:
++  - `opts.perf_budget_ms` allows thresholds per test
++  - Runner reports slow tests even if they pass
 +
-+- **Agent F — Tools + QA (NEW, single throat to choke)**
-+  - validator + determinism harness + replay runner polish
-+  - trace hashing + trace diff tool
-+  - CI gate scripts (headless run + golden replay checks)
-@@
- ### 3.3 Integration Gates
-@@
- - Run **UBS** as the final pre-merge gate (repo policy).
-+ - Add “golden replay” gate (dev-only OK for v3): at least 1 short replay must pass determinism checks on CI.
++### Flake diagnostics (New v3)
++- Add runner flag `--repeat N` for manual investigation
++- CI must not retry failures to convert them to pass; retries (if any) are for extra artifacts only
 ```
 
 ---
 
-# Closing Notes (what I would NOT change)
+## Small but worthwhile editorial fixes (optional)
 
-- The “stable idx assignment sorted by ID” is exactly the right move.
-- Lifecycle being mandatory is also correct; keep it non-negotiable.
-- Central DamageSystem is the right foundation for balancing and instrumentation.
-- Aura staggering + target caps are solid “fairness + perf” guardrails.
+These don’t change architecture, but they reduce ambiguity.
 
-# Summary of highest-impact wins
+### 1) Fix duplicate numbering in Phase 1 deliverables
+You currently have “4.” and “4b.” (fine) but it’s easy to misread. Consider 4/5/6 style numbering or make 4 a “Outputs” section.
 
-If you only implement a subset, prioritize these in order:
+```diff
+diff --git a/planning/cass_memory_update_plan_v2.md b/planning/cass_memory_update_plan_v2.md
+--- a/planning/cass_memory_update_plan_v2.md
++++ b/planning/cass_memory_update_plan_v2.md
+@@ -238,9 +238,11 @@ Deliverables:
+-4. Screenshot output directory: `test_output/screenshots/`
+-4b. **(New)** Per-test artifacts directory: `test_output/artifacts/<safe_test_id>/`
++4. Output directories:
++   - screenshots: `test_output/screenshots/`
++   - artifacts: `test_output/artifacts/<safe_test_id>/`
+```
 
-1. **CommandStream replay** (semantic commands) — makes determinism actually durable.
-2. **RNG streams + explicit RNG passing** — prevents cross-system randomness coupling.
-3. **EventBus deferred emits** — prevents re-entrancy surprises and simplifies reasoning.
-4. **Skill immediate execution (origin-tagged)** — preserves responsiveness without feedback loops.
-5. **Trace hashing + diff tool + golden replay gate** — converts determinism into a reliable regression system.
+### 2) Make “UBS” a required glossary entry
+You already require Phase 1 to identify it; making it a named glossary item reduces confusion.
+
+```diff
+diff --git a/planning/cass_memory_update_plan_v2.md b/planning/cass_memory_update_plan_v2.md
+--- a/planning/cass_memory_update_plan_v2.md
++++ b/planning/cass_memory_update_plan_v2.md
+@@ -79,6 +79,10 @@ Definitions (for consistency + testability)
+ - **"Binding"**: Any Lua-exposed type/function/constant created via Sol2, including methods on usertypes and free functions.
++ - **"UBS"**: Repo-specific build/validation step. Phase 1 must define:
++   - name expansion (what it stands for)
++   - exact invocation command(s)
++   - pass/fail signal and log location
+```
+
+---
+
+## Net effect: what v3 looks like
+
+If you apply these revisions, the “v3” plan has these high-level properties:
+
+- **Reproducible toolchain** (Phase 0) so automation doesn’t rot.
+- **Crash-proof CI semantics** (run sentinel).
+- **One true run model** (reporters consume the same data).
+- **Far less drift** (sync tools tie together tests/registry/docs).
+- **More accurate prioritization** (token-aware frequency scanning).
+- **Scalable CI** (impact selection + sharding + budgets).
+- **Better visual discipline** (baseline policy + size governance).
+- **Better debugging** (artifact bundles + triage index).
+
+If you want, you can treat these revisions as a “v2.1 patchset” and keep the existing v2 numbering, or formally rename the plan to v3.
 

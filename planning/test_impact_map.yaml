@@ -1,0 +1,117 @@
+# File glob -> test filter mapping
+# Used by scripts/select_tests.py
+
+schema_version: "1.0"
+
+# Default tests always run
+default:
+  categories: ["smoke"]
+  tags: ["smoke"]
+
+impact_rules:
+  # Physics binding changes -> physics tests
+  - name: "physics_bindings"
+    globs:
+      - "src/systems/physics/**"
+      - "assets/scripts/core/physics*.lua"
+    filters:
+      categories: ["physics"]
+      tags: ["physics"]
+
+  # UI changes -> UI tests
+  - name: "ui_system"
+    globs:
+      - "src/systems/ui/**"
+      - "assets/scripts/ui/**"
+    filters:
+      categories: ["ui"]
+      tags: ["ui", "visual"]
+
+  # Core scripting + ECS -> core/ecs tests
+  - name: "core_scripting"
+    globs:
+      - "src/systems/scripting/**"
+      - "src/core/**"
+      - "assets/scripts/core/**"
+    filters:
+      categories: ["core", "ecs"]
+      tags: ["ecs", "core"]
+
+  # Component definition changes -> component/ecs tests
+  - name: "components"
+    globs:
+      - "src/components/**"
+    filters:
+      categories: ["ecs", "core"]
+      tags: ["components"]
+
+  # Rendering + shader changes -> rendering tests
+  - name: "rendering_shaders"
+    globs:
+      - "assets/shaders/**"
+      - "src/systems/shaders/**"
+    filters:
+      categories: ["rendering", "shader"]
+      tags: ["visual"]
+
+  # Combat systems -> combat tests
+  - name: "combat"
+    globs:
+      - "assets/scripts/combat/**"
+      - "src/systems/combat/**"
+    filters:
+      categories: ["combat"]
+      tags: ["combat"]
+
+  # Wand systems -> wand tests
+  - name: "wand"
+    globs:
+      - "assets/scripts/wand/**"
+    filters:
+      categories: ["wand"]
+      tags: ["wand"]
+
+  # Data definitions -> data tests
+  - name: "data"
+    globs:
+      - "assets/scripts/data/**"
+    filters:
+      categories: ["data"]
+      tags: ["data"]
+
+  # Input/sound/ai -> input/sound/ai tests
+  - name: "input_sound_ai"
+    globs:
+      - "src/systems/input/**"
+      - "src/systems/sound/**"
+      - "src/systems/ai/**"
+    filters:
+      categories: ["input", "sound", "ai"]
+      tags: ["input", "sound", "ai"]
+
+  # Documentation changes -> validators only
+  - name: "docs"
+    globs:
+      - "docs/**"
+      - "planning/**/*.md"
+    filters:
+      categories: []
+      tags: ["validation"]
+    skip_tests: true
+
+  # Test infrastructure changes -> run everything
+  - name: "test_infra"
+    globs:
+      - "assets/scripts/test/**"
+      - "scripts/test_*.py"
+      - "scripts/tests/**"
+    filters:
+      categories: ["*"]
+      tags: []
+
+# Nightly full suite
+nightly:
+  categories: ["*"]
+  tags: ["*"]
+  include_slow: true
+  include_visual: true

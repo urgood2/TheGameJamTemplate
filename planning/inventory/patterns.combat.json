@@ -1,0 +1,188 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-02-03T05:22:27Z",
+  "area": "combat",
+  "patterns": [
+    {
+      "pattern_id": "combat.wave.telegraph_spawn",
+      "name": "Wave telegraph then spawn",
+      "doc_id": "pattern:combat.wave.telegraph_spawn",
+      "category": "wave",
+      "description": "Telegraph spawn positions, then spawn enemies after a delay buffer.",
+      "source_refs": [
+        "assets/scripts/combat/wave_director.lua:104-123"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "combat.wave.elite_spawn",
+      "name": "Elite telegraph and spawn",
+      "doc_id": "pattern:combat.wave.elite_spawn",
+      "category": "wave",
+      "description": "Telegraph elite spawn and resolve modifiers before spawning.",
+      "source_refs": [
+        "assets/scripts/combat/wave_director.lua:143-186"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "combat.wave.timed_schedule",
+      "name": "Timed wave spawn schedule",
+      "doc_id": "pattern:combat.wave.timed_schedule",
+      "category": "wave",
+      "description": "Schedule enemy spawns with per-entry delays and timer tags.",
+      "source_refs": [
+        "assets/scripts/combat/enemy_spawner.lua:137-169"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "combat.wave.budget_weighted",
+      "name": "Budgeted weighted spawns",
+      "doc_id": "pattern:combat.wave.budget_weighted",
+      "category": "wave",
+      "description": "Select enemies by cost/weight while spending a budget.",
+      "source_refs": [
+        "assets/scripts/combat/enemy_spawner.lua:178-227"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "combat.wave.provider_sequence",
+      "name": "Stage provider sequence",
+      "doc_id": "pattern:combat.wave.provider_sequence",
+      "category": "wave",
+      "description": "Use stage providers (sequence/endless) to feed WaveDirector stages.",
+      "source_refs": [
+        "assets/scripts/combat/wave_system.lua:27-59",
+        "assets/scripts/combat/wave_test_init.lua:33-52"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "combat.enemy.spawn_context",
+      "name": "Enemy context assembly",
+      "doc_id": "pattern:combat.enemy.spawn_context",
+      "category": "enemy",
+      "description": "Build enemy context from definition, apply modifiers, and store in WaveHelpers.",
+      "source_refs": [
+        "assets/scripts/combat/enemy_factory.lua:93-176"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "combat.enemy.physics_builder_chain",
+      "name": "Enemy physics builder chain",
+      "doc_id": "pattern:combat.enemy.physics_builder_chain",
+      "category": "enemy",
+      "description": "Use PhysicsBuilder chain for enemy collision setup.",
+      "source_refs": [
+        "assets/scripts/combat/enemy_factory.lua:182-193"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "combat.enemy.steering_physics_step",
+      "name": "Steering update on physics step",
+      "doc_id": "pattern:combat.enemy.steering_physics_step",
+      "category": "enemy",
+      "description": "Use timer.every_physics_step to drive steering updates and cancel on invalid entities.",
+      "source_refs": [
+        "assets/scripts/combat/enemy_factory.lua:278-296"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "combat.projectile.spawn_basic",
+      "name": "Projectile spawn (transform + data)",
+      "doc_id": "pattern:combat.projectile.spawn_basic",
+      "category": "projectile",
+      "description": "Spawn projectile entities with transform sizing and projectile data/behavior/lifetime tables.",
+      "source_refs": [
+        "assets/scripts/combat/projectile_system.lua:451-538"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "combat.projectile.homing_config",
+      "name": "Homing projectile config",
+      "doc_id": "pattern:combat.projectile.homing_config",
+      "category": "projectile",
+      "description": "Configure homing projectiles with target, strength, and initial direction.",
+      "source_refs": [
+        "assets/scripts/combat/projectile_examples.lua:74-131"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "combat.projectile.pierce_config",
+      "name": "Piercing projectile config",
+      "doc_id": "pattern:combat.projectile.pierce_config",
+      "category": "projectile",
+      "description": "Configure pierce behavior with maxPierceCount and collision behavior.",
+      "source_refs": [
+        "assets/scripts/combat/projectile_examples.lua:141-160"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "combat.helpers.enemy_context_weak_table",
+      "name": "Enemy context weak table",
+      "doc_id": "pattern:combat.helpers.enemy_context_weak_table",
+      "category": "helpers",
+      "description": "Store enemy contexts in a weak-key table for automatic cleanup.",
+      "source_refs": [
+        "assets/scripts/combat/wave_helpers.lua:164-171"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    }
+  ]
+}

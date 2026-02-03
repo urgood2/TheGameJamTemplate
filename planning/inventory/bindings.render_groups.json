@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-02-03T02:59:38.417342+00:00",
+  "system": "render_groups",
+  "source_files": [
+    "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/render_groups/render_groups.cpp"
+  ],
+  "summary": {
+    "usertypes": 0,
+    "functions": 0,
+    "constants": 0,
+    "enums": 0,
+    "methods": 0,
+    "properties": 0,
+    "low_confidence": 0,
+    "unrecognized_patterns": 0
+  },
+  "bindings": {
+    "usertypes": [],
+    "functions": [],
+    "constants": [],
+    "enums": [],
+    "methods": [],
+    "properties": []
+  },
+  "unrecognized_patterns": []
+}

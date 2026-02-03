@@ -1,0 +1,589 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-02-03T02:59:38.431637+00:00",
+  "system": "text",
+  "source_files": [
+    "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+  ],
+  "summary": {
+    "usertypes": 14,
+    "functions": 16,
+    "constants": 0,
+    "enums": 2,
+    "methods": 2,
+    "properties": 7,
+    "low_confidence": 0,
+    "unrecognized_patterns": 21
+  },
+  "bindings": {
+    "usertypes": [
+      {
+        "lua_name": "ts.ParsedEffectArguments",
+        "type": "usertype",
+        "cpp_type": "TextSystem::ParsedEffectArguments",
+        "signature": "",
+        "doc_id": "sol2_usertype_ts_parsedeffectarguments",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:64",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ts.ParsedEffectArguments",
+        "type": "usertype",
+        "cpp_type": "TextSystem::ParsedEffectArguments",
+        "signature": "",
+        "doc_id": "sol2_usertype_ts_parsedeffectarguments",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:72",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ts.Character",
+        "type": "usertype",
+        "cpp_type": "TextSystem::Character",
+        "signature": "",
+        "doc_id": "sol2_usertype_ts_character",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:95",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ts.Text",
+        "type": "usertype",
+        "cpp_type": "TextSystem::Text",
+        "signature": "",
+        "doc_id": "sol2_usertype_ts_text",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:193",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "builders.TextBuilder",
+        "type": "usertype",
+        "cpp_type": "TextSystem::Builders::TextBuilder",
+        "signature": "",
+        "doc_id": "sol2_usertype_builders_textbuilder",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:297",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "TextSystem",
+        "type": "usertype",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_usertype_textsystem",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:59",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "TextSystem.ParsedEffectArguments",
+        "type": "usertype",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_usertype_textsystem_parsedeffectarguments",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:78",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "TextSystem.Character",
+        "type": "usertype",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_usertype_textsystem_character",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:130",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "TextSystem.Text",
+        "type": "usertype",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_usertype_textsystem_text",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:216",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "TextSystem.TextAlignment",
+        "type": "usertype",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_usertype_textsystem_textalignment",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:257",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "TextSystem.TextWrapMode",
+        "type": "usertype",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_usertype_textsystem_textwrapmode",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:277",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "TextSystem.Builders",
+        "type": "usertype",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_usertype_textsystem_builders",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:310",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "TextSystem.Builders.TextBuilder",
+        "type": "usertype",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_usertype_textsystem_builders_textbuilder",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:311",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "TextSystem.Functions",
+        "type": "usertype",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_usertype_textsystem_functions",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:350",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      }
+    ],
+    "functions": [
+      {
+        "lua_name": "adjustAlignment",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_adjustalignment",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:353",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "splitEffects",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_spliteffects",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:359",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "createTextEntity",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_createtextentity",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:367",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "calculateBoundingBox",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_calculateboundingbox",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:388",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "CodepointToString",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_codepointtostring",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:397",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "parseText",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_parsetext",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:403",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "handleEffectSegment",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_handleeffectsegment",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:415",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "updateText",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_updatetext",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:428",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "renderText",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_rendertext",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:437",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "clearAllEffects",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_clearalleffects",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:447",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "applyGlobalEffects",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_applyglobaleffects",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:455",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "debugPrintText",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_debugprinttext",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:465",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "resizeTextToFit",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_resizetexttofit",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:473",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "setTextScaleAndRecenter",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_settextscaleandrecenter",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:485",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "resetTextScaleAndLayout",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_resettextscaleandlayout",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:498",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "setText",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_settext",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:507",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      }
+    ],
+    "constants": [],
+    "enums": [
+      {
+        "lua_name": "ts.TextAlignment",
+        "type": "enum",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_enum_ts_textalignment",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:250",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ts.TextWrapMode",
+        "type": "enum",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_enum_ts_textwrapmode",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:271",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      }
+    ],
+    "methods": [
+      {
+        "lua_name": "TextSystem.ParsedEffectArguments:arguments",
+        "type": "method",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_method_textsystem_parsedeffectarguments_arguments",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:81",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "TextSystem.Builders.TextBuilder:build",
+        "type": "method",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_method_textsystem_builders_textbuilder_build",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:336",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      }
+    ],
+    "properties": [
+      {
+        "lua_name": "TextSystem.effectFunctions",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_textsystem_effectfunctions",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:186",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "TextSystem.TextAlignment.LEFT",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_textsystem_textalignment_left",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:261",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "TextSystem.TextAlignment.CENTER",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_textsystem_textalignment_center",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:263",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "TextSystem.TextAlignment.RIGHT",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_textsystem_textalignment_right",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:265",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "TextSystem.TextAlignment.JUSTIFIED",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_textsystem_textalignment_justified",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:267",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "TextSystem.TextWrapMode.WORD",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_textsystem_textwrapmode_word",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:281",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "TextSystem.TextWrapMode.CHARACTER",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_textsystem_textwrapmode_character",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:286",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      }
+    ]
+  },
+  "unrecognized_patterns": [
+    {
+      "line": 65,
+      "snippet": "//     sol::constructors<>(),",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+    },
+    {
+      "line": 73,
+      "snippet": "\"ParsedEffectArguments\", sol::constructors<>(), \"arguments\",",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+    },
+    {
+      "line": 96,
+      "snippet": "\"Character\", sol::constructors<>(), \"value\",",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+    },
+    {
+      "line": 194,
+      "snippet": "\"Text\", sol::constructors<>(), \"get_value_callback\",",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+    },
+    {
+      "line": 298,
+      "snippet": "\"TextBuilder\", sol::constructors<>(), \"setRawText\",",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+    },
+    {
+      "line": 369,
+      "snippet": "[](const TextSystem::Text &text, float x, float y, sol::optional<sol::table> waitersOpt) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+    },
+    {
+      "line": 525,
+      "snippet": "sol::optional<sol::table> waitersOpt) -> entt::entity {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+    },
+    {
+      "line": 555,
+      "snippet": "sol::function raw_fn = kv.second;",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+    },
+    {
+      "line": 559,
+      "snippet": "sol::thread thr = sol::thread::create(raw_fn.lua_state());",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+    },
+    {
+      "line": 559,
+      "snippet": "sol::thread thr = sol::thread::create(raw_fn.lua_state());",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+    },
+    {
+      "line": 564,
+      "snippet": "sol::function thread_fn = thread_view[\"__waiter_fn\"];",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+    },
+    {
+      "line": 566,
+      "snippet": "sol::coroutine co{thread_fn};",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+    },
+    {
+      "line": 586,
+      "snippet": "sol::function raw_fn = ai_system::masterStateLua[alias];",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+    },
+    {
+      "line": 595,
+      "snippet": "sol::thread thr = sol::thread::create(raw_fn.lua_state());",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+    },
+    {
+      "line": 595,
+      "snippet": "sol::thread thr = sol::thread::create(raw_fn.lua_state());",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+    },
+    {
+      "line": 600,
+      "snippet": "sol::function thread_fn = thread_view[\"__waiter_fn\"];",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+    },
+    {
+      "line": 602,
+      "snippet": "sol::coroutine co{thread_fn};",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+    },
+    {
+      "line": 617,
+      "snippet": "sol::optional<sol::table> waitersOpt) -> entt::entity {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+    },
+    {
+      "line": 1768,
+      "snippet": "if (!co.valid() || co.status() != sol::call_status::yielded) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+    },
+    {
+      "line": 1780,
+      "snippet": "sol::error err = result;",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+    },
+    {
+      "line": 1783,
+      "snippet": "} else if (co.status() == sol::call_status::yielded) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+    }
+  ]
+}

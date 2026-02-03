@@ -1,0 +1,391 @@
+{
+  "category": "state_input",
+  "count": 11,
+  "components": [
+    {
+      "name": "IInputProvider",
+      "category": "state_input",
+      "file_path": "src/systems/input/input_polling.hpp",
+      "line_number": 20,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:IInputProvider"
+    },
+    {
+      "name": "RaylibInputProvider",
+      "category": "state_input",
+      "file_path": "src/systems/input/input_polling.hpp",
+      "line_number": 50,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:RaylibInputProvider"
+    },
+    {
+      "name": "NavSelectable",
+      "category": "state_input",
+      "file_path": "src/systems/input/controller_nav.hpp",
+      "line_number": 21,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "selected",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "disabled",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "group",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "subgroup",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:NavSelectable"
+    },
+    {
+      "name": "NavCallbacks",
+      "category": "state_input",
+      "file_path": "src/systems/input/controller_nav.hpp",
+      "line_number": 31,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "on_focus",
+          "type": "sol::protected_function",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "on_unfocus",
+          "type": "sol::protected_function",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "on_select",
+          "type": "sol::protected_function",
+          "default": null,
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:NavCallbacks"
+    },
+    {
+      "name": "NavGroup",
+      "category": "state_input",
+      "file_path": "src/systems/input/controller_nav.hpp",
+      "line_number": 40,
+      "is_tag": false,
+      "extraction_confidence": 0.9,
+      "notes": [
+        "1 complex types need manual review"
+      ],
+      "fields": [
+        {
+          "name": "name",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "active",
+          "type": "bool",
+          "default": "true",
+          "is_complex": false
+        },
+        {
+          "name": "linear",
+          "type": "bool",
+          "default": "true",
+          "is_complex": false
+        },
+        {
+          "name": "entries",
+          "type": "std::vector<entt::entity>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "selectedIndex",
+          "type": "int",
+          "default": "-1",
+          "is_complex": false
+        },
+        {
+          "name": "spatial",
+          "type": "bool",
+          "default": "true",
+          "is_complex": false
+        },
+        {
+          "name": "wrap",
+          "type": "bool",
+          "default": "true",
+          "is_complex": false
+        },
+        {
+          "name": "callbacks",
+          "type": "NavCallbacks",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "parent",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "upGroup",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "downGroup",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "leftGroup",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "rightGroup",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "pushOnEnter",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "popOnExit",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:NavGroup"
+    },
+    {
+      "name": "NavLayer",
+      "category": "state_input",
+      "file_path": "src/systems/input/controller_nav.hpp",
+      "line_number": 60,
+      "is_tag": false,
+      "extraction_confidence": 0.9,
+      "notes": [
+        "1 complex types need manual review"
+      ],
+      "fields": [
+        {
+          "name": "name",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "groups",
+          "type": "std::vector<std::string>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "active",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "focusGroupIndex",
+          "type": "int",
+          "default": "0",
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:NavLayer"
+    },
+    {
+      "name": "NavManager",
+      "category": "state_input",
+      "file_path": "src/systems/input/controller_nav.hpp",
+      "line_number": 70,
+      "is_tag": false,
+      "extraction_confidence": 0.5,
+      "notes": [
+        "5 complex types need manual review"
+      ],
+      "fields": [
+        {
+          "name": "groups",
+          "type": "std::unordered_map<std::string, NavGroup>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "layers",
+          "type": "std::unordered_map<std::string, NavLayer>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "layerStack",
+          "type": "std::vector<std::string>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "activeLayer",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "disabledEntities",
+          "type": "std::unordered_set<entt::entity>",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "groupToLayer",
+          "type": "std::unordered_map<std::string, std::string>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "callbacks",
+          "type": "NavCallbacks",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "groupCooldowns",
+          "type": "std::unordered_map<std::string, float>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "globalCooldown",
+          "type": "float",
+          "default": "0.08f",
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:NavManager"
+    },
+    {
+      "name": "InactiveTag",
+      "category": "state_input",
+      "file_path": "src/systems/entity_gamestate_management/entity_gamestate_management.hpp",
+      "line_number": 15,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:InactiveTag"
+    },
+    {
+      "name": "StateTag",
+      "category": "state_input",
+      "file_path": "src/systems/entity_gamestate_management/entity_gamestate_management.hpp",
+      "line_number": 26,
+      "is_tag": false,
+      "extraction_confidence": 0.8,
+      "notes": [
+        "2 complex types need manual review"
+      ],
+      "fields": [
+        {
+          "name": "names",
+          "type": "std::vector<std::string>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "hashes",
+          "type": "std::vector<std::size_t>",
+          "default": null,
+          "is_complex": true
+        }
+      ],
+      "doc_id": "component:StateTag"
+    },
+    {
+      "name": "ActiveStates",
+      "category": "state_input",
+      "file_path": "src/systems/entity_gamestate_management/entity_gamestate_management.hpp",
+      "line_number": 39,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "active_hashes",
+          "type": "std::unordered_set<std::size_t>",
+          "default": null,
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:ActiveStates"
+    },
+    {
+      "name": "ScriptComponent",
+      "category": "state_input",
+      "file_path": "src/systems/scripting/scripting_system.hpp",
+      "line_number": 31,
+      "is_tag": false,
+      "extraction_confidence": 0.6,
+      "notes": [
+        "manual draft: scripting_system.hpp; hooks include update/on_collision"
+      ],
+      "fields": [
+        {
+          "name": "self",
+          "type": "sol::table",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "hooks",
+          "type": "struct { update, on_collision }",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "tasks",
+          "type": "std::vector<sol::coroutine>",
+          "default": null,
+          "is_complex": true
+        }
+      ],
+      "doc_id": "component:ScriptComponent"
+    }
+  ]
+}

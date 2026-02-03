@@ -2658,3 +2658,16 @@ build-luajit/
 imgui.ini
 devlog/remotion/node_modules/
 devlog/sfx/node_modules/
+
+# bv (beads viewer) local config and caches
+.bv/
+
+# Test output (ephemeral)
+test_output/**
+!test_output/screenshots/.gitkeep
+!test_output/artifacts/.gitkeep
+
+# Test output (ephemeral - regenerated each run)
+test_output/**
+!test_output/screenshots/.gitkeep
+!test_output/artifacts/.gitkeep

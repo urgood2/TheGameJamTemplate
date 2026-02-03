@@ -1,0 +1,8 @@
+{
+  "schema_version": "1.0",
+  "default_tolerance": {
+    "pixel_diff_threshold": 0.01,
+    "ssim_threshold": 0.98
+  },
+  "per_test_overrides": {}
+}

@@ -1,0 +1,844 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-02-03T02:59:38.414923+00:00",
+  "system": "ldtk",
+  "source_files": [
+    "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+  ],
+  "summary": {
+    "usertypes": 0,
+    "functions": 33,
+    "constants": 0,
+    "enums": 0,
+    "methods": 0,
+    "properties": 26,
+    "low_confidence": 0,
+    "unrecognized_patterns": 33
+  },
+  "bindings": {
+    "usertypes": [],
+    "functions": [
+      {
+        "lua_name": "ldtk.load_config",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_load_config",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:20",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.spawn_entities",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_spawn_entities",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:26",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.prefab_for",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_prefab_for",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:37",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.set_spawner",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_set_spawner",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:129",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.each_intgrid",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_each_intgrid",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:144",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.collider_layers",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_collider_layers",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:153",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.build_colliders",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_build_colliders",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:156",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.clear_colliders",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_clear_colliders",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:163",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.set_active_level",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_set_active_level",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:168",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.active_level",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_active_level",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:178",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.has_active_level",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_has_active_level",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:180",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.level_exists",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_level_exists",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:184",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.get_level_bounds",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_get_level_bounds",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:188",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.get_level_meta",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_get_level_meta",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:198",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.get_neighbors",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_get_neighbors",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:215",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.get_entity_position",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_get_entity_position",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:229",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.get_entities_by_name",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_get_entities_by_name",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:239",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.apply_rules",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_apply_rules",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:277",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.build_colliders_from_grid",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_build_colliders_from_grid",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:336",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.get_layer_count",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_get_layer_count",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:398",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.get_layer_name",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_get_layer_name",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:402",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.get_layer_index",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_get_layer_index",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:406",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.cleanup_procedural",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_cleanup_procedural",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:411",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.draw_procedural_layer",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_draw_procedural_layer",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:420",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.draw_all_procedural_layers",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_draw_all_procedural_layers",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:443",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.get_tileset_info",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_get_tileset_info",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:465",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.draw_procedural_layer_filtered",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_draw_procedural_layer_filtered",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:479",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.draw_procedural_layer_ysorted",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_draw_procedural_layer_ysorted",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:512",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.draw_tile",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_draw_tile",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:538",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.get_tile_grid",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_get_tile_grid",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:564",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.set_signal_emitter",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_set_signal_emitter",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:635",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.set_active_level_with_signals",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_set_active_level_with_signals",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:651",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.emit_entity_spawned",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_ldtk_emit_entity_spawned",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:687",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      }
+    ],
+    "constants": [],
+    "enums": [],
+    "methods": [],
+    "properties": [
+      {
+        "lua_name": "ldtk.load_config",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_ldtk_load_config",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:709",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.spawn_entities",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_ldtk_spawn_entities",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:713",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.each_intgrid",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_ldtk_each_intgrid",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:717",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.prefab_for",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_ldtk_prefab_for",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:719",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.collider_layers",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_ldtk_collider_layers",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:722",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.build_colliders",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_ldtk_build_colliders",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:725",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.clear_colliders",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_ldtk_clear_colliders",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:728",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.set_spawner",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_ldtk_set_spawner",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:732",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.set_active_level",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_ldtk_set_active_level",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:736",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.active_level",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_ldtk_active_level",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:740",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.has_active_level",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_ldtk_has_active_level",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:743",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.level_exists",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_ldtk_level_exists",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:745",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.get_level_bounds",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_ldtk_get_level_bounds",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:747",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.get_level_meta",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_ldtk_get_level_meta",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:749",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.get_neighbors",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_ldtk_get_neighbors",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:751",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.get_entity_position",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_ldtk_get_entity_position",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:753",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.get_entities_by_name",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_ldtk_get_entities_by_name",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:755",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.apply_rules",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_ldtk_apply_rules",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:757",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.build_colliders_from_grid",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_ldtk_build_colliders_from_grid",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:759",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.get_layer_count",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_ldtk_get_layer_count",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:761",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.get_layer_name",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_ldtk_get_layer_name",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:763",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.get_layer_index",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_ldtk_get_layer_index",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:765",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.cleanup_procedural",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_ldtk_cleanup_procedural",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:767",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.set_signal_emitter",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_ldtk_set_signal_emitter",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:769",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.set_active_level_with_signals",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_ldtk_set_active_level_with_signals",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:771",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ldtk.emit_entity_spawned",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_ldtk_emit_entity_spawned",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp:773",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      }
+    ]
+  },
+  "unrecognized_patterns": [
+    {
+      "line": 27,
+      "snippet": "\"spawn_entities\", [](const std::string &levelName, sol::function cb) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 130,
+      "snippet": "static sol::function stored;",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 146,
+      "snippet": "sol::function cb) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 158,
+      "snippet": "sol::optional<std::string> tag) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 171,
+      "snippet": "sol::optional<bool> rebuildColliders,",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 172,
+      "snippet": "sol::optional<bool> spawnEntities, sol::optional<std::string> tag) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 172,
+      "snippet": "sol::optional<bool> spawnEntities, sol::optional<std::string> tag) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 337,
+      "snippet": "[](sol::table gridTable, const std::string& worldName, sol::optional<std::string> tag) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 422,
+      "snippet": "sol::optional<float> offsetX, sol::optional<float> offsetY,",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 422,
+      "snippet": "sol::optional<float> offsetX, sol::optional<float> offsetY,",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 423,
+      "snippet": "sol::optional<int> zLevel, sol::optional<float> opacity) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 423,
+      "snippet": "sol::optional<int> zLevel, sol::optional<float> opacity) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 445,
+      "snippet": "sol::optional<float> offsetX, sol::optional<float> offsetY,",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 445,
+      "snippet": "sol::optional<float> offsetX, sol::optional<float> offsetY,",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 446,
+      "snippet": "sol::optional<int> baseZLevel, sol::optional<float> opacity) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 446,
+      "snippet": "sol::optional<int> baseZLevel, sol::optional<float> opacity) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 481,
+      "snippet": "sol::optional<float> offsetX, sol::optional<float> offsetY,",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 481,
+      "snippet": "sol::optional<float> offsetX, sol::optional<float> offsetY,",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 482,
+      "snippet": "sol::optional<int> zLevel, sol::optional<float> opacity) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 482,
+      "snippet": "sol::optional<int> zLevel, sol::optional<float> opacity) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 514,
+      "snippet": "sol::optional<float> offsetX, sol::optional<float> offsetY,",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 514,
+      "snippet": "sol::optional<float> offsetX, sol::optional<float> offsetY,",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 515,
+      "snippet": "sol::optional<int> baseZLevel, sol::optional<int> zPerRow,",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 515,
+      "snippet": "sol::optional<int> baseZLevel, sol::optional<int> zPerRow,",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 516,
+      "snippet": "sol::optional<float> opacity) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 541,
+      "snippet": "sol::optional<bool> flipX, sol::optional<bool> flipY,",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 541,
+      "snippet": "sol::optional<bool> flipX, sol::optional<bool> flipY,",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 542,
+      "snippet": "sol::optional<float> opacity) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 633,
+      "snippet": "static sol::function ldtkSignalEmitter;",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 654,
+      "snippet": "sol::optional<bool> rebuildColliders,",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 655,
+      "snippet": "sol::optional<bool> spawnEntities, sol::optional<std::string> tag) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 655,
+      "snippet": "sol::optional<bool> spawnEntities, sol::optional<std::string> tag) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    },
+    {
+      "line": 689,
+      "snippet": "const std::string& layerName, sol::optional<sol::table> extraData) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ldtk_loader/ldtk_lua_bindings.cpp"
+    }
+  ]
+}

@@ -1,13 +1,17 @@
 {
+  "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
   "workspace.library": [
-    "assets/scripts/types",
-    "assets/scripts"
+    "${workspaceFolder}/docs/lua_stubs",
+    "${workspaceFolder}/assets/scripts/types",
+    "${workspaceFolder}/assets/scripts"
   ],
-  "Lua.workspace.ignoreDir": [
+  "workspace.ignoreDir": [
     ".worktrees",
     "build",
     "build-*",
-    "node_modules"
+    "node_modules",
+    "test_output",
+    ".git"
   ],
   "diagnostics.globals": [
     "registry",
@@ -45,5 +49,8 @@
   "runtime.path": [
     "assets/scripts/?.lua",
     "assets/scripts/?/init.lua"
-  ]
+  ],
+  "runtime.special": {
+    "require": "require"
+  }
 }

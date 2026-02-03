@@ -1,0 +1,152 @@
+
+<!-- AUTOGEN:BEGIN binding_list -->
+- `AnimationQueueComponent` — (usertype) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/anim_system.cpp:93`
+- `Blackboard` — (usertype) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1573`
+- `Box.height` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/core/game.cpp:340`
+- `Box.left` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/core/game.cpp:337`
+- `Box.top` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/core/game.cpp:338`
+- `Box.width` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/core/game.cpp:339`
+- `Box` — (usertype) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/core/game.cpp:334`
+- `Camera2D.offset` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:559`
+- `Camera2D.rotation` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:561`
+- `Camera2D.target` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:560`
+- `Camera2D.zoom` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:562`
+- `Camera2D` — (usertype) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:551`
+- `Entity` — (usertype) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:161`
+- `GetFrameTime` — (function) — `GetFrameTime() -> number` — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:591`
+- `GetLayer` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/core/game.cpp:831`
+- `GetScreenHeight` — (function) — `GetScreenHeight() -> integer` — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:602`
+- `GetScreenToWorld2D` — (function) — `GetScreenToWorld2D(position: Vector2, camera: Camera2D) -> Vector2` — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:607`
+- `GetScreenWidth` — (function) — `GetScreenWidth() -> integer` — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:601`
+- `GetTime` — (function) — `GetTime() -> number` — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:596`
+- `GetWorldToScreen2D` — (function) — `GetWorldToScreen2D(position: Vector2, camera: Camera2D) -> Vector2` — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:603`
+- `L.WorldQuadtree` — (usertype) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/core/game.cpp:277`
+- `OpenURL` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:456`
+- `Vector2` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:489`
+- `Vector3` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:503`
+- `Vector4` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:518`
+- `WorldQuadtree` — (usertype) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/core/game.cpp:333`
+- `add_layer_shader` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/core/game.cpp:846`
+- `ai.clear_trace` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1886`
+- `ai.dump_blackboard` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:2086`
+- `ai.dump_plan` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:2030`
+- `ai.dump_worldstate` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:2014`
+- `ai.force_interrupt` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1644`
+- `ai.get_all_atoms` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:2049`
+- `ai.get_blackboard` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1590`
+- `ai.get_entity_ai_def` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1080`
+- `ai.get_goap_state` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1921`
+- `ai.get_trace_events` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1845`
+- `ai.get_worldstate` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1120`
+- `ai.has_plan` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:2070`
+- `ai.list_goap_entities` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1902`
+- `ai.list_lua_files` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1647`
+- `ai.patch_goal` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1154`
+- `ai.patch_worldstate` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1147`
+- `ai.pause_ai_system` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1088`
+- `ai.report_goal_selection` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1798`
+- `ai.resume_ai_system` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1101`
+- `ai.set_goal` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1138`
+- `ai.set_worldstate` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1114`
+- `ai` — (usertype) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1072`
+- `animation_system` — (usertype) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/anim_system.cpp:91`
+- `bb.clear` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1299`
+- `bb.decay` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1381`
+- `bb.get_vec2` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1326`
+- `bb.get` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1212`
+- `bb.has` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1286`
+- `bb.inc` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1352`
+- `bb.set_vec2` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1312`
+- `bb.set` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1165`
+- `clearCallbacks` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/anim_system.cpp:399`
+- `clear_layer_shaders` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/core/game.cpp:848`
+- `component_cache.get` — (function) — `component_cache.get(entity, component_type) -> table|nil` — `/data/projects/TheGameJamTemplate@cass-memory-update/assets/scripts/core/component_cache.lua:198`
+- `component_cache.invalidate` — (function) — `component_cache.invalidate(entity, component_type?) -> nil` — `/data/projects/TheGameJamTemplate@cass-memory-update/assets/scripts/core/component_cache.lua:331`
+- `createAnimatedObjectWithTransform` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/anim_system.cpp:137`
+- `createStillAnimationFromSpriteUUID` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/anim_system.cpp:233`
+- `create_ai_entity_with_overrides` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1630`
+- `create_ai_entity` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1607`
+- `entt.registry.add_script` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:178`
+- `entt.registry.alive` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:172`
+- `entt.registry.any_of` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:181`
+- `entt.registry.clear` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:183`
+- `entt.registry.create` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:175`
+- `entt.registry.current` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:174`
+- `entt.registry.destroy` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:176`
+- `entt.registry.emplace` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:177`
+- `entt.registry.get` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:182`
+- `entt.registry.has` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:180`
+- `entt.registry.new` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:170`
+- `entt.registry.orphan` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:184`
+- `entt.registry.remove` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:179`
+- `entt.registry.runtime_view` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:185`
+- `entt.registry.size` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:171`
+- `entt.registry.valid` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:173`
+- `entt.registry` — (usertype) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_system.cpp:263`
+- `entt.runtime_view.contains` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:65`
+- `entt.runtime_view.each` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:66`
+- `entt.runtime_view.size_hint` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:64`
+- `entt.runtime_view` — (usertype) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_system.cpp:239`
+- `getCurrentFrame` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/anim_system.cpp:284`
+- `getEntityByAlias` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_bindings.cpp:18`
+- `getFrameCount` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/anim_system.cpp:291`
+- `getNinepatchUIBorderInfo` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/anim_system.cpp:116`
+- `getProgress` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/anim_system.cpp:305`
+- `getSpriteFrameTextureInfo` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:670`
+- `get_shader_texture_batching` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:618`
+- `globalShaderUniforms` — (property) — `ShaderUniformComponent` — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:663`
+- `globals.camera` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:652`
+- `globals.currentGameState` — (property) — `GameState` — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:470`
+- `globals.cursor` — (property) — `Entity` — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:660`
+- `globals.gameWorldContainerEntity` — (property) — `Entity` — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:657`
+- `globals.inputState` — (property) — `InputState` — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:473`
+- `globals.isGamePaused` — (property) — `boolean` — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:466`
+- `globals.screenHeight` — (property) — `integer` — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:469`
+- `globals.screenWidth` — (property) — `integer` — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:468`
+- `globals.screenWipe` — (property) — `boolean` — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:467`
+- `isKeyPressed` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_bindings.cpp:271`
+- `isPlaying` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/anim_system.cpp:298`
+- `layers` — (usertype) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/core/game.cpp:821`
+- `log_debug` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_bindings.cpp:31`
+- `log_error` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_bindings.cpp:94`
+- `log_info` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_bindings.cpp:158`
+- `log_warn` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_bindings.cpp:210`
+- `onAnimationEnd` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/anim_system.cpp:391`
+- `onFrameChange` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/anim_system.cpp:375`
+- `onLoopComplete` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/anim_system.cpp:383`
+- `ownership_table.getBuildId` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/core/ownership.cpp:61`
+- `ownership_table.getBuildSignature` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/core/ownership.cpp:65`
+- `ownership_table.getDiscordLink` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/core/ownership.cpp:53`
+- `ownership_table.getItchLink` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/core/ownership.cpp:57`
+- `ownership_table.validate` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/core/ownership.cpp:70`
+- `pauseGame` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_bindings.cpp:261`
+- `pause` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/anim_system.cpp:319`
+- `play` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/anim_system.cpp:312`
+- `qmod.box` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/core/game.cpp:321`
+- `quadtree` — (usertype) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/core/game.cpp:349`
+- `remove_layer_shader` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/core/game.cpp:847`
+- `replaceAnimatedObjectOnEntity` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/anim_system.cpp:165`
+- `resetAnimationUIRenderScale` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/anim_system.cpp:267`
+- `resizeAnimationObjectToFit` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/anim_system.cpp:275`
+- `resizeAnimationObjectsInEntityToFitAndCenterUI` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/anim_system.cpp:254`
+- `resizeAnimationObjectsInEntityToFit` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/anim_system.cpp:242`
+- `seekFrame` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/anim_system.cpp:341`
+- `sense.all_in_range` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1509`
+- `sense.distance` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1424`
+- `sense.nearest` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1436`
+- `sense.position` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1411`
+- `setDirection` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/anim_system.cpp:359`
+- `setEntityAlias` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_bindings.cpp:19`
+- `setFGColorForAllAnimationObjects` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/anim_system.cpp:124`
+- `setLoopCount` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/anim_system.cpp:367`
+- `setPaletteTexture` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:702`
+- `setSpeed` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/anim_system.cpp:333`
+- `set_flip` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/anim_system.cpp:215`
+- `set_horizontal_flip` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/anim_system.cpp:102`
+- `set_shader_texture_batching` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:613`
+- `setupAnimatedObjectOnEntity` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/anim_system.cpp:201`
+- `stop` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/anim_system.cpp:326`
+- `toggle_flip` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/anim_system.cpp:224`
+- `unpauseGame` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_bindings.cpp:262`
+- `update` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/anim_system.cpp:109`
+<!-- AUTOGEN:END binding_list -->

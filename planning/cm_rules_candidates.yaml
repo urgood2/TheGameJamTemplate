@@ -1,0 +1,2343 @@
+schema_version: '1.0'
+generated_at: null
+last_import_at: null
+categories:
+  ui-patterns: UI construction patterns
+  ui-gotchas: UI pitfalls and requirements
+  ecs-patterns: Entity/component patterns
+  ecs-gotchas: Entity lifecycle pitfalls
+  lua-bindings: C++ binding usage
+  physics-patterns: Physics system patterns
+  combat-patterns: Combat system patterns
+  rendering-patterns: Draw/layer patterns
+  timer-patterns: Timer system patterns
+  signal-patterns: Signal system patterns
+  wand-patterns: Wand system patterns
+rules:
+- rule_id: ui-gotcha-001
+  category: ui-gotchas
+  rule_text: When calling ChildBuilder.setOffset on UIBox children, always call ui.box.RenewAlignment afterward to recompute
+    layout.
+  doc_id: pattern:ui.uibox_alignment.renew_after_offset
+  test_ref: test_ui_patterns.lua::ui.uibox_alignment.renew_after_offset
+  quirks_anchor: renewalignment-after-setoffset
+  status: verified
+  severity: error
+  tags:
+  - ui
+  - layout
+  - ordering
+  rationale: Offsets update InheritedProperties only; layout does not reflow until RenewAlignment.
+  example_good: |
+    ChildBuilder.setOffset(child, 100, 50)
+    ui.box.RenewAlignment(registry, container)
+  example_bad: |
+    ChildBuilder.setOffset(child, 100, 50) -- missing RenewAlignment
+  last_verified_commit: pending
+- rule_id: ui-gotcha-002
+  category: ui-gotchas
+  rule_text: After ui.box.ReplaceChildren, call ui.box.RenewAlignment to reflow the new child layout.
+  doc_id: pattern:ui.uibox_alignment.renew_after_replacechildren
+  test_ref: test_ui_patterns.lua::ui.uibox_alignment.renew_after_replacechildren
+  quirks_anchor: renewalignment-after-replacechildren
+  status: verified
+  severity: error
+  tags:
+  - ui
+  - layout
+  - ordering
+  rationale: ReplaceChildren invalidates cached alignment for the UIBox tree.
+  example_good: |
+    ui.box.ReplaceChildren(container, newChildren)
+    ui.box.RenewAlignment(registry, container)
+  example_bad: |
+    ui.box.ReplaceChildren(container, newChildren) -- missing RenewAlignment
+  last_verified_commit: pending
+- rule_id: ui-gotcha-003
+  category: ui-gotchas
+  rule_text: After spawning a UIBox, add the default state tag using ui.box.AddStateTagToUIBox.
+  doc_id: pattern:ui.statetag.add_after_spawn
+  test_ref: test_ui_patterns.lua::ui.statetag.add_after_spawn
+  quirks_anchor: addstatetagto-uibox-after-spawn
+  status: verified
+  severity: warn
+  tags:
+  - ui
+  - state
+  rationale: State tags are not assigned automatically on spawn.
+  example_good: |
+    ui.box.AddStateTagToUIBox(registry, entity, "default_state")
+  example_bad: |
+    -- no state tags added after spawn
+  last_verified_commit: pending
+- rule_id: ui-gotcha-004
+  category: ui-gotchas
+  rule_text: After ui.box.ReplaceChildren, reapply state tags with ui.box.AddStateTagToUIBox.
+  doc_id: pattern:ui.statetag.add_after_replacechildren
+  test_ref: test_ui_patterns.lua::ui.statetag.add_after_replacechildren
+  quirks_anchor: addstatetagto-uibox-after-replacechildren
+  status: verified
+  severity: error
+  tags:
+  - ui
+  - state
+  - ordering
+  rationale: ReplaceChildren clears state tags from the UIBox tree.
+  example_good: |
+    ui.box.ReplaceChildren(container, newChildren)
+    ui.box.AddStateTagToUIBox(registry, container, "default_state")
+  example_bad: |
+    ui.box.ReplaceChildren(container, newChildren) -- missing AddStateTagToUIBox
+  last_verified_commit: pending
+- rule_id: ui-gotcha-005
+  category: ui-gotchas
+  rule_text: If UI state tags stop responding, reapply tags after any UI tree rebuild.
+  doc_id: pattern:ui.statetag.persistence_check
+  test_ref: test_ui_patterns.lua::ui.statetag.persistence_check
+  quirks_anchor: state-tag-persistence-check
+  status: verified
+  severity: warn
+  tags:
+  - ui
+  - state
+  rationale: Rebuilds can silently clear state tags.
+  example_good: |
+    ui.box.AddStateTagToUIBox(registry, panel, "default_state")
+  example_bad: |
+    -- rely on previous tags after ReplaceChildren
+  last_verified_commit: pending
+- rule_id: ui-gotcha-006
+  category: ui-gotchas
+  rule_text: When moving a UI panel, update both Transform and UIBoxComponent.uiRoot, then RenewAlignment.
+  doc_id: pattern:ui.visibility.move_transform_and_uiroot
+  test_ref: test_ui_patterns.lua::ui.visibility.move_transform_and_uiroot
+  quirks_anchor: move-both-transform-and-uiboxcomponent-uiroot
+  status: verified
+  severity: error
+  tags:
+  - ui
+  - visibility
+  rationale: Children align to uiRoot, not the panel Transform alone.
+  example_good: |
+    t.actualX, t.actualY = x, y
+    root_t.actualX, root_t.actualY = x, y
+    ui.box.RenewAlignment(registry, entity)
+  example_bad: |
+    t.actualX, t.actualY = x, y -- uiRoot not moved
+  last_verified_commit: pending
+- rule_id: ui-gotcha-007
+  category: ui-gotchas
+  rule_text: Moving only the panel Transform does not move UIBox children; always move uiRoot too.
+  doc_id: pattern:ui.visibility.transform_only_fails
+  test_ref: test_ui_patterns.lua::ui.visibility.transform_only_fails
+  quirks_anchor: transform-only-move-fails
+  status: verified
+  severity: error
+  tags:
+  - ui
+  - visibility
+  rationale: uiRoot remains at old coordinates, so children stay behind.
+  example_good: |
+    root_t.actualX, root_t.actualY = x, y
+  example_bad: |
+    t.actualX, t.actualY = x, y -- children stay at old position
+  last_verified_commit: pending
+- rule_id: ui-gotcha-008
+  category: ui-gotchas
+  rule_text: Clickable UI elements must include ScreenSpaceCollisionMarker.
+  doc_id: pattern:ui.collision.screenspace_marker_required
+  test_ref: test_ui_patterns.lua::ui.collision.screenspace_marker_required
+  quirks_anchor: marker-required-for-clicks
+  status: verified
+  severity: error
+  tags:
+  - ui
+  - input
+  rationale: Input system ignores entities without the marker.
+  example_good: |
+    registry:emplace(entity, ScreenSpaceCollisionMarker {})
+  example_bad: |
+    -- no ScreenSpaceCollisionMarker
+  last_verified_commit: pending
+- rule_id: ui-gotcha-009
+  category: ui-gotchas
+  rule_text: After UI rebuilds, ensure ScreenSpaceCollisionMarker is still attached for click detection.
+  doc_id: pattern:ui.collision.click_detection_with_marker
+  test_ref: test_ui_patterns.lua::ui.collision.click_detection_with_marker
+  quirks_anchor: click-detection-with-marker
+  status: verified
+  severity: warn
+  tags:
+  - ui
+  - input
+  rationale: Markers can be lost when rebuilding UI trees.
+  example_good: |
+    registry:emplace(button, ScreenSpaceCollisionMarker {})
+  example_bad: |
+    ui.box.ReplaceChildren(container, children) -- marker lost
+  last_verified_commit: pending
+- rule_id: ui-gotcha-010
+  category: ui-gotchas
+  rule_text: Without ScreenSpaceCollisionMarker, clicks should be treated as no-ops.
+  doc_id: pattern:ui.collision.click_fails_without_marker
+  test_ref: test_ui_patterns.lua::ui.collision.click_fails_without_marker
+  quirks_anchor: click-fails-without-marker
+  status: verified
+  severity: warn
+  tags:
+  - ui
+  - input
+  rationale: No marker means no screen-space collision.
+  example_good: |
+    -- expect no click callbacks without marker
+  example_bad: |
+    -- assume click will work without marker
+  last_verified_commit: pending
+- rule_id: ui-gotcha-011
+  category: ui-gotchas
+  rule_text: Grid teardown must clear itemRegistry, call grid:destroy(), and dsl.cleanupGrid.
+  doc_id: pattern:ui.grid.cleanup_all_three_registries
+  test_ref: test_ui_patterns.lua::ui.grid.cleanup_all_three_registries
+  quirks_anchor: cleanup-all-three-registries
+  status: verified
+  severity: error
+  tags:
+  - ui
+  - grid
+  - cleanup
+  rationale: Partial cleanup leaves orphaned items or stale state.
+  example_good: |
+    itemRegistry = {}
+    grid:destroy()
+    dsl.cleanupGrid(registry)
+  example_bad: |
+    grid:destroy() -- registry cleanup skipped
+  last_verified_commit: pending
+- rule_id: ui-gotcha-012
+  category: ui-gotchas
+  rule_text: Destroying a grid without clearing itemRegistry leaves stale items.
+  doc_id: pattern:ui.grid.cleanup_partial_fails
+  test_ref: test_ui_patterns.lua::ui.grid.cleanup_partial_fails
+  quirks_anchor: partial-cleanup-fails
+  status: verified
+  severity: warn
+  tags:
+  - ui
+  - grid
+  - cleanup
+  rationale: itemRegistry still points to destroyed grid slots.
+  example_good: |
+    itemRegistry = {}
+  example_bad: |
+    grid:destroy() -- itemRegistry still populated
+  last_verified_commit: pending
+- rule_id: ui-gotcha-013
+  category: ui-gotchas
+  rule_text: HUD elements must use DrawCommandSpace.Screen to stay fixed.
+  doc_id: pattern:ui.drawspace.screen_fixed_hud
+  test_ref: test_ui_patterns.lua::ui.drawspace.screen_fixed_hud
+  quirks_anchor: screen-draw-space-stays-fixed
+  status: verified
+  severity: error
+  tags:
+  - ui
+  - rendering
+  rationale: World draw space follows camera movement.
+  example_good: |
+    command_buffer.queueDraw(layers.ui, fn, z, layer.DrawCommandSpace.Screen)
+  example_bad: |
+    command_buffer.queueDraw(layers.ui, fn, z, layer.DrawCommandSpace.World)
+  last_verified_commit: pending
+- rule_id: ui-gotcha-014
+  category: ui-gotchas
+  rule_text: DrawCommandSpace.World will make UI elements follow camera movement.
+  doc_id: pattern:ui.drawspace.world_follows_camera
+  test_ref: test_ui_patterns.lua::ui.drawspace.world_follows_camera
+  quirks_anchor: world-draw-space-follows-camera
+  status: verified
+  severity: warn
+  tags:
+  - ui
+  - rendering
+  rationale: World space coordinates are camera-relative.
+  example_good: |
+    -- use World only for diegetic UI
+  example_bad: |
+    -- using World for HUD
+  last_verified_commit: pending
+- rule_id: ui-gotcha-015
+  category: ui-gotchas
+  rule_text: Never add ObjectAttachedToUITag to draggable UI elements.
+  doc_id: pattern:ui.attached.never_on_draggables
+  test_ref: test_ui_patterns.lua::ui.attached.never_on_draggables
+  quirks_anchor: never-use-objectattachedto-uitag-on-draggables
+  status: verified
+  severity: error
+  tags:
+  - ui
+  - drag
+  rationale: The tag forces attachment behavior that conflicts with drag logic.
+  example_good: |
+    -- leave draggables without ObjectAttachedToUITag
+  example_bad: |
+    registry:emplace(card, ObjectAttachedToUITag {})
+  last_verified_commit: pending
+- rule_id: ui-gotcha-016
+  category: ui-gotchas
+  rule_text: ObjectAttachedToUITag is safe for non-draggable attachments that should follow a parent.
+  doc_id: pattern:ui.attached.correct_usage
+  test_ref: test_ui_patterns.lua::ui.attached.correct_usage
+  quirks_anchor: objectattachedto-uitag-correct-usage
+  status: verified
+  severity: info
+  tags:
+  - ui
+  - attachment
+  rationale: Static attachments can use the tag without conflicting drag behavior.
+  example_good: |
+    registry:emplace(badge, ObjectAttachedToUITag {})
+  example_bad: |
+    -- missing tag for static attachment
+  last_verified_commit: pending
+- rule_id: ui-gotcha-017
+  category: ui-gotchas
+  rule_text: ChildBuilder.setOffset should be followed by RenewAlignment even for small offsets.
+  doc_id: pattern:ui.childbuilder.setoffset_requires_renew
+  test_ref: test_ui_patterns.lua::ui.uibox_alignment.renew_after_offset
+  quirks_anchor: setoffset-requires-renewalignment
+  status: verified
+  severity: warn
+  tags:
+  - ui
+  - layout
+  rationale: Layout caches do not update on offset change alone.
+  example_good: |
+    ChildBuilder.setOffset(child, 5, 5)
+    ui.box.RenewAlignment(registry, container)
+  example_bad: |
+    ChildBuilder.setOffset(child, 5, 5) -- no RenewAlignment
+  last_verified_commit: pending
+- rule_id: ui-gotcha-018
+  category: ui-gotchas
+  rule_text: ReplaceChildren on nested UI trees requires reapplying state tags on the new root.
+  doc_id: pattern:ui.statetag.add_after_replacechildren
+  test_ref: test_ui_patterns.lua::ui.statetag.add_after_replacechildren
+  quirks_anchor: addstatetagto-uibox-after-replacechildren
+  status: verified
+  severity: warn
+  tags:
+  - ui
+  - state
+  rationale: Nested trees inherit state tags from the root UIBox.
+  example_good: |
+    ui.box.AddStateTagToUIBox(registry, root, "default_state")
+  example_bad: |
+    ui.box.ReplaceChildren(root, children) -- missing tag reapply
+  last_verified_commit: pending
+- rule_id: ui-gotcha-019
+  category: ui-gotchas
+  rule_text: Slot decorations on sprite panels must be scaled with ui_scale.SPRITE_SCALE.
+  doc_id: pattern:ui.slot_decorations.sprite_panel_scaling
+  test_ref: manual
+  quirks_anchor: slot-decorations-and-sprite-panels
+  status: unverified
+  severity: info
+  tags:
+  - ui
+  - decorations
+  rationale: Decorations are applied in sprite-space and must use sprite scale.
+  example_good: |
+    gridConfig.slotDecorations = { { sprite = "decor.png" } }
+  example_bad: |
+    -- decorations applied without sprite scaling
+  last_verified_commit: pending
+- rule_id: ui-gotcha-020
+  category: ui-gotchas
+  rule_text: UIBox creation should add default state tags immediately after spawn.
+  doc_id: pattern:ui.uibox_creation.basic
+  test_ref: test_ui_patterns.lua::ui.statetag.add_after_spawn
+  quirks_anchor: uibox-creation-and-configuration
+  status: verified
+  severity: warn
+  tags:
+  - ui
+  - state
+  rationale: UIBoxes do not auto-assign state tags on spawn.
+  example_good: |
+    local box = dsl.spawn(pos, def)
+    ui.box.AddStateTagToUIBox(registry, box, "default_state")
+  example_bad: |
+    local box = dsl.spawn(pos, def) -- missing state tag
+  last_verified_commit: pending
+- rule_id: ui-pattern-001
+  category: ui-patterns
+  rule_text: When calling ChildBuilder.setOffset on UIBox children, always call ui.box.RenewAlignment afterward to recompute
+    layout.
+  doc_id: pattern:ui.uibox_alignment.renew_after_offset
+  test_ref: test_ui_patterns.lua::ui.uibox_alignment.renew_after_offset
+  quirks_anchor: renewalignment-after-setoffset
+  status: verified
+  severity: info
+  tags:
+  - ui
+  - pattern
+  rationale: Offsets update InheritedProperties only; layout does not reflow until RenewAlignment.
+  example_good: |
+    ChildBuilder.setOffset(child, 100, 50)
+    ui.box.RenewAlignment(registry, container)
+  example_bad: |
+    ChildBuilder.setOffset(child, 100, 50) -- missing RenewAlignment
+  last_verified_commit: pending
+- rule_id: ui-pattern-002
+  category: ui-patterns
+  rule_text: After ui.box.ReplaceChildren, call ui.box.RenewAlignment to reflow the new child layout.
+  doc_id: pattern:ui.uibox_alignment.renew_after_replacechildren
+  test_ref: test_ui_patterns.lua::ui.uibox_alignment.renew_after_replacechildren
+  quirks_anchor: renewalignment-after-replacechildren
+  status: verified
+  severity: info
+  tags:
+  - ui
+  - pattern
+  rationale: ReplaceChildren invalidates cached alignment for the UIBox tree.
+  example_good: |
+    ui.box.ReplaceChildren(container, newChildren)
+    ui.box.RenewAlignment(registry, container)
+  example_bad: |
+    ui.box.ReplaceChildren(container, newChildren) -- missing RenewAlignment
+  last_verified_commit: pending
+- rule_id: ui-pattern-003
+  category: ui-patterns
+  rule_text: After spawning a UIBox, add the default state tag using ui.box.AddStateTagToUIBox.
+  doc_id: pattern:ui.statetag.add_after_spawn
+  test_ref: test_ui_patterns.lua::ui.statetag.add_after_spawn
+  quirks_anchor: addstatetagto-uibox-after-spawn
+  status: verified
+  severity: info
+  tags:
+  - ui
+  - pattern
+  rationale: State tags are not assigned automatically on spawn.
+  example_good: |
+    ui.box.AddStateTagToUIBox(registry, entity, "default_state")
+  example_bad: |
+    -- no state tags added after spawn
+  last_verified_commit: pending
+- rule_id: ui-pattern-004
+  category: ui-patterns
+  rule_text: After ui.box.ReplaceChildren, reapply state tags with ui.box.AddStateTagToUIBox.
+  doc_id: pattern:ui.statetag.add_after_replacechildren
+  test_ref: test_ui_patterns.lua::ui.statetag.add_after_replacechildren
+  quirks_anchor: addstatetagto-uibox-after-replacechildren
+  status: verified
+  severity: info
+  tags:
+  - ui
+  - pattern
+  rationale: ReplaceChildren clears state tags from the UIBox tree.
+  example_good: |
+    ui.box.ReplaceChildren(container, newChildren)
+    ui.box.AddStateTagToUIBox(registry, container, "default_state")
+  example_bad: |
+    ui.box.ReplaceChildren(container, newChildren) -- missing AddStateTagToUIBox
+  last_verified_commit: pending
+- rule_id: ui-pattern-005
+  category: ui-patterns
+  rule_text: If UI state tags stop responding, reapply tags after any UI tree rebuild.
+  doc_id: pattern:ui.statetag.persistence_check
+  test_ref: test_ui_patterns.lua::ui.statetag.persistence_check
+  quirks_anchor: state-tag-persistence-check
+  status: verified
+  severity: info
+  tags:
+  - ui
+  - pattern
+  rationale: Rebuilds can silently clear state tags.
+  example_good: |
+    ui.box.AddStateTagToUIBox(registry, panel, "default_state")
+  example_bad: |
+    -- rely on previous tags after ReplaceChildren
+  last_verified_commit: pending
+- rule_id: ui-pattern-006
+  category: ui-patterns
+  rule_text: When moving a UI panel, update both Transform and UIBoxComponent.uiRoot, then RenewAlignment.
+  doc_id: pattern:ui.visibility.move_transform_and_uiroot
+  test_ref: test_ui_patterns.lua::ui.visibility.move_transform_and_uiroot
+  quirks_anchor: move-both-transform-and-uiboxcomponent-uiroot
+  status: verified
+  severity: info
+  tags:
+  - ui
+  - pattern
+  rationale: Children align to uiRoot, not the panel Transform alone.
+  example_good: |
+    t.actualX, t.actualY = x, y
+    root_t.actualX, root_t.actualY = x, y
+    ui.box.RenewAlignment(registry, entity)
+  example_bad: |
+    t.actualX, t.actualY = x, y -- uiRoot not moved
+  last_verified_commit: pending
+- rule_id: ui-pattern-007
+  category: ui-patterns
+  rule_text: Clickable UI elements must include ScreenSpaceCollisionMarker.
+  doc_id: pattern:ui.collision.screenspace_marker_required
+  test_ref: test_ui_patterns.lua::ui.collision.screenspace_marker_required
+  quirks_anchor: marker-required-for-clicks
+  status: verified
+  severity: info
+  tags:
+  - ui
+  - pattern
+  rationale: Input system ignores entities without the marker.
+  example_good: |
+    registry:emplace(entity, ScreenSpaceCollisionMarker {})
+  example_bad: |
+    -- no ScreenSpaceCollisionMarker
+  last_verified_commit: pending
+- rule_id: ui-pattern-008
+  category: ui-patterns
+  rule_text: After UI rebuilds, ensure ScreenSpaceCollisionMarker is still attached for click detection.
+  doc_id: pattern:ui.collision.click_detection_with_marker
+  test_ref: test_ui_patterns.lua::ui.collision.click_detection_with_marker
+  quirks_anchor: click-detection-with-marker
+  status: verified
+  severity: info
+  tags:
+  - ui
+  - pattern
+  rationale: Markers can be lost when rebuilding UI trees.
+  example_good: |
+    registry:emplace(button, ScreenSpaceCollisionMarker {})
+  example_bad: |
+    ui.box.ReplaceChildren(container, children) -- marker lost
+  last_verified_commit: pending
+- rule_id: ui-pattern-009
+  category: ui-patterns
+  rule_text: Grid teardown must clear itemRegistry, call grid:destroy(), and dsl.cleanupGrid.
+  doc_id: pattern:ui.grid.cleanup_all_three_registries
+  test_ref: test_ui_patterns.lua::ui.grid.cleanup_all_three_registries
+  quirks_anchor: cleanup-all-three-registries
+  status: verified
+  severity: info
+  tags:
+  - ui
+  - pattern
+  rationale: Partial cleanup leaves orphaned items or stale state.
+  example_good: |
+    itemRegistry = {}
+    grid:destroy()
+    dsl.cleanupGrid(registry)
+  example_bad: |
+    grid:destroy() -- registry cleanup skipped
+  last_verified_commit: pending
+- rule_id: ui-pattern-010
+  category: ui-patterns
+  rule_text: DrawCommandSpace.World will make UI elements follow camera movement.
+  doc_id: pattern:ui.drawspace.world_follows_camera
+  test_ref: test_ui_patterns.lua::ui.drawspace.world_follows_camera
+  quirks_anchor: world-draw-space-follows-camera
+  status: verified
+  severity: info
+  tags:
+  - ui
+  - pattern
+  rationale: World space coordinates are camera-relative.
+  example_good: |
+    -- use World only for diegetic UI
+  example_bad: |
+    -- using World for HUD
+  last_verified_commit: pending
+- rule_id: ui-pattern-011
+  category: ui-patterns
+  rule_text: HUD elements must use DrawCommandSpace.Screen to stay fixed.
+  doc_id: pattern:ui.drawspace.screen_fixed_hud
+  test_ref: test_ui_patterns.lua::ui.drawspace.screen_fixed_hud
+  quirks_anchor: screen-draw-space-stays-fixed
+  status: verified
+  severity: info
+  tags:
+  - ui
+  - pattern
+  rationale: World draw space follows camera movement.
+  example_good: |
+    command_buffer.queueDraw(layers.ui, fn, z, layer.DrawCommandSpace.Screen)
+  example_bad: |
+    command_buffer.queueDraw(layers.ui, fn, z, layer.DrawCommandSpace.World)
+  last_verified_commit: pending
+- rule_id: ui-pattern-012
+  category: ui-patterns
+  rule_text: ObjectAttachedToUITag is safe for non-draggable attachments that should follow a parent.
+  doc_id: pattern:ui.attached.correct_usage
+  test_ref: test_ui_patterns.lua::ui.attached.correct_usage
+  quirks_anchor: objectattachedto-uitag-correct-usage
+  status: verified
+  severity: info
+  tags:
+  - ui
+  - pattern
+  rationale: Static attachments can use the tag without conflicting drag behavior.
+  example_good: |
+    registry:emplace(badge, ObjectAttachedToUITag {})
+  example_bad: |
+    -- missing tag for static attachment
+  last_verified_commit: pending
+- rule_id: ecs-gotcha-001
+  category: ecs-gotchas
+  rule_text: When attaching scripts, always assign data before attach_ecs because attach-time hooks read fields immediately.
+  doc_id: pattern:ecs.attach_ecs.assign_before_attach
+  test_ref: test_entity_lifecycle.lua::ecs.attach_ecs.assign_before_attach
+  quirks_anchor: ecs-attach-ecs-timing
+  status: verified
+  severity: error
+  tags:
+  - ecs
+  - lifecycle
+  - ordering
+  rationale: Attach-time hooks (run_custom_func, addStateTag, etc.) read fields immediately. Late data means hooks see nil.
+  example_good: |
+    local script = EntityType {}
+    script.data = { value = 42 }    -- Assign FIRST
+    script:attach_ecs { ... }       -- Attach LAST
+  example_bad: |
+    local script = EntityType {}
+    script:attach_ecs { ... }       -- Attach first
+    script.data = { value = 42 }    -- DATA LOST!
+  last_verified_commit: pending
+- rule_id: ecs-gotcha-002
+  category: ecs-gotchas
+  rule_text: Never store gameplay data on GameObject components; use the script table instead to keep data discoverable.
+  doc_id: pattern:ecs.gameobject.no_data_storage
+  test_ref: test_entity_lifecycle.lua::ecs.gameobject.no_data_storage
+  quirks_anchor: ecs-gameobject-restrictions
+  status: verified
+  severity: error
+  tags:
+  - ecs
+  - component
+  - storage
+  rationale: GameObject is a component wrapper. Script data must live on the script table to be discoverable via safe_script_get/getScriptTableFromEntityID.
+  example_good: |
+    local script = safe_script_get(entity)
+    script.myData = { hp = 10 }
+  example_bad: |
+    local gameObj = component_cache.get(entity, GameObject)
+    gameObj.myData = {}  -- WRONG: bypasses script table system
+  last_verified_commit: pending
+- rule_id: ecs-gotcha-003
+  category: ecs-gotchas
+  rule_text: Keep LuaJIT functions under ~200 locals by grouping values in tables to avoid crashes.
+  doc_id: pattern:ecs.luajit.200_local_limit
+  test_ref: test_entity_lifecycle.lua::ecs.luajit.200_local_limit
+  quirks_anchor: ecs-luajit-locals
+  status: verified
+  severity: error
+  tags:
+  - luajit
+  - performance
+  - limits
+  rationale: LuaJIT crashes at runtime if a function has more than 200 locals.
+  example_good: |
+    local sounds = { footsteps = { ... } }
+  example_bad: |
+    local sound1, sound2, sound3 = ...  -- 197 more = CRASH
+  last_verified_commit: pending
+- rule_id: ecs-gotcha-004
+  category: ecs-gotchas
+  rule_text: Invalidate component_cache entries on destroy or component removal to prevent stale data.
+  doc_id: pattern:ecs.cache.invalidation
+  test_ref: test_entity_lifecycle.lua::ecs.cache.invalidation
+  quirks_anchor: ecs-component-cache
+  status: verified
+  severity: error
+  tags:
+  - ecs
+  - cache
+  - cleanup
+  rationale: Cached lookups are fast but must be invalidated on destroy/remove to avoid stale data.
+  example_good: |
+    component_cache.invalidate(eid, Transform)
+  example_bad: |
+    -- Forget to invalidate after destroy; cache returns stale data
+  last_verified_commit: pending
+- rule_id: ecs-gotcha-005
+  category: ecs-gotchas
+  rule_text: When attach_ecs is called before assigning script data, attach-time hooks read nil values and initialization
+    fails.
+  doc_id: pattern:ecs.attach_ecs.assign_after_attach_fails
+  test_ref: test_entity_lifecycle.lua::ecs.attach_ecs.assign_after_attach_fails
+  quirks_anchor: attach-ecs-assign-after-fails
+  status: verified
+  severity: error
+  tags:
+  - ecs
+  - lifecycle
+  - ordering
+  rationale: attach_ecs captures data immediately; assigning after the call does not backfill state.
+  example_good: |
+    local script = EntityType {}
+    script.data = { value = 42 }
+    script:attach_ecs { create_new = false, existing_entity = eid }
+  example_bad: |
+    local script = EntityType {}
+    script:attach_ecs { create_new = false, existing_entity = eid }
+    script.data = { value = 42 }
+  last_verified_commit: pending
+- rule_id: ecs-gotcha-006
+  category: ecs-gotchas
+  rule_text: When ensure_entity returns false, stop processing because the entity id is invalid and any component access will
+    be stale.
+  doc_id: pattern:ecs.validate.ensure_entity_invalid
+  test_ref: test_entity_lifecycle.lua::ecs.validate.ensure_entity_invalid
+  quirks_anchor: ensure-entity-invalid
+  status: verified
+  severity: error
+  tags:
+  - ecs
+  - validation
+  rationale: Invalid entity ids can point to destroyed entities; guard before using component_cache.
+  example_good: |
+    if not ensure_entity(eid) then return end
+    local t = component_cache.get(eid, Transform)
+  example_bad: |
+    local t = component_cache.get(eid, Transform) -- no validity check
+  last_verified_commit: pending
+- rule_id: ecs-gotcha-007
+  category: ecs-gotchas
+  rule_text: When ensure_scripted_entity returns false, do not access script tables because ScriptComponent is missing.
+  doc_id: pattern:ecs.validate.ensure_scripted_entity_invalid
+  test_ref: test_entity_lifecycle.lua::ecs.validate.ensure_scripted_entity_invalid
+  quirks_anchor: ensure-scripted-entity-invalid
+  status: verified
+  severity: error
+  tags:
+  - ecs
+  - validation
+  rationale: Script lookups fail when ScriptComponent is missing; guard with ensure_scripted_entity.
+  example_good: |
+    if not ensure_scripted_entity(eid) then return end
+    local script = safe_script_get(eid)
+  example_bad: |
+    local script = safe_script_get(eid) -- eid may not be scripted
+  last_verified_commit: pending
+- rule_id: ecs-gotcha-008
+  category: ecs-gotchas
+  rule_text: When script_field is used with a nil default, treat missing fields as intentional nil to avoid unintended fallbacks.
+  doc_id: pattern:ecs.access.script_field_nil
+  test_ref: test_entity_lifecycle.lua::ecs.access.script_field_nil
+  quirks_anchor: script-field-nil-default
+  status: verified
+  severity: warn
+  tags:
+  - ecs
+  - scripting
+  rationale: script_field returns the provided default even if it is nil; callers must handle nil explicitly.
+  example_good: |
+    local mana = script_field(eid, "mana", nil)
+    if mana == nil then return end
+  example_bad: |
+    local mana = script_field(eid, "mana", nil)
+    -- assume mana is always a number
+  last_verified_commit: pending
+- rule_id: ecs-gotcha-009
+  category: ecs-gotchas
+  rule_text: When safe_script_get returns nil, abort script logic because the entity is invalid or missing ScriptComponent.
+  doc_id: pattern:ecs.access.safe_script_get_invalid
+  test_ref: test_entity_lifecycle.lua::ecs.access.safe_script_get_invalid
+  quirks_anchor: safe-script-get-invalid
+  status: verified
+  severity: error
+  tags:
+  - ecs
+  - scripting
+  rationale: safe_script_get fails on invalid entities; continuing with nil scripts causes crashes.
+  example_good: |
+    local script = safe_script_get(eid)
+    if not script then return end
+  example_bad: |
+    local script = safe_script_get(eid)
+    script.health = 0 -- script may be nil
+  last_verified_commit: pending
+- rule_id: ecs-gotcha-010
+  category: ecs-gotchas
+  rule_text: When an entity is destroyed, cached component handles become invalid and must not be reused.
+  doc_id: pattern:ecs.cache.get_after_destroy
+  test_ref: test_entity_lifecycle.lua::ecs.cache.get_after_destroy
+  quirks_anchor: cache-get-after-destroy
+  status: verified
+  severity: error
+  tags:
+  - ecs
+  - cache
+  rationale: component_cache entries are invalidated on destroy; reuse leads to stale data.
+  example_good: |
+    registry:destroy(eid)
+    component_cache.invalidate(eid)
+    local t = component_cache.get(eid, Transform) -- nil
+  example_bad: |
+    local t = component_cache.get(eid, Transform)
+    registry:destroy(eid)
+    -- reusing t after destroy
+  last_verified_commit: pending
+- rule_id: ecs-gotcha-011
+  category: ecs-gotchas
+  rule_text: When destroying entities, clear external references because stale ids can reappear and point at new entities.
+  doc_id: pattern:ecs.destroy.no_stale_refs
+  test_ref: test_entity_lifecycle.lua::ecs.destroy.no_stale_refs
+  quirks_anchor: destroy-no-stale-refs
+  status: verified
+  severity: error
+  tags:
+  - ecs
+  - lifecycle
+  rationale: Entt can reuse ids; stale references can mutate unrelated entities.
+  example_good: |
+    registry:destroy(eid)
+    component_cache.invalidate(eid)
+    ref = nil
+  example_bad: |
+    registry:destroy(eid)
+    -- ref still used later
+  last_verified_commit: pending
+- rule_id: ecs-gotcha-012
+  category: ecs-gotchas
+  rule_text: When destroying entities, remove timer, signal, and parent-child references to avoid callbacks hitting dead entities.
+  doc_id: pattern:ecs.destroy.cleanup_all_references
+  test_ref: test_entity_lifecycle.lua::ecs.destroy.cleanup_all_references
+  quirks_anchor: destroy-cleanup-references
+  status: verified
+  severity: error
+  tags:
+  - ecs
+  - lifecycle
+  - cleanup
+  rationale: Timers and signals keep references alive after destroy; cleanup prevents late callbacks.
+  example_good: |
+    registry:destroy(eid)
+    timer.cancel(timer_handle)
+    entity_links.unlink(eid)
+  example_bad: |
+    registry:destroy(eid)
+    -- timers and links still reference eid
+  last_verified_commit: pending
+- rule_id: ecs-gotcha-013
+  category: ecs-gotchas
+  rule_text: When destroying entities, invalidate cached components so later lookups do not return stale data.
+  doc_id: pattern:ecs.destroy.cache_cleared
+  test_ref: test_entity_lifecycle.lua::ecs.destroy.cache_cleared
+  quirks_anchor: destroy-cache-cleared
+  status: verified
+  severity: error
+  tags:
+  - ecs
+  - cache
+  rationale: component_cache can retain destroyed entries unless explicitly cleared.
+  example_good: |
+    registry:destroy(eid)
+    component_cache.invalidate(eid)
+  example_bad: |
+    registry:destroy(eid)
+    -- cache not invalidated
+  last_verified_commit: pending
+- rule_id: ecs-gotcha-014
+  category: ecs-gotchas
+  rule_text: When ensure_entity receives entt_null or nil, treat it as invalid and return early.
+  doc_id: pattern:ecs.validate.ensure_entity_nil
+  test_ref: 'Unverified: no test'
+  quirks_anchor: ensure-entity-nil
+  status: unverified
+  severity: warn
+  tags:
+  - ecs
+  - validation
+  rationale: nil or entt_null ids are never valid; short-circuit prevents invalid lookups.
+  example_good: |
+    if not ensure_entity(eid) then return end
+  example_bad: |
+    local t = component_cache.get(eid, Transform) -- eid may be nil
+  last_verified_commit: pending
+- rule_id: ecs-gotcha-015
+  category: ecs-gotchas
+  rule_text: When safe_script_get returns nil for entt_null, skip logic because the entity is not scripted.
+  doc_id: pattern:ecs.access.safe_script_get_nil
+  test_ref: 'Unverified: no test'
+  quirks_anchor: safe-script-get-nil
+  status: unverified
+  severity: warn
+  tags:
+  - ecs
+  - scripting
+  rationale: nil scripts are expected for invalid ids; continue only when script exists.
+  example_good: |
+    local script = safe_script_get(eid)
+    if not script then return end
+  example_bad: |
+    local script = safe_script_get(eid)
+    script:tick()
+  last_verified_commit: pending
+- rule_id: ecs-pattern-001
+  category: ecs-patterns
+  rule_text: Use Node.quick or EntityBuilder.validated to guarantee data assignment occurs before attach_ecs.
+  doc_id: pattern:ecs.attach_ecs.assign_before_attach
+  test_ref: test_entity_lifecycle.lua::ecs.attach_ecs.assign_before_attach
+  quirks_anchor: ecs-attach-ecs-timing
+  status: verified
+  severity: info
+  tags:
+  - ecs
+  - pattern
+  - builder
+  rationale: Builder patterns enforce correct ordering automatically.
+  example_good: |
+    EntityBuilder.validated({data = {value = 42}}):attach()
+  example_bad: |
+    -- Manual ordering is error-prone
+  last_verified_commit: pending
+- rule_id: ecs-pattern-002
+  category: ecs-patterns
+  rule_text: Store entity state on the script table so safe_script_get and script_field can retrieve it reliably.
+  doc_id: pattern:ecs.gameobject.script_table_usage
+  test_ref: test_entity_lifecycle.lua::ecs.gameobject.script_table_usage
+  quirks_anchor: ecs-gameobject-restrictions
+  status: verified
+  severity: info
+  tags:
+  - ecs
+  - pattern
+  - storage
+  rationale: Script table is the canonical location for entity state.
+  example_good: |
+    script.hp = 100
+    script.data.inventory = {}
+  example_bad: |
+    -- Storing elsewhere makes data undiscoverable
+  last_verified_commit: pending
+- rule_id: ecs-pattern-003
+  category: ecs-patterns
+  rule_text: Validate entity ids with ensure_entity before component or script access to avoid invalid lookups.
+  doc_id: pattern:ecs.validate.ensure_entity_valid
+  test_ref: test_entity_lifecycle.lua::ecs.validate.ensure_entity_valid
+  quirks_anchor: ecs-validation
+  status: verified
+  severity: warn
+  tags:
+  - ecs
+  - validation
+  - safety
+  rationale: Accessing invalid entities causes crashes or undefined behavior.
+  example_good: |
+    if ensure_entity(eid) then
+        local t = component_cache.get(eid, Transform)
+    end
+  example_bad: |
+    local t = component_cache.get(eid, Transform)  -- might be invalid
+  last_verified_commit: pending
+- rule_id: ecs-pattern-004
+  category: ecs-patterns
+  rule_text: Use ensure_scripted_entity when you require a ScriptComponent to avoid nil script tables.
+  doc_id: pattern:ecs.validate.ensure_scripted_entity_valid
+  test_ref: test_entity_lifecycle.lua::ecs.validate.ensure_scripted_entity_valid
+  quirks_anchor: ecs-validation
+  status: verified
+  severity: warn
+  tags:
+  - ecs
+  - validation
+  - script
+  rationale: ensure_scripted_entity confirms both validity AND script presence.
+  example_good: |
+    if ensure_scripted_entity(eid) then
+        local script = safe_script_get(eid)
+    end
+  example_bad: |
+    local script = safe_script_get(eid)  -- might return nil
+  last_verified_commit: pending
+- rule_id: ecs-pattern-005
+  category: ecs-patterns
+  rule_text: Use safe_script_get for script access and guard nil to prevent crashes on destroyed entities.
+  doc_id: pattern:ecs.access.safe_script_get_valid
+  test_ref: test_entity_lifecycle.lua::ecs.access.safe_script_get_valid
+  quirks_anchor: ecs-script-access
+  status: verified
+  severity: info
+  tags:
+  - ecs
+  - access
+  - safety
+  rationale: safe_script_get returns nil on invalid/missing script instead of crashing.
+  example_good: |
+    local script = safe_script_get(eid)
+    if script then ... end
+  example_bad: |
+    local script = getScriptTableFromEntityID(eid)  -- crashes on invalid
+  last_verified_commit: pending
+- rule_id: ecs-pattern-006
+  category: ecs-patterns
+  rule_text: Prefer script_field(eid, field, default) to avoid nil checks and express defaults explicitly.
+  doc_id: pattern:ecs.access.script_field_default
+  test_ref: test_entity_lifecycle.lua::ecs.access.script_field_default
+  quirks_anchor: ecs-script-access
+  status: verified
+  severity: info
+  tags:
+  - ecs
+  - access
+  - defaults
+  rationale: script_field safely returns default without manual nil handling.
+  example_good: |
+    local health = script_field(eid, "health", 100)
+  example_bad: |
+    local script = safe_script_get(eid)
+    local health = script and script.health or 100
+  last_verified_commit: pending
+- rule_id: ecs-pattern-007
+  category: ecs-patterns
+  rule_text: Use component_cache.get for hot paths instead of registry:get to avoid redundant lookups.
+  doc_id: pattern:ecs.cache.get_valid
+  test_ref: test_entity_lifecycle.lua::ecs.cache.get_valid
+  quirks_anchor: ecs-component-cache
+  status: verified
+  severity: info
+  tags:
+  - ecs
+  - cache
+  - performance
+  rationale: Cached lookups are O(1) after first access.
+  example_good: |
+    local transform = component_cache.get(eid, Transform)
+  example_bad: |
+    local transform = registry:get(Transform, eid)  -- always lookups
+  last_verified_commit: pending
+- rule_id: ecs-pattern-008
+  category: ecs-patterns
+  rule_text: After destroying entities, clear cached components to avoid stale reference bugs.
+  doc_id: pattern:ecs.destroy.cache_cleared
+  test_ref: test_entity_lifecycle.lua::ecs.destroy.cache_cleared
+  quirks_anchor: ecs-destruction
+  status: verified
+  severity: warn
+  tags:
+  - ecs
+  - destroy
+  - cache
+  rationale: Destruction must clear caches to avoid returning dead data.
+  example_good: |
+    registry:destroy(eid)
+    component_cache.invalidate(eid)
+  example_bad: |
+    registry:destroy(eid)  -- cache still returns old transform
+  last_verified_commit: pending
+- rule_id: ecs-pattern-009
+  category: ecs-patterns
+  rule_text: On destruction, revalidate references with safe_script_get or ensure_entity before reuse.
+  doc_id: pattern:ecs.destroy.no_stale_refs
+  test_ref: test_entity_lifecycle.lua::ecs.destroy.no_stale_refs
+  quirks_anchor: ecs-destruction
+  status: verified
+  severity: warn
+  tags:
+  - ecs
+  - destroy
+  - validation
+  rationale: Always re-validate before using old ids after any destruction.
+  example_good: |
+    if safe_script_get(ref) == nil then
+        -- reference is stale, handle accordingly
+    end
+  example_bad: |
+    -- Assume ref is still valid after unrelated destroy
+  last_verified_commit: pending
+- rule_id: ecs-pattern-010
+  category: ecs-patterns
+  rule_text: Destroy-then-recreate should produce a clean script table with no cached garbage.
+  doc_id: pattern:ecs.destroy.then_recreate
+  test_ref: test_entity_lifecycle.lua::ecs.destroy.then_recreate
+  quirks_anchor: ecs-destruction
+  status: verified
+  severity: info
+  tags:
+  - ecs
+  - destroy
+  - recreation
+  rationale: New entity after destroy must have fresh state, not cached remnants.
+  example_good: |
+    destroy_entity(old_eid)
+    local new = create_entity()  -- clean slate
+  example_bad: |
+    -- New entity somehow has old entity's cached data
+  last_verified_commit: pending
+- rule_id: ecs-pattern-011
+  category: ecs-patterns
+  rule_text: Remove invalid entity references from registries or lists after destroy to avoid stale lookups.
+  doc_id: pattern:ecs.destroy.cleanup_all_references
+  test_ref: test_entity_lifecycle.lua::ecs.destroy.cleanup_all_references
+  quirks_anchor: ecs-destruction
+  status: verified
+  severity: warn
+  tags:
+  - ecs
+  - destroy
+  - cleanup
+  rationale: Entity lists/registries must be cleaned to prevent iterating over destroyed entities.
+  example_good: |
+    enemy_list = filter(enemy_list, ensure_entity)
+  example_bad: |
+    -- enemy_list still contains destroyed entity ids
+  last_verified_commit: pending
+- rule_id: ecs-pattern-012
+  category: ecs-patterns
+  rule_text: When initializing scripts, pass data in the constructor so init can read it before attach_ecs.
+  doc_id: pattern:ecs.init.data_preserved
+  test_ref: test_entity_lifecycle.lua::ecs.init.data_preserved
+  quirks_anchor: ecs-init-data-preserved
+  status: verified
+  severity: info
+  tags:
+  - ecs
+  - lifecycle
+  rationale: init runs during construction; passing data up front preserves initialization state.
+  example_good: |
+    local ScriptType = Node:extend()
+    local script = ScriptType { data = { value = 99 } }
+    script:attach_ecs { create_new = false, existing_entity = eid }
+  example_bad: |
+    local ScriptType = Node:extend()
+    local script = ScriptType {}
+    script.data = { value = 99 }
+    script:attach_ecs { create_new = false, existing_entity = eid }
+  last_verified_commit: pending
+- rule_id: ecs-pattern-013
+  category: ecs-patterns
+  rule_text: When repeatedly accessing components, use component_cache for fast lookups and invalidate on teardown.
+  doc_id: pattern:ecs.cache.performance
+  test_ref: test_entity_lifecycle.lua::ecs.cache.performance
+  quirks_anchor: ecs-cache-performance
+  status: verified
+  severity: info
+  tags:
+  - ecs
+  - cache
+  - performance
+  rationale: Cached lookups avoid repeated registry access while remaining safe when invalidated.
+  example_good: |
+    local t = component_cache.get(eid, Transform)
+    component_cache.invalidate(eid, Transform)
+  example_bad: |
+    local t = registry:get(eid, Transform) -- repeated each frame
+  last_verified_commit: pending
+- rule_id: ecs-pattern-014
+  category: ecs-patterns
+  rule_text: When creating entities with standard fields, use EntityBuilder.create with a config table for consistent setup.
+  doc_id: pattern:core.entity_builder.create
+  test_ref: test_core_patterns.lua::core.entity_builder.create
+  quirks_anchor: entity-builder-create
+  status: verified
+  severity: info
+  tags:
+  - ecs
+  - builder
+  rationale: EntityBuilder.create wires sprite, transform, and data in one deterministic call.
+  example_good: |
+    local entity, script = EntityBuilder.create({ sprite = "kobold", position = { x = 100, y = 200 }, size = { 64, 64 }, data = { health = 100 } })
+  example_bad: |
+    -- manual component wiring scattered across files
+  last_verified_commit: pending
+- rule_id: ecs-pattern-015
+  category: ecs-patterns
+  rule_text: When chaining entity creation steps, use the EntityBuilder fluent API for readable setup.
+  doc_id: pattern:core.entity_builder.fluent_chain
+  test_ref: test_core_patterns.lua::core.entity_builder.fluent_chain
+  quirks_anchor: entity-builder-fluent-chain
+  status: verified
+  severity: info
+  tags:
+  - ecs
+  - builder
+  rationale: Fluent chaining keeps spawn parameters together and avoids partial setup.
+  example_good: |
+    local entity = EntityBuilder.new("wall_tile"):at(wx, wy):build()
+  example_bad: |
+    -- create entity then patch fields across multiple functions
+  last_verified_commit: pending
+- rule_id: ecs-pattern-016
+  category: ecs-patterns
+  rule_text: When attaching child entities, use ChildBuilder to configure inherited properties and offsets in one flow.
+  doc_id: pattern:core.child_builder.attach_offset
+  test_ref: test_core_patterns.lua::core.child_builder.attach_offset
+  quirks_anchor: child-builder-attach-offset
+  status: verified
+  severity: info
+  tags:
+  - ecs
+  - builder
+  - hierarchy
+  rationale: ChildBuilder sets role inheritance, offsets, and alignment correctly for child entities.
+  example_good: |
+    ChildBuilder.for_entity(child):attachTo(parent):offset(20, 0):rotateWith():apply()
+  example_bad: |
+    -- attach child without inherited properties configured
+  last_verified_commit: pending
+- rule_id: binding-001
+  category: lua-bindings
+  rule_text: When calling physics_table.set_collision_tags, pass arguments in the bound order because the C++ binding does
+    not validate optional parameters.
+  doc_id: pattern:binding.physics_table.set_collision_tags
+  test_ref: 'Unverified: binding docs only'
+  quirks_anchor: binding-physics_table.set_collision_tags
+  status: unverified
+  severity: info
+  tags:
+  - binding
+  - lua
+  rationale: Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+  example_good: |
+    -- physics_table.set_collision_tags usage
+    physics_table.set_collision_tags(...)
+  example_bad: |
+    -- missing required args
+    physics_table.set_collision_tags()
+  last_verified_commit: pending
+- rule_id: binding-002
+  category: lua-bindings
+  rule_text: When calling physics_table.enable_collision_between, pass arguments in the bound order because the C++ binding
+    does not validate optional parameters.
+  doc_id: pattern:binding.physics_table.enable_collision_between
+  test_ref: 'Unverified: binding docs only'
+  quirks_anchor: binding-physics_table.enable_collision_between
+  status: unverified
+  severity: info
+  tags:
+  - binding
+  - lua
+  rationale: Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+  example_good: |
+    -- physics_table.enable_collision_between usage
+    physics_table.enable_collision_between(...)
+  example_bad: |
+    -- missing required args
+    physics_table.enable_collision_between()
+  last_verified_commit: pending
+- rule_id: binding-003
+  category: lua-bindings
+  rule_text: When calling physics_table.disable_collision_between, pass arguments in the bound order because the C++ binding
+    does not validate optional parameters.
+  doc_id: pattern:binding.physics_table.disable_collision_between
+  test_ref: 'Unverified: binding docs only'
+  quirks_anchor: binding-physics_table.disable_collision_between
+  status: unverified
+  severity: info
+  tags:
+  - binding
+  - lua
+  rationale: Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+  example_good: |
+    -- physics_table.disable_collision_between usage
+    physics_table.disable_collision_between(...)
+  example_bad: |
+    -- missing required args
+    physics_table.disable_collision_between()
+  last_verified_commit: pending
+- rule_id: binding-004
+  category: lua-bindings
+  rule_text: When calling physics_table.update_collision_masks_for, pass arguments in the bound order because the C++ binding
+    does not validate optional parameters.
+  doc_id: pattern:binding.physics_table.update_collision_masks_for
+  test_ref: 'Unverified: binding docs only'
+  quirks_anchor: binding-physics_table.update_collision_masks_for
+  status: unverified
+  severity: info
+  tags:
+  - binding
+  - lua
+  rationale: Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+  example_good: |
+    -- physics_table.update_collision_masks_for usage
+    physics_table.update_collision_masks_for(...)
+  example_bad: |
+    -- missing required args
+    physics_table.update_collision_masks_for()
+  last_verified_commit: pending
+- rule_id: binding-005
+  category: lua-bindings
+  rule_text: When calling physics_table.reapply_all_filters, pass arguments in the bound order because the C++ binding does
+    not validate optional parameters.
+  doc_id: pattern:binding.physics_table.reapply_all_filters
+  test_ref: 'Unverified: binding docs only'
+  quirks_anchor: binding-physics_table.reapply_all_filters
+  status: unverified
+  severity: info
+  tags:
+  - binding
+  - lua
+  rationale: Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+  example_good: |
+    -- physics_table.reapply_all_filters usage
+    physics_table.reapply_all_filters(...)
+  example_bad: |
+    -- missing required args
+    physics_table.reapply_all_filters()
+  last_verified_commit: pending
+- rule_id: binding-006
+  category: lua-bindings
+  rule_text: When calling physics_table.on_pair_begin, pass arguments in the bound order because the C++ binding does not
+    validate optional parameters.
+  doc_id: pattern:binding.physics_table.on_pair_begin
+  test_ref: 'Unverified: binding docs only'
+  quirks_anchor: binding-physics_table.on_pair_begin
+  status: unverified
+  severity: info
+  tags:
+  - binding
+  - lua
+  rationale: Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+  example_good: |
+    -- physics_table.on_pair_begin usage
+    physics_table.on_pair_begin(...)
+  example_bad: |
+    -- missing required args
+    physics_table.on_pair_begin()
+  last_verified_commit: pending
+- rule_id: binding-007
+  category: lua-bindings
+  rule_text: When calling physics_table.on_pair_separate, pass arguments in the bound order because the C++ binding does not
+    validate optional parameters.
+  doc_id: pattern:binding.physics_table.on_pair_separate
+  test_ref: 'Unverified: binding docs only'
+  quirks_anchor: binding-physics_table.on_pair_separate
+  status: unverified
+  severity: info
+  tags:
+  - binding
+  - lua
+  rationale: Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+  example_good: |
+    -- physics_table.on_pair_separate usage
+    physics_table.on_pair_separate(...)
+  example_bad: |
+    -- missing required args
+    physics_table.on_pair_separate()
+  last_verified_commit: pending
+- rule_id: binding-008
+  category: lua-bindings
+  rule_text: When calling physics_table.on_pair_presolve, pass arguments in the bound order because the C++ binding does not
+    validate optional parameters.
+  doc_id: pattern:binding.physics_table.on_pair_presolve
+  test_ref: 'Unverified: binding docs only'
+  quirks_anchor: binding-physics_table.on_pair_presolve
+  status: unverified
+  severity: info
+  tags:
+  - binding
+  - lua
+  rationale: Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+  example_good: |
+    -- physics_table.on_pair_presolve usage
+    physics_table.on_pair_presolve(...)
+  example_bad: |
+    -- missing required args
+    physics_table.on_pair_presolve()
+  last_verified_commit: pending
+- rule_id: binding-009
+  category: lua-bindings
+  rule_text: When calling physics_table.on_pair_postsolve, pass arguments in the bound order because the C++ binding does
+    not validate optional parameters.
+  doc_id: pattern:binding.physics_table.on_pair_postsolve
+  test_ref: 'Unverified: binding docs only'
+  quirks_anchor: binding-physics_table.on_pair_postsolve
+  status: unverified
+  severity: info
+  tags:
+  - binding
+  - lua
+  rationale: Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+  example_good: |
+    -- physics_table.on_pair_postsolve usage
+    physics_table.on_pair_postsolve(...)
+  example_bad: |
+    -- missing required args
+    physics_table.on_pair_postsolve()
+  last_verified_commit: pending
+- rule_id: binding-010
+  category: lua-bindings
+  rule_text: When calling physics_table.clear_pair_handlers, pass arguments in the bound order because the C++ binding does
+    not validate optional parameters.
+  doc_id: pattern:binding.physics_table.clear_pair_handlers
+  test_ref: 'Unverified: binding docs only'
+  quirks_anchor: binding-physics_table.clear_pair_handlers
+  status: unverified
+  severity: info
+  tags:
+  - binding
+  - lua
+  rationale: Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+  example_good: |
+    -- physics_table.clear_pair_handlers usage
+    physics_table.clear_pair_handlers(...)
+  example_bad: |
+    -- missing required args
+    physics_table.clear_pair_handlers()
+  last_verified_commit: pending
+- rule_id: binding-011
+  category: lua-bindings
+  rule_text: When calling t.after, pass arguments in the bound order because the C++ binding does not validate optional parameters.
+  doc_id: pattern:binding.t.after
+  test_ref: 'Unverified: binding docs only'
+  quirks_anchor: binding-t.after
+  status: unverified
+  severity: info
+  tags:
+  - binding
+  - lua
+  rationale: Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+  example_good: |
+    -- t.after usage
+    t.after(...)
+  example_bad: |
+    -- missing required args
+    t.after()
+  last_verified_commit: pending
+- rule_id: binding-012
+  category: lua-bindings
+  rule_text: When calling t.every, pass arguments in the bound order because the C++ binding does not validate optional parameters.
+  doc_id: pattern:binding.t.every
+  test_ref: 'Unverified: binding docs only'
+  quirks_anchor: binding-t.every
+  status: unverified
+  severity: info
+  tags:
+  - binding
+  - lua
+  rationale: Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+  example_good: |
+    -- t.every usage
+    t.every(...)
+  example_bad: |
+    -- missing required args
+    t.every()
+  last_verified_commit: pending
+- rule_id: binding-013
+  category: lua-bindings
+  rule_text: When calling t.cancel, pass arguments in the bound order because the C++ binding does not validate optional parameters.
+  doc_id: pattern:binding.t.cancel
+  test_ref: 'Unverified: binding docs only'
+  quirks_anchor: binding-t.cancel
+  status: unverified
+  severity: info
+  tags:
+  - binding
+  - lua
+  rationale: Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+  example_good: |
+    -- t.cancel usage
+    t.cancel(...)
+  example_bad: |
+    -- missing required args
+    t.cancel()
+  last_verified_commit: pending
+- rule_id: binding-014
+  category: lua-bindings
+  rule_text: When calling t.update, pass arguments in the bound order because the C++ binding does not validate optional parameters.
+  doc_id: pattern:binding.t.update
+  test_ref: 'Unverified: binding docs only'
+  quirks_anchor: binding-t.update
+  status: unverified
+  severity: info
+  tags:
+  - binding
+  - lua
+  rationale: Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+  example_good: |
+    -- t.update usage
+    t.update(...)
+  example_bad: |
+    -- missing required args
+    t.update()
+  last_verified_commit: pending
+- rule_id: binding-015
+  category: lua-bindings
+  rule_text: When calling t.run_every_render_frame, pass arguments in the bound order because the C++ binding does not validate
+    optional parameters.
+  doc_id: pattern:binding.t.run_every_render_frame
+  test_ref: 'Unverified: binding docs only'
+  quirks_anchor: binding-t.run_every_render_frame
+  status: unverified
+  severity: info
+  tags:
+  - binding
+  - lua
+  rationale: Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+  example_good: |
+    -- t.run_every_render_frame usage
+    t.run_every_render_frame(...)
+  example_bad: |
+    -- missing required args
+    t.run_every_render_frame()
+  last_verified_commit: pending
+- rule_id: binding-016
+  category: lua-bindings
+  rule_text: When calling sp.loadFromFile, pass arguments in the bound order because the C++ binding does not validate optional
+    parameters.
+  doc_id: pattern:binding.sp.loadfromfile
+  test_ref: 'Unverified: binding docs only'
+  quirks_anchor: binding-sp.loadfromfile
+  status: unverified
+  severity: info
+  tags:
+  - binding
+  - lua
+  rationale: Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+  example_good: |
+    -- sp.loadFromFile usage
+    sp.loadFromFile(...)
+  example_bad: |
+    -- missing required args
+    sp.loadFromFile()
+  last_verified_commit: pending
+- rule_id: binding-017
+  category: lua-bindings
+  rule_text: When calling sh.loadShadersFromJSON, pass arguments in the bound order because the C++ binding does not validate
+    optional parameters.
+  doc_id: pattern:binding.sh.loadshadersfromjson
+  test_ref: 'Unverified: binding docs only'
+  quirks_anchor: binding-sh.loadshadersfromjson
+  status: unverified
+  severity: info
+  tags:
+  - binding
+  - lua
+  rationale: Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+  example_good: |
+    -- sh.loadShadersFromJSON usage
+    sh.loadShadersFromJSON(...)
+  example_bad: |
+    -- missing required args
+    sh.loadShadersFromJSON()
+  last_verified_commit: pending
+- rule_id: binding-018
+  category: lua-bindings
+  rule_text: When calling addShaderPass, pass arguments in the bound order because the C++ binding does not validate optional
+    parameters.
+  doc_id: pattern:binding.addshaderpass
+  test_ref: 'Unverified: binding docs only'
+  quirks_anchor: binding-addshaderpass
+  status: unverified
+  severity: info
+  tags:
+  - binding
+  - lua
+  rationale: Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+  example_good: |
+    -- addShaderPass usage
+    addShaderPass(...)
+  example_bad: |
+    -- missing required args
+    addShaderPass()
+  last_verified_commit: pending
+- rule_id: binding-019
+  category: lua-bindings
+  rule_text: When calling layerTbl.CreateLayer, pass arguments in the bound order because the C++ binding does not validate
+    optional parameters.
+  doc_id: pattern:binding.layertbl.createlayer
+  test_ref: 'Unverified: binding docs only'
+  quirks_anchor: binding-layertbl.createlayer
+  status: unverified
+  severity: info
+  tags:
+  - binding
+  - lua
+  rationale: Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+  example_good: |
+    -- layerTbl.CreateLayer usage
+    layerTbl.CreateLayer(...)
+  example_bad: |
+    -- missing required args
+    layerTbl.CreateLayer()
+  last_verified_commit: pending
+- rule_id: binding-020
+  category: lua-bindings
+  rule_text: When calling layerTbl.UpdateLayerZIndex, pass arguments in the bound order because the C++ binding does not validate
+    optional parameters.
+  doc_id: pattern:binding.layertbl.updatelayerzindex
+  test_ref: 'Unverified: binding docs only'
+  quirks_anchor: binding-layertbl.updatelayerzindex
+  status: unverified
+  severity: info
+  tags:
+  - binding
+  - lua
+  rationale: Binding signatures are strict; argument mismatches cause runtime errors or silent misbehavior.
+  example_good: |
+    -- layerTbl.UpdateLayerZIndex usage
+    layerTbl.UpdateLayerZIndex(...)
+  example_bad: |
+    -- missing required args
+    layerTbl.UpdateLayerZIndex()
+  last_verified_commit: pending
+- rule_id: physics-pattern-001
+  category: physics-patterns
+  rule_text: When setting up physics on an entity, use PhysicsBuilder to apply colliders, tags, and masks in one chain.
+  doc_id: pattern:core.physics_builder.basic_chain
+  test_ref: test_core_patterns.lua::core.physics_builder.basic_chain
+  quirks_anchor: physics-builder-basic-chain
+  status: verified
+  severity: info
+  tags:
+  - physics
+  - builder
+  rationale: PhysicsBuilder centralizes collider configuration and reduces missing tag or mask setup.
+  example_good: |
+    PhysicsBuilder.for_entity(entity):circle():tag("projectile"):bullet():collideWith({ "enemy", "WORLD" }):apply()
+  example_bad: |
+    -- collider configured without tags or masks
+  last_verified_commit: pending
+- rule_id: physics-pattern-002
+  category: physics-patterns
+  rule_text: When creating a physics world, pass meter scale and gravity at initialization for consistent simulation units.
+  doc_id: pattern:physics.world_create
+  test_ref: 'Unverified: docs only'
+  quirks_anchor: physics-world-create
+  status: unverified
+  severity: info
+  tags:
+  - physics
+  - world
+  rationale: Consistent unit scaling avoids mismatched forces and collider sizes.
+  example_good: |
+    local world = physics.PhysicsWorld(registry, 64.0, 0.0, 900.0)
+  example_bad: |
+    local world = physics.PhysicsWorld(registry, 1.0, 0.0, 900.0) -- inconsistent scale
+  last_verified_commit: pending
+- rule_id: physics-pattern-003
+  category: physics-patterns
+  rule_text: When defining collision categories, register tags and masks before spawning bodies so filters apply to existing
+    shapes.
+  doc_id: pattern:physics.set_collision_tags
+  test_ref: 'Unverified: docs only'
+  quirks_anchor: physics-set-collision-tags
+  status: unverified
+  severity: info
+  tags:
+  - physics
+  - collision
+  rationale: Collision tags must be defined before filters are applied to shapes.
+  example_good: |
+    physics.set_collision_tags(world, { "player", "enemy", "terrain" })
+  example_bad: |
+    -- spawn shapes before tags are registered
+  last_verified_commit: pending
+- rule_id: physics-pattern-004
+  category: physics-patterns
+  rule_text: When enabling collisions between groups, use enable_collision_between or enable_collision_between_many to keep
+    masks consistent.
+  doc_id: pattern:physics.enable_collision_between
+  test_ref: 'Unverified: docs only'
+  quirks_anchor: physics-enable-collision-between
+  status: unverified
+  severity: info
+  tags:
+  - physics
+  - collision
+  rationale: Centralizing mask updates prevents missing pairings when new tags are added.
+  example_good: |
+    physics.enable_collision_between(world, "player", { "enemy", "terrain" })
+  example_bad: |
+    -- manually toggling shape masks without updating tag list
+  last_verified_commit: pending
+- rule_id: physics-pattern-005
+  category: physics-patterns
+  rule_text: When changing mask rules at runtime, call update_collision_masks_for to reapply filters to existing shapes.
+  doc_id: pattern:physics.update_collision_masks_for
+  test_ref: 'Unverified: docs only'
+  quirks_anchor: physics-update-collision-masks
+  status: unverified
+  severity: info
+  tags:
+  - physics
+  - collision
+  rationale: Existing shapes keep old filters unless masks are reapplied.
+  example_good: |
+    physics.update_collision_masks_for(world, "player", { "enemy", "terrain" })
+  example_bad: |
+    -- update tag list without reapplying masks
+  last_verified_commit: pending
+- rule_id: physics-pattern-006
+  category: physics-patterns
+  rule_text: When adding colliders, create physics first and then call AddCollider with correct shape and sensor flags.
+  doc_id: pattern:physics.add_collider
+  test_ref: 'Unverified: docs only'
+  quirks_anchor: physics-add-collider
+  status: unverified
+  severity: info
+  tags:
+  - physics
+  - collision
+  rationale: Collider creation depends on physics bodies; calling before setup creates invalid shapes.
+  example_good: |
+    physics.AddCollider(world, entity, "player", "rectangle", 32, 48, 0, 0, false)
+  example_bad: |
+    physics.AddCollider(world, entity, "player", "rectangle", 32, 48, 0, 0, false) -- no body
+  last_verified_commit: pending
+- rule_id: physics-pattern-007
+  category: physics-patterns
+  rule_text: When adding extra shapes, use add_shape_to_entity so the body and primary shape stay consistent.
+  doc_id: pattern:physics.add_shape_to_entity
+  test_ref: 'Unverified: docs only'
+  quirks_anchor: physics-add-shape
+  status: unverified
+  severity: info
+  tags:
+  - physics
+  - collision
+  rationale: Multi-shape bodies require consistent bookkeeping that helpers provide.
+  example_good: |
+    physics.add_shape_to_entity(world, entity, "player", "circle", 16, 0, 0, 0, false)
+  example_bad: |
+    -- manually attach shapes without tracking indices
+  last_verified_commit: pending
+- rule_id: physics-pattern-008
+  category: physics-patterns
+  rule_text: When running segment queries, use the provided callback pattern so you can terminate or continue properly.
+  doc_id: pattern:physics.segment_query_with_callback
+  test_ref: 'Unverified: docs only'
+  quirks_anchor: physics-segment-query
+  status: unverified
+  severity: info
+  tags:
+  - physics
+  - query
+  rationale: Segment queries require callback return values to control traversal.
+  example_good: |
+    physics.segment_query_first(world, from, to, function(hit) return true end)
+  example_bad: |
+    -- ignoring callback return value
+  last_verified_commit: pending
+- rule_id: physics-pattern-009
+  category: physics-patterns
+  rule_text: When converting raycast hits, use entity_from_ptr to map shape or body pointers back to entities.
+  doc_id: pattern:physics.raycast_entity_from_ptr
+  test_ref: 'Unverified: docs only'
+  quirks_anchor: physics-entity-from-ptr
+  status: unverified
+  severity: info
+  tags:
+  - physics
+  - query
+  rationale: Hit structures expose raw pointers; entity_from_ptr restores entity ids safely.
+  example_good: |
+    local e = physics.entity_from_ptr(hit.shape)
+  example_bad: |
+    -- treat hit.shape as an entity id
+  last_verified_commit: pending
+- rule_id: physics-pattern-010
+  category: physics-patterns
+  rule_text: When creating physics from transforms, call create_physics_for_transform with proper shape config.
+  doc_id: pattern:physics.create_physics_for_transform
+  test_ref: 'Unverified: docs only'
+  quirks_anchor: physics-create-from-transform
+  status: unverified
+  severity: info
+  tags:
+  - physics
+  - setup
+  rationale: Transform-backed physics ensures colliders align with visual positions.
+  example_good: |
+    physics.create_physics_for_transform(registry, PhysicsManager, entity, { shape = "rectangle", tag = "player" })
+  example_bad: |
+    -- manually create body without syncing to transform
+  last_verified_commit: pending
+- rule_id: rendering-pattern-001
+  category: rendering-patterns
+  rule_text: When applying shaders, use ShaderBuilder.add(...):apply() to ensure the pipeline component is attached.
+  doc_id: pattern:core.shader_builder.add_apply
+  test_ref: test_core_patterns.lua::core.shader_builder.add_apply
+  quirks_anchor: shader-builder-add-apply
+  status: verified
+  severity: info
+  tags:
+  - rendering
+  - shader
+  rationale: ShaderBuilder ensures shader passes are attached and configured before draw.
+  example_good: |
+    ShaderBuilder.for_entity(entity):add("3d_skew_holo"):apply()
+  example_bad: |
+    -- set shader name without attaching ShaderPipelineComponent
+  last_verified_commit: pending
+- rule_id: rendering-pattern-002
+  category: rendering-patterns
+  rule_text: When ordering draw layers, update layer Z indices so higher layers draw last.
+  doc_id: pattern:render.layer_z_order
+  test_ref: 'Unverified: docs only'
+  quirks_anchor: render-layer-z-order
+  status: unverified
+  severity: info
+  tags:
+  - rendering
+  - layers
+  rationale: Explicit Z ordering prevents UI or effects from drawing under gameplay layers.
+  example_good: |
+    layerTbl.UpdateLayerZIndex(layers.ui, 200)
+  example_bad: |
+    -- rely on default ordering without updating Z
+  last_verified_commit: pending
+- rule_id: rendering-pattern-003
+  category: rendering-patterns
+  rule_text: When issuing draw calls, enqueue them through the command buffer for deterministic render order.
+  doc_id: pattern:render.command_buffer.queue_draw
+  test_ref: 'Unverified: docs only'
+  quirks_anchor: render-command-buffer
+  status: unverified
+  severity: info
+  tags:
+  - rendering
+  - commands
+  rationale: Command buffers centralize draw order and layer sorting.
+  example_good: |
+    command_buffer.queueDraw(layers.ui, fn, 0, layer.DrawCommandSpace.Screen)
+  example_bad: |
+    -- call draw functions directly outside command buffer
+  last_verified_commit: pending
+- rule_id: rendering-pattern-004
+  category: rendering-patterns
+  rule_text: When drawing HUD elements, use DrawCommandSpace.Screen to keep them fixed to the viewport.
+  doc_id: pattern:render.drawcommandspace.screen
+  test_ref: 'Unverified: docs only'
+  quirks_anchor: render-draw-space-screen
+  status: unverified
+  severity: info
+  tags:
+  - rendering
+  - ui
+  rationale: Screen space commands ignore camera transforms and keep UI stable.
+  example_good: |
+    command_buffer.queueDraw(layers.ui, fn, 0, layer.DrawCommandSpace.Screen)
+  example_bad: |
+    command_buffer.queueDraw(layers.ui, fn, 0, layer.DrawCommandSpace.World)
+  last_verified_commit: pending
+- rule_id: rendering-pattern-005
+  category: rendering-patterns
+  rule_text: When drawing world-space visuals, use DrawCommandSpace.World so they track camera transforms.
+  doc_id: pattern:render.drawcommandspace.world
+  test_ref: 'Unverified: docs only'
+  quirks_anchor: render-draw-space-world
+  status: unverified
+  severity: info
+  tags:
+  - rendering
+  - world
+  rationale: World space commands align with camera and physics coordinates.
+  example_good: |
+    command_buffer.queueDraw(layers.world, fn, 0, layer.DrawCommandSpace.World)
+  example_bad: |
+    -- using screen space for world objects
+  last_verified_commit: pending
+- rule_id: rendering-pattern-006
+  category: rendering-patterns
+  rule_text: When building shader pipelines, attach passes before setting uniforms to avoid missing references.
+  doc_id: pattern:render.shader_pipeline.attach
+  test_ref: 'Unverified: docs only'
+  quirks_anchor: render-shader-pipeline-attach
+  status: unverified
+  severity: info
+  tags:
+  - rendering
+  - shader
+  rationale: Uniforms are stored per pass; passes must exist before applying values.
+  example_good: |
+    addShaderPass(pipeline, "glow")
+    sh.ApplyUniformsToShader(pipeline, uniforms)
+  example_bad: |
+    sh.ApplyUniformsToShader(pipeline, uniforms) -- no passes yet
+  last_verified_commit: pending
+- rule_id: rendering-pattern-007
+  category: rendering-patterns
+  rule_text: When using global shader uniforms, update them before enqueuing draw commands.
+  doc_id: pattern:render.global_uniforms.before_draw
+  test_ref: 'Unverified: docs only'
+  quirks_anchor: render-global-uniforms
+  status: unverified
+  severity: info
+  tags:
+  - rendering
+  - shader
+  rationale: Uniform changes after queueing will not affect already captured draw state.
+  example_good: |
+    globalShaderUniforms.time = t
+    command_buffer.queueDraw(...)
+  example_bad: |
+    command_buffer.queueDraw(...)
+    globalShaderUniforms.time = t
+  last_verified_commit: pending
+- rule_id: rendering-pattern-008
+  category: rendering-patterns
+  rule_text: When grouping renderables, create render groups and update them via render group helpers.
+  doc_id: pattern:render.render_groups.register
+  test_ref: 'Unverified: docs only'
+  quirks_anchor: render-groups-register
+  status: unverified
+  severity: info
+  tags:
+  - rendering
+  - groups
+  rationale: Render groups keep related entities on consistent layers and z offsets.
+  example_good: |
+    layerTbl.CreateLayer("ui")
+    render_groups.register("inventory", layers.ui)
+  example_bad: |
+    -- ad hoc layer assignment without grouping
+  last_verified_commit: pending
+- rule_id: rendering-pattern-009
+  category: rendering-patterns
+  rule_text: When batching draw commands, keep batch group ids stable to avoid flickering ordering.
+  doc_id: pattern:render.batch_group.use
+  test_ref: 'Unverified: docs only'
+  quirks_anchor: render-batch-group
+  status: unverified
+  severity: info
+  tags:
+  - rendering
+  - batch
+  rationale: Stable batch ids ensure deterministic sorting and grouping in the renderer.
+  example_good: |
+    command_buffer.queueDraw(layers.ui, fn, 0, layer.DrawCommandSpace.Screen, "inventory")
+  example_bad: |
+    -- dynamic batch ids per frame
+  last_verified_commit: pending
+- rule_id: rendering-pattern-010
+  category: rendering-patterns
+  rule_text: When using transform-local render callbacks, ensure transforms are updated before rendering.
+  doc_id: pattern:render.transform_local_callback
+  test_ref: 'Unverified: docs only'
+  quirks_anchor: render-transform-local
+  status: unverified
+  severity: info
+  tags:
+  - rendering
+  - transform
+  rationale: Local render callbacks rely on up-to-date transforms to compute offsets.
+  example_good: |
+    update_transforms()
+    render_local_callbacks()
+  example_bad: |
+    render_local_callbacks() -- transforms not updated
+  last_verified_commit: pending
+- rule_id: combat-pattern-001
+  category: combat-patterns
+  rule_text: When dealing damage, construct a DamageBundle with base damage and modifiers before applying resistances.
+  doc_id: pattern:combat.damage_bundle.create
+  test_ref: 'Unverified: docs only'
+  quirks_anchor: combat-damage-bundle
+  status: unverified
+  severity: info
+  tags:
+  - combat
+  - damage
+  rationale: Bundling damage values keeps modifiers and resistances applied consistently.
+  example_good: |
+    local bundle = DamageBundle.new(base, modifiers)
+    combat.apply_damage(target, bundle)
+  example_bad: |
+    combat.apply_damage(target, base) -- no modifiers
+  last_verified_commit: pending
+- rule_id: combat-pattern-002
+  category: combat-patterns
+  rule_text: When applying buffs and debuffs, process application order before damage to ensure correct scaling.
+  doc_id: pattern:combat.buff.application_order
+  test_ref: 'Unverified: docs only'
+  quirks_anchor: combat-buff-order
+  status: unverified
+  severity: info
+  tags:
+  - combat
+  - buff
+  rationale: Buff order affects damage outcomes and status calculations.
+  example_good: |
+    apply_buffs(attacker)
+    apply_damage(target)
+  example_bad: |
+    apply_damage(target)
+    apply_buffs(attacker)
+  last_verified_commit: pending
+- rule_id: combat-pattern-003
+  category: combat-patterns
+  rule_text: When spawning projectiles, register them with the combat system and clean them up on hit or timeout.
+  doc_id: pattern:combat.projectile.lifecycle
+  test_ref: 'Unverified: docs only'
+  quirks_anchor: combat-projectile-lifecycle
+  status: unverified
+  severity: info
+  tags:
+  - combat
+  - projectile
+  rationale: Projectile lifecycle management prevents orphan entities and missed hit processing.
+  example_good: |
+    local proj = spawn_projectile(params)
+    projectile_system.register(proj)
+  example_bad: |
+    spawn_projectile(params) -- not registered
+  last_verified_commit: pending
+- rule_id: combat-pattern-004
+  category: combat-patterns
+  rule_text: When stacking status effects, enforce stack limits and refresh timers rather than duplicating entries.
+  doc_id: pattern:combat.status.stack_rules
+  test_ref: 'Unverified: docs only'
+  quirks_anchor: combat-status-stacking
+  status: unverified
+  severity: info
+  tags:
+  - combat
+  - status
+  rationale: Stack rules keep buffs predictable and prevent runaway power scaling.
+  example_good: |
+    status.apply_or_refresh(target, status_id, stacks)
+  example_bad: |
+    status.apply(target, status_id) -- duplicates without refresh
+  last_verified_commit: pending
+- rule_id: combat-pattern-005
+  category: combat-patterns
+  rule_text: When executing abilities, verify resource costs before resolving effects to avoid negative resources.
+  doc_id: pattern:combat.ability.cost_check
+  test_ref: 'Unverified: docs only'
+  quirks_anchor: combat-ability-cost
+  status: unverified
+  severity: info
+  tags:
+  - combat
+  - ability
+  rationale: Cost validation prevents abilities from firing when resources are insufficient.
+  example_good: |
+    if can_pay_cost(caster, cost) then pay_cost(caster, cost) end
+  example_bad: |
+    pay_cost(caster, cost) -- no check
+  last_verified_commit: pending
+- rule_id: combat-pattern-006
+  category: combat-patterns
+  rule_text: When selecting targets, filter for alive entities and valid teams before applying effects.
+  doc_id: pattern:combat.target.filter_alive
+  test_ref: 'Unverified: docs only'
+  quirks_anchor: combat-target-filter
+  status: unverified
+  severity: info
+  tags:
+  - combat
+  - targeting
+  rationale: Filtering prevents applying effects to dead or invalid targets.
+  example_good: |
+    local targets = filter_alive(team_targets)
+  example_bad: |
+    local targets = team_targets -- includes dead
+  last_verified_commit: pending
+- rule_id: combat-pattern-007
+  category: combat-patterns
+  rule_text: When processing hits, emit combat events so downstream systems can react.
+  doc_id: pattern:combat.event.emit_on_hit
+  test_ref: 'Unverified: docs only'
+  quirks_anchor: combat-event-on-hit
+  status: unverified
+  severity: info
+  tags:
+  - combat
+  - events
+  rationale: Combat events drive VFX, UI updates, and triggers.
+  example_good: |
+    combat_bus.emit("hit", attacker, target, bundle)
+  example_bad: |
+    apply_damage(target, bundle) -- no event
+  last_verified_commit: pending
+- rule_id: combat-pattern-008
+  category: combat-patterns
+  rule_text: When applying damage, run resist calculations before reducing health.
+  doc_id: pattern:combat.damage.apply_resist
+  test_ref: 'Unverified: docs only'
+  quirks_anchor: combat-damage-resist
+  status: unverified
+  severity: info
+  tags:
+  - combat
+  - damage
+  rationale: Resist calculations change final damage and should be applied consistently.
+  example_good: |
+    local final = apply_resist(target, bundle)
+    apply_damage(target, final)
+  example_bad: |
+    apply_damage(target, bundle) -- no resist
+  last_verified_commit: pending
+- rule_id: combat-pattern-009
+  category: combat-patterns
+  rule_text: When projectiles hit, remove them immediately to prevent double hits.
+  doc_id: pattern:combat.projectile.remove_on_hit
+  test_ref: 'Unverified: docs only'
+  quirks_anchor: combat-projectile-remove
+  status: unverified
+  severity: info
+  tags:
+  - combat
+  - projectile
+  rationale: Leaving projectiles alive risks repeated collisions and duplicate effects.
+  example_good: |
+    on_hit(function(p) destroy_projectile(p) end)
+  example_bad: |
+    -- projectile keeps moving after hit
+  last_verified_commit: pending
+- rule_id: combat-pattern-010
+  category: combat-patterns
+  rule_text: When resolving effect graphs, process nodes deterministically to keep combat outcomes stable.
+  doc_id: pattern:combat.effect_graph.resolve
+  test_ref: 'Unverified: docs only'
+  quirks_anchor: combat-effect-graph
+  status: unverified
+  severity: info
+  tags:
+  - combat
+  - effects
+  rationale: Deterministic resolution prevents order-dependent bugs in combat logic.
+  example_good: |
+    effect_graph.resolve(sequence)
+  example_bad: |
+    -- iterate nodes in unordered table
+  last_verified_commit: pending
+- rule_id: timer-pattern-001
+  category: timer-patterns
+  rule_text: When scheduling delayed work, use timer.after with a small callback to keep logic deterministic.
+  doc_id: pattern:core.timer.after_basic
+  test_ref: test_core_patterns.lua::core.timer.after_basic
+  quirks_anchor: timer-after-basic
+  status: verified
+  severity: info
+  tags:
+  - timer
+  rationale: timer.after provides a consistent delayed callback hook.
+  example_good: |
+    local tag = timer.after(0.5, function() do_work() end)
+  example_bad: |
+    -- manual frame countdown scattered across update loops
+  last_verified_commit: pending
+- rule_id: timer-pattern-002
+  category: timer-patterns
+  rule_text: When running repeated ticks, guard timer.every callbacks with validity checks to prevent stale entity work.
+  doc_id: pattern:core.timer.every_guarded_tick
+  test_ref: test_core_patterns.lua::core.timer.every_guarded_tick
+  quirks_anchor: timer-every-guarded
+  status: verified
+  severity: info
+  tags:
+  - timer
+  rationale: Guarded callbacks stop timers when entities are destroyed.
+  example_good: |
+    timer.every(interval, function() if not entity_cache.valid(e) then return false end end)
+  example_bad: |
+    timer.every(interval, function() use_entity(e) end)
+  last_verified_commit: pending
+- rule_id: timer-pattern-003
+  category: timer-patterns
+  rule_text: When tweening scalar values, use timer.tween_scalar with getter and setter functions.
+  doc_id: pattern:core.timer.tween_scalar
+  test_ref: test_core_patterns.lua::core.timer.tween_scalar
+  quirks_anchor: timer-tween-scalar
+  status: verified
+  severity: info
+  tags:
+  - timer
+  rationale: tween_scalar provides deterministic interpolation with explicit getters and setters.
+  example_good: |
+    timer.tween_scalar(duration, getter, setter, target)
+  example_bad: |
+    -- manual interpolation with inconsistent dt
+  last_verified_commit: pending
+- rule_id: timer-pattern-004
+  category: timer-patterns
+  rule_text: When a delayed action can be canceled, store the timer handle and cancel it on cleanup.
+  doc_id: pattern:timer.cancel_on_cleanup
+  test_ref: 'Unverified: docs only'
+  quirks_anchor: timer-cancel-on-cleanup
+  status: unverified
+  severity: info
+  tags:
+  - timer
+  rationale: Canceling timers prevents callbacks after entities are destroyed.
+  example_good: |
+    local handle = timer.after(1.0, fn)
+    timer.cancel(handle)
+  example_bad: |
+    timer.after(1.0, fn) -- no cancel on cleanup
+  last_verified_commit: pending
+- rule_id: timer-pattern-005
+  category: timer-patterns
+  rule_text: When managing groups of timers, use a shared tag or group id for bulk cancellation.
+  doc_id: pattern:timer.group_cancel
+  test_ref: 'Unverified: docs only'
+  quirks_anchor: timer-group-cancel
+  status: unverified
+  severity: info
+  tags:
+  - timer
+  rationale: Grouping timers simplifies cleanup and avoids leaks.
+  example_good: |
+    local tag = timer.every(1.0, fn, 0, false, nil, "ui")
+    timer.cancel(tag)
+  example_bad: |
+    -- individual timers without group cleanup
+  last_verified_commit: pending
+- rule_id: signal-pattern-001
+  category: signal-patterns
+  rule_text: When emitting events, use signal.emit with explicit parameters to keep handlers consistent.
+  doc_id: pattern:core.signal.emit
+  test_ref: test_core_patterns.lua::core.signal.emit
+  quirks_anchor: signal-emit
+  status: verified
+  severity: info
+  tags:
+  - signal
+  rationale: signal.emit sends arguments to all handlers in a predictable order.
+  example_good: |
+    signal.emit("grid_transfer_failed", item, from, to, reason)
+  example_bad: |
+    -- direct handler calls without signal bus
+  last_verified_commit: pending
+- rule_id: signal-pattern-002
+  category: signal-patterns
+  rule_text: When registering listeners, use signal.register and store the handler for cleanup.
+  doc_id: pattern:core.signal.register
+  test_ref: test_core_patterns.lua::core.signal.register
+  quirks_anchor: signal-register
+  status: verified
+  severity: info
+  tags:
+  - signal
+  rationale: Registering through the signal bus centralizes event handling.
+  example_good: |
+    signal.register("character_select_opened", function() setMainMenuVisible(false) end)
+  example_bad: |
+    -- ad hoc event tables without unregister
+  last_verified_commit: pending
+- rule_id: signal-pattern-003
+  category: signal-patterns
+  rule_text: When managing multiple listeners, use SignalGroup and call cleanup to unregister them.
+  doc_id: pattern:core.signal_group.cleanup
+  test_ref: test_core_patterns.lua::core.signal_group.cleanup
+  quirks_anchor: signal-group-cleanup
+  status: verified
+  severity: info
+  tags:
+  - signal
+  rationale: SignalGroup keeps related listeners together and cleans them in one call.
+  example_good: |
+    local group = SignalGroup.new("menu")
+    group:on("game_state_changed", handler)
+    group:cleanup()
+  example_bad: |
+    -- listeners registered without cleanup
+  last_verified_commit: pending
+- rule_id: signal-pattern-004
+  category: signal-patterns
+  rule_text: When bridging bus events to signals, call EventBridge.attach to connect the systems.
+  doc_id: pattern:core.event_bridge.attach
+  test_ref: test_core_patterns.lua::core.event_bridge.attach
+  quirks_anchor: signal-event-bridge
+  status: verified
+  severity: info
+  tags:
+  - signal
+  rationale: EventBridge attaches signal forwarding to the shared event bus.
+  example_good: |
+    local EventBridge = require("core.event_bridge")
+    EventBridge.attach(ctx)
+  example_bad: |
+    -- emit bus events without signal bridge
+  last_verified_commit: pending
+- rule_id: signal-pattern-005
+  category: signal-patterns
+  rule_text: When listeners are no longer needed, unregister them to prevent duplicate callbacks.
+  doc_id: pattern:signal.unregister
+  test_ref: 'Unverified: docs only'
+  quirks_anchor: signal-unregister
+  status: unverified
+  severity: info
+  tags:
+  - signal
+  rationale: Unregistering keeps handler lists short and avoids double firing.
+  example_good: |
+    signal.remove("event_name", handler)
+  example_bad: |
+    -- leave handler registered forever
+  last_verified_commit: pending
+- rule_id: wand-pattern-001
+  category: wand-patterns
+  rule_text: When creating wands, apply a template first so base stats and slots are initialized.
+  doc_id: pattern:wand.template.apply
+  test_ref: 'Unverified: test_wand_templates_phase2.lua'
+  quirks_anchor: wand-template-apply
+  status: proposed
+  severity: info
+  tags:
+  - wand
+  rationale: Templates establish baseline stats before custom modifications.
+  example_good: |
+    local wand = wand_templates.apply(template_id, overrides)
+  example_bad: |
+    -- build wand stats without template baseline
+  last_verified_commit: pending
+- rule_id: wand-pattern-002
+  category: wand-patterns
+  rule_text: When firing spells, respect trigger ordering so phase effects resolve predictably.
+  doc_id: pattern:wand.trigger.phase_order
+  test_ref: 'Unverified: test_wand_triggers_phase2.lua'
+  quirks_anchor: wand-trigger-order
+  status: proposed
+  severity: info
+  tags:
+  - wand
+  rationale: Trigger ordering prevents spells from skipping or double-applying effects.
+  example_good: |
+    wand.apply_triggers(wand, "pre")
+    wand.cast_spells(wand)
+    wand.apply_triggers(wand, "post")
+  example_bad: |
+    wand.cast_spells(wand) -- no trigger phases
+  last_verified_commit: pending
+- rule_id: wand-pattern-003
+  category: wand-patterns
+  rule_text: When applying cumulative wand stats, recompute totals after all modifiers are attached.
+  doc_id: pattern:wand.cumulative_stats.apply
+  test_ref: 'Unverified: wand_cumulative_test.lua'
+  quirks_anchor: wand-cumulative-stats
+  status: proposed
+  severity: info
+  tags:
+  - wand
+  rationale: Recomputing totals after modifiers avoids inconsistent stat displays.
+  example_good: |
+    wand.recompute_stats(wand)
+  example_bad: |
+    -- use cached stats after adding modifiers
+  last_verified_commit: pending
+- rule_id: wand-pattern-004
+  category: wand-patterns
+  rule_text: When upgrading wands, apply upgrade behavior rules to preserve balance constraints.
+  doc_id: pattern:wand.upgrade.apply
+  test_ref: 'Unverified: wand_upgrade_behavior_test.lua'
+  quirks_anchor: wand-upgrade-apply
+  status: proposed
+  severity: info
+  tags:
+  - wand
+  rationale: Upgrade rules prevent invalid slot counts or stat overflows.
+  example_good: |
+    wand_upgrades.apply(wand, upgrade_id)
+  example_bad: |
+    -- direct stat edits without upgrade rules
+  last_verified_commit: pending
+- rule_id: wand-pattern-005
+  category: wand-patterns
+  rule_text: When integrating wand systems, ensure the panel and runtime state stay synchronized.
+  doc_id: pattern:wand.system.integration
+  test_ref: 'Unverified: wand_system_integration_test.lua'
+  quirks_anchor: wand-system-integration
+  status: proposed
+  severity: info
+  tags:
+  - wand
+  rationale: UI and runtime state must remain consistent to avoid desync.
+  example_good: |
+    wand_panel.sync_from_state(wand_state)
+  example_bad: |
+    -- update runtime without UI sync
+  last_verified_commit: pending

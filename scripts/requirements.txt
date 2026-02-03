@@ -1,0 +1,47 @@
+# Python tooling for extractors/validators/reporters.
+# Install: pip install -r scripts/requirements.txt
+#
+# Dependencies for:
+# - Sol2 binding extraction (extract_sol2_bindings.py)
+# - Component extraction (extract_components.py)
+# - Frequency scanning (frequency_scan.py)
+# - Doc skeleton generation (generate_docs_skeletons.py)
+# - Stats regeneration (recount_scope_stats.py)
+# - Schema validation
+# - Link checking (link_check_docs.py)
+
+# Audio analysis (optional, used by eagle_audio_analyzer.py)
+# librosa pulls in numba, which is not yet available on Python 3.13.
+librosa==0.11.0 ; python_version < "3.13"
+numpy==2.4.2 ; python_version < "3.13"
+
+# PDF generation (docs/generate_thumbnail_spec_pdf.py)
+fpdf2==2.8.5
+
+# Testing
+pytest==8.3.4
+pytest-cov==6.0.0
+
+# Validation & Config
+jsonschema==4.23.0
+PyYAML==6.0.2
+
+# Parsing (for C++/Lua extraction)
+tree-sitter==0.24.0
+tree-sitter-cpp==0.23.4
+tree-sitter-lua==0.4.1
+
+# Link checking
+requests==2.32.3
+
+# CLI utilities
+rich==13.9.4
+click==8.1.8
+
+# Code quality
+ruff==0.9.10
+mypy==1.15.0
+
+# Type stubs
+types-requests==2.32.0.20241016
+types-PyYAML==6.0.12.20241230

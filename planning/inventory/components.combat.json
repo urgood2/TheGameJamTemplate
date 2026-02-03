@@ -1,0 +1,1209 @@
+{
+  "category": "combat",
+  "count": 54,
+  "components": [
+    {
+      "name": "LuaContentLoader",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/loader_lua.hpp",
+      "line_number": 11,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:LuaContentLoader",
+      "source_ref": "src/systems/composable_mechanics/loader_lua.hpp:11"
+    },
+    {
+      "name": "HitResult",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/combat_math.hpp",
+      "line_number": 7,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "pth",
+          "type": "float",
+          "default": "0.f",
+          "is_complex": false
+        },
+        {
+          "name": "damageScalar",
+          "type": "float",
+          "default": "1.f",
+          "is_complex": false
+        },
+        {
+          "name": "critChance",
+          "type": "float",
+          "default": "0.f",
+          "is_complex": false
+        },
+        {
+          "name": "critMultiplier",
+          "type": "float",
+          "default": "1.f",
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:HitResult",
+      "source_ref": "src/systems/composable_mechanics/combat_math.hpp:7"
+    },
+    {
+      "name": "Event",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/events.hpp",
+      "line_number": 24,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "type",
+          "type": "EventType",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "source",
+          "type": "entt::entity",
+          "default": "entt::null",
+          "is_complex": false
+        },
+        {
+          "name": "primaryTarget",
+          "type": "entt::entity",
+          "default": "entt::null",
+          "is_complex": false
+        },
+        {
+          "name": "damage",
+          "type": "DamageBundle*",
+          "default": "nullptr",
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:Event",
+      "source_ref": "src/systems/composable_mechanics/events.hpp:24"
+    },
+    {
+      "name": "Context",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/events.hpp",
+      "line_number": 32,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:Context",
+      "source_ref": "src/systems/composable_mechanics/events.hpp:32"
+    },
+    {
+      "name": "EventListener",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/events.hpp",
+      "line_number": 38,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "lane",
+          "type": "int",
+          "default": "0",
+          "is_complex": false
+        },
+        {
+          "name": "priority",
+          "type": "int",
+          "default": "0",
+          "is_complex": false
+        },
+        {
+          "name": "tieBreak",
+          "type": "int",
+          "default": "0",
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:EventListener",
+      "source_ref": "src/systems/composable_mechanics/events.hpp:38"
+    },
+    {
+      "name": "Ability",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/ability.hpp",
+      "line_number": 13,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "name",
+          "type": "Sid",
+          "default": "0",
+          "is_complex": false
+        },
+        {
+          "name": "triggerPredicate",
+          "type": "TriggerPredicate",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "collectTargets",
+          "type": "TargetFunc",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "effectGraph",
+          "type": "CompiledEffectGraph",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "cooldownSec",
+          "type": "float",
+          "default": "0.f",
+          "is_complex": false
+        },
+        {
+          "name": "cooldownLeft",
+          "type": "float",
+          "default": "0.f",
+          "is_complex": false
+        },
+        {
+          "name": "internalCooldownSec",
+          "type": "float",
+          "default": "0.f",
+          "is_complex": false
+        },
+        {
+          "name": "internalCooldownLeft",
+          "type": "float",
+          "default": "0.f",
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:Ability",
+      "tier": 1,
+      "verified": false,
+      "test_id": "combat.components.ability.cooldowns",
+      "source_ref": "src/systems/composable_mechanics/ability.hpp:13"
+    },
+    {
+      "name": "AbilityDatabase",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/ability.hpp",
+      "line_number": 26,
+      "is_tag": false,
+      "extraction_confidence": 0.9,
+      "notes": [
+        "1 complex types need manual review"
+      ],
+      "fields": [
+        {
+          "name": "byId",
+          "type": "std::unordered_map<Sid, Ability>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "it",
+          "type": "auto",
+          "default": "byId.find(id)",
+          "is_complex": false
+        },
+        {
+          "name": "it",
+          "type": "return",
+          "default": "= byId.end() ? nullptr : &it->second",
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:AbilityDatabase",
+      "source_ref": "src/systems/composable_mechanics/ability.hpp:26"
+    },
+    {
+      "name": "EngineBootstrap",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/bootstrap.hpp",
+      "line_number": 7,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "abilityDb",
+          "type": "AbilityDatabase",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "bus",
+          "type": "auto",
+          "default": "world.ctx().emplace<EventBus>()",
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:EngineBootstrap",
+      "source_ref": "src/systems/composable_mechanics/bootstrap.hpp:7"
+    },
+    {
+      "name": "Op_ModifyStats_Params",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/effects.hpp",
+      "line_number": 34,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:Op_ModifyStats_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:34"
+    },
+    {
+      "name": "Op_DealDamage_Params",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/effects.hpp",
+      "line_number": 40,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "weaponScalar",
+          "type": "float",
+          "default": "1.0f",
+          "is_complex": false
+        },
+        {
+          "name": "tags",
+          "type": "uint32_t",
+          "default": "DmgTag_IsSkill",
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:Op_DealDamage_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:40"
+    },
+    {
+      "name": "Op_ApplyStatus_Params",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/effects.hpp",
+      "line_number": 46,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:Op_ApplyStatus_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:46"
+    },
+    {
+      "name": "Op_ApplyRR_Params",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/effects.hpp",
+      "line_number": 48,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:Op_ApplyRR_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:48"
+    },
+    {
+      "name": "EffectOp",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/effects.hpp",
+      "line_number": 50,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "code",
+          "type": "EffectOpCode",
+          "default": "EffectOpCode::NoOp",
+          "is_complex": false
+        },
+        {
+          "name": "firstChild",
+          "type": "uint16_t",
+          "default": "0",
+          "is_complex": false
+        },
+        {
+          "name": "childCount",
+          "type": "uint16_t",
+          "default": "0",
+          "is_complex": false
+        },
+        {
+          "name": "paramIndex",
+          "type": "int",
+          "default": "-1",
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:EffectOp",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:50"
+    },
+    {
+      "name": "Op_Repeat_Params",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/effects.hpp",
+      "line_number": 61,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:Op_Repeat_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:61"
+    },
+    {
+      "name": "Op_LimitPerTurn_Params",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/effects.hpp",
+      "line_number": 62,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:Op_LimitPerTurn_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:62"
+    },
+    {
+      "name": "Op_PushUnit_Params",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/effects.hpp",
+      "line_number": 64,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:Op_PushUnit_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:64"
+    },
+    {
+      "name": "Op_ShuffleAllies_Params",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/effects.hpp",
+      "line_number": 65,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:Op_ShuffleAllies_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:65"
+    },
+    {
+      "name": "Op_TransformUnit_Params",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/effects.hpp",
+      "line_number": 67,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:Op_TransformUnit_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:67"
+    },
+    {
+      "name": "Op_SummonUnit_Params",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/effects.hpp",
+      "line_number": 68,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:Op_SummonUnit_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:68"
+    },
+    {
+      "name": "Op_CopyAbilityFrom_Params",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/effects.hpp",
+      "line_number": 70,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:Op_CopyAbilityFrom_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:70"
+    },
+    {
+      "name": "Op_Item_Params",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/effects.hpp",
+      "line_number": 71,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:Op_Item_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:71"
+    },
+    {
+      "name": "Op_ModifyPlayerResource_Params",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/effects.hpp",
+      "line_number": 73,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:Op_ModifyPlayerResource_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:73"
+    },
+    {
+      "name": "Op_SetLevel_Params",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/effects.hpp",
+      "line_number": 75,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:Op_SetLevel_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:75"
+    },
+    {
+      "name": "Op_GiveExperience_Params",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/effects.hpp",
+      "line_number": 76,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:Op_GiveExperience_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:76"
+    },
+    {
+      "name": "Op_ShopAddItem_Params",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/effects.hpp",
+      "line_number": 78,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:Op_ShopAddItem_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:78"
+    },
+    {
+      "name": "Op_ShopDiscountUnit_Params",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/effects.hpp",
+      "line_number": 79,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:Op_ShopDiscountUnit_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:79"
+    },
+    {
+      "name": "Op_ShopDiscountItem_Params",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/effects.hpp",
+      "line_number": 80,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:Op_ShopDiscountItem_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:80"
+    },
+    {
+      "name": "Op_ShopRoll_Params",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/effects.hpp",
+      "line_number": 81,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:Op_ShopRoll_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:81"
+    },
+    {
+      "name": "Op_ShopReplaceItems_Params",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/effects.hpp",
+      "line_number": 82,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:Op_ShopReplaceItems_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:82"
+    },
+    {
+      "name": "Op_StatSwapWithin_Params",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/effects.hpp",
+      "line_number": 84,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:Op_StatSwapWithin_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:84"
+    },
+    {
+      "name": "Op_StatSwapBetween_Params",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/effects.hpp",
+      "line_number": 85,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:Op_StatSwapBetween_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:85"
+    },
+    {
+      "name": "Op_StatCopyFrom_Params",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/effects.hpp",
+      "line_number": 86,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:Op_StatCopyFrom_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:86"
+    },
+    {
+      "name": "Op_ClassifyAdd_Params",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/effects.hpp",
+      "line_number": 88,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:Op_ClassifyAdd_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:88"
+    },
+    {
+      "name": "Op_TakeLessDamageOneShot_Params",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/effects.hpp",
+      "line_number": 90,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:Op_TakeLessDamageOneShot_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:90"
+    },
+    {
+      "name": "CompiledEffectGraph",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/effects.hpp",
+      "line_number": 94,
+      "is_tag": false,
+      "extraction_confidence": 0.5,
+      "notes": [
+        "26 complex types need manual review"
+      ],
+      "fields": [
+        {
+          "name": "ops",
+          "type": "std::vector<EffectOp>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "modParams",
+          "type": "std::vector<Op_ModifyStats_Params>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "dmgParams",
+          "type": "std::vector<Op_DealDamage_Params>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "statusParams",
+          "type": "std::vector<Op_ApplyStatus_Params>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "rrParams",
+          "type": "std::vector<Op_ApplyRR_Params>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "repParams",
+          "type": "std::vector<Op_Repeat_Params>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "lptParams",
+          "type": "std::vector<Op_LimitPerTurn_Params>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "pushParams",
+          "type": "std::vector<Op_PushUnit_Params>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "shuffleParams",
+          "type": "std::vector<Op_ShuffleAllies_Params>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "transformParams",
+          "type": "std::vector<Op_TransformUnit_Params>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "summonParams",
+          "type": "std::vector<Op_SummonUnit_Params>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "copyAbilityParams",
+          "type": "std::vector<Op_CopyAbilityFrom_Params>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "itemParams",
+          "type": "std::vector<Op_Item_Params>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "playerResParams",
+          "type": "std::vector<Op_ModifyPlayerResource_Params>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "setLevelParams",
+          "type": "std::vector<Op_SetLevel_Params>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "giveXpParams",
+          "type": "std::vector<Op_GiveExperience_Params>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "shopAddItemParams",
+          "type": "std::vector<Op_ShopAddItem_Params>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "shopDiscUnitParams",
+          "type": "std::vector<Op_ShopDiscountUnit_Params>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "shopDiscItemParams",
+          "type": "std::vector<Op_ShopDiscountItem_Params>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "shopRollParams",
+          "type": "std::vector<Op_ShopRoll_Params>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "shopReplaceParams",
+          "type": "std::vector<Op_ShopReplaceItems_Params>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "swapWithinParams",
+          "type": "std::vector<Op_StatSwapWithin_Params>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "swapBetweenParams",
+          "type": "std::vector<Op_StatSwapBetween_Params>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "statCopyParams",
+          "type": "std::vector<Op_StatCopyFrom_Params>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "classAddParams",
+          "type": "std::vector<Op_ClassifyAdd_Params>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "nhmParams",
+          "type": "std::vector<Op_TakeLessDamageOneShot_Params>",
+          "default": null,
+          "is_complex": true
+        }
+      ],
+      "doc_id": "component:CompiledEffectGraph",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:94"
+    },
+    {
+      "name": "EngineServices",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/effects.hpp",
+      "line_number": 149,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:EngineServices",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:149"
+    },
+    {
+      "name": "DamageBundle",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/stats.hpp",
+      "line_number": 47,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "weaponScalar",
+          "type": "float",
+          "default": "1.0f",
+          "is_complex": false
+        },
+        {
+          "name": "tags",
+          "type": "uint32_t",
+          "default": "DmgTag_None",
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:DamageBundle",
+      "tier": 1,
+      "verified": false,
+      "test_id": "combat.components.damagebundle.read_write",
+      "source_ref": "src/systems/composable_mechanics/stats.hpp:47"
+    },
+    {
+      "name": "ResistPack",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/stats.hpp",
+      "line_number": 56,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:ResistPack",
+      "source_ref": "src/systems/composable_mechanics/stats.hpp:56"
+    },
+    {
+      "name": "ShieldStats",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/stats.hpp",
+      "line_number": 65,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "blockChance",
+          "type": "float",
+          "default": "0.0f",
+          "is_complex": false
+        },
+        {
+          "name": "blockAmount",
+          "type": "float",
+          "default": "0.0f",
+          "is_complex": false
+        },
+        {
+          "name": "recoveryTimeSec",
+          "type": "float",
+          "default": "0.0f",
+          "is_complex": false
+        },
+        {
+          "name": "recoveryLeftSec",
+          "type": "float",
+          "default": "0.0f",
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:ShieldStats",
+      "source_ref": "src/systems/composable_mechanics/stats.hpp:65"
+    },
+    {
+      "name": "Stats",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/stats.hpp",
+      "line_number": 73,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:Stats",
+      "tier": 1,
+      "verified": false,
+      "test_id": "combat.components.stats.read_write",
+      "source_ref": "src/systems/composable_mechanics/stats.hpp:73"
+    },
+    {
+      "name": "LifeEnergy",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/stats.hpp",
+      "line_number": 95,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "hp",
+          "type": "float",
+          "default": "0.f, maxHp = 0.f",
+          "is_complex": false
+        },
+        {
+          "name": "energy",
+          "type": "float",
+          "default": "0.f, maxEnergy = 0.f",
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:LifeEnergy",
+      "source_ref": "src/systems/composable_mechanics/stats.hpp:95"
+    },
+    {
+      "name": "Team",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/stats.hpp",
+      "line_number": 101,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "teamId",
+          "type": "uint8_t",
+          "default": "0",
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:Team",
+      "source_ref": "src/systems/composable_mechanics/stats.hpp:101"
+    },
+    {
+      "name": "BoardPos",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/board.hpp",
+      "line_number": 10,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "lane",
+          "type": "int",
+          "default": "0",
+          "is_complex": false
+        },
+        {
+          "name": "index",
+          "type": "int",
+          "default": "-1",
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:BoardPos",
+      "source_ref": "src/systems/composable_mechanics/board.hpp:10"
+    },
+    {
+      "name": "BoardHelpers",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/board.hpp",
+      "line_number": 19,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "pa",
+          "type": "auto*",
+          "default": "r.try_get<BoardPos>(e)",
+          "is_complex": false
+        },
+        {
+          "name": "view",
+          "type": "auto",
+          "default": "r.view<BoardPos, Team>()",
+          "is_complex": false
+        },
+        {
+          "name": "ta",
+          "type": "auto*",
+          "default": "r.try_get<Team>(e)",
+          "is_complex": false
+        },
+        {
+          "name": "best",
+          "type": "entt::entity",
+          "default": "entt::null",
+          "is_complex": false
+        },
+        {
+          "name": "best",
+          "type": "return",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "pa",
+          "type": "auto*",
+          "default": "r.try_get<BoardPos>(e)",
+          "is_complex": false
+        },
+        {
+          "name": "ta",
+          "type": "auto*",
+          "default": "r.try_get<Team>(e)",
+          "is_complex": false
+        },
+        {
+          "name": "start",
+          "type": "int",
+          "default": "pa->index + 1",
+          "is_complex": false
+        },
+        {
+          "name": "view",
+          "type": "auto",
+          "default": "r.view<BoardPos, Team>()",
+          "is_complex": false
+        },
+        {
+          "name": "want",
+          "type": "int",
+          "default": "start + k",
+          "is_complex": false
+        },
+        {
+          "name": "pa",
+          "type": "auto*",
+          "default": "r.try_get<BoardPos>(e)",
+          "is_complex": false
+        },
+        {
+          "name": "ta",
+          "type": "auto*",
+          "default": "r.try_get<Team>(e)",
+          "is_complex": false
+        },
+        {
+          "name": "view",
+          "type": "auto",
+          "default": "r.view<BoardPos, Team>()",
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:BoardHelpers",
+      "source_ref": "src/systems/composable_mechanics/board.hpp:19"
+    },
+    {
+      "name": "BuffInstance",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/components.hpp",
+      "line_number": 7,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "id",
+          "type": "Sid",
+          "default": "0",
+          "is_complex": false
+        },
+        {
+          "name": "timeLeftSec",
+          "type": "float",
+          "default": "0.f",
+          "is_complex": false
+        },
+        {
+          "name": "stacks",
+          "type": "uint8_t",
+          "default": "1",
+          "is_complex": false
+        },
+        {
+          "name": "stackingKey",
+          "type": "Sid",
+          "default": "0",
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:BuffInstance",
+      "tier": 1,
+      "verified": false,
+      "test_id": "combat.components.buffinstance.read_write",
+      "source_ref": "src/systems/composable_mechanics/components.hpp:7"
+    },
+    {
+      "name": "ActiveBuffs",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/components.hpp",
+      "line_number": 18,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:ActiveBuffs",
+      "source_ref": "src/systems/composable_mechanics/components.hpp:18"
+    },
+    {
+      "name": "AbilityRef",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/components.hpp",
+      "line_number": 21,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:AbilityRef",
+      "source_ref": "src/systems/composable_mechanics/components.hpp:21"
+    },
+    {
+      "name": "KnownAbilities",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/components.hpp",
+      "line_number": 22,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:KnownAbilities",
+      "source_ref": "src/systems/composable_mechanics/components.hpp:22"
+    },
+    {
+      "name": "StatusFlags",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/components.hpp",
+      "line_number": 25,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "isChilled",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "isFrozen",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "isStunned",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        }
+      ],
+      "doc_id": "component:StatusFlags",
+      "source_ref": "src/systems/composable_mechanics/components.hpp:25"
+    },
+    {
+      "name": "HeldItem",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/components.hpp",
+      "line_number": 31,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:HeldItem",
+      "source_ref": "src/systems/composable_mechanics/components.hpp:31"
+    },
+    {
+      "name": "Level",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/components.hpp",
+      "line_number": 32,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:Level",
+      "source_ref": "src/systems/composable_mechanics/components.hpp:32"
+    },
+    {
+      "name": "Experience",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/components.hpp",
+      "line_number": 33,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:Experience",
+      "source_ref": "src/systems/composable_mechanics/components.hpp:33"
+    },
+    {
+      "name": "ClassTags",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/components.hpp",
+      "line_number": 34,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:ClassTags",
+      "source_ref": "src/systems/composable_mechanics/components.hpp:34"
+    },
+    {
+      "name": "NextHitMitigation",
+      "category": "combat",
+      "file_path": "src/systems/composable_mechanics/components.hpp",
+      "line_number": 36,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [],
+      "doc_id": "component:NextHitMitigation",
+      "source_ref": "src/systems/composable_mechanics/components.hpp:36"
+    }
+  ]
+}

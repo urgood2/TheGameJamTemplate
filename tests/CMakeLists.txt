@@ -9,8 +9,10 @@ set(TESTING_STUB_SOURCES
     ${CMAKE_SOURCE_DIR}/src/testing/lua_state_query.cpp
     ${CMAKE_SOURCE_DIR}/src/testing/path_sandbox.cpp
     ${CMAKE_SOURCE_DIR}/src/testing/perf_tracker.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/schema_validator.cpp
     ${CMAKE_SOURCE_DIR}/src/testing/screenshot_capture.cpp
     ${CMAKE_SOURCE_DIR}/src/testing/screenshot_compare.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/schema_validator.cpp
     ${CMAKE_SOURCE_DIR}/src/testing/test_api_dump.cpp
     ${CMAKE_SOURCE_DIR}/src/testing/test_api_registry.cpp
     ${CMAKE_SOURCE_DIR}/src/testing/test_forensics.cpp
@@ -50,7 +52,6 @@ add_executable(unit_tests
     unit/test_scripting_bindings.cpp
     unit/test_scripting_lifecycle.cpp
     unit/test_globals_caches.cpp
-    unit/test_stubs_compile.cpp
     unit/test_telemetry.cpp
     unit/test_controller_nav.cpp
     unit/test_input_events.cpp
@@ -182,6 +183,51 @@ target_link_libraries(test_mode_config_tests PRIVATE
 )
 
 gtest_discover_tests(test_mode_config_tests)
+
+# ======================================================================
+# Test API Registry Unit Tests
+# ======================================================================
+add_executable(test_api_registry_tests
+    unit/test_api_registry.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/test_api_registry.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/test_api_dump.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/schema_validator.cpp
+)
+
+target_include_directories(test_api_registry_tests PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(test_api_registry_tests PRIVATE
+    gtest_main
+    CommonSettings
+)
+
+gtest_discover_tests(test_api_registry_tests)
+
+# ======================================================================
+# Test Runtime Unit Tests
+# ======================================================================
+add_executable(test_runtime_tests
+    unit/test_runtime.cpp
+    unit/test_schema_validation.cpp
+    ${TESTING_STUB_SOURCES}
+)
+
+target_include_directories(test_runtime_tests PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(test_runtime_tests PRIVATE
+    gtest_main
+    CommonSettings
+)
+
+gtest_discover_tests(test_runtime_tests)
 
 # ======================================================================
 # Test Mode Stub Compile Tests (headers + stub .cpp files)

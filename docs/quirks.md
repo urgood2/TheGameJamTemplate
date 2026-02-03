@@ -667,6 +667,148 @@ Fix:
 Test:
 - assets/scripts/tests/test_ui_patterns.lua::ui.attached.correct_usage
 
+### UI Rule Candidates
+
+1. rule_id: ui-gotcha-001
+    rule_text: After ChildBuilder.setOffset, always call ui.box.RenewAlignment so child layout recomputes.
+    doc_id: pattern:ui.uibox_alignment.renew_after_offset
+    test_ref: test_ui_patterns.lua::ui.uibox_alignment.renew_after_offset
+    quirks_anchor: renewalignment-after-setoffset
+    status: verified
+
+2. rule_id: ui-gotcha-002
+    rule_text: After ReplaceChildren, call ui.box.RenewAlignment to avoid mispositioned children.
+    doc_id: pattern:ui.uibox_alignment.renew_after_replacechildren
+    test_ref: test_ui_patterns.lua::ui.uibox_alignment.renew_after_replacechildren
+    quirks_anchor: renewalignment-after-replacechildren
+    status: verified
+
+3. rule_id: ui-gotcha-003
+    rule_text: Add state tags after UIBox spawn to enable hover/pressed styling.
+    doc_id: pattern:ui.statetag.add_after_spawn
+    test_ref: test_ui_patterns.lua::ui.statetag.add_after_spawn
+    quirks_anchor: addstatetagto-uibox-after-spawn
+    status: verified
+
+4. rule_id: ui-gotcha-004
+    rule_text: Re-apply AddStateTagToUIBox after ReplaceChildren because tags are cleared.
+    doc_id: pattern:ui.statetag.add_after_replacechildren
+    test_ref: test_ui_patterns.lua::ui.statetag.add_after_replacechildren
+    quirks_anchor: addstatetagto-uibox-after-replacechildren
+    status: verified
+
+5. rule_id: ui-gotcha-005
+    rule_text: Reapply state tags whenever the UI tree is rebuilt to preserve state transitions.
+    doc_id: pattern:ui.statetag.persistence_check
+    test_ref: test_ui_patterns.lua::ui.statetag.persistence_check
+    quirks_anchor: state-tag-persistence-check
+    status: verified
+
+6. rule_id: ui-gotcha-006
+    rule_text: Move both Transform and UIBoxComponent.uiRoot when relocating panels.
+    doc_id: pattern:ui.visibility.move_transform_and_uiroot
+    test_ref: test_ui_patterns.lua::ui.visibility.move_transform_and_uiroot
+    quirks_anchor: move-both-transform-and-uiboxcomponent-uiroot
+    status: verified
+
+7. rule_id: ui-gotcha-007
+    rule_text: Moving only Transform leaves children behind because uiRoot is the alignment anchor.
+    doc_id: pattern:ui.visibility.transform_only_fails
+    test_ref: test_ui_patterns.lua::ui.visibility.transform_only_fails
+    quirks_anchor: transform-only-move-fails
+    status: verified
+
+8. rule_id: ui-gotcha-008
+    rule_text: Add ScreenSpaceCollisionMarker to all clickable UI so input is detected.
+    doc_id: pattern:ui.collision.screenspace_marker_required
+    test_ref: test_ui_patterns.lua::ui.collision.screenspace_marker_required
+    quirks_anchor: marker-required-for-clicks
+    status: verified
+
+9. rule_id: ui-gotcha-009
+    rule_text: Preserve collision markers across ReplaceChildren to keep click handling.
+    doc_id: pattern:ui.collision.click_detection_with_marker
+    test_ref: test_ui_patterns.lua::ui.collision.click_detection_with_marker
+    quirks_anchor: click-detection-with-marker
+    status: verified
+
+10. rule_id: ui-gotcha-010
+    rule_text: Without ScreenSpaceCollisionMarker, click callbacks never fire.
+    doc_id: pattern:ui.collision.click_fails_without_marker
+    test_ref: test_ui_patterns.lua::ui.collision.click_fails_without_marker
+    quirks_anchor: click-fails-without-marker
+    status: verified
+
+11. rule_id: ui-gotcha-011
+    rule_text: Cleanup grid teardown by clearing itemRegistry, destroying grid, then dsl.cleanupGrid.
+    doc_id: pattern:ui.grid.cleanup_all_three_registries
+    test_ref: test_ui_patterns.lua::ui.grid.cleanup_all_three_registries
+    quirks_anchor: cleanup-all-three-registries
+    status: verified
+
+12. rule_id: ui-gotcha-012
+    rule_text: Partial grid cleanup leaves orphan registry entries and ghost slots.
+    doc_id: pattern:ui.grid.cleanup_partial_fails
+    test_ref: test_ui_patterns.lua::ui.grid.cleanup_partial_fails
+    quirks_anchor: partial-cleanup-fails
+    status: verified
+
+13. rule_id: ui-gotcha-013
+    rule_text: DrawCommandSpace.World makes HUD elements follow the camera.
+    doc_id: pattern:ui.drawspace.world_follows_camera
+    test_ref: test_ui_patterns.lua::ui.drawspace.world_follows_camera
+    quirks_anchor: world-draw-space-follows-camera
+    status: verified
+
+14. rule_id: ui-gotcha-014
+    rule_text: Use DrawCommandSpace.Screen for fixed HUDs that should not move with camera.
+    doc_id: pattern:ui.drawspace.screen_fixed_hud
+    test_ref: test_ui_patterns.lua::ui.drawspace.screen_fixed_hud
+    quirks_anchor: screen-draw-space-stays-fixed
+    status: verified
+
+15. rule_id: ui-gotcha-015
+    rule_text: Never attach ObjectAttachedToUITag to draggable UI elements.
+    doc_id: pattern:ui.attached.never_on_draggables
+    test_ref: test_ui_patterns.lua::ui.attached.never_on_draggables
+    quirks_anchor: never-use-objectattachedto-uitag-on-draggables
+    status: verified
+
+16. rule_id: ui-gotcha-016
+    rule_text: ObjectAttachedToUITag is safe for static attachments that must follow parent.
+    doc_id: pattern:ui.attached.correct_usage
+    test_ref: test_ui_patterns.lua::ui.attached.correct_usage
+    quirks_anchor: objectattachedto-uitag-correct-usage
+    status: verified
+
+17. rule_id: ui-gotcha-017
+    rule_text: UIBox creation requires post-spawn state tags and alignment to activate interaction.
+    doc_id: pattern:ui.uibox_creation.basic
+    test_ref: test_ui_patterns.lua::ui.statetag.add_after_spawn
+    quirks_anchor: uibox-creation-and-configuration
+    status: verified
+
+18. rule_id: ui-gotcha-018
+    rule_text: ChildBuilder.setOffset changes require RenewAlignment to reflow layout.
+    doc_id: pattern:ui.childbuilder.setoffset_requires_renew
+    test_ref: test_ui_patterns.lua::ui.uibox_alignment.renew_after_offset
+    quirks_anchor: setoffset-requires-renewalignment
+    status: verified
+
+19. rule_id: ui-gotcha-019
+    rule_text: Slot decorations must apply sprite scale or slot config to avoid misaligned panels.
+    doc_id: pattern:ui.slot_decorations.sprite_panel_scaling
+    test_ref: Unverified: manual visual check
+    quirks_anchor: slot-decorations-and-sprite-panels
+    status: unverified
+
+20. rule_id: ui-gotcha-020
+    rule_text: Call RenewAlignment after ReplaceChildren to avoid cached layout using old children.
+    doc_id: pattern:ui.uibox_alignment.renew_after_replacechildren
+    test_ref: test_ui_patterns.lua::ui.uibox_alignment.renew_after_replacechildren
+    quirks_anchor: renewalignment-after-replacechildren
+    status: verified
+
 ---
 
 <a id="physics-system"></a>

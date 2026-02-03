@@ -691,6 +691,22 @@ audio-process-force:
 	python3 scripts/process_audio.py --force
 
 # =============================================================================
+# Pixquare Sync (iCloud)
+# =============================================================================
+
+# Watch for Pixquare exports from iCloud (animations + sprites)
+watch-pixquare:
+	python3 scripts/watch_pixquare.py --verbose
+
+# One-time sync of Pixquare exports from iCloud
+sync-pixquare-once:
+	python3 scripts/watch_pixquare.py --once --verbose
+
+# Sync without moving files to processed/ folder
+sync-pixquare-dry:
+	python3 scripts/watch_pixquare.py --once --verbose --no-move
+
+# =============================================================================
 # AI Coding Assistants
 # =============================================================================
 

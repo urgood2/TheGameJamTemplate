@@ -18,12 +18,8 @@ Command attempted (fails currently due to `args.roots` being strings in `scripts
 `python3 scripts/frequency_scan.py --system input_sound_ai --bindings planning/inventory/bindings.input_sound_ai.json --roots assets/scripts --mode token_aware --output planning/inventory/frequency.input_sound_ai.json`
 
 ## Extractor Gaps
-- `sound_system.cpp`: `lua.set_function(...)` entries appear after the extractor preview window, so they were manually added:
-  `playSoundEffect`, `toggleLowPassFilter`, `toggleDelayEffect`, `resetSoundSystem`, `setLowPassTarget`, `setLowPassSpeed`,
-  `playMusic`, `playPlaylist`, `clearPlaylist`, `stopAllMusic`, `queueMusic`, `setTrackVolume`, `getTrackVolume`,
-  `fadeInMusic`, `fadeOutMusic`, `pauseMusic`, `resumeMusic`, `setVolume`, `setMusicVolume`, `setCategoryVolume`,
-  `setSoundPitch`.
-- `ai_system.cpp`: bindings are currently extracted under `bindings.core.json` (no `ai` mapping in extractor); filtered by `source_ref`.
+- `sound_system.cpp`: file scan only checks the first ~5KB for binding markers; `lua.set_function(...)` entries appear later, so sound functions are parsed manually into the inventory.
+- `ai_system.cpp`: bindings are extracted under `bindings.core.json` (no `ai` mapping in extractor); filtered by `source_ref`.
 
 ## Tests
 - `input.is_key_pressed.basic` → `sol2_function_in_iskeypressed`
@@ -129,7 +125,9 @@ Command attempted (fails currently due to `args.roots` being strings in `scripts
 - `create_ai_entity_with_overrides` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1630`
 - `create_ai_entity` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1607`
 - `fadeInMusic` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/sound/sound_system.cpp:335`
+- `fadeInMusic` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/sound/sound_system.cpp:418`
 - `fadeOutMusic` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/sound/sound_system.cpp:345`
+- `fadeOutMusic` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/sound/sound_system.cpp:419`
 - `getTrackVolume` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/sound/sound_system.cpp:326`
 - `in.action_down` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/input/input_lua_bindings.cpp:810`
 - `in.action_pressed` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/input/input_lua_bindings.cpp:808`
@@ -159,23 +157,32 @@ Command attempted (fails currently due to `args.roots` being strings in `scripts
 - `in.start_rebind` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/input/input_lua_bindings.cpp:819`
 - `in.updateCursorFocus` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/input/input_lua_bindings.cpp:415`
 - `pauseMusic` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/sound/sound_system.cpp:354`
+- `pauseMusic` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/sound/sound_system.cpp:420`
 - `playMusic` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/sound/sound_system.cpp:246`
+- `playMusic` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/sound/sound_system.cpp:414`
 - `playPlaylist` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/sound/sound_system.cpp:257`
 - `playSoundEffect` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/sound/sound_system.cpp:166`
+- `playSoundEffect` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/sound/sound_system.cpp:413`
 - `queueMusic` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/sound/sound_system.cpp:306`
+- `queueMusic` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/sound/sound_system.cpp:417`
 - `resetSoundSystem` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/sound/sound_system.cpp:219`
 - `resumeMusic` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/sound/sound_system.cpp:364`
+- `resumeMusic` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/sound/sound_system.cpp:421`
 - `sense.all_in_range` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1509`
 - `sense.distance` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1424`
 - `sense.nearest` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1436`
 - `sense.position` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ai/ai_system.cpp:1411`
 - `setCategoryVolume` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/sound/sound_system.cpp:392`
+- `setCategoryVolume` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/sound/sound_system.cpp:424`
 - `setLowPassSpeed` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/sound/sound_system.cpp:237`
 - `setLowPassTarget` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/sound/sound_system.cpp:228`
 - `setMusicVolume` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/sound/sound_system.cpp:383`
+- `setMusicVolume` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/sound/sound_system.cpp:423`
 - `setSoundPitch` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/sound/sound_system.cpp:402`
+- `setSoundPitch` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/sound/sound_system.cpp:425`
 - `setTrackVolume` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/sound/sound_system.cpp:316`
 - `setVolume` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/sound/sound_system.cpp:374`
+- `setVolume` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/sound/sound_system.cpp:422`
 - `stopAllMusic` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/sound/sound_system.cpp:296`
 - `toggleDelayEffect` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/sound/sound_system.cpp:210`
 - `toggleLowPassFilter` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/sound/sound_system.cpp:201`

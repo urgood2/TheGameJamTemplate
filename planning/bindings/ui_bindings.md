@@ -18,10 +18,10 @@ Commands used:
 - `rg -n --glob 'assets/scripts/**/*.lua' 'ui\\.box\\.AddStateTagToUIBox'`
 - `rg -n --glob 'assets/scripts/**/*.lua' 'ui\\.box\\.set_draw_layer'`
 
-Counts (approx):
-- `ui.box.RenewAlignment`: 66
-- `ui.box.AddStateTagToUIBox`: 88
-- `ui.box.set_draw_layer`: 69
+Counts:
+- `ui.box.RenewAlignment`: 71
+- `ui.box.AddStateTagToUIBox`: 93
+- `ui.box.set_draw_layer`: 76
 
 ## Gotchas
 - **RenewAlignment after structural changes**: Call `ui.box.RenewAlignment(registry, uiBox)` after offset/transform edits or after `ui.box.ReplaceChildren` to rebuild layout. Example:
@@ -32,6 +32,7 @@ Counts (approx):
 - **State tags after rebuild**: `ui.box.AddStateTagToUIBox` should be reapplied after `ReplaceChildren` since tag propagation can be lost during tree rebuild.
 - **Draw layer assignment**: Call `ui.box.set_draw_layer(uiBox, "ui")` after initialization to ensure draw ordering is correct.
 - **Screen-space interactions**: UI click detection typically requires `ScreenSpaceCollisionMarker` on relevant UI elements (not auto-added).
+- **Draw command space**: Screen space UI draws should use `layer.DrawCommandSpace.Screen` to avoid camera transforms.
 
 ## Detail Tiers
 - **Tier 0**: Extracted binding list only (see AUTOGEN list below).
@@ -48,11 +49,19 @@ Counts (approx):
   })
   local box = ui.box.Initialize({ x = 0, y = 0 }, root)
   ```
-- `ui.box.RenewAlignment` — Detail Tier: 1. Required after offset changes or replacing children (see gotchas).
+  - Gotchas: Set draw layer after initialization, and re-run `ui.box.RenewAlignment` after changes to offsets or children.
+- `ui.box.RenewAlignment` — Detail Tier: 1. Required after offset changes or replacing children.
+  - Gotchas: Call after `ChildBuilder.setOffset` and after `ui.box.ReplaceChildren`.
 - `ui.box.AddStateTagToUIBox` — Detail Tier: 1. Re-apply after `ReplaceChildren` to ensure tags persist.
+  - Gotchas: State tags can be lost during tree rebuilds.
 - `ui.box.set_draw_layer` — Detail Tier: 1. Must target a valid layer name (e.g. `"ui"`).
-- `ui.box.ReplaceChildren` — Detail Tier: 1. Rebuilds UI subtree; call `RenewAlignment` + reapply state tags after use.
+  - Gotchas: If missing, UI may render behind gameplay layers.
+- `ui.box.ReplaceChildren` — Detail Tier: 1. Rebuilds UI subtree.
+  - Gotchas: Must call `ui.box.RenewAlignment` and reapply state tags after replacement.
 - `ui.box.GetUIEByID` — Detail Tier: 1. Returns `Entity|nil` for a UI element by id.
+  - Gotchas: Returns nil when id is missing or the tree is stale.
+- `ChildBuilder.setOffset` — Detail Tier: 1. Lua helper for adjusting child offsets.
+  - Gotchas: Call `ui.box.RenewAlignment` after offset changes to reflow layout.
 
 ## Doc Divergences
 - `ui.box.SetVisible` appears in planning notes but is not bound in `src/systems/ui/ui.cpp`.
@@ -66,12 +75,15 @@ Counts (approx):
   - `element.*` → `ui.element.*`
 
 ## Tests
-- `ui.box.initialize.basic` → `sol2_function_ui_box_initialize`
-- `ui.box.renew_alignment.basic` → `sol2_function_ui_box_renewalignment`
-- `ui.box.add_state_tag.basic` → `sol2_function_ui_box_addstatetagtouibox`
-- `ui.box.set_draw_layer.basic` → `sol2_function_ui_box_set_draw_layer`
-- `ui.box.get_uie_by_id.basic` → `sol2_function_ui_box_getuiebyid`
-- `ui.box.replace_children.basic` → `sol2_function_ui_box_replacechildren`
+- `ui.box.initialize.basic` → `sol2_function_box_initialize`
+- `ui.box.renew_alignment.basic` → `sol2_function_box_renewalignment`
+- `ui.box.add_state_tag.basic` → `sol2_function_box_addstatetagtouibox`
+- `ui.box.set_draw_layer.basic` → `sol2_function_box_set_draw_layer`
+- `ui.box.get_uie_by_id.basic` → `sol2_function_box_getuiebyid`
+- `ui.box.replace_children.basic` → `sol2_function_box_replacechildren`
+- `ui.child_builder.set_offset.basic` → `helper:ChildBuilder.setOffset`
+- `ui.screen_space_collision_marker.toggle` → `component:ScreenSpaceCollisionMarker`
+- `ui.draw_command_space.enum` → `binding:layer.DrawCommandSpace.Screen`
 
 <!-- AUTOGEN:BEGIN binding_list -->
 - `FocusArgs.button` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/ui/ui.cpp:154`

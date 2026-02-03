@@ -1,0 +1,113 @@
+# File glob → test filter mapping
+# Used by scripts/select_tests.py
+
+impact_rules:
+  # Physics binding changes → physics tests
+  - globs:
+      - "src/systems/physics/**/*"
+      - "src/systems/collision/**/*"
+      - "src/systems/line_of_sight/**/*"
+      - "src/systems/chipmunk_objectivec/**/*"
+    filters:
+      categories: ["physics"]
+      tags: ["physics"]
+
+  # UI changes → UI tests
+  - globs:
+      - "src/systems/ui/**/*"
+      - "src/systems/nine_patch/**/*"
+      - "src/systems/text/**/*"
+      - "src/systems/gui_indicator/**/*"
+      - "assets/scripts/ui/**/*"
+      - "assets/scripts/dsl/**/*"
+    filters:
+      categories: ["ui"]
+      tags: ["ui"]
+
+  # Core + ECS changes → core/ecs tests
+  - globs:
+      - "src/core/**/*"
+      - "src/components/**/*"
+      - "src/systems/scripting/**/*"
+      - "src/systems/entity_gamestate_management/**/*"
+      - "src/systems/transform/**/*"
+      - "src/util/**/*"
+      - "assets/scripts/core/**/*"
+    filters:
+      categories: ["core", "ecs"]
+      tags: ["ecs", "components"]
+
+  # Input systems → input tests
+  - globs:
+      - "src/systems/input/**/*"
+      - "assets/scripts/input/**/*"
+    filters:
+      categories: ["input"]
+      tags: ["input"]
+
+  # Sound systems → sound tests
+  - globs:
+      - "src/systems/sound/**/*"
+      - "assets/scripts/sound/**/*"
+    filters:
+      categories: ["sound"]
+      tags: ["sound"]
+
+  # AI systems → ai tests
+  - globs:
+      - "src/systems/ai/**/*"
+      - "assets/scripts/ai/**/*"
+    filters:
+      categories: ["ai"]
+      tags: ["ai"]
+
+  # Rendering/shader changes → rendering tests
+  - globs:
+      - "src/systems/shaders/**/*"
+      - "src/systems/layer/**/*"
+      - "src/systems/render_groups/**/*"
+      - "assets/shaders/**/*"
+      - "assets/scripts/shaders/**/*"
+    filters:
+      categories: ["rendering", "shader"]
+      tags: ["visual", "rendering"]
+
+  # Timer/animation changes → timer tests
+  - globs:
+      - "src/systems/timer/**/*"
+      - "src/systems/anim_system.*"
+      - "assets/scripts/timer/**/*"
+    filters:
+      categories: ["timer"]
+      tags: ["timer"]
+
+  # Combat/mechanics changes → combat tests
+  - globs:
+      - "src/systems/composable_mechanics/**/*"
+      - "assets/scripts/combat/**/*"
+    filters:
+      categories: ["combat"]
+      tags: ["combat"]
+
+  # Localization/content loading changes → data tests
+  - globs:
+      - "src/systems/localization/**/*"
+      - "src/systems/ldtk_loader/**/*"
+      - "src/systems/ldtk_rule_import/**/*"
+      - "assets/scripts/data/**/*"
+    filters:
+      categories: ["data"]
+      tags: ["data"]
+
+  # Test harness changes → selftest/smoke
+  - globs:
+      - "assets/scripts/test/**/*"
+      - "scripts/test_*"
+    filters:
+      categories: ["selftest", "smoke"]
+      tags: ["smoke"]
+
+# Default: always run smoke tests
+default:
+  categories: ["smoke"]
+  tags: ["smoke"]

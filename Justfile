@@ -706,6 +706,23 @@ sync-pixquare-once:
 sync-pixquare-dry:
 	python3 scripts/watch_pixquare.py --once --verbose --no-move
 
+# Install Pixquare watcher as login service (starts automatically)
+install-pixquare-service:
+	cp scripts/com.thegamejamtemplate.pixquare-watcher.plist ~/Library/LaunchAgents/
+	launchctl load ~/Library/LaunchAgents/com.thegamejamtemplate.pixquare-watcher.plist
+	@echo "Pixquare watcher installed and started"
+
+# Uninstall Pixquare watcher login service
+uninstall-pixquare-service:
+	-launchctl unload ~/Library/LaunchAgents/com.thegamejamtemplate.pixquare-watcher.plist
+	-rm ~/Library/LaunchAgents/com.thegamejamtemplate.pixquare-watcher.plist
+	@echo "Pixquare watcher service removed"
+
+# Check Pixquare watcher service status
+pixquare-service-status:
+	@launchctl list | grep pixquare || echo "Service not running"
+	@echo "Log: ~/Library/Logs/pixquare-watcher.log"
+
 # =============================================================================
 # AI Coding Assistants
 # =============================================================================

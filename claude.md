@@ -54,6 +54,15 @@ just watch-pixquare    # Watch mode (continuous)
 just sync-pixquare-once # One-time sync
 ```
 
+**Auto-start on login (recommended):**
+```bash
+just install-pixquare-service   # Install and start
+just pixquare-service-status    # Check status
+just uninstall-pixquare-service # Remove service
+```
+
+The service logs to `~/Library/Logs/pixquare-watcher.log`.
+
 **iCloud folder setup (one-time):**
 ```bash
 mkdir -p ~/Library/Mobile\ Documents/com~apple~CloudDocs/pixquare-animations

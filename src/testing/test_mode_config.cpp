@@ -4,325 +4,344 @@
 #include <atomic>
 #include <chrono>
 #include <cctype>
+#include <ctime>
 #include <iomanip>
 #include <limits>
 #include <sstream>
-#include <system_error>
 
-namespace test_mode {
-
+namespace testing {
 namespace {
 
-std::string toLower(std::string value) {
-    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char c) {
-        return static_cast<char>(std::tolower(c));
+std::string to_lower(std::string value) {
+    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::tolower(ch));
     });
     return value;
 }
 
-bool parseInt(const std::string& value, int& out, std::string& error) {
+bool parse_bool_value(const std::string& value, bool& out) {
+    const auto lowered = to_lower(value);
+    if (lowered == "1" || lowered == "true" || lowered == "yes" || lowered == "on") {
+        out = true;
+        return true;
+    }
+    if (lowered == "0" || lowered == "false" || lowered == "no" || lowered == "off") {
+        out = false;
+        return true;
+    }
+    return false;
+}
+
+bool parse_bool_flag(const std::optional<std::string>& value, bool& out, std::string& error,
+                     const std::string& flag) {
+    if (!value.has_value()) {
+        out = true;
+        return true;
+    }
+    if (!parse_bool_value(*value, out)) {
+        error = "Invalid value for " + flag + ": " + *value;
+        return false;
+    }
+    return true;
+}
+
+bool parse_int(const std::string& value, int& out, std::string& error, const std::string& flag) {
+    if (value.empty()) {
+        error = "Missing value for " + flag;
+        return false;
+    }
     try {
         size_t idx = 0;
-        int parsed = std::stoi(value, &idx, 10);
+        long parsed = std::stol(value, &idx, 10);
         if (idx != value.size()) {
-            error = "Invalid integer value: " + value;
+            error = "Invalid value for " + flag + ": " + value;
             return false;
         }
-        out = parsed;
+        if (parsed < std::numeric_limits<int>::min() || parsed > std::numeric_limits<int>::max()) {
+            error = "Value out of range for " + flag + ": " + value;
+            return false;
+        }
+        out = static_cast<int>(parsed);
         return true;
     } catch (const std::exception&) {
-        error = "Invalid integer value: " + value;
+        error = "Invalid value for " + flag + ": " + value;
         return false;
     }
 }
 
-bool parseU32(const std::string& value, uint32_t& out, std::string& error) {
+bool parse_uint32(const std::string& value, uint32_t& out, std::string& error,
+                  const std::string& flag) {
+    if (value.empty()) {
+        error = "Missing value for " + flag;
+        return false;
+    }
     try {
         size_t idx = 0;
-        unsigned long parsed = std::stoul(value, &idx, 10);
-        if (idx != value.size() || parsed > std::numeric_limits<uint32_t>::max()) {
-            error = "Invalid u32 value: " + value;
+        unsigned long long parsed = std::stoull(value, &idx, 10);
+        if (idx != value.size()) {
+            error = "Invalid value for " + flag + ": " + value;
+            return false;
+        }
+        if (parsed > std::numeric_limits<uint32_t>::max()) {
+            error = "Value out of range for " + flag + ": " + value;
             return false;
         }
         out = static_cast<uint32_t>(parsed);
         return true;
     } catch (const std::exception&) {
-        error = "Invalid u32 value: " + value;
+        error = "Invalid value for " + flag + ": " + value;
         return false;
     }
 }
 
-bool parseBool(const std::optional<std::string>& value, bool& out, std::string& error) {
-    if (!value.has_value()) {
-        out = true;
-        return true;
+bool parse_resolution(const std::string& value, int& width, int& height, std::string& error) {
+    auto pos = value.find('x');
+    if (pos == std::string::npos) {
+        pos = value.find('X');
     }
-
-    std::string normalized = toLower(value.value());
-    if (normalized == "1" || normalized == "true" || normalized == "yes" || normalized == "on") {
-        out = true;
-        return true;
-    }
-    if (normalized == "0" || normalized == "false" || normalized == "no" || normalized == "off") {
-        out = false;
-        return true;
-    }
-
-    error = "Invalid boolean value: " + value.value();
-    return false;
-}
-
-bool parseResolution(const std::string& value, int& width, int& height, std::string& error) {
-    auto lower = toLower(value);
-    auto sep = lower.find('x');
-    if (sep == std::string::npos) {
-        error = "Invalid resolution value: " + value;
+    if (pos == std::string::npos) {
+        error = "Invalid resolution format: " + value;
         return false;
     }
-    std::string w = lower.substr(0, sep);
-    std::string h = lower.substr(sep + 1);
-    if (w.empty() || h.empty()) {
-        error = "Invalid resolution value: " + value;
+    const auto w_str = value.substr(0, pos);
+    const auto h_str = value.substr(pos + 1);
+    if (!parse_int(w_str, width, error, "--resolution") ||
+        !parse_int(h_str, height, error, "--resolution")) {
         return false;
     }
-    int parsedW = 0;
-    int parsedH = 0;
-    if (!parseInt(w, parsedW, error) || !parseInt(h, parsedH, error)) {
+    if (width <= 0 || height <= 0) {
+        error = "Resolution must be positive: " + value;
         return false;
     }
-    width = parsedW;
-    height = parsedH;
     return true;
 }
 
-bool parseNetworkMode(const std::string& value, NetworkMode& out, std::string& error) {
-    std::string normalized = toLower(value);
-    if (normalized == "deny") {
+bool parse_network_mode(const std::string& value, NetworkMode& out, std::string& error) {
+    const auto mode = to_lower(value);
+    if (mode == "deny") {
         out = NetworkMode::Deny;
         return true;
     }
-    if (normalized == "localhost") {
+    if (mode == "localhost") {
         out = NetworkMode::Localhost;
         return true;
     }
-    if (normalized == "any") {
+    if (mode == "any") {
         out = NetworkMode::Any;
         return true;
     }
-    error = "Invalid allow-network value: " + value;
+    error = "Invalid --allow-network: " + value;
     return false;
 }
 
-bool parseBaselineWriteMode(const std::string& value, BaselineWriteMode& out, std::string& error) {
-    std::string normalized = toLower(value);
-    if (normalized == "deny") {
+bool parse_baseline_write_mode(const std::string& value, BaselineWriteMode& out,
+                               std::string& error) {
+    const auto mode = to_lower(value);
+    if (mode == "deny") {
         out = BaselineWriteMode::Deny;
         return true;
     }
-    if (normalized == "stage") {
+    if (mode == "stage") {
         out = BaselineWriteMode::Stage;
         return true;
     }
-    if (normalized == "apply") {
+    if (mode == "apply") {
         out = BaselineWriteMode::Apply;
         return true;
     }
-    error = "Invalid baseline-write-mode value: " + value;
+    error = "Invalid --baseline-write-mode: " + value;
     return false;
 }
 
-bool parseFailureVideoMode(const std::string& value, FailureVideoMode& out, std::string& error) {
-    std::string normalized = toLower(value);
-    if (normalized == "off") {
+bool parse_failure_video_mode(const std::string& value, FailureVideoMode& out,
+                              std::string& error) {
+    const auto mode = to_lower(value);
+    if (mode == "off") {
         out = FailureVideoMode::Off;
         return true;
     }
-    if (normalized == "on") {
+    if (mode == "on") {
         out = FailureVideoMode::On;
         return true;
     }
-    error = "Invalid failure-video value: " + value;
+    error = "Invalid --failure-video: " + value;
     return false;
 }
 
-bool parseRngScope(const std::string& value, RngScope& out, std::string& error) {
-    std::string normalized = toLower(value);
-    if (normalized == "test") {
+bool parse_rng_scope(const std::string& value, RngScope& out, std::string& error) {
+    const auto mode = to_lower(value);
+    if (mode == "test") {
         out = RngScope::Test;
         return true;
     }
-    if (normalized == "run") {
+    if (mode == "run") {
         out = RngScope::Run;
         return true;
     }
-    error = "Invalid rng-scope value: " + value;
+    error = "Invalid --rng-scope: " + value;
     return false;
 }
 
-bool parseRendererMode(const std::string& value, RendererMode& out, std::string& error) {
-    std::string normalized = toLower(value);
-    if (normalized == "null") {
+bool parse_renderer_mode(const std::string& value, RendererMode& out, std::string& error) {
+    const auto mode = to_lower(value);
+    if (mode == "null") {
         out = RendererMode::Null;
         return true;
     }
-    if (normalized == "offscreen") {
+    if (mode == "offscreen") {
         out = RendererMode::Offscreen;
         return true;
     }
-    if (normalized == "windowed") {
+    if (mode == "windowed") {
         out = RendererMode::Windowed;
         return true;
     }
-    error = "Invalid renderer value: " + value;
+    error = "Invalid --renderer: " + value;
     return false;
 }
 
-bool parseDeterminismAuditScope(const std::string& value, DeterminismAuditScope& out, std::string& error) {
-    std::string normalized = toLower(value);
-    if (normalized == "test_api") {
+bool parse_determinism_audit_scope(const std::string& value, DeterminismAuditScope& out,
+                                   std::string& error) {
+    const auto mode = to_lower(value);
+    if (mode == "test_api") {
         out = DeterminismAuditScope::TestApi;
         return true;
     }
-    if (normalized == "engine") {
+    if (mode == "engine") {
         out = DeterminismAuditScope::Engine;
         return true;
     }
-    if (normalized == "render_hash") {
+    if (mode == "render_hash") {
         out = DeterminismAuditScope::RenderHash;
         return true;
     }
-    error = "Invalid determinism-audit-scope value: " + value;
+    error = "Invalid --determinism-audit-scope: " + value;
     return false;
 }
 
-bool parseDeterminismViolationMode(const std::string& value, DeterminismViolationMode& out, std::string& error) {
-    std::string normalized = toLower(value);
-    if (normalized == "fatal") {
+bool parse_determinism_violation(const std::string& value, DeterminismViolationMode& out,
+                                 std::string& error) {
+    const auto mode = to_lower(value);
+    if (mode == "fatal") {
         out = DeterminismViolationMode::Fatal;
         return true;
     }
-    if (normalized == "warn") {
+    if (mode == "warn") {
         out = DeterminismViolationMode::Warn;
         return true;
     }
-    error = "Invalid determinism-violation value: " + value;
+    error = "Invalid --determinism-violation: " + value;
     return false;
 }
 
-bool parseIsolateTestsMode(const std::string& value, IsolateTestsMode& out, std::string& error) {
-    std::string normalized = toLower(value);
-    if (normalized == "none") {
+bool parse_isolate_tests_mode(const std::string& value, IsolateTestsMode& out,
+                              std::string& error) {
+    const auto mode = to_lower(value);
+    if (mode == "none") {
         out = IsolateTestsMode::None;
         return true;
     }
-    if (normalized == "process-per-file") {
+    if (mode == "process-per-file") {
         out = IsolateTestsMode::ProcessPerFile;
         return true;
     }
-    if (normalized == "process-per-test") {
+    if (mode == "process-per-test") {
         out = IsolateTestsMode::ProcessPerTest;
         return true;
     }
-    error = "Invalid isolate-tests value: " + value;
+    error = "Invalid --isolate-tests: " + value;
     return false;
 }
 
-bool parseLuaSandboxMode(const std::string& value, LuaSandboxMode& out, std::string& error) {
-    std::string normalized = toLower(value);
-    if (normalized == "on") {
+bool parse_lua_sandbox_mode(const std::string& value, LuaSandboxMode& out,
+                            std::string& error) {
+    const auto mode = to_lower(value);
+    if (mode == "on") {
         out = LuaSandboxMode::On;
         return true;
     }
-    if (normalized == "off") {
+    if (mode == "off") {
         out = LuaSandboxMode::Off;
         return true;
     }
-    error = "Invalid lua-sandbox value: " + value;
+    error = "Invalid --lua-sandbox: " + value;
     return false;
 }
 
-bool parsePerfMode(const std::string& value, PerfMode& out, std::string& error) {
-    std::string normalized = toLower(value);
-    if (normalized == "off") {
+bool parse_perf_mode(const std::string& value, PerfMode& out, std::string& error) {
+    const auto mode = to_lower(value);
+    if (mode == "off") {
         out = PerfMode::Off;
         return true;
     }
-    if (normalized == "collect") {
+    if (mode == "collect") {
         out = PerfMode::Collect;
         return true;
     }
-    if (normalized == "enforce") {
+    if (mode == "enforce") {
         out = PerfMode::Enforce;
         return true;
     }
-    error = "Invalid perf-mode value: " + value;
+    error = "Invalid --perf-mode: " + value;
     return false;
 }
 
-std::optional<std::string> splitValue(const std::string& arg, std::string& flag) {
-    auto pos = arg.find('=');
-    if (pos == std::string::npos) {
-        flag = arg;
-        return std::nullopt;
-    }
-    flag = arg.substr(0, pos);
-    return arg.substr(pos + 1);
-}
-
-bool readNextValue(const std::optional<std::string>& inlineValue,
-                   int& index,
-                   int argc,
-                   char** argv,
-                   std::string& out,
-                   std::string& error) {
-    if (inlineValue.has_value()) {
-        out = inlineValue.value();
-        return true;
-    }
-    if (index + 1 >= argc) {
-        error = "Missing value for flag";
-        return false;
-    }
-    out = argv[++index];
-    return true;
-}
-
-void splitTags(const std::string& value, std::vector<std::string>& out) {
-    size_t start = 0;
-    while (start < value.size()) {
-        size_t comma = value.find(',', start);
-        if (comma == std::string::npos) {
-            out.push_back(value.substr(start));
-            return;
+std::filesystem::path detect_repo_root() {
+    std::filesystem::path current = std::filesystem::current_path();
+    std::filesystem::path cursor = current;
+    while (true) {
+        const auto assets = cursor / "assets";
+        const auto tests = cursor / "tests";
+        const auto cmake = cursor / "CMakeLists.txt";
+        if (std::filesystem::exists(assets) && std::filesystem::exists(tests) &&
+            std::filesystem::exists(cmake)) {
+            return cursor;
         }
-        out.push_back(value.substr(start, comma - start));
-        start = comma + 1;
+        if (cursor == cursor.root_path()) {
+            break;
+        }
+        cursor = cursor.parent_path();
     }
+    return current;
 }
 
-bool isUnderRoot(const std::filesystem::path& root, const std::filesystem::path& candidate, std::string& error) {
+std::filesystem::path resolve_path(const std::filesystem::path& root,
+                                  const std::filesystem::path& value) {
+    if (value.empty()) {
+        return value;
+    }
+    if (value.is_absolute()) {
+        return value.lexically_normal();
+    }
+    return (root / value).lexically_normal();
+}
+
+bool is_under_root(const std::filesystem::path& root, const std::filesystem::path& candidate) {
     std::error_code ec;
-    auto rootAbs = std::filesystem::weakly_canonical(root, ec);
+    auto canonical_root = std::filesystem::weakly_canonical(root, ec);
     if (ec) {
-        rootAbs = std::filesystem::absolute(root);
+        canonical_root = std::filesystem::absolute(root, ec);
+    }
+    auto canonical_candidate = std::filesystem::weakly_canonical(candidate, ec);
+    if (ec) {
+        canonical_candidate = std::filesystem::absolute(candidate, ec);
     }
 
-    std::filesystem::path candidateAbs = candidate.is_absolute() ? candidate : rootAbs / candidate;
-    candidateAbs = candidateAbs.lexically_normal();
-
-    auto rootIt = rootAbs.begin();
-    auto candIt = candidateAbs.begin();
-    for (; rootIt != rootAbs.end(); ++rootIt, ++candIt) {
-        if (candIt == candidateAbs.end() || *candIt != *rootIt) {
-            error = "Path escapes project root: " + candidate.string();
+    auto root_it = canonical_root.begin();
+    auto cand_it = canonical_candidate.begin();
+    for (; root_it != canonical_root.end() && cand_it != canonical_candidate.end(); ++root_it, ++cand_it) {
+        if (*root_it != *cand_it) {
             return false;
         }
     }
-    return true;
+    return root_it == canonical_root.end();
 }
 
-bool ensureDir(const std::filesystem::path& dir, std::string& error) {
+bool ensure_dir(const std::filesystem::path& dir, std::string& error) {
     std::error_code ec;
+    if (dir.empty()) {
+        return true;
+    }
     std::filesystem::create_directories(dir, ec);
     if (ec) {
         error = "Failed to create directory: " + dir.string();
@@ -331,732 +350,617 @@ bool ensureDir(const std::filesystem::path& dir, std::string& error) {
     return true;
 }
 
-uint32_t deriveShuffleSeed(uint32_t seed) {
-    uint64_t mixed = static_cast<uint64_t>(seed) * 2654435761u;
-    mixed ^= (mixed >> 16);
-    return static_cast<uint32_t>(mixed & 0xffffffffu);
+bool ensure_parent_dir(const std::filesystem::path& path, std::string& error) {
+    if (path.empty()) {
+        return true;
+    }
+    return ensure_dir(path.parent_path(), error);
+}
+
+std::string generate_run_id() {
+    using namespace std::chrono;
+    static std::atomic<uint64_t> counter{0};
+
+    auto now = system_clock::now();
+    auto ms = duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
+    auto t = system_clock::to_time_t(now);
+    std::tm tm{};
+#if defined(_WIN32)
+    gmtime_s(&tm, &t);
+#else
+    gmtime_r(&t, &tm);
+#endif
+
+    char time_buf[32] = {};
+    std::strftime(time_buf, sizeof(time_buf), "%Y%m%d_%H%M%S", &tm);
+
+    std::ostringstream oss;
+    oss << time_buf << '_' << std::setw(3) << std::setfill('0') << ms.count()
+        << '_' << counter.fetch_add(1, std::memory_order_relaxed);
+    return oss.str();
+}
+
+struct ArgSplit {
+    std::string flag;
+    std::optional<std::string> value;
+};
+
+ArgSplit split_arg(const std::string& arg) {
+    auto pos = arg.find('=');
+    if (pos == std::string::npos) {
+        return {arg, std::nullopt};
+    }
+    return {arg.substr(0, pos), arg.substr(pos + 1)};
+}
+
+bool take_value(int& i, int argc, char** argv, const std::optional<std::string>& inline_value,
+                std::string& out, std::string& error, const std::string& flag) {
+    if (inline_value.has_value()) {
+        out = *inline_value;
+        if (out.empty()) {
+            error = "Missing value for " + flag;
+            return false;
+        }
+        return true;
+    }
+    if (i + 1 >= argc) {
+        error = "Missing value for " + flag;
+        return false;
+    }
+    out = argv[++i];
+    return true;
 }
 
 } // namespace
 
-std::string BuildTestModeUsage() {
-    std::ostringstream out;
-    out << "Test mode flags\n";
-    out << "  --test-mode\n";
-    out << "  --headless\n";
-    out << "  --test-script <path>\n";
-    out << "  --test-suite <dir>\n";
-    out << "  --list-tests\n";
-    out << "  --list-tests-json <path>\n";
-    out << "  --test-filter <glob_or_regex>\n";
-    out << "  --run-test-id <id>\n";
-    out << "  --run-test-exact <full_name>\n";
-    out << "  --exclude-tag <tag>\n";
-    out << "  --include-tag <tag>\n";
-    out << "  --seed <u32> or -s <u32>\n";
-    out << "  --fixed-fps <int>\n";
-    out << "  --resolution <WxH>\n";
-    out << "  --allow-network <deny|localhost|any>\n";
-    out << "  --artifacts <dir>\n";
-    out << "  --report-json <path>\n";
-    out << "  --report-junit <path>\n";
-    out << "  --update-baselines\n";
-    out << "  --fail-on-missing-baseline\n";
-    out << "  --baseline-key <key>\n";
-    out << "  --baseline-write-mode <deny|stage|apply>\n";
-    out << "  --baseline-staging-dir <dir>\n";
-    out << "  --baseline-approve-token <token>\n";
-    out << "  --shard <n>\n";
-    out << "  --total-shards <k>\n";
-    out << "  --timeout-seconds <int>\n";
-    out << "  --default-test-timeout-frames <int>\n";
-    out << "  --failure-video <off|on>\n";
-    out << "  --failure-video-frames <n>\n";
-    out << "  --retry-failures <n>\n";
-    out << "  --allow-flaky\n";
-    out << "  --auto-audit-on-flake\n";
-    out << "  --flake-artifacts\n";
-    out << "  --run-quarantined\n";
-    out << "  --fail-fast\n";
-    out << "  --max-failures <n>\n";
-    out << "  --shuffle-tests\n";
-    out << "  --shuffle-seed <u32>\n";
-    out << "  --test-manifest <path>\n";
-    out << "  --rng-scope <test|run>\n";
-    out << "  --renderer <null|offscreen|windowed>\n";
-    out << "  --determinism-audit\n";
-    out << "  --determinism-audit-runs <n>\n";
-    out << "  --determinism-audit-scope <test_api|engine|render_hash>\n";
-    out << "  --determinism-violation <fatal|warn>\n";
-    out << "  --fail-on-log-level <level>\n";
-    out << "  --fail-on-log-category <glob>\n";
-    out << "  --record-input <path>\n";
-    out << "  --replay-input <path>\n";
-    out << "  --isolate-tests <none|process-per-file|process-per-test>\n";
-    out << "  --lua-sandbox <on|off>\n";
-    out << "  --perf-mode <off|collect|enforce>\n";
-    out << "  --perf-budget <path>\n";
-    out << "  --perf-trace <path>\n";
-    return out.str();
+std::string test_mode_usage() {
+    std::ostringstream oss;
+    oss << "Usage: --test-mode [options]\n";
+    oss << "See planning/PLAN.md section 2 for full CLI contract.";
+    return oss.str();
 }
 
-std::string GenerateRunId() {
-    using clock = std::chrono::system_clock;
-    auto now = clock::now();
-    auto time = clock::to_time_t(now);
-    std::tm tm{};
-#if defined(_WIN32)
-    localtime_s(&tm, &time);
-#else
-    localtime_r(&time, &tm);
-#endif
-
-    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
-
-    static std::atomic<uint32_t> sequence{0};
-    uint32_t seq = sequence.fetch_add(1);
-
-    std::ostringstream out;
-    out << std::put_time(&tm, "%Y%m%d_%H%M%S");
-    out << '_' << std::setw(3) << std::setfill('0') << ms.count();
-    if (seq > 0) {
-        out << '-' << seq;
-    }
-    return out.str();
-}
-
-bool ParseTestModeArgs(int argc, char** argv, TestModeConfig& out, std::string& error) {
-    if (argc <= 1) {
-        return true;
-    }
+bool parse_test_mode_args(int argc, char** argv, TestModeConfig& out, std::string& err) {
+    out = TestModeConfig{};
+    bool shuffle_seed_set = false;
 
     for (int i = 1; i < argc; ++i) {
-        std::string arg = argv[i];
-        if (arg == "--") {
-            error = "Unexpected positional arguments";
+        std::string raw = argv[i] ? argv[i] : "";
+        if (raw.empty()) {
+            continue;
+        }
+        if (raw == "--") {
+            err = "Unexpected positional arguments";
             return false;
         }
 
-        if (arg.rfind("--", 0) == 0) {
-            std::string flag;
-            std::optional<std::string> inlineValue = splitValue(arg, flag);
+        auto split = split_arg(raw);
+        std::string flag = split.flag;
+        const auto& inline_value = split.value;
 
-            if (flag == "--test-mode") {
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--headless") {
-                if (!parseBool(inlineValue, out.headless, error)) {
-                    return false;
-                }
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--test-script") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                out.test_script = value;
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--test-suite") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                out.test_suite = value;
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--list-tests") {
-                bool enabled = true;
-                if (!parseBool(inlineValue, enabled, error)) {
-                    return false;
-                }
-                out.list_tests = enabled;
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--list-tests-json") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                out.list_tests_json_path = value;
-                out.list_tests = true;
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--test-filter") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                out.test_filter = value;
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--run-test-id") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                out.run_test_id = value;
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--run-test-exact") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                out.run_test_exact = value;
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--exclude-tag") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                splitTags(value, out.exclude_tags);
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--include-tag") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                splitTags(value, out.include_tags);
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--seed") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                if (!parseU32(value, out.seed, error)) {
-                    return false;
-                }
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--fixed-fps") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                if (!parseInt(value, out.fixed_fps, error)) {
-                    return false;
-                }
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--resolution") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                if (!parseResolution(value, out.resolution_width, out.resolution_height, error)) {
-                    return false;
-                }
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--allow-network") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                if (!parseNetworkMode(value, out.allow_network, error)) {
-                    return false;
-                }
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--artifacts") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                out.artifacts_dir = value;
-                out.artifacts_dir_set = true;
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--report-json") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                out.report_json_path = value;
-                out.report_json_set = true;
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--report-junit") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                out.report_junit_path = value;
-                out.report_junit_set = true;
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--update-baselines") {
-                bool enabled = true;
-                if (!parseBool(inlineValue, enabled, error)) {
-                    return false;
-                }
-                out.update_baselines = enabled;
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--fail-on-missing-baseline") {
-                bool enabled = true;
-                if (!parseBool(inlineValue, enabled, error)) {
-                    return false;
-                }
-                out.fail_on_missing_baseline = enabled;
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--baseline-key") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                out.baseline_key = value;
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--baseline-write-mode") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                if (!parseBaselineWriteMode(value, out.baseline_write_mode, error)) {
-                    return false;
-                }
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--baseline-staging-dir") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                out.baseline_staging_dir = value;
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--baseline-approve-token") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                out.baseline_approve_token = value;
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--shard") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                if (!parseInt(value, out.shard, error)) {
-                    return false;
-                }
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--total-shards") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                if (!parseInt(value, out.total_shards, error)) {
-                    return false;
-                }
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--timeout-seconds") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                if (!parseInt(value, out.timeout_seconds, error)) {
-                    return false;
-                }
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--default-test-timeout-frames") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                if (!parseInt(value, out.default_test_timeout_frames, error)) {
-                    return false;
-                }
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--failure-video") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                if (!parseFailureVideoMode(value, out.failure_video, error)) {
-                    return false;
-                }
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--failure-video-frames") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                if (!parseInt(value, out.failure_video_frames, error)) {
-                    return false;
-                }
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--retry-failures") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                if (!parseInt(value, out.retry_failures, error)) {
-                    return false;
-                }
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--allow-flaky") {
-                bool enabled = true;
-                if (!parseBool(inlineValue, enabled, error)) {
-                    return false;
-                }
-                out.allow_flaky = enabled;
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--auto-audit-on-flake") {
-                bool enabled = true;
-                if (!parseBool(inlineValue, enabled, error)) {
-                    return false;
-                }
-                out.auto_audit_on_flake = enabled;
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--flake-artifacts") {
-                bool enabled = true;
-                if (!parseBool(inlineValue, enabled, error)) {
-                    return false;
-                }
-                out.flake_artifacts = enabled;
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--run-quarantined") {
-                bool enabled = true;
-                if (!parseBool(inlineValue, enabled, error)) {
-                    return false;
-                }
-                out.run_quarantined = enabled;
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--fail-fast") {
-                bool enabled = true;
-                if (!parseBool(inlineValue, enabled, error)) {
-                    return false;
-                }
-                out.fail_fast = enabled;
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--max-failures") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                if (!parseInt(value, out.max_failures, error)) {
-                    return false;
-                }
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--shuffle-tests") {
-                bool enabled = true;
-                if (!parseBool(inlineValue, enabled, error)) {
-                    return false;
-                }
-                out.shuffle_tests = enabled;
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--shuffle-seed") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                if (!parseU32(value, out.shuffle_seed, error)) {
-                    return false;
-                }
-                out.shuffle_seed_set = true;
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--test-manifest") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                out.test_manifest_path = value;
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--rng-scope") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                if (!parseRngScope(value, out.rng_scope, error)) {
-                    return false;
-                }
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--renderer") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                if (!parseRendererMode(value, out.renderer, error)) {
-                    return false;
-                }
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--determinism-audit") {
-                bool enabled = true;
-                if (!parseBool(inlineValue, enabled, error)) {
-                    return false;
-                }
-                out.determinism_audit = enabled;
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--determinism-audit-runs") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                if (!parseInt(value, out.determinism_audit_runs, error)) {
-                    return false;
-                }
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--determinism-audit-scope") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                if (!parseDeterminismAuditScope(value, out.determinism_audit_scope, error)) {
-                    return false;
-                }
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--determinism-violation") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                if (!parseDeterminismViolationMode(value, out.determinism_violation, error)) {
-                    return false;
-                }
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--fail-on-log-level") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                out.fail_on_log_level = value;
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--fail-on-log-category") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                out.fail_on_log_category = value;
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--record-input") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                out.record_input = value;
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--replay-input") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                out.replay_input = value;
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--isolate-tests") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                if (!parseIsolateTestsMode(value, out.isolate_tests, error)) {
-                    return false;
-                }
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--lua-sandbox") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                if (!parseLuaSandboxMode(value, out.lua_sandbox, error)) {
-                    return false;
-                }
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--perf-mode") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                if (!parsePerfMode(value, out.perf_mode, error)) {
-                    return false;
-                }
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--perf-budget") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                out.perf_budget = value;
-                out.enabled = true;
-                continue;
-            }
-            if (flag == "--perf-trace") {
-                std::string value;
-                if (!readNextValue(inlineValue, i, argc, argv, value, error)) {
-                    return false;
-                }
-                out.perf_trace = value;
-                out.enabled = true;
-                continue;
-            }
-
-            error = "Unknown flag: " + flag + "\n" + BuildTestModeUsage();
-            return false;
+        if (flag == "-s") {
+            flag = "--seed";
+        } else if (flag == "-f") {
+            flag = "--fixed-fps";
+        } else if (flag == "-r") {
+            flag = "--resolution";
+        } else if (flag == "-t") {
+            flag = "--test-script";
+        } else if (flag == "-T") {
+            flag = "--test-suite";
+        } else if (flag == "-l") {
+            flag = "--list-tests";
         }
 
-        if (arg.rfind("-", 0) == 0) {
-            if (arg == "-s") {
-                std::string value;
-                if (!readNextValue(std::nullopt, i, argc, argv, value, error)) {
-                    return false;
-                }
-                if (!parseU32(value, out.seed, error)) {
-                    return false;
-                }
-                out.enabled = true;
-                continue;
+        if (flag == "--test-mode") {
+            out.enabled = true;
+            continue;
+        }
+        if (flag == "--headless") {
+            if (!parse_bool_flag(inline_value, out.headless, err, flag)) {
+                return false;
             }
-            error = "Unknown flag: " + arg + "\n" + BuildTestModeUsage();
-            return false;
+            continue;
+        }
+        if (flag == "--test-script") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            out.test_script = value;
+            continue;
+        }
+        if (flag == "--test-suite") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            out.test_suite = value;
+            continue;
+        }
+        if (flag == "--list-tests") {
+            if (!parse_bool_flag(inline_value, out.list_tests, err, flag)) {
+                return false;
+            }
+            continue;
+        }
+        if (flag == "--list-tests-json") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            out.list_tests_json_path = value;
+            out.list_tests = true;
+            continue;
+        }
+        if (flag == "--test-filter") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            out.test_filter = value;
+            continue;
+        }
+        if (flag == "--run-test-id") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            out.run_test_id = value;
+            continue;
+        }
+        if (flag == "--run-test-exact") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            out.run_test_exact = value;
+            continue;
+        }
+        if (flag == "--include-tag") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            out.include_tags.push_back(value);
+            continue;
+        }
+        if (flag == "--exclude-tag") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            out.exclude_tags.push_back(value);
+            continue;
+        }
+        if (flag == "--seed") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            if (!parse_uint32(value, out.seed, err, flag)) {
+                return false;
+            }
+            continue;
+        }
+        if (flag == "--fixed-fps") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            if (!parse_int(value, out.fixed_fps, err, flag)) {
+                return false;
+            }
+            continue;
+        }
+        if (flag == "--resolution") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            if (!parse_resolution(value, out.resolution_width, out.resolution_height, err)) {
+                return false;
+            }
+            continue;
+        }
+        if (flag == "--allow-network") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            if (!parse_network_mode(value, out.allow_network, err)) {
+                return false;
+            }
+            continue;
+        }
+        if (flag == "--artifacts") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            out.artifacts_dir = std::filesystem::path(value);
+            continue;
+        }
+        if (flag == "--report-json") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            out.report_json_path = std::filesystem::path(value);
+            continue;
+        }
+        if (flag == "--report-junit") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            out.report_junit_path = std::filesystem::path(value);
+            continue;
+        }
+        if (flag == "--update-baselines") {
+            out.update_baselines = true;
+            continue;
+        }
+        if (flag == "--fail-on-missing-baseline") {
+            out.fail_on_missing_baseline = true;
+            continue;
+        }
+        if (flag == "--baseline-key") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            out.baseline_key = value;
+            continue;
+        }
+        if (flag == "--baseline-write-mode") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            if (!parse_baseline_write_mode(value, out.baseline_write_mode, err)) {
+                return false;
+            }
+            continue;
+        }
+        if (flag == "--baseline-staging-dir") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            out.baseline_staging_dir = std::filesystem::path(value);
+            continue;
+        }
+        if (flag == "--baseline-approve-token") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            out.baseline_approve_token = value;
+            continue;
+        }
+        if (flag == "--shard") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            if (!parse_int(value, out.shard, err, flag)) {
+                return false;
+            }
+            continue;
+        }
+        if (flag == "--total-shards") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            if (!parse_int(value, out.total_shards, err, flag)) {
+                return false;
+            }
+            continue;
+        }
+        if (flag == "--timeout-seconds") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            if (!parse_int(value, out.timeout_seconds, err, flag)) {
+                return false;
+            }
+            continue;
+        }
+        if (flag == "--default-test-timeout-frames") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            if (!parse_int(value, out.default_test_timeout_frames, err, flag)) {
+                return false;
+            }
+            continue;
+        }
+        if (flag == "--failure-video") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            if (!parse_failure_video_mode(value, out.failure_video, err)) {
+                return false;
+            }
+            continue;
+        }
+        if (flag == "--failure-video-frames") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            if (!parse_int(value, out.failure_video_frames, err, flag)) {
+                return false;
+            }
+            continue;
+        }
+        if (flag == "--retry-failures") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            if (!parse_int(value, out.retry_failures, err, flag)) {
+                return false;
+            }
+            continue;
+        }
+        if (flag == "--allow-flaky") {
+            out.allow_flaky = true;
+            continue;
+        }
+        if (flag == "--auto-audit-on-flake") {
+            out.auto_audit_on_flake = true;
+            continue;
+        }
+        if (flag == "--flake-artifacts") {
+            out.flake_artifacts = true;
+            continue;
+        }
+        if (flag == "--run-quarantined") {
+            out.run_quarantined = true;
+            continue;
+        }
+        if (flag == "--fail-fast") {
+            out.fail_fast = true;
+            continue;
+        }
+        if (flag == "--max-failures") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            if (!parse_int(value, out.max_failures, err, flag)) {
+                return false;
+            }
+            continue;
+        }
+        if (flag == "--shuffle-tests") {
+            out.shuffle_tests = true;
+            continue;
+        }
+        if (flag == "--shuffle-seed") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            if (!parse_uint32(value, out.shuffle_seed, err, flag)) {
+                return false;
+            }
+            shuffle_seed_set = true;
+            continue;
+        }
+        if (flag == "--test-manifest") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            out.test_manifest_path = std::filesystem::path(value);
+            continue;
+        }
+        if (flag == "--rng-scope") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            if (!parse_rng_scope(value, out.rng_scope, err)) {
+                return false;
+            }
+            continue;
+        }
+        if (flag == "--renderer") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            if (!parse_renderer_mode(value, out.renderer, err)) {
+                return false;
+            }
+            out.renderer_set = true;
+            continue;
+        }
+        if (flag == "--determinism-audit") {
+            out.determinism_audit = true;
+            continue;
+        }
+        if (flag == "--determinism-audit-runs") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            if (!parse_int(value, out.determinism_audit_runs, err, flag)) {
+                return false;
+            }
+            continue;
+        }
+        if (flag == "--determinism-audit-scope") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            if (!parse_determinism_audit_scope(value, out.determinism_audit_scope, err)) {
+                return false;
+            }
+            continue;
+        }
+        if (flag == "--determinism-violation") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            if (!parse_determinism_violation(value, out.determinism_violation, err)) {
+                return false;
+            }
+            continue;
+        }
+        if (flag == "--fail-on-log-level") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            out.fail_on_log_level = value;
+            continue;
+        }
+        if (flag == "--fail-on-log-category") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            out.fail_on_log_category = value;
+            continue;
+        }
+        if (flag == "--record-input") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            out.record_input_path = std::filesystem::path(value);
+            continue;
+        }
+        if (flag == "--replay-input") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            out.replay_input_path = std::filesystem::path(value);
+            continue;
+        }
+        if (flag == "--isolate-tests") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            if (!parse_isolate_tests_mode(value, out.isolate_tests, err)) {
+                return false;
+            }
+            continue;
+        }
+        if (flag == "--lua-sandbox") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            if (!parse_lua_sandbox_mode(value, out.lua_sandbox, err)) {
+                return false;
+            }
+            continue;
+        }
+        if (flag == "--perf-mode") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            if (!parse_perf_mode(value, out.perf_mode, err)) {
+                return false;
+            }
+            continue;
+        }
+        if (flag == "--perf-budget") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            out.perf_budget_path = std::filesystem::path(value);
+            continue;
+        }
+        if (flag == "--perf-trace") {
+            std::string value;
+            if (!take_value(i, argc, argv, inline_value, value, err, flag)) {
+                return false;
+            }
+            out.perf_trace_path = std::filesystem::path(value);
+            continue;
         }
 
-        error = "Unexpected positional argument: " + arg + "\n" + BuildTestModeUsage();
+        err = "Unknown flag: " + flag + "\n" + test_mode_usage();
         return false;
+    }
+
+    if (!shuffle_seed_set && out.shuffle_tests) {
+        out.shuffle_seed = out.seed;
     }
 
     return true;
 }
 
-bool ValidateAndFinalize(TestModeConfig& config, std::string& error) {
-    const std::filesystem::path root = std::filesystem::current_path();
-
+bool validate_and_finalize(TestModeConfig& config, std::string& err) {
     if (config.test_script.has_value() && config.test_suite.has_value()) {
-        error = "test-script and test-suite are mutually exclusive";
+        err = "--test-script and --test-suite are mutually exclusive";
         return false;
     }
-
     if (config.run_test_id.has_value() && config.run_test_exact.has_value()) {
-        error = "run-test-id and run-test-exact are mutually exclusive";
+        err = "--run-test-id and --run-test-exact are mutually exclusive";
         return false;
     }
-
     if (!config.test_filter.empty() && (config.run_test_id.has_value() || config.run_test_exact.has_value())) {
-        error = "test-filter is mutually exclusive with run-test-id and run-test-exact";
+        err = "--test-filter is mutually exclusive with --run-test-id and --run-test-exact";
         return false;
     }
-
-    if (config.shard <= 0 || config.total_shards <= 0 || config.shard > config.total_shards) {
-        error = "Invalid shard configuration";
+    if (config.shard <= 0 || config.total_shards <= 0) {
+        err = "--shard and --total-shards must be >= 1";
         return false;
     }
-
+    if (config.shard > config.total_shards) {
+        err = "--shard must be <= --total-shards";
+        return false;
+    }
     if (config.timeout_seconds <= 0) {
-        error = "timeout-seconds must be greater than zero";
+        err = "--timeout-seconds must be > 0";
         return false;
     }
-
     if (config.fixed_fps <= 0) {
-        error = "fixed-fps must be greater than zero";
+        err = "--fixed-fps must be > 0";
         return false;
     }
-
-    if (config.resolution_width <= 0 || config.resolution_height <= 0) {
-        error = "resolution must be positive";
-        return false;
-    }
-
     if (config.default_test_timeout_frames <= 0) {
-        error = "default-test-timeout-frames must be greater than zero";
+        err = "--default-test-timeout-frames must be > 0";
         return false;
     }
-
-    if (config.failure_video_frames <= 0) {
-        error = "failure-video-frames must be greater than zero";
-        return false;
-    }
-
     if (config.determinism_audit_runs <= 0) {
-        error = "determinism-audit-runs must be greater than zero";
+        err = "--determinism-audit-runs must be > 0";
         return false;
+    }
+    if (config.failure_video_frames <= 0) {
+        err = "--failure-video-frames must be > 0";
+        return false;
+    }
+    if (config.retry_failures < 0 || config.max_failures < 0) {
+        err = "Retry and max failure counts must be >= 0";
+        return false;
+    }
+    if (config.resolution_width <= 0 || config.resolution_height <= 0) {
+        err = "--resolution must be WxH with positive values";
+        return false;
+    }
+
+    bool default_suite = false;
+    if (!config.test_script.has_value() && !config.test_suite.has_value()) {
+        config.test_suite = std::string("assets/scripts/tests/e2e");
+        default_suite = true;
     }
 
     if (config.update_baselines) {
@@ -1066,151 +970,188 @@ bool ValidateAndFinalize(TestModeConfig& config, std::string& error) {
         }
     }
 
-    if (config.shuffle_tests && !config.shuffle_seed_set) {
-        config.shuffle_seed = deriveShuffleSeed(config.seed);
+    if (config.shuffle_tests && config.shuffle_seed == 0) {
+        config.shuffle_seed = config.seed;
     }
 
-    if (config.enabled && !config.test_script.has_value() && !config.test_suite.has_value()) {
-        config.test_suite = std::filesystem::path("assets") / "scripts" / "tests" / "e2e";
+    if (config.headless && !config.renderer_set) {
+        config.renderer = RendererMode::Offscreen;
     }
 
-    auto validatePath = [&](const std::filesystem::path& path, bool mustExist, bool mustBeDir) -> bool {
-        if (!isUnderRoot(root, path, error)) {
-            return false;
+    if (config.run_id.empty()) {
+        config.run_id = generate_run_id();
+    }
+
+    auto root = detect_repo_root();
+    auto out_root = root / "tests" / "out";
+    auto baseline_staging_root = root / "tests" / "baselines_staging";
+
+    config.run_root = root / "tests" / "out" / config.run_id;
+    if (config.artifacts_dir.empty()) {
+        config.artifacts_dir = config.run_root / "artifacts";
+    }
+    if (config.report_json_path.empty()) {
+        config.report_json_path = config.run_root / "report.json";
+    }
+    if (config.report_junit_path.empty()) {
+        config.report_junit_path = config.run_root / "report.junit.xml";
+    }
+    config.forensics_dir = config.run_root / "forensics";
+
+    if (config.test_manifest_path.empty()) {
+        config.test_manifest_path = std::filesystem::path("tests/test_manifest.json");
+    }
+
+    auto validate_path = [&](const std::filesystem::path& path,
+                             const std::filesystem::path& allowed_root,
+                             const std::string& label) -> bool {
+        if (path.empty()) {
+            return true;
         }
-        std::filesystem::path resolved = path.is_absolute() ? path : root / path;
-        std::error_code ec;
-        resolved = std::filesystem::weakly_canonical(resolved, ec);
-        if (ec) {
-            resolved = resolved.lexically_normal();
-        }
-        if (mustExist && !std::filesystem::exists(resolved)) {
-            error = "Missing required path: " + path.string();
-            return false;
-        }
-        if (mustBeDir && std::filesystem::exists(resolved) && !std::filesystem::is_directory(resolved)) {
-            error = "Expected directory path: " + path.string();
+        auto resolved = resolve_path(root, path);
+        if (!is_under_root(allowed_root, resolved)) {
+            err = "Path outside allowed root for " + label;
             return false;
         }
         return true;
     };
 
-    if (config.test_script.has_value()) {
-        if (!validatePath(config.test_script.value(), true, false)) {
+    auto validate_input_path = [&](const std::filesystem::path& path, const std::string& label,
+                                   bool require_dir) -> bool {
+        auto resolved = resolve_path(root, path);
+        if (!is_under_root(root, resolved)) {
+            err = "Path outside repo root for " + label;
             return false;
         }
-    }
-
-    if (config.test_suite.has_value()) {
-        if (!validatePath(config.test_suite.value(), true, true)) {
+        if (!std::filesystem::exists(resolved)) {
+            err = "Missing required path for " + label + ": " + resolved.string();
             return false;
         }
-    }
-
-    if (config.list_tests_json_path.has_value()) {
-        if (!validatePath(config.list_tests_json_path.value(), false, false)) {
+        if (require_dir && !std::filesystem::is_directory(resolved)) {
+            err = "Expected directory for " + label + ": " + resolved.string();
             return false;
         }
-    }
-
-    if (!validatePath(config.test_manifest_path, false, false)) {
-        return false;
-    }
-
-    if (!validatePath(config.baseline_staging_dir, false, true)) {
-        return false;
-    }
-
-    if (config.record_input.has_value()) {
-        if (!validatePath(config.record_input.value(), false, false)) {
+        if (!require_dir && std::filesystem::is_directory(resolved)) {
+            err = "Expected file for " + label + ": " + resolved.string();
             return false;
         }
-    }
-
-    if (config.replay_input.has_value()) {
-        if (!validatePath(config.replay_input.value(), true, false)) {
-            return false;
-        }
-    }
-
-    if (config.perf_budget.has_value()) {
-        if (!validatePath(config.perf_budget.value(), false, false)) {
-            return false;
-        }
-    }
-
-    if (config.perf_trace.has_value()) {
-        if (!validatePath(config.perf_trace.value(), false, false)) {
-            return false;
-        }
-    }
-
-    if (!config.enabled) {
         return true;
+    };
+
+    if (!validate_path(config.artifacts_dir, out_root, "--artifacts")) {
+        return false;
+    }
+    if (!validate_path(config.report_json_path, out_root, "--report-json")) {
+        return false;
+    }
+    if (!validate_path(config.report_junit_path, out_root, "--report-junit")) {
+        return false;
+    }
+    if (!validate_path(config.run_root, out_root, "run root")) {
+        return false;
+    }
+    if (!validate_path(config.forensics_dir, out_root, "forensics dir")) {
+        return false;
+    }
+    if (!validate_path(config.baseline_staging_dir, baseline_staging_root, "--baseline-staging-dir")) {
+        return false;
+    }
+    if (!validate_path(config.test_manifest_path, root, "--test-manifest")) {
+        return false;
+    }
+    if (config.list_tests_json_path.has_value()) {
+        if (!validate_path(std::filesystem::path(*config.list_tests_json_path), out_root, "--list-tests-json")) {
+            return false;
+        }
+    }
+    if (config.record_input_path.has_value()) {
+        if (!validate_path(*config.record_input_path, out_root, "--record-input")) {
+            return false;
+        }
+    }
+    if (config.replay_input_path.has_value()) {
+        if (!validate_input_path(*config.replay_input_path, "--replay-input", false)) {
+            return false;
+        }
+    }
+    if (config.perf_budget_path.has_value()) {
+        if (!validate_input_path(*config.perf_budget_path, "--perf-budget", false)) {
+            return false;
+        }
+    }
+    if (config.perf_trace_path.has_value()) {
+        if (!validate_path(*config.perf_trace_path, out_root, "--perf-trace")) {
+            return false;
+        }
+    }
+    if (config.test_script.has_value()) {
+        if (!validate_input_path(std::filesystem::path(*config.test_script), "--test-script", false)) {
+            return false;
+        }
+    }
+    if (config.test_suite.has_value() && !default_suite) {
+        if (!validate_input_path(std::filesystem::path(*config.test_suite), "--test-suite", true)) {
+            return false;
+        }
     }
 
-    if (config.run_id.empty()) {
-        config.run_id = GenerateRunId();
-    }
-
-    config.out_dir = std::filesystem::path("tests") / "out" / config.run_id;
-    if (!config.artifacts_dir_set) {
-        config.artifacts_dir = config.out_dir / "artifacts";
-    }
-    if (!config.report_json_set) {
-        config.report_json_path = config.out_dir / "report.json";
-    }
-    if (!config.report_junit_set) {
-        config.report_junit_path = config.out_dir / "report.junit.xml";
-    }
-    config.forensics_dir = config.out_dir / "forensics";
-
-    if (!validatePath(config.out_dir, false, true)) {
-        return false;
-    }
-    if (!validatePath(config.artifacts_dir, false, true)) {
-        return false;
-    }
-    if (!validatePath(config.forensics_dir, false, true)) {
-        return false;
-    }
-    if (!validatePath(config.report_json_path, false, false)) {
-        return false;
-    }
-    if (!validatePath(config.report_junit_path, false, false)) {
-        return false;
-    }
-
-    if (!ensureDir(config.out_dir, error)) {
-        return false;
-    }
-    if (!ensureDir(config.artifacts_dir, error)) {
-        return false;
-    }
-    if (!ensureDir(config.forensics_dir, error)) {
-        return false;
-    }
+    config.artifacts_dir = resolve_path(root, config.artifacts_dir);
+    config.report_json_path = resolve_path(root, config.report_json_path);
+    config.report_junit_path = resolve_path(root, config.report_junit_path);
+    config.run_root = resolve_path(root, config.run_root);
+    config.forensics_dir = resolve_path(root, config.forensics_dir);
+    config.baseline_staging_dir = resolve_path(root, config.baseline_staging_dir);
+    config.test_manifest_path = resolve_path(root, config.test_manifest_path);
 
     if (config.list_tests_json_path.has_value()) {
-        auto jsonPath = config.list_tests_json_path.value();
-        std::filesystem::path resolved = jsonPath.is_absolute() ? jsonPath : root / jsonPath;
-        if (!ensureDir(resolved.parent_path(), error)) {
+        config.list_tests_json_path = resolve_path(root, *config.list_tests_json_path).string();
+    }
+    if (config.record_input_path.has_value()) {
+        config.record_input_path = resolve_path(root, *config.record_input_path);
+    }
+    if (config.replay_input_path.has_value()) {
+        config.replay_input_path = resolve_path(root, *config.replay_input_path);
+    }
+    if (config.perf_budget_path.has_value()) {
+        config.perf_budget_path = resolve_path(root, *config.perf_budget_path);
+    }
+    if (config.perf_trace_path.has_value()) {
+        config.perf_trace_path = resolve_path(root, *config.perf_trace_path);
+    }
+    if (config.test_script.has_value()) {
+        config.test_script = resolve_path(root, *config.test_script).string();
+    }
+    if (config.test_suite.has_value()) {
+        config.test_suite = resolve_path(root, *config.test_suite).string();
+    }
+
+    if (!ensure_dir(config.run_root, err)) {
+        return false;
+    }
+    if (!ensure_dir(config.artifacts_dir, err)) {
+        return false;
+    }
+    if (!ensure_dir(config.forensics_dir, err)) {
+        return false;
+    }
+    if (!ensure_parent_dir(config.report_json_path, err)) {
+        return false;
+    }
+    if (!ensure_parent_dir(config.report_junit_path, err)) {
+        return false;
+    }
+    if (config.list_tests_json_path.has_value()) {
+        if (!ensure_parent_dir(std::filesystem::path(*config.list_tests_json_path), err)) {
             return false;
         }
     }
-
-    std::filesystem::path reportJsonParent = config.report_json_path.parent_path();
-    if (!reportJsonParent.empty()) {
-        std::filesystem::path resolved = reportJsonParent.is_absolute() ? reportJsonParent : root / reportJsonParent;
-        if (!ensureDir(resolved, error)) {
+    if (config.record_input_path.has_value()) {
+        if (!ensure_parent_dir(*config.record_input_path, err)) {
             return false;
         }
     }
-
-    std::filesystem::path reportJunitParent = config.report_junit_path.parent_path();
-    if (!reportJunitParent.empty()) {
-        std::filesystem::path resolved = reportJunitParent.is_absolute() ? reportJunitParent : root / reportJunitParent;
-        if (!ensureDir(resolved, error)) {
+    if (config.perf_trace_path.has_value()) {
+        if (!ensure_parent_dir(*config.perf_trace_path, err)) {
             return false;
         }
     }
@@ -1218,4 +1159,4 @@ bool ValidateAndFinalize(TestModeConfig& config, std::string& error) {
     return true;
 }
 
-} // namespace test_mode
+} // namespace testing

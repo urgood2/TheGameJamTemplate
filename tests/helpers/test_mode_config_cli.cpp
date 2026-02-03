@@ -1,17 +1,18 @@
 #include <iostream>
+#include <string>
 
 #include "testing/test_mode_config.hpp"
 
 int main(int argc, char** argv) {
-    test_mode::TestModeConfig config;
+    testing::TestModeConfig config;
     std::string error;
 
-    if (!test_mode::ParseTestModeArgs(argc, argv, config, error)) {
+    if (!testing::parse_test_mode_args(argc, argv, config, error)) {
         std::cerr << error << "\n";
         return 2;
     }
 
-    if (!test_mode::ValidateAndFinalize(config, error)) {
+    if (!testing::validate_and_finalize(config, error)) {
         std::cerr << error << "\n";
         return 2;
     }

@@ -45,6 +45,29 @@ cmake -B build -DUSE_LUAJIT=OFF && cmake --build build               # Lua 5.4.4
 - **200 local variable limit**: Per function scope (see Common Mistakes)
 - **Bitwise operations**: Use `bit.bor()`, `bit.band()`, etc. from `bit_compat.lua` - NOT raw Lua 5.3+ operators
 
+## Pixquare iPad Workflow
+
+Sync pixel art from iPad (Pixquare app) via iCloud:
+
+```bash
+just watch-pixquare    # Watch mode (continuous)
+just sync-pixquare-once # One-time sync
+```
+
+**iCloud folder setup (one-time):**
+```bash
+mkdir -p ~/Library/Mobile\ Documents/com~apple~CloudDocs/pixquare-animations
+mkdir -p ~/Library/Mobile\ Documents/com~apple~CloudDocs/pixquare-sprites
+```
+
+**Workflow:**
+- Animations: Export .aseprite to `pixquare-animations/` → auto-copied to `assets/animations/`
+- Static sprites: Export .aseprite to `pixquare-sprites/` → layers merged into `auto_export_assets.aseprite`
+
+Processed files are moved to `processed/` subfolder. To update an existing sprite, delete its `{name}_*` layers from `auto_export_assets.aseprite` first.
+
+See `docs/plans/2026-02-03-pixquare-ipad-sync-design.md` for full design.
+
 ## Lua Runtime Debugging
 
 ```bash

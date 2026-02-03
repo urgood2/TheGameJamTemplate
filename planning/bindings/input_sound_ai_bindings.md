@@ -1,3 +1,37 @@
+# Input/Sound/AI Bindings
+
+## Scope
+Bindings for player input, audio playback, and AI systems exposed to Lua.
+
+## Source Files
+- `src/systems/input/input_lua_bindings.cpp`
+- `src/systems/sound/sound_system.cpp`
+- `src/systems/ai/ai_system.cpp`
+
+## Binding Patterns (C++)
+- Input: `sol::table in = lua["in"]; in.set_function(...)` plus `lua.create_table_with(...)` for enums.
+- Sound: `lua.set_function("playSoundEffect", ...)` with `rec.record_free_function(...)` for signatures.
+- AI: `sol::table ai = lua["ai"]; ai.set_function(...)` and `lua.set_function("create_ai_entity", ...)`.
+
+## Frequency Scan
+Command attempted (fails currently due to `args.roots` being strings in `scripts/frequency_scan.py`):
+`python3 scripts/frequency_scan.py --system input_sound_ai --bindings planning/inventory/bindings.input_sound_ai.json --roots assets/scripts --mode token_aware --output planning/inventory/frequency.input_sound_ai.json`
+
+## Extractor Gaps
+- `sound_system.cpp`: `lua.set_function(...)` entries appear after the extractor preview window, so they were manually added:
+  `playSoundEffect`, `toggleLowPassFilter`, `toggleDelayEffect`, `resetSoundSystem`, `setLowPassTarget`, `setLowPassSpeed`,
+  `playMusic`, `playPlaylist`, `clearPlaylist`, `stopAllMusic`, `queueMusic`, `setTrackVolume`, `getTrackVolume`,
+  `fadeInMusic`, `fadeOutMusic`, `pauseMusic`, `resumeMusic`, `setVolume`, `setMusicVolume`, `setCategoryVolume`,
+  `setSoundPitch`.
+- `ai_system.cpp`: bindings are currently extracted under `bindings.core.json` (no `ai` mapping in extractor); filtered by `source_ref`.
+
+## Tests
+- `input.is_key_pressed.basic` → `sol2_function_in_iskeypressed`
+- `input.get_mouse_position.basic` → `sol2_function_in_getmousepos`
+- `sound.play.basic` → `sol2_function_playsoundeffect`
+- `sound.stop.basic` → `sol2_function_stopallmusic`
+- `ai.list_lua_files.basic` → `sol2_function_ai_list_lua_files`
+- `ai.create_entity.basic` → `sol2_function_create_ai_entity`
 
 <!-- AUTOGEN:BEGIN binding_list -->
 - `AxisButtonState.current` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/input/input_lua_bindings.cpp:690`

@@ -1,13 +1,13 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-02-03T02:59:38.415770+00:00",
+  "generated_at": "2026-02-03T05:32:25.036452+00:00",
   "system": "physics",
   "source_files": [
     "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp"
   ],
   "summary": {
     "usertypes": 15,
-    "functions": 98,
+    "functions": 101,
     "constants": 0,
     "enums": 3,
     "methods": 0,
@@ -292,7 +292,8 @@
         "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:266",
         "extraction_confidence": "high",
         "tier": 0,
-        "verified": false
+        "verified": true,
+        "test_id": "physics.update_collision_masks.basic"
       },
       {
         "lua_name": "physics_table.reapply_all_filters",
@@ -391,7 +392,8 @@
         "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:872",
         "extraction_confidence": "high",
         "tier": 0,
-        "verified": false
+        "verified": true,
+        "test_id": "physics.collision_callback"
       },
       {
         "lua_name": "physics_table.on_pair_separate",
@@ -787,7 +789,8 @@
         "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:1431",
         "extraction_confidence": "high",
         "tier": 0,
-        "verified": false
+        "verified": true,
+        "test_id": "physics.segment_query.hit_entity"
       },
       {
         "lua_name": "physics_table.point_query_nearest",
@@ -1261,6 +1264,42 @@
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
+      },
+      {
+        "lua_name": "physics.entity_from_ptr",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "(p: lightuserdata) -> entt.entity",
+        "doc_id": "sol2_function_physics_entity_from_ptr",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:293",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": true,
+        "test_id": "physics.segment_query.hit_entity"
+      },
+      {
+        "lua_name": "physics.AddCollider",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "(world, e, tag, shapeType, a, b, c, d, isSensor, points) -> nil",
+        "doc_id": "sol2_function_physics_addcollider",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:429",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": true,
+        "test_id": "physics.add_collider.circle"
+      },
+      {
+        "lua_name": "physics.add_shape_to_entity",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "(world, e, tag, shapeType, a, b, c, d, isSensor, points) -> nil",
+        "doc_id": "sol2_function_physics_add_shape_to_entity",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/physics/physics_lua_bindings.cpp:461",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": true,
+        "test_id": "physics.add_shape.circle"
       }
     ],
     "constants": [],

@@ -217,10 +217,15 @@ def load_quirks_anchors(quirks_path: Path) -> set[str]:
         return anchors
     for line in quirks_path.read_text().splitlines():
         stripped = line.strip()
+        anchor_match = re.search(r'<a id="([^"]+)">', stripped)
+        if anchor_match:
+            anchors.add(anchor_match.group(1))
         if stripped.startswith("#"):
             heading = stripped.lstrip("#").strip()
             if heading:
                 anchors.add(slugify_heading(heading))
+                if re.fullmatch(r"[A-Za-z0-9._-]+", heading):
+                    anchors.add(heading.lower())
     return anchors
 
 

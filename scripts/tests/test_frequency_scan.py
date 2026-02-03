@@ -104,6 +104,7 @@ def test_alias_matching_records_canonical_name(tmp_path: Path):
 
     entry = _entry_map(output)["ui.box"]
     assert "UIBox" in entry["matched_aliases"]
+    assert entry["alias_hits"]["UIBox"] == 1
     assert entry["total_occurrences"] == 1
 
 

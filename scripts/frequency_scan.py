@@ -328,6 +328,10 @@ class FrequencyEntry:
         return {
             "name": self.name,
             "aliases": self.aliases,
+            "alias_hits": {
+                alias: stats.occurrences
+                for alias, stats in sorted(self.matched_aliases.items())
+            },
             "matched_aliases": {
                 alias: stats.to_dict()
                 for alias, stats in sorted(self.matched_aliases.items())

@@ -2662,12 +2662,12 @@ devlog/sfx/node_modules/
 # bv (beads viewer) local config and caches
 .bv/
 
+
 # Test output (ephemeral)
 test_output/**
 !test_output/screenshots/.gitkeep
 !test_output/artifacts/.gitkeep
 
-# Test output (ephemeral - regenerated each run)
-test_output/**
-!test_output/screenshots/.gitkeep
-!test_output/artifacts/.gitkeep
+# Agent coordination and local state
+.beads/
+.flywheel/

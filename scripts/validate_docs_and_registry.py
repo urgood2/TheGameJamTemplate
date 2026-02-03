@@ -32,6 +32,8 @@ EXIT_ERROR = 2
 
 DOC_ID_RE = re.compile(r"(?:pattern|binding|component):[A-Za-z0-9._-]+")
 DOC_ID_LINE_RE = re.compile(r"\bdoc_ids?\b", re.IGNORECASE)
+DOC_CHECKS = {"duplicates", "verified", "registry"}
+REGISTRY_CHECKS = {"verified", "registry", "manifest", "quirks"}
 
 
 @dataclass
@@ -90,7 +92,7 @@ def extract_doc_ids_from_line(line: str) -> list[str]:
     return [doc_id for doc_id in DOC_ID_RE.findall(line) if is_valid_doc_id(doc_id)]
 
 
-def parse_docs(root: Path) -> tuple[dict[str, list[DocIdOccurrence]], set[str], int]:
+def collect_doc_files(root: Path) -> list[Path]:
     doc_files: list[Path] = []
     doc_files.extend((root / "planning" / "bindings").glob("*.md"))
     doc_files.extend((root / "planning" / "components").glob("*.md"))
@@ -99,7 +101,11 @@ def parse_docs(root: Path) -> tuple[dict[str, list[DocIdOccurrence]], set[str], 
     quirks = root / "docs" / "quirks.md"
     if quirks.exists():
         doc_files.append(quirks)
+    return doc_files
 
+
+def parse_docs(root: Path) -> tuple[dict[str, list[DocIdOccurrence]], set[str], int]:
+    doc_files = collect_doc_files(root)
     occurrences: dict[str, list[DocIdOccurrence]] = {}
     verified_doc_ids: set[str] = set()
 
@@ -189,7 +195,10 @@ def parse_registry(registry_path: Path) -> dict[str, RegistryEntry]:
 def load_manifest(manifest_path: Path) -> set[str]:
     if not manifest_path.exists():
         return set()
-    payload = json.loads(manifest_path.read_text())
+    try:
+        payload = json.loads(manifest_path.read_text())
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Invalid JSON in manifest: {manifest_path}") from exc
     tests = payload.get("tests", [])
     return {entry.get("test_id") for entry in tests if entry.get("test_id")}
 
@@ -366,6 +375,36 @@ def main() -> int:
     if not checks:
         checks = {"duplicates", "verified", "registry", "manifest", "quirks"}
 
+    registry_path = root / "assets" / "scripts" / "test" / "test_registry.lua"
+    manifest_path = root / "test_output" / "test_manifest.json"
+    quirks_path = root / "docs" / "quirks.md"
+
+    missing_inputs: list[str] = []
+    if checks & DOC_CHECKS:
+        if not collect_doc_files(root):
+            missing_inputs.append("planning/{bindings,components,patterns}/*.md")
+    if checks & REGISTRY_CHECKS and not registry_path.exists():
+        missing_inputs.append(str(registry_path))
+    if "manifest" in checks and not manifest_path.exists():
+        missing_inputs.append(str(manifest_path))
+    if "quirks" in checks and not quirks_path.exists():
+        missing_inputs.append(str(quirks_path))
+
+    if missing_inputs:
+        if args.json:
+            payload = {
+                "error": {
+                    "type": "missing_inputs",
+                    "missing": missing_inputs,
+                }
+            }
+            print(json.dumps(payload, indent=2))
+        else:
+            log("ERROR: Missing required input files", stderr=True)
+            for missing in missing_inputs:
+                log(f"  - {missing}", stderr=True)
+        return EXIT_ERROR
+
     log("=== Docs/Registry Consistency Check ===", verbose=not args.json)
     log(f"Input root: {root}", verbose=not args.json)
     log("Input files:", verbose=not args.json)
@@ -374,65 +413,88 @@ def main() -> int:
     log("  Registry: assets/scripts/test/test_registry.lua", verbose=not args.json)
     log("  Manifest: test_output/test_manifest.json", verbose=not args.json)
 
-    issues, counts = run_validation(root, checks)
+    try:
+        issues, counts = run_validation(root, checks)
+    except (OSError, UnicodeDecodeError, ValueError) as exc:
+        if args.json:
+            payload = {"error": {"type": "parse_error", "message": str(exc)}}
+            print(json.dumps(payload, indent=2))
+        else:
+            log(f"ERROR: {exc}", stderr=True)
+        return EXIT_ERROR
 
     if not args.json:
-        log("[1/5] Checking for duplicate doc_ids...", verbose=True)
-        log(f"  Scanned: {counts['doc_files']} files", verbose=True)
-        log(f"  doc_ids found: {counts['doc_ids']}", verbose=True)
-        if any(issue.check == "duplicates" for issue in issues):
-            for issue in issues:
-                if issue.check != "duplicates":
-                    continue
-                log(f"  FAIL: {issue.message}", verbose=True)
-                for detail in issue.details:
-                    log(f"    - {detail}", verbose=True)
-        else:
-            log("  PASS: No duplicates", verbose=True)
+        ordered_checks = [
+            ("duplicates", "Checking for duplicate doc_ids..."),
+            ("verified", "Checking Verified entries have registry mapping..."),
+            ("registry", "Checking registry entries point to valid docs..."),
+            ("manifest", "Checking test_ids registered by harness..."),
+            ("quirks", "Checking quirks anchors..."),
+        ]
+        check_total = sum(1 for name, _ in ordered_checks if name in checks)
+        check_index = 0
+        for name, label in ordered_checks:
+            if name not in checks:
+                continue
+            check_index += 1
+            log(f"[{check_index}/{check_total}] {label}", verbose=True)
+            if name == "duplicates":
+                log(f"  Scanned: {counts['doc_files']} files", verbose=True)
+                log(f"  doc_ids found: {counts['doc_ids']}", verbose=True)
+            if name == "duplicates":
+                relevant = [issue for issue in issues if issue.check == "duplicates"]
+                if relevant:
+                    for issue in relevant:
+                        log(f"  FAIL: {issue.message}", verbose=True)
+                        for detail in issue.details:
+                            log(f"    - {detail}", verbose=True)
+                else:
+                    log("  PASS: No duplicates", verbose=True)
+                continue
 
-        log("[2/5] Checking Verified entries have registry mapping...", verbose=True)
-        if any(issue.check == "verified" for issue in issues):
-            for issue in issues:
-                if issue.check != "verified":
-                    continue
-                log(f"  FAIL: {issue.message}", verbose=True)
-                for detail in issue.details:
-                    log(f"    - {detail}", verbose=True)
-        else:
-            log(f"  PASS: All {counts['verified_doc_ids']} Verified entries mapped", verbose=True)
+            if name == "verified":
+                relevant = [issue for issue in issues if issue.check == "verified"]
+                if relevant:
+                    for issue in relevant:
+                        log(f"  FAIL: {issue.message}", verbose=True)
+                        for detail in issue.details:
+                            log(f"    - {detail}", verbose=True)
+                else:
+                    log(f"  PASS: All {counts['verified_doc_ids']} Verified entries mapped", verbose=True)
+                continue
 
-        log("[3/5] Checking registry entries point to valid docs...", verbose=True)
-        if any(issue.check == "registry" for issue in issues):
-            for issue in issues:
-                if issue.check != "registry":
-                    continue
-                log(f"  FAIL: {issue.message}", verbose=True)
-                for detail in issue.details:
-                    log(f"    - {detail}", verbose=True)
-        else:
-            log(f"  PASS: All {counts['registry_doc_ids']} registry entries valid", verbose=True)
+            if name == "registry":
+                relevant = [issue for issue in issues if issue.check == "registry"]
+                if relevant:
+                    for issue in relevant:
+                        log(f"  FAIL: {issue.message}", verbose=True)
+                        for detail in issue.details:
+                            log(f"    - {detail}", verbose=True)
+                else:
+                    log(f"  PASS: All {counts['registry_doc_ids']} registry entries valid", verbose=True)
+                continue
 
-        log("[4/5] Checking test_ids registered by harness...", verbose=True)
-        if any(issue.check == "manifest" for issue in issues):
-            for issue in issues:
-                if issue.check != "manifest":
-                    continue
-                log(f"  FAIL: {issue.message}", verbose=True)
-                for detail in issue.details:
-                    log(f"    - {detail}", verbose=True)
-        else:
-            log("  PASS: All registry test_ids found in manifest", verbose=True)
+            if name == "manifest":
+                relevant = [issue for issue in issues if issue.check == "manifest"]
+                if relevant:
+                    for issue in relevant:
+                        log(f"  FAIL: {issue.message}", verbose=True)
+                        for detail in issue.details:
+                            log(f"    - {detail}", verbose=True)
+                else:
+                    log("  PASS: All registry test_ids found in manifest", verbose=True)
+                continue
 
-        log("[5/5] Checking quirks anchors...", verbose=True)
-        if any(issue.check == "quirks" for issue in issues):
-            for issue in issues:
-                if issue.check != "quirks":
-                    continue
-                log(f"  FAIL: {issue.message}", verbose=True)
-                for detail in issue.details:
-                    log(f"    - {detail}", verbose=True)
-        else:
-            log("  PASS: All anchors exist in docs/quirks.md", verbose=True)
+            if name == "quirks":
+                relevant = [issue for issue in issues if issue.check == "quirks"]
+                if relevant:
+                    for issue in relevant:
+                        log(f"  FAIL: {issue.message}", verbose=True)
+                        for detail in issue.details:
+                            log(f"    - {detail}", verbose=True)
+                else:
+                    log("  PASS: All anchors exist in docs/quirks.md", verbose=True)
+                continue
 
         log("=== SUMMARY ===", verbose=True)
         log(f"Checks: {counts['checked']}", verbose=True)

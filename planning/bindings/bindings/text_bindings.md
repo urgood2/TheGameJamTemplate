@@ -1,0 +1,44 @@
+
+<!-- AUTOGEN:BEGIN binding_list -->
+- `CodepointToString` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:397`
+- `TextSystem.Builders.TextBuilder:build` — (method) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:336`
+- `TextSystem.Builders.TextBuilder` — (usertype) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:311`
+- `TextSystem.Builders` — (usertype) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:310`
+- `TextSystem.Character` — (usertype) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:130`
+- `TextSystem.Functions` — (usertype) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:350`
+- `TextSystem.ParsedEffectArguments:arguments` — (method) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:81`
+- `TextSystem.ParsedEffectArguments` — (usertype) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:78`
+- `TextSystem.TextAlignment.CENTER` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:263`
+- `TextSystem.TextAlignment.JUSTIFIED` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:267`
+- `TextSystem.TextAlignment.LEFT` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:261`
+- `TextSystem.TextAlignment.RIGHT` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:265`
+- `TextSystem.TextAlignment` — (usertype) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:257`
+- `TextSystem.TextWrapMode.CHARACTER` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:286`
+- `TextSystem.TextWrapMode.WORD` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:281`
+- `TextSystem.TextWrapMode` — (usertype) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:277`
+- `TextSystem.Text` — (usertype) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:216`
+- `TextSystem.effectFunctions` — (property) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:186`
+- `TextSystem` — (usertype) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:59`
+- `adjustAlignment` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:353`
+- `applyGlobalEffects` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:455`
+- `builders.TextBuilder` — (usertype) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:297`
+- `calculateBoundingBox` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:388`
+- `clearAllEffects` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:447`
+- `createTextEntity` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:367`
+- `debugPrintText` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:465`
+- `handleEffectSegment` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:415`
+- `parseText` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:403`
+- `renderText` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:437`
+- `resetTextScaleAndLayout` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:498`
+- `resizeTextToFit` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:473`
+- `setTextScaleAndRecenter` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:485`
+- `setText` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:507`
+- `splitEffects` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:359`
+- `ts.Character` — (usertype) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:95`
+- `ts.ParsedEffectArguments` — (usertype) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:64`
+- `ts.ParsedEffectArguments` — (usertype) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:72`
+- `ts.TextAlignment` — (enum) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:250`
+- `ts.TextWrapMode` — (enum) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:271`
+- `ts.Text` — (usertype) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:193`
+- `updateText` — (function) — `/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:428`
+<!-- AUTOGEN:END binding_list -->

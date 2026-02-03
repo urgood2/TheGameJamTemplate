@@ -202,6 +202,30 @@ def process_sprite(source: Path, aseprite_exe: str, verbose: bool, move: bool) -
         return False
 
 
+def sync_once(aseprite_exe: str, verbose: bool, move: bool) -> Tuple[int, int]:
+    """Run a single sync pass. Returns (animations_processed, sprites_processed)."""
+    animations_processed = 0
+    sprites_processed = 0
+
+    # Process animations
+    animation_files = get_aseprite_files(ANIMATIONS_ICLOUD)
+    if animation_files:
+        print(f"\nFound {len(animation_files)} animation(s) in {ANIMATIONS_ICLOUD.name}/")
+        for f in animation_files:
+            if process_animation(f, aseprite_exe, verbose, move):
+                animations_processed += 1
+
+    # Process sprites
+    sprite_files = get_aseprite_files(SPRITES_ICLOUD)
+    if sprite_files:
+        print(f"\nFound {len(sprite_files)} sprite(s) in {SPRITES_ICLOUD.name}/")
+        for f in sprite_files:
+            if process_sprite(f, aseprite_exe, verbose, move):
+                sprites_processed += 1
+
+    return animations_processed, sprites_processed
+
+
 def main():
     parser = argparse.ArgumentParser(description="Sync Pixquare exports from iCloud")
     parser.add_argument("--once", action="store_true", help="Single sync without watching")
@@ -230,8 +254,9 @@ def main():
     print(f"Watching: {SPRITES_ICLOUD}")
 
     if args.once:
-        # Single sync - implemented in Task 5
-        print("--once mode not yet implemented")
+        print("\n=== Running single sync ===")
+        anims, sprites = sync_once(aseprite_exe, args.verbose, not args.no_move)
+        print(f"\n=== Sync complete: {anims} animation(s), {sprites} sprite(s) ===")
     else:
         # Watch loop - implemented in Task 6
         print("watch mode not yet implemented")

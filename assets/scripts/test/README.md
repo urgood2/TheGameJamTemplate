@@ -171,6 +171,12 @@ The harness enforces determinism assumptions used by documentation verification:
 
 If any of these are not possible in the runtime environment, record the limitation in `test_output/capabilities.json` and mark affected tests as skipped.
 
+## Known Non-Determinism
+
+See [planning/known_nondeterminism.md](../../../../planning/known_nondeterminism.md)
+for documented sources of nondeterminism, mitigations, and tolerance
+configuration details.
+
 ## Output Wipe Policy
 
 Each run wipes `test_output/` files and regenerates:

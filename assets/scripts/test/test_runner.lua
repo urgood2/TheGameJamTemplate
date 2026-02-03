@@ -887,6 +887,18 @@ function TestRunner.run(self_or_opts, maybe_opts)
         return TestUtils.write_json("test_output/results.json", results_payload)
     end)
 
+    do
+        local ok, CoverageReport = pcall(require, "test.test_coverage_report")
+        if ok and CoverageReport and type(CoverageReport.generate) == "function" then
+            local generated = pcall(CoverageReport.generate, "test_output/results.json", "test_output/coverage_report.md")
+            if not generated then
+                TestUtils.log("[REPORT] WARNING: Failed to generate coverage_report.md")
+            end
+        else
+            TestUtils.log("[REPORT] WARNING: Coverage report module not available")
+        end
+    end
+
     local manifest = TestRegistry.build_manifest()
     log_report_write("test_output/test_manifest.json", function()
         return TestUtils.write_json("test_output/test_manifest.json", manifest)

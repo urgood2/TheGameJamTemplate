@@ -67,8 +67,12 @@ def run_step(
 def build_steps(python: str) -> list[Step]:
     lua_expr = "dofile('assets/scripts/test/run_all_tests.lua'); os.exit(_G.TEST_EXIT_CODE or 0)"
     coverage_expr = (
-        "local ok, mod = pcall(require, 'test.coverage_report'); "
-        "if ok and mod and mod.generate then mod.generate() else error('coverage_report module missing') end"
+        "package.path='assets/scripts/?.lua;assets/scripts/?/init.lua;'..package.path; "
+        "local ok, mod = pcall(require, 'test.test_coverage_report'); "
+        "if ok and mod and mod.generate then "
+        "  local out_ok = mod.generate('test_output/results.json','test_output/coverage_report.md'); "
+        "  if not out_ok then error('coverage_report generation failed') end "
+        "else error('coverage_report module missing') end"
     )
     return [
         Step("Validating toolchain", [[python, "scripts/doctor.py"]]),

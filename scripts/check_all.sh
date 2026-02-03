@@ -125,7 +125,7 @@ step_evidence_check() {
 }
 
 step_test_suite() {
-    run_cmd "test harness" ./scripts/run_tests.sh || return 1
+    run_cmd "Lua test harness" lua -e "dofile('assets/scripts/test/run_all_tests.lua'); os.exit(_G.TEST_EXIT_CODE or 0)" || return 1
     run_cmd "coverage report" lua -e "package.path='assets/scripts/?.lua;assets/scripts/?/init.lua;'..package.path; local cr=require('test.test_coverage_report'); local ok=cr.generate('test_output/results.json','test_output/coverage_report.md'); if not ok then os.exit(1) end" || return 1
 }
 

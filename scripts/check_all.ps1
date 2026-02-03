@@ -111,7 +111,7 @@ Run-Step "Checking docs consistency" {
 } | Out-Null
 Run-Step "Checking evidence blocks" { Run-Cmd "scripts/sync_docs_evidence.py --check" { python scripts/sync_docs_evidence.py --check } } | Out-Null
 Run-Step "Running test suite" {
-    Run-Cmd "test harness" { ./scripts/run_tests.sh }
+    Run-Cmd "Lua test harness" { lua -e "dofile('assets/scripts/test/run_all_tests.lua'); os.exit(_G.TEST_EXIT_CODE or 0)" }
     Run-Cmd "coverage report" { lua -e "package.path='assets/scripts/?.lua;assets/scripts/?/init.lua;'..package.path; local cr=require('test.test_coverage_report'); local ok=cr.generate('test_output/results.json','test_output/coverage_report.md'); if not ok then os.exit(1) end" }
 } | Out-Null
 

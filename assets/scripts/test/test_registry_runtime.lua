@@ -148,6 +148,11 @@ if GeneratedRegistry and type(GeneratedRegistry) == "table" then
     if GeneratedRegistry.docs then
         TestRegistry._doc_index = GeneratedRegistry.docs
     end
+    for doc_id, entry in pairs(TestRegistry._doc_index) do
+        if type(entry) == "table" and entry.doc_id == nil then
+            entry.doc_id = doc_id
+        end
+    end
 end
 
 function TestRegistry.all()

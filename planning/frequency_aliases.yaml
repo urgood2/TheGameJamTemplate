@@ -1,5 +1,5 @@
 # Frequency Scanner Alias Configuration
-# Maps canonical names to aliases used in the codebase.
+# Maps canonical names to all known aliases in codebase
 
 aliases:
   # Physics system

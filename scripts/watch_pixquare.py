@@ -159,14 +159,25 @@ def process_sprite(source: Path, aseprite_exe: str, verbose: bool, move: bool) -
         )
 
         # Parse JSON output from script
+        # Note: Aseprite may print plugin init messages before our JSON
         output = result.stdout.strip()
         if verbose:
             print(f"  Script output: {output}")
 
+        # Extract JSON from output (Aseprite may prepend plugin messages)
+        json_start = output.rfind("{")
+        json_end = output.rfind("}") + 1
+        if json_start == -1 or json_end == 0:
+            print(f"ERROR: No JSON found in script output: {output}")
+            print(f"  stderr: {result.stderr}")
+            return False
+
+        json_str = output[json_start:json_end]
         try:
-            response = json.loads(output)
+            response = json.loads(json_str)
         except json.JSONDecodeError:
-            print(f"ERROR: Invalid JSON from merge script: {output}")
+            print(f"ERROR: Invalid JSON from merge script: {json_str}")
+            print(f"  Full output: {output}")
             print(f"  stderr: {result.stderr}")
             return False
 

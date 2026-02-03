@@ -1,0 +1,123 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Test Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schema_version", "run", "tests", "summary"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+"
+    },
+    "run": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["run_id", "seed", "platform", "engine_version"],
+      "properties": {
+        "run_id": {"type": "string"},
+        "seed": {"type": "integer"},
+        "platform": {
+          "type": "string",
+          "enum": ["linux", "windows", "mac", "unknown"]
+        },
+        "engine_version": {"type": "string"},
+        "content_fingerprint": {"type": "string"},
+        "renderer_fingerprint": {"type": "string"},
+        "resolution": {
+          "type": "string",
+          "pattern": "^[0-9]+x[0-9]+$"
+        },
+        "baseline_key": {"type": "string"}
+      }
+    },
+    "tests": {
+      "type": "array",
+      "items": {"$ref": "#/definitions/test_result"}
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["passed", "failed", "skipped", "flaky"],
+      "properties": {
+        "passed": {"type": "integer", "minimum": 0},
+        "failed": {"type": "integer", "minimum": 0},
+        "skipped": {"type": "integer", "minimum": 0},
+        "flaky": {"type": "integer", "minimum": 0}
+      }
+    }
+  },
+  "definitions": {
+    "relative_path": {
+      "type": "string",
+      "pattern": "^(?!/)(?![A-Za-z]:).+"
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["kind", "path"],
+      "properties": {
+        "kind": {"type": "string"},
+        "path": {"$ref": "#/definitions/relative_path"},
+        "attempt": {"type": ["integer", "null"]},
+        "step": {"type": ["string", "null"]},
+        "description": {"type": ["string", "null"]}
+      }
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["name", "start_frame", "end_frame", "status"],
+      "properties": {
+        "name": {"type": "string"},
+        "start_frame": {"type": "integer", "minimum": 0},
+        "end_frame": {"type": "integer", "minimum": 0},
+        "status": {"type": "string", "enum": ["pass", "fail", "skipped"]}
+      }
+    },
+    "test_result": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["name", "status"],
+      "properties": {
+        "name": {"type": "string"},
+        "id": {"type": "string"},
+        "status": {
+          "type": "string",
+          "enum": ["pass", "fail", "skipped", "xfail", "xpass", "flaky", "quarantined"]
+        },
+        "failure_kind": {
+          "anyOf": [
+            {"type": "null"},
+            {
+              "type": "string",
+              "enum": [
+                "assertion",
+                "timeout",
+                "crash",
+                "harness_error",
+                "determinism_divergence",
+                "log_gating",
+                "baseline_missing",
+                "baseline_mismatch",
+                "capability_missing",
+                "perf_budget_exceeded",
+                "unknown"
+              ]
+            }
+          ]
+        },
+        "attempts": {"type": "integer", "minimum": 0},
+        "artifacts": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/artifact"}
+        },
+        "steps": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/step"}
+        },
+        "timings_frames": {"type": "integer", "minimum": 0},
+        "timings_ms": {"type": "number", "minimum": 0}
+      }
+    }
+  }
+}

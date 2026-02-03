@@ -1,0 +1,46 @@
+{
+  "schema_version": "0.1.0",
+  "run": {
+    "run_id": "2026-02-03T15-11-00Z_abc123",
+    "seed": 12345,
+    "platform": "linux",
+    "engine_version": "dev",
+    "content_fingerprint": "content-fp",
+    "renderer_fingerprint": "renderer-fp",
+    "resolution": "1280x720",
+    "baseline_key": "default"
+  },
+  "tests": [
+    {
+      "name": "menu.opens",
+      "id": "menu.opens",
+      "status": "pass",
+      "attempts": 1,
+      "artifacts": [
+        {
+          "kind": "screenshot",
+          "path": "artifacts/menu.png",
+          "attempt": 1,
+          "step": "open_menu",
+          "description": "Menu snapshot"
+        }
+      ],
+      "steps": [
+        {
+          "name": "open_menu",
+          "start_frame": 1,
+          "end_frame": 60,
+          "status": "pass"
+        }
+      ],
+      "timings_frames": 60,
+      "timings_ms": 1000
+    }
+  ],
+  "summary": {
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0
+  }
+}

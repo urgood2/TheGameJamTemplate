@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Test API Descriptor",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schema_version", "version", "state_paths", "queries", "commands", "capabilities"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "state_paths": {
+      "type": "array",
+      "items": {"$ref": "#/definitions/StatePathDef"}
+    },
+    "queries": {
+      "type": "array",
+      "items": {"$ref": "#/definitions/QueryDef"}
+    },
+    "commands": {
+      "type": "array",
+      "items": {"$ref": "#/definitions/CommandDef"}
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": {"type": "boolean"}
+    }
+  },
+  "definitions": {
+    "ArgumentDef": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["name", "type", "required", "description"],
+      "properties": {
+        "name": {"type": "string"},
+        "type": {
+          "type": "string",
+          "enum": ["boolean", "number", "string", "table", "any"]
+        },
+        "required": {"type": "boolean"},
+        "description": {"type": "string"}
+      }
+    },
+    "StatePathDef": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["path", "type", "writable", "description"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_]+(\\.[A-Za-z0-9_]+)*$"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["boolean", "number", "string", "table"]
+        },
+        "writable": {"type": "boolean"},
+        "description": {"type": "string"}
+      }
+    },
+    "QueryDef": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["name", "arguments", "returns", "description"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_]+(\\.[A-Za-z0-9_]+)*$"
+        },
+        "arguments": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/ArgumentDef"}
+        },
+        "returns": {"type": "string"},
+        "description": {"type": "string"}
+      }
+    },
+    "CommandDef": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["name", "arguments", "description"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_]+(\\.[A-Za-z0-9_]+)*$"
+        },
+        "arguments": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/ArgumentDef"}
+        },
+        "description": {"type": "string"}
+      }
+    }
+  }
+}

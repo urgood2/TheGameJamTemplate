@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0.0",
+  "args": ["--test-mode", "--headless", "--seed", "12345"],
+  "seed": 12345,
+  "platform": "linux",
+  "engine_version": "dev",
+  "content_fingerprint": "sha256:content",
+  "renderer": "vulkan",
+  "renderer_fingerprint": "vulkan_mesa_24.1_intel_srgb",
+  "baseline_key": "software_sdr_srgb",
+  "resolution": "1280x720",
+  "git_sha": "abc123",
+  "build_id": "ci-12345",
+  "determinism_pins": {
+    "ftz_daz": true,
+    "rounding": "nearest",
+    "locale": "C",
+    "timezone": "UTC",
+    "thread_mode": "single"
+  },
+  "test_api_fingerprint": "sha256:def456",
+  "test_ordering_hash": "sha256:orderhash",
+  "shard": 1,
+  "total_shards": 4,
+  "timeout_seconds": 600,
+  "timestamp": "2026-02-03T15:13:00Z"
+}

@@ -3252,6 +3252,9 @@ SamplesDraw = SamplesDraw or {}
 ---@field hadMatrix bool
 Scope = Scope or {}
 
+---@class ScreenSpaceCollisionMarker
+ScreenSpaceCollisionMarker = ScreenSpaceCollisionMarker or {}
+
 ---@class ScrollbarDef
 ---@field track RegionDef
 ---@field thumb RegionDef
@@ -3731,6 +3734,99 @@ UFNode = UFNode or {}
 ---@field inputs std::unordered_map<std::string, InputDef>
 ---@field icons std::unordered_map<std::string, RegionDef>
 UIAssetPack = UIAssetPack or {}
+
+---@class UIBoxComponent
+---@field uiRoot std::optional<entt::entity>
+---@field drawLayers std::map<int, entt::entity>
+---@field onBoxResize std::function<void(entt::entity)>
+UIBoxComponent = UIBoxComponent or {}
+
+---@class UIConfig
+---@field stylingType UIStylingType
+---@field nPatchInfo std::optional<NPatchInfo>
+---@field nPatchSourceTexture std::optional<Texture2D>
+---@field spriteSourceTexture std::optional<Texture2D*>
+---@field spriteSourceRect std::optional<Rectangle>
+---@field spriteScaleMode SpriteScaleMode
+---@field decorations std::optional<UIDecorations>
+---@field id std::optional<std::string>
+---@field instanceType std::optional<std::string>
+---@field uiType std::optional<UITypeEnum>
+---@field drawLayer std::optional<int>
+---@field group std::optional<std::string>
+---@field groupParent std::optional<entt::entity>
+---@field offset std::optional<Vector2>
+---@field scale std::optional<float>
+---@field textSpacing std::optional<float>
+---@field fontSize std::optional<float>
+---@field fontName std::optional<std::string>
+---@field focusWithObject std::optional<bool>
+---@field refreshMovement std::optional<bool>
+---@field noMovementWhenDragged bool
+---@field master std::optional<entt::entity>
+---@field parent std::optional<entt::entity>
+---@field object std::optional<entt::entity>
+---@field objectRecalculate bool
+---@field alignmentFlags std::optional<int>
+---@field padding std::optional<float>
+---@field includeChildrenInShaderPass bool
+---@field outlineThickness std::optional<float>
+---@field makeMovementDynamic bool
+---@field shadow bool
+---@field outlineShadow bool
+---@field shadowColor std::optional<Color>
+---@field noFill bool
+---@field pixelatedRectangle bool
+---@field button_UIE std::optional<entt::entity>
+---@field disable_button bool
+---@field progressBarFetchValueLambda std::function<float(entt::entity)>
+---@field progressBar bool
+---@field progressBarMaxValue std::optional<float>
+---@field ui_object_updated bool
+---@field buttonDelayStart std::optional<float>
+---@field buttonDelay std::optional<float>
+---@field buttonDelayProgress std::optional<float>
+---@field buttonDelayEnd std::optional<float>
+---@field buttonClicked bool
+---@field buttonDistance std::optional<float>
+---@field tooltip std::optional<Tooltip>
+---@field detailedTooltip std::optional<Tooltip>
+---@field onDemandTooltip std::optional<Tooltip>
+---@field hover bool
+---@field force_focus bool
+---@field dynamicMotion std::optional<bool>
+---@field choice std::optional<bool>
+---@field chosen std::optional<bool>
+---@field one_press std::optional<bool>
+---@field chosen_vert std::optional<std::string>
+---@field draw_after bool
+---@field focusArgs std::optional<FocusArgs>
+---@field instaFunc std::optional<bool>
+---@field ref_entity std::optional<entt::entity>
+---@field ref_component std::optional<std::string>
+---@field ref_value std::optional<std::string>
+---@field prev_ref_value std::optional<entt::meta_any>
+---@field text std::optional<std::string>
+---@field language std::optional<std::string>
+---@field verticalText std::optional<bool>
+---@field hPopup std::optional<entt::entity>
+---@field dPopup std::optional<entt::entity>
+---@field hPopupConfig std::shared_ptr<UIConfig>
+---@field dPopupConfig std::shared_ptr<UIConfig>
+---@field nPatchTiling std::optional<nine_patch::NPatchTiling>
+---@field extend_up std::optional<float>
+---@field resolution std::optional<float>
+---@field emboss std::optional<float>
+---@field line_emboss bool
+---@field mid bool
+---@field noRole std::optional<bool>
+---@field role std::optional<transform::InheritedProperties>
+---@field isFiller bool
+---@field flexWeight float
+---@field maxFillSize float
+---@field computedFillSize float
+---@field Builder struct
+UIConfig = UIConfig or {}
 
 ---@class UIConfigBundle
 ---@field style UIStyleConfig

@@ -28,7 +28,8 @@
       "is_tag": false,
       "line_number": 13,
       "name": "AtlasSelection",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:AtlasSelection"
     },
     {
       "category": "ui",
@@ -63,7 +64,8 @@
       "is_tag": false,
       "line_number": 25,
       "name": "ButtonDef",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ButtonDef"
     },
     {
       "category": "ui",
@@ -110,7 +112,8 @@
       "is_tag": false,
       "line_number": 56,
       "name": "EditContext",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:EditContext"
     },
     {
       "category": "ui",
@@ -120,7 +123,8 @@
       "is_tag": true,
       "line_number": 56,
       "name": "IUIElementHandler",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:IUIElementHandler"
     },
     {
       "category": "ui",
@@ -130,7 +134,8 @@
       "is_tag": true,
       "line_number": 593,
       "name": "ImBitArray",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImBitArray"
     },
     {
       "category": "ui",
@@ -147,7 +152,8 @@
       "is_tag": false,
       "line_number": 709,
       "name": "ImChunkStream",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImChunkStream"
     },
     {
       "category": "ui",
@@ -164,7 +170,8 @@
       "is_tag": false,
       "line_number": 2652,
       "name": "ImColor",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImColor"
     },
     {
       "category": "ui",
@@ -187,7 +194,8 @@
       "is_tag": false,
       "line_number": 2909,
       "name": "ImDrawChannel",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImDrawChannel"
     },
     {
       "category": "ui",
@@ -222,7 +230,8 @@
       "is_tag": false,
       "line_number": 2868,
       "name": "ImDrawCmd",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImDrawCmd"
     },
     {
       "category": "ui",
@@ -245,7 +254,8 @@
       "is_tag": false,
       "line_number": 2901,
       "name": "ImDrawCmdHeader",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImDrawCmdHeader"
     },
     {
       "category": "ui",
@@ -310,7 +320,8 @@
       "is_tag": false,
       "line_number": 3113,
       "name": "ImDrawData",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImDrawData"
     },
     {
       "category": "ui",
@@ -327,7 +338,8 @@
       "is_tag": false,
       "line_number": 796,
       "name": "ImDrawDataBuilder",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImDrawDataBuilder"
     },
     {
       "category": "ui",
@@ -422,7 +434,8 @@
       "is_tag": false,
       "line_number": 2973,
       "name": "ImDrawList",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImDrawList"
     },
     {
       "category": "ui",
@@ -451,7 +464,8 @@
       "is_tag": false,
       "line_number": 2918,
       "name": "ImDrawListSplitter",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImDrawListSplitter"
     },
     {
       "category": "ui",
@@ -480,7 +494,8 @@
       "is_tag": false,
       "line_number": 2886,
       "name": "ImDrawVert",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImDrawVert"
     },
     {
       "category": "ui",
@@ -593,7 +608,8 @@
       "is_tag": false,
       "line_number": 3336,
       "name": "ImFont",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImFont"
     },
     {
       "category": "ui",
@@ -712,7 +728,8 @@
       "is_tag": false,
       "line_number": 3232,
       "name": "ImFontAtlas",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImFontAtlas"
     },
     {
       "category": "ui",
@@ -741,7 +758,8 @@
       "is_tag": false,
       "line_number": 3194,
       "name": "ImFontAtlasCustomRect",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImFontAtlasCustomRect"
     },
     {
       "category": "ui",
@@ -751,7 +769,8 @@
       "is_tag": true,
       "line_number": 3579,
       "name": "ImFontBuilderIO",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImFontBuilderIO"
     },
     {
       "category": "ui",
@@ -870,7 +889,8 @@
       "is_tag": false,
       "line_number": 3137,
       "name": "ImFontConfig",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImFontConfig"
     },
     {
       "category": "ui",
@@ -887,7 +907,8 @@
       "is_tag": false,
       "line_number": 3167,
       "name": "ImFontGlyph",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImFontGlyph"
     },
     {
       "category": "ui",
@@ -904,7 +925,8 @@
       "is_tag": false,
       "line_number": 3179,
       "name": "ImFontGlyphRangesBuilder",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImFontGlyphRangesBuilder"
     },
     {
       "category": "ui",
@@ -927,7 +949,8 @@
       "is_tag": false,
       "line_number": 1033,
       "name": "ImGuiColorMod",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiColorMod"
     },
     {
       "category": "ui",
@@ -2570,7 +2593,8 @@
       "is_tag": false,
       "line_number": 1921,
       "name": "ImGuiContext",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiContext"
     },
     {
       "category": "ui",
@@ -2611,7 +2635,8 @@
       "is_tag": false,
       "line_number": 1906,
       "name": "ImGuiContextHook",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiContextHook"
     },
     {
       "category": "ui",
@@ -2646,7 +2671,8 @@
       "is_tag": false,
       "line_number": 822,
       "name": "ImGuiDataTypeInfo",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiDataTypeInfo"
     },
     {
       "category": "ui",
@@ -2656,7 +2682,8 @@
       "is_tag": true,
       "line_number": 816,
       "name": "ImGuiDataTypeStorage",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiDataTypeStorage"
     },
     {
       "category": "ui",
@@ -2685,7 +2712,8 @@
       "is_tag": false,
       "line_number": 808,
       "name": "ImGuiDataVarInfo",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiDataVarInfo"
     },
     {
       "category": "ui",
@@ -2714,7 +2742,8 @@
       "is_tag": false,
       "line_number": 1841,
       "name": "ImGuiDebugAllocEntry",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiDebugAllocEntry"
     },
     {
       "category": "ui",
@@ -2743,7 +2772,8 @@
       "is_tag": false,
       "line_number": 1848,
       "name": "ImGuiDebugAllocInfo",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiDebugAllocInfo"
     },
     {
       "category": "ui",
@@ -2766,7 +2796,8 @@
       "is_tag": false,
       "line_number": 1609,
       "name": "ImGuiFocusScopeData",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiFocusScopeData"
     },
     {
       "category": "ui",
@@ -2813,7 +2844,8 @@
       "is_tag": false,
       "line_number": 1887,
       "name": "ImGuiIDStackTool",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiIDStackTool"
     },
     {
       "category": "ui",
@@ -3256,7 +3288,8 @@
       "is_tag": false,
       "line_number": 2152,
       "name": "ImGuiIO",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiIO"
     },
     {
       "category": "ui",
@@ -3327,7 +3360,8 @@
       "is_tag": false,
       "line_number": 1390,
       "name": "ImGuiInputEvent",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiInputEvent"
     },
     {
       "category": "ui",
@@ -3337,7 +3371,8 @@
       "is_tag": true,
       "line_number": 1388,
       "name": "ImGuiInputEventAppFocused",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiInputEventAppFocused"
     },
     {
       "category": "ui",
@@ -3347,7 +3382,8 @@
       "is_tag": true,
       "line_number": 1386,
       "name": "ImGuiInputEventKey",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiInputEventKey"
     },
     {
       "category": "ui",
@@ -3357,7 +3393,8 @@
       "is_tag": true,
       "line_number": 1385,
       "name": "ImGuiInputEventMouseButton",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiInputEventMouseButton"
     },
     {
       "category": "ui",
@@ -3367,7 +3404,8 @@
       "is_tag": true,
       "line_number": 1383,
       "name": "ImGuiInputEventMousePos",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiInputEventMousePos"
     },
     {
       "category": "ui",
@@ -3377,7 +3415,8 @@
       "is_tag": true,
       "line_number": 1384,
       "name": "ImGuiInputEventMouseWheel",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiInputEventMouseWheel"
     },
     {
       "category": "ui",
@@ -3387,7 +3426,8 @@
       "is_tag": true,
       "line_number": 1387,
       "name": "ImGuiInputEventText",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiInputEventText"
     },
     {
       "category": "ui",
@@ -3476,7 +3516,8 @@
       "is_tag": false,
       "line_number": 2359,
       "name": "ImGuiInputTextCallbackData",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiInputTextCallbackData"
     },
     {
       "category": "ui",
@@ -3511,7 +3552,8 @@
       "is_tag": false,
       "line_number": 2144,
       "name": "ImGuiKeyData",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiKeyData"
     },
     {
       "category": "ui",
@@ -3546,7 +3588,8 @@
       "is_tag": false,
       "line_number": 1443,
       "name": "ImGuiKeyOwnerData",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiKeyOwnerData"
     },
     {
       "category": "ui",
@@ -3593,7 +3636,8 @@
       "is_tag": false,
       "line_number": 1417,
       "name": "ImGuiKeyRoutingData",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiKeyRoutingData"
     },
     {
       "category": "ui",
@@ -3616,7 +3660,8 @@
       "is_tag": false,
       "line_number": 1431,
       "name": "ImGuiKeyRoutingTable",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiKeyRoutingTable"
     },
     {
       "category": "ui",
@@ -3675,7 +3720,8 @@
       "is_tag": false,
       "line_number": 1238,
       "name": "ImGuiLastItemData",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiLastItemData"
     },
     {
       "category": "ui",
@@ -3728,7 +3774,8 @@
       "is_tag": false,
       "line_number": 2566,
       "name": "ImGuiListClipper",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiListClipper"
     },
     {
       "category": "ui",
@@ -3769,7 +3816,8 @@
       "is_tag": false,
       "line_number": 1513,
       "name": "ImGuiListClipperData",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiListClipperData"
     },
     {
       "category": "ui",
@@ -3810,7 +3858,8 @@
       "is_tag": false,
       "line_number": 1500,
       "name": "ImGuiListClipperRange",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiListClipperRange"
     },
     {
       "category": "ui",
@@ -3833,7 +3882,8 @@
       "is_tag": false,
       "line_number": 1812,
       "name": "ImGuiLocEntry",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiLocEntry"
     },
     {
       "category": "ui",
@@ -3922,7 +3972,8 @@
       "is_tag": false,
       "line_number": 1858,
       "name": "ImGuiMetricsConfig",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiMetricsConfig"
     },
     {
       "category": "ui",
@@ -3987,7 +4038,8 @@
       "is_tag": false,
       "line_number": 1592,
       "name": "ImGuiNavItemData",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiNavItemData"
     },
     {
       "category": "ui",
@@ -4016,7 +4068,8 @@
       "is_tag": false,
       "line_number": 1256,
       "name": "ImGuiNavTreeNodeData",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiNavTreeNodeData"
     },
     {
       "category": "ui",
@@ -4081,7 +4134,8 @@
       "is_tag": false,
       "line_number": 1220,
       "name": "ImGuiNextItemData",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiNextItemData"
     },
     {
       "category": "ui",
@@ -4194,7 +4248,8 @@
       "is_tag": false,
       "line_number": 1183,
       "name": "ImGuiNextWindowData",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiNextWindowData"
     },
     {
       "category": "ui",
@@ -4229,7 +4284,8 @@
       "is_tag": false,
       "line_number": 1677,
       "name": "ImGuiOldColumnData",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiOldColumnData"
     },
     {
       "category": "ui",
@@ -4318,7 +4374,8 @@
       "is_tag": false,
       "line_number": 1687,
       "name": "ImGuiOldColumns",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiOldColumns"
     },
     {
       "category": "ui",
@@ -4328,7 +4385,8 @@
       "is_tag": true,
       "line_number": 2437,
       "name": "ImGuiOnceUponAFrame",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiOnceUponAFrame"
     },
     {
       "category": "ui",
@@ -4381,7 +4439,8 @@
       "is_tag": false,
       "line_number": 2402,
       "name": "ImGuiPayload",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiPayload"
     },
     {
       "category": "ui",
@@ -4410,7 +4469,8 @@
       "is_tag": false,
       "line_number": 3434,
       "name": "ImGuiPlatformImeData",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiPlatformImeData"
     },
     {
       "category": "ui",
@@ -4469,7 +4529,8 @@
       "is_tag": false,
       "line_number": 1317,
       "name": "ImGuiPopupData",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiPopupData"
     },
     {
       "category": "ui",
@@ -4492,7 +4553,8 @@
       "is_tag": false,
       "line_number": 1296,
       "name": "ImGuiPtrOrIndex",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiPtrOrIndex"
     },
     {
       "category": "ui",
@@ -4521,7 +4583,8 @@
       "is_tag": false,
       "line_number": 1779,
       "name": "ImGuiSettingsHandler",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiSettingsHandler"
     },
     {
       "category": "ui",
@@ -4550,7 +4613,8 @@
       "is_tag": false,
       "line_number": 1289,
       "name": "ImGuiShrinkWidthItem",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiShrinkWidthItem"
     },
     {
       "category": "ui",
@@ -4585,7 +4649,8 @@
       "is_tag": false,
       "line_number": 2393,
       "name": "ImGuiSizeCallbackData",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiSizeCallbackData"
     },
     {
       "category": "ui",
@@ -4614,7 +4679,8 @@
       "is_tag": false,
       "line_number": 1875,
       "name": "ImGuiStackLevelInfo",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiStackLevelInfo"
     },
     {
       "category": "ui",
@@ -4631,7 +4697,8 @@
       "is_tag": false,
       "line_number": 2509,
       "name": "ImGuiStorage",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiStorage"
     },
     {
       "category": "ui",
@@ -4648,7 +4715,8 @@
       "is_tag": false,
       "line_number": 2492,
       "name": "ImGuiStoragePair",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiStoragePair"
     },
     {
       "category": "ui",
@@ -4965,7 +5033,8 @@
       "is_tag": false,
       "line_number": 2070,
       "name": "ImGuiStyle",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiStyle"
     },
     {
       "category": "ui",
@@ -4982,7 +5051,8 @@
       "is_tag": false,
       "line_number": 1040,
       "name": "ImGuiStyleMod",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiStyleMod"
     },
     {
       "category": "ui",
@@ -5065,7 +5135,8 @@
       "is_tag": false,
       "line_number": 2665,
       "name": "ImGuiTabItem",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiTabItem"
     },
     {
       "category": "ui",
@@ -5088,7 +5159,8 @@
       "is_tag": false,
       "line_number": 2797,
       "name": "ImGuiTableCellData",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiTableCellData"
     },
     {
       "category": "ui",
@@ -5327,7 +5399,8 @@
       "is_tag": false,
       "line_number": 2738,
       "name": "ImGuiTableColumn",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiTableColumn"
     },
     {
       "category": "ui",
@@ -5368,7 +5441,8 @@
       "is_tag": false,
       "line_number": 2976,
       "name": "ImGuiTableColumnSettings",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiTableColumnSettings"
     },
     {
       "category": "ui",
@@ -5403,7 +5477,8 @@
       "is_tag": false,
       "line_number": 1956,
       "name": "ImGuiTableColumnSortSpecs",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiTableColumnSortSpecs"
     },
     {
       "category": "ui",
@@ -5438,7 +5513,8 @@
       "is_tag": false,
       "line_number": 2806,
       "name": "ImGuiTableHeaderData",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiTableHeaderData"
     },
     {
       "category": "ui",
@@ -5485,7 +5561,8 @@
       "is_tag": false,
       "line_number": 2816,
       "name": "ImGuiTableInstanceData",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiTableInstanceData"
     },
     {
       "category": "ui",
@@ -5532,7 +5609,8 @@
       "is_tag": false,
       "line_number": 3000,
       "name": "ImGuiTableSettings",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiTableSettings"
     },
     {
       "category": "ui",
@@ -5561,7 +5639,8 @@
       "is_tag": false,
       "line_number": 1946,
       "name": "ImGuiTableSortSpecs",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiTableSortSpecs"
     },
     {
       "category": "ui",
@@ -5578,7 +5657,8 @@
       "is_tag": false,
       "line_number": 2472,
       "name": "ImGuiTextBuffer",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiTextBuffer"
     },
     {
       "category": "ui",
@@ -5607,7 +5687,8 @@
       "is_tag": false,
       "line_number": 2445,
       "name": "ImGuiTextFilter",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiTextFilter"
     },
     {
       "category": "ui",
@@ -5630,7 +5711,8 @@
       "is_tag": false,
       "line_number": 728,
       "name": "ImGuiTextIndex",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiTextIndex"
     },
     {
       "category": "ui",
@@ -5689,7 +5771,8 @@
       "is_tag": false,
       "line_number": 3409,
       "name": "ImGuiViewport",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiViewport"
     },
     {
       "category": "ui",
@@ -5742,7 +5825,8 @@
       "is_tag": false,
       "line_number": 1765,
       "name": "ImGuiWindowSettings",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiWindowSettings"
     },
     {
       "category": "ui",
@@ -5777,7 +5861,8 @@
       "is_tag": false,
       "line_number": 1281,
       "name": "ImGuiWindowStackData",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImGuiWindowStackData"
     },
     {
       "category": "ui",
@@ -5787,7 +5872,8 @@
       "is_tag": true,
       "line_number": 1976,
       "name": "ImNewWrapper",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImNewWrapper"
     },
     {
       "category": "ui",
@@ -5822,7 +5908,8 @@
       "is_tag": false,
       "line_number": 675,
       "name": "ImPool",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImPool"
     },
     {
       "category": "ui",
@@ -5845,7 +5932,8 @@
       "is_tag": false,
       "line_number": 622,
       "name": "ImSpan",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImSpan"
     },
     {
       "category": "ui",
@@ -5874,7 +5962,8 @@
       "is_tag": false,
       "line_number": 652,
       "name": "ImSpanAllocator",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImSpanAllocator"
     },
     {
       "category": "ui",
@@ -5975,7 +6064,8 @@
       "is_tag": false,
       "line_number": 2675,
       "name": "ImTextCustomization",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImTextCustomization"
     },
     {
       "category": "ui",
@@ -5992,7 +6082,8 @@
       "is_tag": false,
       "line_number": 512,
       "name": "ImVec1",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImVec1"
     },
     {
       "category": "ui",
@@ -6002,7 +6093,8 @@
       "is_tag": true,
       "line_number": 279,
       "name": "ImVec2",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImVec2"
     },
     {
       "category": "ui",
@@ -6012,7 +6104,8 @@
       "is_tag": true,
       "line_number": 520,
       "name": "ImVec2ih",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImVec2ih"
     },
     {
       "category": "ui",
@@ -6022,7 +6115,8 @@
       "is_tag": true,
       "line_number": 292,
       "name": "ImVec4",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImVec4"
     },
     {
       "category": "ui",
@@ -6051,7 +6145,8 @@
       "is_tag": false,
       "line_number": 1998,
       "name": "ImVector",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ImVector"
     },
     {
       "category": "ui",
@@ -6074,7 +6169,8 @@
       "is_tag": false,
       "line_number": 51,
       "name": "InputDef",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:InputDef"
     },
     {
       "category": "ui",
@@ -6121,7 +6217,8 @@
       "is_tag": false,
       "line_number": 17,
       "name": "LayoutMetrics",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:LayoutMetrics"
     },
     {
       "category": "ui",
@@ -6156,7 +6253,8 @@
       "is_tag": false,
       "line_number": 29,
       "name": "NinePatchGuides",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:NinePatchGuides"
     },
     {
       "category": "ui",
@@ -6233,7 +6331,8 @@
       "is_tag": false,
       "line_number": 66,
       "name": "PackEditorState",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:PackEditorState"
     },
     {
       "category": "ui",
@@ -6256,7 +6355,8 @@
       "is_tag": false,
       "line_number": 33,
       "name": "ProgressBarDef",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ProgressBarDef"
     },
     {
       "category": "ui",
@@ -6285,7 +6385,8 @@
       "is_tag": false,
       "line_number": 18,
       "name": "RegionDef",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:RegionDef"
     },
     {
       "category": "ui",
@@ -6314,7 +6415,8 @@
       "is_tag": false,
       "line_number": 10,
       "name": "Scope",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:Scope"
     },
     {
       "category": "ui",
@@ -6326,7 +6428,8 @@
       "name": "ScreenSpaceCollisionMarker",
       "notes": [
         "Marker component for UI screen-space collision"
-      ]
+      ],
+      "doc_id": "component:ScreenSpaceCollisionMarker"
     },
     {
       "category": "ui",
@@ -6349,7 +6452,8 @@
       "is_tag": false,
       "line_number": 39,
       "name": "ScrollbarDef",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:ScrollbarDef"
     },
     {
       "category": "ui",
@@ -6384,7 +6488,8 @@
       "is_tag": false,
       "line_number": 27,
       "name": "SizingEntry",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:SizingEntry"
     },
     {
       "category": "ui",
@@ -6407,7 +6512,8 @@
       "is_tag": false,
       "line_number": 45,
       "name": "SliderDef",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:SliderDef"
     },
     {
       "category": "ui",
@@ -6442,7 +6548,8 @@
       "is_tag": false,
       "line_number": 60,
       "name": "SpriteButtonConfig",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:SpriteButtonConfig"
     },
     {
       "category": "ui",
@@ -6477,7 +6584,8 @@
       "is_tag": false,
       "line_number": 53,
       "name": "SpriteButtonStates",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:SpriteButtonStates"
     },
     {
       "category": "ui",
@@ -6512,7 +6620,8 @@
       "is_tag": false,
       "line_number": 46,
       "name": "SpritePanelBorders",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:SpritePanelBorders"
     },
     {
       "category": "ui",
@@ -6565,7 +6674,8 @@
       "is_tag": false,
       "line_number": 15,
       "name": "TypeTraits",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:TypeTraits"
     },
     {
       "category": "ui",
@@ -6632,7 +6742,8 @@
       "name": "UIAssetPack",
       "notes": [
         "7 complex types need manual review"
-      ]
+      ],
+      "doc_id": "component:UIAssetPack"
     },
     {
       "category": "ui",
@@ -6663,7 +6774,8 @@
       "name": "UIBoxComponent",
       "notes": [
         "Manually added: indented struct not captured by extractor"
-      ]
+      ],
+      "doc_id": "component:UIBoxComponent"
     },
     {
       "category": "ui",
@@ -7180,7 +7292,8 @@
       "name": "UIConfig",
       "notes": [
         "Manually added: indented struct not captured by extractor"
-      ]
+      ],
+      "doc_id": "component:UIConfig"
     },
     {
       "category": "ui",
@@ -7215,7 +7328,8 @@
       "is_tag": false,
       "line_number": 248,
       "name": "UIConfigBundle",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:UIConfigBundle"
     },
     {
       "category": "ui",
@@ -7364,7 +7478,8 @@
       "is_tag": false,
       "line_number": 206,
       "name": "UIContentConfig",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:UIContentConfig"
     },
     {
       "category": "ui",
@@ -7447,7 +7562,8 @@
       "is_tag": false,
       "line_number": 21,
       "name": "UIDecoration",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:UIDecoration"
     },
     {
       "category": "ui",
@@ -7466,7 +7582,8 @@
       "name": "UIDecorations",
       "notes": [
         "1 complex types need manual review"
-      ]
+      ],
+      "doc_id": "component:UIDecorations"
     },
     {
       "category": "ui",
@@ -7567,7 +7684,8 @@
       "is_tag": false,
       "line_number": 24,
       "name": "UIDrawContext",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:UIDrawContext"
     },
     {
       "category": "ui",
@@ -7602,7 +7720,8 @@
       "is_tag": false,
       "line_number": 69,
       "name": "UIElementCore",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:UIElementCore"
     },
     {
       "category": "ui",
@@ -7787,7 +7906,8 @@
       "is_tag": false,
       "line_number": 152,
       "name": "UIInteractionConfig",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:UIInteractionConfig"
     },
     {
       "category": "ui",
@@ -7906,7 +8026,8 @@
       "is_tag": false,
       "line_number": 114,
       "name": "UILayoutConfig",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:UILayoutConfig"
     },
     {
       "category": "ui",
@@ -7935,7 +8056,8 @@
       "is_tag": false,
       "line_number": 15,
       "name": "UISpriteConfig",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:UISpriteConfig"
     },
     {
       "category": "ui",
@@ -8066,7 +8188,8 @@
       "is_tag": false,
       "line_number": 79,
       "name": "UIStyleConfig",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:UIStyleConfig"
     },
     {
       "category": "ui",
@@ -8113,7 +8236,8 @@
       "is_tag": false,
       "line_number": 185,
       "name": "stbrp_context",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:stbrp_context"
     },
     {
       "category": "ui",
@@ -8123,7 +8247,8 @@
       "is_tag": true,
       "line_number": 179,
       "name": "stbrp_node",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:stbrp_node"
     },
     {
       "category": "ui",
@@ -8146,7 +8271,8 @@
       "is_tag": false,
       "line_number": 119,
       "name": "stbrp_rect",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:stbrp_rect"
     },
     {
       "category": "ui",
@@ -8156,7 +8282,8 @@
       "is_tag": true,
       "line_number": 3919,
       "name": "stbrp_rect",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:stbrp_rect"
     },
     {
       "category": "ui",
@@ -8233,7 +8360,8 @@
       "is_tag": false,
       "line_number": 718,
       "name": "stbtt_fontinfo",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:stbtt_fontinfo"
     },
     {
       "category": "ui",
@@ -8274,7 +8402,8 @@
       "is_tag": false,
       "line_number": 683,
       "name": "stbtt_pack_context",
-      "notes": []
+      "notes": [],
+      "doc_id": "component:stbtt_pack_context"
     }
   ],
   "count": 129

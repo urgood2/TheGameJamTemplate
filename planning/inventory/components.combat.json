@@ -11,7 +11,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:LuaContentLoader"
+      "doc_id": "component:LuaContentLoader",
+      "source_ref": "src/systems/composable_mechanics/loader_lua.hpp:11"
     },
     {
       "name": "HitResult",
@@ -47,7 +48,8 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:HitResult"
+      "doc_id": "component:HitResult",
+      "source_ref": "src/systems/composable_mechanics/combat_math.hpp:7"
     },
     {
       "name": "Event",
@@ -83,7 +85,8 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:Event"
+      "doc_id": "component:Event",
+      "source_ref": "src/systems/composable_mechanics/events.hpp:24"
     },
     {
       "name": "Context",
@@ -94,7 +97,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:Context"
+      "doc_id": "component:Context",
+      "source_ref": "src/systems/composable_mechanics/events.hpp:32"
     },
     {
       "name": "EventListener",
@@ -124,7 +128,8 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:EventListener"
+      "doc_id": "component:EventListener",
+      "source_ref": "src/systems/composable_mechanics/events.hpp:38"
     },
     {
       "name": "Ability",
@@ -184,7 +189,11 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:Ability"
+      "doc_id": "component:Ability",
+      "tier": 1,
+      "verified": false,
+      "test_id": "combat.components.ability.cooldowns",
+      "source_ref": "src/systems/composable_mechanics/ability.hpp:13"
     },
     {
       "name": "AbilityDatabase",
@@ -216,7 +225,8 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:AbilityDatabase"
+      "doc_id": "component:AbilityDatabase",
+      "source_ref": "src/systems/composable_mechanics/ability.hpp:26"
     },
     {
       "name": "EngineBootstrap",
@@ -240,7 +250,8 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:EngineBootstrap"
+      "doc_id": "component:EngineBootstrap",
+      "source_ref": "src/systems/composable_mechanics/bootstrap.hpp:7"
     },
     {
       "name": "Op_ModifyStats_Params",
@@ -251,7 +262,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:Op_ModifyStats_Params"
+      "doc_id": "component:Op_ModifyStats_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:34"
     },
     {
       "name": "Op_DealDamage_Params",
@@ -275,7 +287,8 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:Op_DealDamage_Params"
+      "doc_id": "component:Op_DealDamage_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:40"
     },
     {
       "name": "Op_ApplyStatus_Params",
@@ -286,7 +299,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:Op_ApplyStatus_Params"
+      "doc_id": "component:Op_ApplyStatus_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:46"
     },
     {
       "name": "Op_ApplyRR_Params",
@@ -297,7 +311,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:Op_ApplyRR_Params"
+      "doc_id": "component:Op_ApplyRR_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:48"
     },
     {
       "name": "EffectOp",
@@ -333,7 +348,8 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:EffectOp"
+      "doc_id": "component:EffectOp",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:50"
     },
     {
       "name": "Op_Repeat_Params",
@@ -344,7 +360,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:Op_Repeat_Params"
+      "doc_id": "component:Op_Repeat_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:61"
     },
     {
       "name": "Op_LimitPerTurn_Params",
@@ -355,7 +372,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:Op_LimitPerTurn_Params"
+      "doc_id": "component:Op_LimitPerTurn_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:62"
     },
     {
       "name": "Op_PushUnit_Params",
@@ -366,7 +384,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:Op_PushUnit_Params"
+      "doc_id": "component:Op_PushUnit_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:64"
     },
     {
       "name": "Op_ShuffleAllies_Params",
@@ -377,7 +396,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:Op_ShuffleAllies_Params"
+      "doc_id": "component:Op_ShuffleAllies_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:65"
     },
     {
       "name": "Op_TransformUnit_Params",
@@ -388,7 +408,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:Op_TransformUnit_Params"
+      "doc_id": "component:Op_TransformUnit_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:67"
     },
     {
       "name": "Op_SummonUnit_Params",
@@ -399,7 +420,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:Op_SummonUnit_Params"
+      "doc_id": "component:Op_SummonUnit_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:68"
     },
     {
       "name": "Op_CopyAbilityFrom_Params",
@@ -410,7 +432,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:Op_CopyAbilityFrom_Params"
+      "doc_id": "component:Op_CopyAbilityFrom_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:70"
     },
     {
       "name": "Op_Item_Params",
@@ -421,7 +444,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:Op_Item_Params"
+      "doc_id": "component:Op_Item_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:71"
     },
     {
       "name": "Op_ModifyPlayerResource_Params",
@@ -432,7 +456,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:Op_ModifyPlayerResource_Params"
+      "doc_id": "component:Op_ModifyPlayerResource_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:73"
     },
     {
       "name": "Op_SetLevel_Params",
@@ -443,7 +468,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:Op_SetLevel_Params"
+      "doc_id": "component:Op_SetLevel_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:75"
     },
     {
       "name": "Op_GiveExperience_Params",
@@ -454,7 +480,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:Op_GiveExperience_Params"
+      "doc_id": "component:Op_GiveExperience_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:76"
     },
     {
       "name": "Op_ShopAddItem_Params",
@@ -465,7 +492,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:Op_ShopAddItem_Params"
+      "doc_id": "component:Op_ShopAddItem_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:78"
     },
     {
       "name": "Op_ShopDiscountUnit_Params",
@@ -476,7 +504,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:Op_ShopDiscountUnit_Params"
+      "doc_id": "component:Op_ShopDiscountUnit_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:79"
     },
     {
       "name": "Op_ShopDiscountItem_Params",
@@ -487,7 +516,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:Op_ShopDiscountItem_Params"
+      "doc_id": "component:Op_ShopDiscountItem_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:80"
     },
     {
       "name": "Op_ShopRoll_Params",
@@ -498,7 +528,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:Op_ShopRoll_Params"
+      "doc_id": "component:Op_ShopRoll_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:81"
     },
     {
       "name": "Op_ShopReplaceItems_Params",
@@ -509,7 +540,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:Op_ShopReplaceItems_Params"
+      "doc_id": "component:Op_ShopReplaceItems_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:82"
     },
     {
       "name": "Op_StatSwapWithin_Params",
@@ -520,7 +552,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:Op_StatSwapWithin_Params"
+      "doc_id": "component:Op_StatSwapWithin_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:84"
     },
     {
       "name": "Op_StatSwapBetween_Params",
@@ -531,7 +564,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:Op_StatSwapBetween_Params"
+      "doc_id": "component:Op_StatSwapBetween_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:85"
     },
     {
       "name": "Op_StatCopyFrom_Params",
@@ -542,7 +576,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:Op_StatCopyFrom_Params"
+      "doc_id": "component:Op_StatCopyFrom_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:86"
     },
     {
       "name": "Op_ClassifyAdd_Params",
@@ -553,7 +588,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:Op_ClassifyAdd_Params"
+      "doc_id": "component:Op_ClassifyAdd_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:88"
     },
     {
       "name": "Op_TakeLessDamageOneShot_Params",
@@ -564,7 +600,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:Op_TakeLessDamageOneShot_Params"
+      "doc_id": "component:Op_TakeLessDamageOneShot_Params",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:90"
     },
     {
       "name": "CompiledEffectGraph",
@@ -734,7 +771,8 @@
           "is_complex": true
         }
       ],
-      "doc_id": "component:CompiledEffectGraph"
+      "doc_id": "component:CompiledEffectGraph",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:94"
     },
     {
       "name": "EngineServices",
@@ -745,7 +783,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:EngineServices"
+      "doc_id": "component:EngineServices",
+      "source_ref": "src/systems/composable_mechanics/effects.hpp:149"
     },
     {
       "name": "DamageBundle",
@@ -769,7 +808,11 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:DamageBundle"
+      "doc_id": "component:DamageBundle",
+      "tier": 1,
+      "verified": false,
+      "test_id": "combat.components.damagebundle.read_write",
+      "source_ref": "src/systems/composable_mechanics/stats.hpp:47"
     },
     {
       "name": "ResistPack",
@@ -780,7 +823,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:ResistPack"
+      "doc_id": "component:ResistPack",
+      "source_ref": "src/systems/composable_mechanics/stats.hpp:56"
     },
     {
       "name": "ShieldStats",
@@ -816,7 +860,8 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:ShieldStats"
+      "doc_id": "component:ShieldStats",
+      "source_ref": "src/systems/composable_mechanics/stats.hpp:65"
     },
     {
       "name": "Stats",
@@ -827,7 +872,11 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:Stats"
+      "doc_id": "component:Stats",
+      "tier": 1,
+      "verified": false,
+      "test_id": "combat.components.stats.read_write",
+      "source_ref": "src/systems/composable_mechanics/stats.hpp:73"
     },
     {
       "name": "LifeEnergy",
@@ -851,7 +900,8 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:LifeEnergy"
+      "doc_id": "component:LifeEnergy",
+      "source_ref": "src/systems/composable_mechanics/stats.hpp:95"
     },
     {
       "name": "Team",
@@ -869,7 +919,8 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:Team"
+      "doc_id": "component:Team",
+      "source_ref": "src/systems/composable_mechanics/stats.hpp:101"
     },
     {
       "name": "BoardPos",
@@ -893,7 +944,8 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:BoardPos"
+      "doc_id": "component:BoardPos",
+      "source_ref": "src/systems/composable_mechanics/board.hpp:10"
     },
     {
       "name": "BoardHelpers",
@@ -983,7 +1035,8 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:BoardHelpers"
+      "doc_id": "component:BoardHelpers",
+      "source_ref": "src/systems/composable_mechanics/board.hpp:19"
     },
     {
       "name": "BuffInstance",
@@ -1019,7 +1072,11 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:BuffInstance"
+      "doc_id": "component:BuffInstance",
+      "tier": 1,
+      "verified": false,
+      "test_id": "combat.components.buffinstance.read_write",
+      "source_ref": "src/systems/composable_mechanics/components.hpp:7"
     },
     {
       "name": "ActiveBuffs",
@@ -1030,7 +1087,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:ActiveBuffs"
+      "doc_id": "component:ActiveBuffs",
+      "source_ref": "src/systems/composable_mechanics/components.hpp:18"
     },
     {
       "name": "AbilityRef",
@@ -1041,7 +1099,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:AbilityRef"
+      "doc_id": "component:AbilityRef",
+      "source_ref": "src/systems/composable_mechanics/components.hpp:21"
     },
     {
       "name": "KnownAbilities",
@@ -1052,7 +1111,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:KnownAbilities"
+      "doc_id": "component:KnownAbilities",
+      "source_ref": "src/systems/composable_mechanics/components.hpp:22"
     },
     {
       "name": "StatusFlags",
@@ -1082,7 +1142,8 @@
           "is_complex": false
         }
       ],
-      "doc_id": "component:StatusFlags"
+      "doc_id": "component:StatusFlags",
+      "source_ref": "src/systems/composable_mechanics/components.hpp:25"
     },
     {
       "name": "HeldItem",
@@ -1093,7 +1154,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:HeldItem"
+      "doc_id": "component:HeldItem",
+      "source_ref": "src/systems/composable_mechanics/components.hpp:31"
     },
     {
       "name": "Level",
@@ -1104,7 +1166,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:Level"
+      "doc_id": "component:Level",
+      "source_ref": "src/systems/composable_mechanics/components.hpp:32"
     },
     {
       "name": "Experience",
@@ -1115,7 +1178,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:Experience"
+      "doc_id": "component:Experience",
+      "source_ref": "src/systems/composable_mechanics/components.hpp:33"
     },
     {
       "name": "ClassTags",
@@ -1126,7 +1190,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:ClassTags"
+      "doc_id": "component:ClassTags",
+      "source_ref": "src/systems/composable_mechanics/components.hpp:34"
     },
     {
       "name": "NextHitMitigation",
@@ -1137,7 +1202,8 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": [],
-      "doc_id": "component:NextHitMitigation"
+      "doc_id": "component:NextHitMitigation",
+      "source_ref": "src/systems/composable_mechanics/components.hpp:36"
     }
   ]
 }

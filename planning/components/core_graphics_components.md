@@ -6,11 +6,12 @@ Key considerations:
 - Core components (TransformCustom, FrameData) are used per-frame; keep updates consistent with systems that read them.
 - Graphics and particle components often drive rendering state; treat as data containers unless bindings confirm mutability.
 - Lua accessibility varies; verify before reading or writing from scripts.
+- Lua access entries below are based on `docs/lua_stubs/components.lua` bindings and should be validated with live scripts.
 
 ## FrameData
 **doc_id:** `component:FrameData`
 **Location:** `src/components/graphics.hpp:15`
-**Lua Access:** `TBD (verify in bindings)`
+**Lua Access:** `component_cache.get` (stub exposed; usage not yet validated)
 
 **Fields:**
 
@@ -19,10 +20,17 @@ Key considerations:
 | frame | Rectangle | None |  |
 | texture | Texture2D* | None |  |
 
+**Common Patterns:**
+
+```lua
+local frame = component_cache.get(entity, FrameData)
+local rect = frame.frame
+```
+
 ## SpriteComponentASCII
 **doc_id:** `component:SpriteComponentASCII`
 **Location:** `src/components/graphics.hpp:31`
-**Lua Access:** `TBD (verify in bindings)`
+**Lua Access:** `component_cache.get` (stub exposed; usage not yet validated)
 
 **Fields:**
 
@@ -37,10 +45,18 @@ Key considerations:
 | noBackgroundColor | bool | false |  |
 | noForegroundColor | bool | false |  |
 
+**Common Patterns:**
+
+```lua
+local sprite = component_cache.get(entity, SpriteComponentASCII)
+sprite.spriteNumber = 0
+sprite.noBackgroundColor = false
+```
+
 ## AnimationObject
 **doc_id:** `component:AnimationObject`
 **Location:** `src/components/graphics.hpp:51`
-**Lua Access:** `TBD (verify in bindings)`
+**Lua Access:** `component_cache.get` (stub exposed; usage not yet validated)
 
 **Fields:**
 
@@ -63,7 +79,7 @@ Key considerations:
 ## AnimationQueueComponent
 **doc_id:** `component:AnimationQueueComponent`
 **Location:** `src/components/graphics.hpp:76`
-**Lua Access:** `TBD (verify in bindings)`
+**Lua Access:** `component_cache.get` (stub exposed; usage not yet validated)
 **Notes:** 2 complex types need manual review
 
 **Fields:**
@@ -79,17 +95,25 @@ Key considerations:
 | currentAnimationIndex | int | 0 |  |
 | useCallbackOnAnimationQueueComplete | bool | false |  |
 
+**Common Patterns:**
+
+```lua
+local anim = component_cache.get(entity, AnimationQueueComponent)
+anim.enabled = true
+anim.currentAnimationIndex = 0
+```
+
 ## TweenedLocationComponent
 **doc_id:** `component:TweenedLocationComponent`
 **Location:** `src/components/graphics.hpp:90`
-**Lua Access:** `TBD (verify in bindings)`
+**Lua Access:** `component_cache.get` (tag component; stub exposed)
 
 **Fields:** None
 
 ## ParticleComponent
 **doc_id:** `component:ParticleComponent`
 **Location:** `src/components/particle.hpp:6`
-**Lua Access:** `TBD (verify in bindings)`
+**Lua Access:** `component_cache.get` (stub exposed; usage not yet validated)
 **Notes:** 1 complex types need manual review
 
 **Fields:**
@@ -108,7 +132,7 @@ Key considerations:
 ## TransformCustom
 **doc_id:** `component:TransformCustom`
 **Location:** `src/components/components.hpp:36`
-**Lua Access:** `TBD (verify in bindings)`
+**Lua Access:** `component_cache.get` (stub exposed; usage not yet validated)
 
 **Fields:**
 
@@ -121,10 +145,18 @@ Key considerations:
 | r | float | 0.0f |  |
 | scale | float | 1.0f |  |
 
+**Common Patterns:**
+
+```lua
+local transform = component_cache.get(entity, TransformCustom)
+transform.x = 100
+transform.y = 200
+```
+
 ## Action
 **doc_id:** `component:Action`
 **Location:** `src/components/components.hpp:52`
-**Lua Access:** `TBD (verify in bindings)`
+**Lua Access:** `component_cache.get` (stub exposed; usage not yet validated)
 **Notes:** 4 complex types need manual review
 
 **Fields:**
@@ -143,7 +175,7 @@ Key considerations:
 ## GOAPComponent
 **doc_id:** `component:GOAPComponent`
 **Location:** `src/components/components.hpp:75`
-**Lua Access:** `TBD (verify in bindings)`
+**Lua Access:** `component_cache.get` (stub exposed; usage not yet validated)
 **Notes:** 3 complex types need manual review
 
 **Fields:**
@@ -173,7 +205,7 @@ Key considerations:
 ## TileComponent
 **doc_id:** `component:TileComponent`
 **Location:** `src/components/components.hpp:132`
-**Lua Access:** `TBD (verify in bindings)`
+**Lua Access:** `component_cache.get` (stub exposed; usage not yet validated)
 **Notes:** 3 complex types need manual review
 
 **Fields:**
@@ -204,7 +236,7 @@ Key considerations:
 ## LocationComponent
 **doc_id:** `component:LocationComponent`
 **Location:** `src/components/components.hpp:161`
-**Lua Access:** `TBD (verify in bindings)`
+**Lua Access:** `component_cache.get` (stub exposed; usage not yet validated)
 
 **Fields:**
 
@@ -215,7 +247,7 @@ Key considerations:
 ## NinePatchComponent
 **doc_id:** `component:NinePatchComponent`
 **Location:** `src/components/components.hpp:168`
-**Lua Access:** `TBD (verify in bindings)`
+**Lua Access:** `component_cache.get` (stub exposed; usage not yet validated)
 
 **Fields:**
 
@@ -234,10 +266,18 @@ Key considerations:
 | blinkTimer | float | 0.0f |  |
 | isVisible | bool | true |  |
 
+**Common Patterns:**
+
+```lua
+local patch = component_cache.get(entity, NinePatchComponent)
+patch.alpha = 0.8
+patch.isVisible = true
+```
+
 ## ContainerComponent
 **doc_id:** `component:ContainerComponent`
 **Location:** `src/components/components.hpp:187`
-**Lua Access:** `TBD (verify in bindings)`
+**Lua Access:** `component_cache.get` (stub exposed; usage not yet validated)
 **Notes:** 1 complex types need manual review
 
 **Fields:**
@@ -249,21 +289,21 @@ Key considerations:
 ## InfoComponent
 **doc_id:** `component:InfoComponent`
 **Location:** `src/components/components.hpp:193`
-**Lua Access:** `TBD (verify in bindings)`
+**Lua Access:** `component_cache.get` (tag component; stub exposed)
 
 **Fields:** None
 
 ## VFXTag
 **doc_id:** `component:VFXTag`
 **Location:** `src/components/components.hpp:200`
-**Lua Access:** `TBD (verify in bindings)`
+**Lua Access:** `component_cache.get` (tag component; stub exposed)
 
 **Fields:** None
 
 ## ParticleTag
 **doc_id:** `component:ParticleTag`
 **Location:** `src/systems/particles/particle.hpp:58`
-**Lua Access:** `TBD (verify in bindings)`
+**Lua Access:** `component_cache.get` (stub exposed; usage not yet validated)
 **Notes:** source_category:particles
 
 **Fields:**
@@ -275,7 +315,7 @@ Key considerations:
 ## Particle
 **doc_id:** `component:Particle`
 **Location:** `src/systems/particles/particle.hpp:62`
-**Lua Access:** `TBD (verify in bindings)`
+**Lua Access:** `component_cache.get` (stub exposed; usage not yet validated)
 **Notes:** source_category:particles
 
 **Fields:**
@@ -302,7 +342,7 @@ Key considerations:
 ## ParticleEmitter
 **doc_id:** `component:ParticleEmitter`
 **Location:** `src/systems/particles/particle.hpp:89`
-**Lua Access:** `TBD (verify in bindings)`
+**Lua Access:** `component_cache.get` (stub exposed; usage not yet validated)
 **Notes:** 1 complex types need manual review; source_category:particles
 
 **Fields:**
@@ -335,7 +375,7 @@ Key considerations:
 ## ParticleAnimationConfig
 **doc_id:** `component:ParticleAnimationConfig`
 **Location:** `src/systems/particles/particle.hpp:116`
-**Lua Access:** `TBD (verify in bindings)`
+**Lua Access:** `component_cache.get` (stub exposed; usage not yet validated)
 **Notes:** source_category:particles
 
 **Fields:**
@@ -351,7 +391,7 @@ Key considerations:
 ## StencilMaskSource
 **doc_id:** `component:StencilMaskSource`
 **Location:** `src/systems/particles/particle.hpp:1024`
-**Lua Access:** `TBD (verify in bindings)`
+**Lua Access:** `component_cache.get` (stub exposed; usage not yet validated)
 **Notes:** source_category:particles
 
 **Fields:**
@@ -363,7 +403,7 @@ Key considerations:
 ## StencilMaskedParticle
 **doc_id:** `component:StencilMaskedParticle`
 **Location:** `src/systems/particles/particle.hpp:1029`
-**Lua Access:** `TBD (verify in bindings)`
+**Lua Access:** `component_cache.get` (stub exposed; usage not yet validated)
 **Notes:** source_category:particles
 
 **Fields:**

@@ -7,6 +7,41 @@ Key considerations:
 - Many types are intermediate structs for combat math and event dispatch; treat as read-only unless documented.
 - Lua accessibility varies; verify before mutating from scripts.
 
+## Tiered Documentation
+- **Tier 0**: name + location + Lua access (extracted listing below).
+- **Tier 1**: fields + writability + common patterns for high-frequency components.
+- **Tier 2**: verified test id + gotchas.
+
+## Combat System Notes
+- Buff stacking uses `stackingKey` to group unique and replace policies in `BuffInstance`.
+- `DamageBundle` carries per-type flat damage and a `DmgTag_*` bitmask for weapon and skill tagging.
+- `Stats` uses base, add, mul arrays and caches `final` after recompute. When mutating base or modifiers, recompute final values.
+- `Ability` cooldown fields are runtime and updated by `AbilitySystem.tickCooldowns`.
+
+## High-Frequency Components (Tier 1)
+- `Stats` — Detail Tier: 1. Layered stat storage with `base`, `add`, `mul`, and cached `final`.
+  - Gotchas: Call `RecomputeFinal` after modifying base or modifiers.
+- `BuffInstance` — Detail Tier: 1. Active buff state with duration, stacks, and stacking policy.
+  - Gotchas: `add` and `mul` arrays exist in C++ but are complex types and omitted from Tier 0 extraction.
+- `DamageBundle` — Detail Tier: 1. Damage package with `weaponScalar`, per-type flat array, and `tags`.
+  - Gotchas: Flat array is per `DamageType`, not exposed in Tier 0 extraction.
+- `Ability` — Detail Tier: 1. Ability definition with trigger predicate, target collection, and effect graph.
+  - Gotchas: Function fields are C++ callbacks and are not expected to be mutated in Lua.
+
+## Doc Divergences
+- Card system components are not present in `src/systems/composable_mechanics` headers and are likely defined in other categories.
+
+## Low Confidence Items
+- AbilityDatabase (unordered_map and helper methods)
+- CompiledEffectGraph (complex graph structure)
+
+## Tests
+- `combat.components.smoke` → `component:BuffInstance`, `component:Stats`, `component:DamageBundle`, `component:Ability`
+- `combat.components.buffinstance.read_write` → `component:BuffInstance`
+- `combat.components.stats.read_write` → `component:Stats`
+- `combat.components.damagebundle.read_write` → `component:DamageBundle`
+- `combat.components.ability.cooldowns` → `component:Ability`
+
 ## LuaContentLoader
 **doc_id:** `component:LuaContentLoader`
 **Location:** `src/systems/composable_mechanics/loader_lua.hpp:11`

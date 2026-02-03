@@ -1,0 +1,82 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-02-03T06:06:43Z",
+  "area": "wand",
+  "patterns": [
+    {
+      "pattern_id": "wand.registry.lazy_load",
+      "name": "Card registry lazy-load caching",
+      "doc_id": "pattern:wand.registry.lazy_load",
+      "category": "registry",
+      "description": "CardRegistry lazily requires data.cards, caches cards and trigger cards, and serves helpers by id/tag.",
+      "source_refs": [
+        "assets/scripts/wand/card_registry.lua:10"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "wand.behavior_registry.register_execute",
+      "name": "Behavior registry register/execute with pcall",
+      "doc_id": "pattern:wand.behavior_registry.register_execute",
+      "category": "behavior_registry",
+      "description": "BehaviorRegistry registers behavior functions by id and executes them with pcall, returning success and result.",
+      "source_refs": [
+        "assets/scripts/wand/card_behavior_registry.lua:62"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "wand.modifiers.joker_effect_schema",
+      "name": "Joker effects mutate modifier table in place",
+      "doc_id": "pattern:wand.modifiers.joker_effect_schema",
+      "category": "modifiers",
+      "description": "Joker effects are mapped via schema to modifier fields; applyJokerEffects mutates the shared modifiers table before wand_actions reads it.",
+      "source_refs": [
+        "assets/scripts/wand/wand_modifiers.lua:166"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "wand.executor.subcast_trace",
+      "name": "Sub-cast tracing with stable ids",
+      "doc_id": "pattern:wand.executor.subcast_trace",
+      "category": "executor",
+      "description": "WandExecutor builds a trace id from wand, block, card, and trigger then logs and optionally signals debug events.",
+      "source_refs": [
+        "assets/scripts/wand/wand_executor.lua:47"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "wand.triggers.register_cleanup",
+      "name": "Trigger registration with timer/signal cleanup",
+      "doc_id": "pattern:wand.triggers.register_cleanup",
+      "category": "triggers",
+      "description": "WandTriggers registers trigger definitions, sets timer tags/event types, and cleanup cancels timers and removes signal listeners.",
+      "source_refs": [
+        "assets/scripts/wand/wand_triggers.lua:63"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    }
+  ]
+}

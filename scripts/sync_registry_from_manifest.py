@@ -35,6 +35,8 @@ TEST_MANIFEST = Path("test_output/test_manifest.json")
 OVERRIDES_FILE = Path("assets/scripts/test/test_registry_overrides.lua")
 REGISTRY_OUTPUT = Path("assets/scripts/test/test_registry.lua")
 
+LOG_PREFIX = "[SYNC]"
+
 
 @dataclass
 class DocIdEntry:
@@ -53,7 +55,7 @@ class DocIdEntry:
 def log(message: str, verbose: bool = True) -> None:
     """Log a message with [SYNC] prefix."""
     if verbose:
-        print(f"[SYNC] {message}")
+        print(f"{LOG_PREFIX} {message}")
 
 
 def get_git_root() -> Path | None:
@@ -136,18 +138,18 @@ def extract_doc_ids_from_patterns(data: dict) -> list[tuple[str, str | None]]:
 
 def load_inventories(
     inventory_dir: Path, verbose: bool = False
-) -> dict[str, str | None]:
+) -> tuple[dict[str, str | None], list[str]]:
     """Load all inventory files and extract doc_ids.
 
-    Returns dict mapping doc_id -> source_ref.
+    Returns (doc_id -> source_ref, inventory filenames).
     """
     log("Loading inventories...", verbose)
     doc_ids: dict[str, str | None] = {}
-    inventory_files = list(inventory_dir.glob("*.json"))
+    inventory_files = []
 
-    for inv_file in sorted(inventory_files):
+    for inv_file in sorted(inventory_dir.glob("*.json")):
         try:
-            with open(inv_file) as f:
+            with open(inv_file, encoding="utf-8") as f:
                 data = json.load(f)
         except (OSError, json.JSONDecodeError) as e:
             log(f"  Warning: Failed to load {inv_file.name}: {e}", verbose)
@@ -170,56 +172,61 @@ def load_inventories(
         for doc_id, source_ref in extracted:
             doc_ids[doc_id] = source_ref
 
+        inventory_files.append(inv_file.name)
         log(f"  {inv_file.name}: {len(extracted)} {item_type}", verbose)
 
     log(f"  Total doc_ids from inventories: {len(doc_ids)}", verbose)
-    return doc_ids
+    return doc_ids, inventory_files
 
 
-def load_test_manifest(manifest_path: Path, verbose: bool = False) -> dict[str, dict]:
+def load_test_manifest(
+    manifest_path: Path,
+    verbose: bool = False,
+    display_name: str | None = None,
+) -> tuple[dict[str, dict], int, int]:
     """Load test manifest and build doc_id -> test mapping.
 
-    Returns dict mapping doc_id -> {test_id, test_file, status, tags, category}.
+    Returns (doc_id->test mapping, tests_registered, doc_ids_declared).
     """
-    log(f"Loading {manifest_path}...", verbose)
+    display = display_name or str(manifest_path)
+    log(f"Loading {display}...", verbose)
 
     if not manifest_path.exists():
         log("  Warning: Test manifest not found, continuing without test mappings", verbose)
-        return {}
+        return {}, 0, 0
 
     try:
-        with open(manifest_path) as f:
+        with open(manifest_path, encoding="utf-8") as f:
             data = json.load(f)
     except (OSError, json.JSONDecodeError) as e:
         log(f"  Warning: Failed to load manifest: {e}", verbose)
-        return {}
+        return {}, 0, 0
 
     tests = data.get("tests", [])
     log(f"  Tests registered: {len(tests)}", verbose)
 
-    # Build doc_id -> test mapping
+    # Build doc_id -> test mapping (deterministic)
     doc_id_to_test: dict[str, dict] = {}
     total_doc_ids = 0
 
-    for test in tests:
+    for test in sorted(tests, key=lambda t: str(t.get("test_id", ""))):
         test_id = test.get("test_id")
         test_file = test.get("test_file")
-        status = test.get("status", "verified")
         tags = test.get("tags", [])
         category = test.get("category")
 
         for doc_id in test.get("doc_ids", []):
             total_doc_ids += 1
-            doc_id_to_test[doc_id] = {
-                "test_id": test_id,
-                "test_file": test_file,
-                "status": status,
-                "tags": tags,
-                "category": category,
-            }
+            if doc_id not in doc_id_to_test:
+                doc_id_to_test[doc_id] = {
+                    "test_id": test_id,
+                    "test_file": test_file,
+                    "tags": sorted(set(tags)) if isinstance(tags, list) else [],
+                    "category": category,
+                }
 
     log(f"  doc_ids declared: {total_doc_ids}", verbose)
-    return doc_id_to_test
+    return doc_id_to_test, len(tests), total_doc_ids
 
 
 def parse_lua_overrides(overrides_path: Path, verbose: bool = False) -> dict[str, dict]:
@@ -285,13 +292,14 @@ def build_registry(
     test_mappings: dict[str, dict],
     overrides: dict[str, dict],
     verbose: bool = False,
-) -> dict[str, DocIdEntry]:
+) -> tuple[dict[str, DocIdEntry], int, int, int]:
     """Build the registry from all sources."""
     log("Matching doc_ids to tests...", verbose)
     registry: dict[str, DocIdEntry] = {}
 
     verified_count = 0
     unverified_count = 0
+    overrides_applied = 0
 
     # Process all doc_ids from inventories
     for doc_id in sorted(inventory_doc_ids.keys()):
@@ -338,28 +346,29 @@ def build_registry(
 
     # Apply overrides
     if overrides:
-        log("Applying overrides...", verbose)
         for doc_id, override in overrides.items():
-            if doc_id in registry:
-                entry = registry[doc_id]
-                if "status" in override:
-                    entry.status = override["status"]
-                if "reason" in override:
-                    entry.reason = override["reason"]
-                if "test_id" in override:
-                    entry.test_id = override["test_id"]
-                if "note" in override:
-                    entry.reason = override.get("note")
-                log(f"  Applying: {doc_id}", verbose)
-        log(f"  Overrides applied: {len(overrides)}", verbose)
+            if doc_id not in registry:
+                continue
+            entry = registry[doc_id]
+            if "status" in override:
+                entry.status = override["status"]
+            if "reason" in override:
+                entry.reason = override["reason"]
+            if "test_id" in override:
+                entry.test_id = override["test_id"]
+            if "note" in override:
+                entry.reason = override.get("note")
+            overrides_applied += 1
+            log(f"  Applying: {doc_id}", verbose)
 
-    return registry
+    return registry, verified_count, unverified_count, overrides_applied
 
 
 def generate_registry_lua(
     registry: dict[str, DocIdEntry],
     inventory_files: list[str],
     manifest_path: str,
+    overrides_path: str,
 ) -> str:
     """Generate deterministic Lua registry file content."""
     now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -375,6 +384,7 @@ def generate_registry_lua(
         f'    generated_at = "{now}",',
         "    sources = {",
         f'        manifest = "{manifest_path}",',
+        f'        overrides = "{overrides_path}",',
         "        inventories = {",
     ]
 
@@ -412,7 +422,7 @@ def generate_registry_lua(
             lines.append(f'            category = "{entry.category}",')
 
         if entry.tags:
-            tags_str = ", ".join(f'"{t}"' for t in entry.tags)
+            tags_str = ", ".join(f'"{t}"' for t in sorted(set(entry.tags)))
             lines.append(f"            tags = {{{tags_str}}},")
 
         lines.append("        },")
@@ -424,23 +434,63 @@ def generate_registry_lua(
     return "\n".join(lines)
 
 
+def parse_registry_docs(content: str) -> dict[str, dict]:
+    """Parse doc entries from a generated registry file."""
+    docs: dict[str, dict] = {}
+    current_id = None
+    current_fields: dict[str, object] = {}
+
+    for raw_line in content.splitlines():
+        line = raw_line.strip()
+        if line.startswith('["') and line.endswith("{"):
+            current_id = line.split('"', 2)[1]
+            current_fields = {}
+            continue
+        if current_id and line.startswith("}"):
+            docs[current_id] = current_fields
+            current_id = None
+            continue
+        if not current_id:
+            continue
+
+        if "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().rstrip(",")
+
+        if value == "nil":
+            parsed = None
+        elif value.startswith("{") and value.endswith("}"):
+            items = [v.strip().strip('"') for v in value.strip("{}").split(",") if v.strip()]
+            parsed = items
+        elif value.startswith('"') and value.endswith('"'):
+            parsed = value.strip('"')
+        else:
+            parsed = value
+
+        current_fields[key] = parsed
+
+    return docs
+
+
 def compare_registries(old_content: str, new_content: str) -> tuple[int, int, int]:
     """Compare old and new registry content.
 
     Returns (new_entries, updated_entries, removed_entries).
     """
-    # Simple line-based comparison for now
-    old_lines = set(old_content.splitlines())
-    new_lines = set(new_content.splitlines())
+    old_docs = parse_registry_docs(old_content)
+    new_docs = parse_registry_docs(new_content)
 
-    # Count doc entries (lines starting with ["...)
-    old_docs = {ln for ln in old_lines if ln.strip().startswith('["')}
-    new_docs = {ln for ln in new_lines if ln.strip().startswith('["')}
+    old_ids = set(old_docs.keys())
+    new_ids = set(new_docs.keys())
 
-    new_entries = len(new_docs - old_docs)
-    removed_entries = len(old_docs - new_docs)
-    # Updated is approximate
-    updated_entries = len(old_docs & new_docs)
+    new_entries = len(new_ids - old_ids)
+    removed_entries = len(old_ids - new_ids)
+    updated_entries = sum(
+        1 for doc_id in (old_ids & new_ids)
+        if old_docs.get(doc_id) != new_docs.get(doc_id)
+    )
 
     return new_entries, updated_entries, removed_entries
 
@@ -479,15 +529,21 @@ def main() -> int:
     output_path = git_root / REGISTRY_OUTPUT
 
     # Load all sources
-    inventory_doc_ids = load_inventories(inventory_dir, verbose)
-    test_mappings = load_test_manifest(manifest_path, verbose)
+    test_mappings, tests_registered, doc_ids_declared = load_test_manifest(
+        manifest_path, verbose, display_name=str(TEST_MANIFEST)
+    )
+    inventory_doc_ids, inventory_files = load_inventories(inventory_dir, verbose)
     overrides = parse_lua_overrides(overrides_path, verbose)
 
     # Build registry
-    registry = build_registry(inventory_doc_ids, test_mappings, overrides, verbose)
+    log(f"Applying overrides from {OVERRIDES_FILE}...", verbose)
 
-    # Get inventory file names for metadata
-    inventory_files = [f.name for f in inventory_dir.glob("*.json") if f.name.startswith(("bindings.", "components.", "patterns."))]
+    registry, verified_count, unverified_count, overrides_applied = build_registry(
+        inventory_doc_ids, test_mappings, overrides, verbose
+    )
+    log(f"  Verified (test exists): {verified_count}", verbose)
+    log(f"  Unverified (no test): {unverified_count}", verbose)
+    log(f"  Overrides applied: {overrides_applied}", verbose)
 
     # Generate output
     log("Generating test_registry.lua...", verbose)
@@ -495,6 +551,7 @@ def main() -> int:
         registry,
         inventory_files,
         str(TEST_MANIFEST),
+        str(OVERRIDES_FILE),
     )
 
     # Compare with existing
@@ -521,11 +578,12 @@ def main() -> int:
             return EXIT_CHECK_FAILED
 
     # Write output
-    log(f"Writing {output_path}...", verbose)
+    log("Writing test_registry.lua...", verbose)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(new_content)
 
-    log(f"Done. Registry now has {len(registry)} entries.", verbose)
+    log("Done.", verbose)
+    log(f"Registry now has {len(registry)} entries.", verbose)
     return EXIT_SUCCESS
 
 

@@ -1,0 +1,18 @@
+{
+    "schema_version": "1.0",
+    "updated_at": "2026-02-04T00:00:00Z",
+    "default_expiry_days": 14,
+    "quarantined_tests": [
+        {
+            "test_id": "rendering.shader.bloom",
+            "reason": "GPU-dependent bloom intensity varies across vendors",
+            "owner": "@rendering-team",
+            "issue_link": "https://github.com/org/repo/issues/123",
+            "quarantined_at": "2026-02-04T00:00:00Z",
+            "expires_at": "2026-02-18T00:00:00Z",
+            "platforms": ["*"],
+            "renewal_count": 0,
+            "max_renewals": 2
+        }
+    ]
+}

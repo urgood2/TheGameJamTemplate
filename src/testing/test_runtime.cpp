@@ -1,12 +1,19 @@
 #include "testing/test_runtime.hpp"
 
 #include <algorithm>
+#include <cfenv>
 #include <chrono>
+#include <clocale>
 #include <cstdlib>
 #include <ctime>
 #include <fstream>
 #include <iomanip>
+#include <optional>
 #include <sstream>
+
+#if defined(__SSE2__) || defined(_M_X64) || (defined(_M_IX86_FP) && _M_IX86_FP >= 2)
+#include <xmmintrin.h>
+#endif
 
 #include <nlohmann/json.hpp>
 #include <spdlog/spdlog.h>
@@ -64,6 +71,63 @@ std::string current_timestamp_utc() {
     return oss.str();
 }
 
+std::string current_locale_name() {
+    const char* locale = std::setlocale(LC_ALL, nullptr);
+    if (locale && *locale) {
+        return locale;
+    }
+    return "C";
+}
+
+std::string current_timezone_name() {
+    const char* tz = std::getenv("TZ");
+    if (tz && *tz) {
+        return tz;
+    }
+    return "UTC";
+}
+
+std::string rounding_mode_name() {
+    switch (std::fegetround()) {
+        case FE_TONEAREST:
+            return "nearest";
+        case FE_TOWARDZERO:
+            return "toward_zero";
+        case FE_UPWARD:
+            return "toward_inf";
+        case FE_DOWNWARD:
+            return "toward_neg_inf";
+        default:
+            return "nearest";
+    }
+}
+
+bool ftz_daz_enabled() {
+#if defined(__SSE2__) || defined(_M_X64) || (defined(_M_IX86_FP) && _M_IX86_FP >= 2)
+    const bool ftz = (_MM_GET_FLUSH_ZERO_MODE() == _MM_FLUSH_ZERO_ON);
+    return ftz;
+#else
+    return false;
+#endif
+}
+
+nlohmann::json build_determinism_pins(const TestModeConfig& config) {
+    nlohmann::json pins;
+    pins["ftz_daz"] = ftz_daz_enabled();
+    pins["rounding"] = rounding_mode_name();
+    pins["locale"] = current_locale_name();
+    pins["timezone"] = current_timezone_name();
+    pins["thread_mode"] = "single";
+    if (config.allow_network == NetworkMode::Deny) {
+        pins["network_mode"] = "deny";
+    } else if (config.allow_network == NetworkMode::Localhost) {
+        pins["network_mode"] = "localhost";
+    } else {
+        pins["network_mode"] = "any";
+    }
+    return pins;
+}
+
 nlohmann::json build_report_json(const TestModeConfig& config) {
     nlohmann::json run;
     run["run_id"] = config.run_id;
@@ -103,6 +167,8 @@ nlohmann::json build_run_manifest_json(const TestModeConfig& config) {
     manifest["shard"] = config.shard;
     manifest["total_shards"] = config.total_shards;
     manifest["timeout_seconds"] = config.timeout_seconds;
+    manifest["determinism_pins"] = build_determinism_pins(config);
+    manifest["test_api_fingerprint"] = "";
     return manifest;
 }
 
@@ -173,16 +239,28 @@ bool TestRuntime::initialize(const TestModeConfig& config) {
     allocate_subsystems();
 
     if (path_sandbox_) {
-        path_sandbox_->set_root(config_.run_root);
+        path_sandbox_->initialize(config_);
     }
-    if (artifact_store_) {
-        artifact_store_->set_root(config_.artifacts_dir);
+    if (artifact_store_ && path_sandbox_) {
+        artifact_store_->initialize(config_, *path_sandbox_);
     }
     if (baseline_manager_) {
-        baseline_manager_->set_root(config_.baseline_staging_dir);
+        baseline_manager_->initialize(config_);
+    }
+    if (api_registry_) {
+        api_registry_->initialize(config_);
+    }
+    if (determinism_guard_) {
+        determinism_guard_->initialize(config_);
+    }
+    if (perf_tracker_) {
+        perf_tracker_->initialize(config_);
     }
     if (screenshot_capture_) {
         screenshot_capture_->set_size(config_.resolution_width, config_.resolution_height);
+    }
+    if (forensics_) {
+        forensics_->initialize(config_, *this);
     }
 
     running_ = true;
@@ -243,6 +321,10 @@ TestApiRegistry& TestRuntime::api_registry() {
     return *api_registry_;
 }
 
+const TestApiRegistry& TestRuntime::api_registry() const {
+    return *api_registry_;
+}
+
 DeterminismGuard& TestRuntime::determinism_guard() {
     return *determinism_guard_;
 }
@@ -263,28 +345,48 @@ void TestRuntime::on_test_start(const std::string& test_id, int attempt) {
     current_test_id_ = test_id;
     test_complete_ = false;
     wait_frames_remaining_ = 0;
+    requested_outcome_.clear();
+    requested_outcome_reason_.clear();
 
     const int normalized_attempt = std::max(1, attempt);
+    current_attempt_ = normalized_attempt;
     auto it = retry_counts_.find(test_id);
     if (it == retry_counts_.end() || normalized_attempt > it->second) {
         retry_counts_[test_id] = normalized_attempt;
     }
+
+    if (perf_tracker_) {
+        perf_tracker_->begin_test(test_id);
+    }
 }
 
 void TestRuntime::on_test_end(const std::string& test_id, TestStatus status, int attempt) {
-    (void)status;
     current_test_id_ = test_id;
     test_complete_ = true;
 
     const int normalized_attempt = std::max(1, attempt);
+    current_attempt_ = normalized_attempt;
     auto it = retry_counts_.find(test_id);
     if (it == retry_counts_.end() || normalized_attempt > it->second) {
         retry_counts_[test_id] = normalized_attempt;
+    }
+
+    if (perf_tracker_) {
+        perf_tracker_->end_test();
+    }
+
+    if (forensics_ && (status == TestStatus::Fail || status == TestStatus::Error)) {
+        if (!should_retry_test(test_id, status)) {
+            forensics_->capture_on_failure(test_id, status);
+        }
     }
 }
 
 void TestRuntime::on_run_complete() {
     write_reports();
+    if (forensics_) {
+        forensics_->capture_on_run_complete();
+    }
 }
 
 void TestRuntime::on_frame_start(int frame_number) {
@@ -308,9 +410,8 @@ void TestRuntime::on_frame_start(int frame_number) {
 }
 
 void TestRuntime::on_frame_end(int frame_number) {
-    (void)frame_number;
     if (perf_tracker_) {
-        perf_tracker_->record_frame_ms(0.0);
+        perf_tracker_->record_frame(frame_number, 0.0f, 0.0f);
     }
     if (timeline_writer_ && timeline_writer_->is_open()) {
         timeline_writer_->write_event("frame_end");
@@ -344,38 +445,76 @@ void TestRuntime::write_reports() {
             schema_validation_failed_ = true;
             schema_validation_error_ = "failed to create run root: " + config_.run_root.string();
             SPDLOG_ERROR("{}", schema_validation_error_);
-#ifndef UNIT_TESTS
-            std::exit(2);
-#endif
+            if (config_.exit_on_schema_failure) {
+                std::exit(2);
+            }
             return;
         }
     }
 
     const auto report = build_report_json(config_);
-    const auto run_manifest = build_run_manifest_json(config_);
+    auto run_manifest = build_run_manifest_json(config_);
     const auto test_api = build_test_api_json();
 
+    if (api_registry_) {
+        run_manifest["test_api_fingerprint"] = api_registry_->compute_fingerprint();
+    }
+
     std::string err;
+    auto resolve_output = [&](const std::filesystem::path& path,
+                              const std::string& label) -> std::optional<std::filesystem::path> {
+        if (path.empty()) {
+            return std::nullopt;
+        }
+        if (!path_sandbox_) {
+            return path;
+        }
+        auto resolved = path_sandbox_->resolve_write_path(path);
+        if (!resolved) {
+            err = "output path outside sandbox for " + label + ": " + path.string();
+            return std::nullopt;
+        }
+        return resolved;
+    };
+
     const auto report_path = resolve_output_path(config_, config_.report_json_path, "report.json");
     const auto junit_path = resolve_output_path(config_, config_.report_junit_path, "report.junit.xml");
     const auto manifest_path = resolve_output_path(config_, "run_manifest.json", "run_manifest.json");
     const auto test_api_path = resolve_output_path(config_, "test_api.json", "test_api.json");
 
-    if (!validate_and_write("tests/schemas/report.schema.json", report, report_path, err) ||
-        !validate_and_write("tests/schemas/run_manifest.schema.json", run_manifest, manifest_path, err) ||
-        !validate_and_write("tests/schemas/test_api.schema.json", test_api, test_api_path, err)) {
+    auto resolved_report = resolve_output(report_path, "report");
+    auto resolved_manifest = resolve_output(manifest_path, "run manifest");
+    auto resolved_test_api = resolve_output(test_api_path, "test api");
+    std::optional<std::filesystem::path> resolved_junit;
+    if (!junit_path.empty()) {
+        resolved_junit = resolve_output(junit_path, "junit report");
+    }
+
+    if (!resolved_report || !resolved_manifest || !resolved_test_api) {
         schema_validation_failed_ = true;
-        schema_validation_error_ = err.empty() ? "schema validation failed" : err;
-        SPDLOG_ERROR("Schema validation failed: {}", schema_validation_error_);
+        schema_validation_error_ = err.empty() ? "output path outside sandbox" : err;
+        SPDLOG_ERROR("{}", schema_validation_error_);
 #ifndef UNIT_TESTS
         std::exit(2);
 #endif
         return;
     }
 
-    if (!junit_path.empty()) {
+    if (!validate_and_write("tests/schemas/report.schema.json", report, *resolved_report, err) ||
+        !validate_and_write("tests/schemas/run_manifest.schema.json", run_manifest, *resolved_manifest, err) ||
+        !validate_and_write("tests/schemas/test_api.schema.json", test_api, *resolved_test_api, err)) {
+        schema_validation_failed_ = true;
+        schema_validation_error_ = err.empty() ? "schema validation failed" : err;
+        SPDLOG_ERROR("Schema validation failed: {}", schema_validation_error_);
+        if (config_.exit_on_schema_failure) {
+            std::exit(2);
+        }
+        return;
+    }
+
+    if (resolved_junit.has_value()) {
         std::string junit_err;
-        if (!write_text_file(junit_path, "", junit_err)) {
+        if (!write_text_file(*resolved_junit, "", junit_err)) {
             SPDLOG_ERROR("Unable to write junit report: {}", junit_err);
         }
     }
@@ -429,6 +568,59 @@ void TestRuntime::prepare_for_retry(const std::string& test_id) {
     test_complete_ = false;
 }
 
+void TestRuntime::reset_for_snapshot() {
+    wait_frames_remaining_ = 0;
+    test_complete_ = false;
+    requested_outcome_.clear();
+    requested_outcome_reason_.clear();
+    exit_requested_ = false;
+    exit_code_ = 0;
+}
+
+void TestRuntime::request_exit(int code) {
+    exit_requested_ = true;
+    exit_code_ = code;
+}
+
+bool TestRuntime::exit_requested() const {
+    return exit_requested_;
+}
+
+int TestRuntime::exit_code() const {
+    return exit_code_;
+}
+
+void TestRuntime::request_skip(const std::string& reason) {
+    requested_outcome_ = "skip";
+    requested_outcome_reason_ = reason;
+    test_complete_ = true;
+}
+
+void TestRuntime::request_xfail(const std::string& reason) {
+    requested_outcome_ = "xfail";
+    requested_outcome_reason_ = reason;
+}
+
+const std::string& TestRuntime::requested_outcome() const {
+    return requested_outcome_;
+}
+
+const std::string& TestRuntime::requested_outcome_reason() const {
+    return requested_outcome_reason_;
+}
+
+bool TestRuntime::has_active_test() const {
+    return !current_test_id_.empty();
+}
+
+const std::string& TestRuntime::current_test_id() const {
+    return current_test_id_;
+}
+
+int TestRuntime::current_attempt() const {
+    return current_attempt_;
+}
+
 const TestModeConfig& TestRuntime::config() const {
     return config_;
 }
@@ -469,8 +661,13 @@ void TestRuntime::reset_state() {
     wait_frames_remaining_ = 0;
     test_complete_ = false;
     current_test_id_.clear();
+    current_attempt_ = 1;
     retry_counts_.clear();
     resume_count_ = 0;
+    exit_requested_ = false;
+    exit_code_ = 0;
+    requested_outcome_.clear();
+    requested_outcome_reason_.clear();
 }
 
 void TestRuntime::allocate_subsystems() {

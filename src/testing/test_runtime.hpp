@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "testing/artifact_store.hpp"
@@ -44,6 +45,7 @@ public:
     ArtifactStore& artifact_store();
     TestForensics& forensics();
     TestApiRegistry& api_registry();
+    const TestApiRegistry& api_registry() const;
     DeterminismGuard& determinism_guard();
     PerfTracker& perf_tracker();
     TimelineWriter& timeline_writer();
@@ -64,6 +66,20 @@ public:
 
     bool should_retry_test(const std::string& test_id, TestStatus status) const;
     void prepare_for_retry(const std::string& test_id);
+    void reset_for_snapshot();
+
+    void request_exit(int code);
+    bool exit_requested() const;
+    int exit_code() const;
+
+    void request_skip(const std::string& reason);
+    void request_xfail(const std::string& reason);
+    const std::string& requested_outcome() const;
+    const std::string& requested_outcome_reason() const;
+
+    bool has_active_test() const;
+    const std::string& current_test_id() const;
+    int current_attempt() const;
 
     const TestModeConfig& config() const;
     int current_frame() const;
@@ -98,8 +114,13 @@ private:
     int wait_frames_remaining_ = 0;
     bool test_complete_ = false;
     std::string current_test_id_;
+    int current_attempt_ = 1;
     std::map<std::string, int> retry_counts_;
     int resume_count_ = 0;
+    bool exit_requested_ = false;
+    int exit_code_ = 0;
+    std::string requested_outcome_;
+    std::string requested_outcome_reason_;
     bool schema_validation_failed_ = false;
     std::string schema_validation_error_;
 };

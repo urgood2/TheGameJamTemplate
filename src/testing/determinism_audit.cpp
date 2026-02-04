@@ -12,6 +12,15 @@ void DeterminismAudit::record_hash(const std::string& hash) {
 }
 
 bool DeterminismAudit::has_diverged() const {
+    if (hashes_.size() < 2) {
+        return false;
+    }
+    const auto& first = hashes_.front();
+    for (const auto& hash : hashes_) {
+        if (hash != first) {
+            return true;
+        }
+    }
     return false;
 }
 

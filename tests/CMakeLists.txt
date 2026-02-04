@@ -140,6 +140,34 @@ target_link_libraries(unit_tests PRIVATE
     CommonSettings
 )
 
+# ======================================================================
+# E2E Supervisor Stub (helper binary for tests)
+# ======================================================================
+add_executable(e2e_supervisor_stub
+    helpers/e2e_supervisor_stub.cpp
+)
+
+# ======================================================================
+# E2E Supervisor Unit Tests (lightweight target)
+# ======================================================================
+add_executable(e2e_supervisor_tests
+    unit/test_e2e_supervisor.cpp
+    ${CMAKE_SOURCE_DIR}/tools/e2e_supervisor_lib.cpp
+)
+
+target_include_directories(e2e_supervisor_tests PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(e2e_supervisor_tests PRIVATE
+    gtest_main
+)
+
+add_dependencies(e2e_supervisor_tests e2e_supervisor_stub)
+
+gtest_discover_tests(e2e_supervisor_tests)
+
 # Link Tracy if enabled (needed by shader_system, physics_world, layer_command_buffer)
 if(TRACY_ENABLE AND NOT EMSCRIPTEN)
     target_link_libraries(unit_tests PRIVATE Tracy::TracyClient)

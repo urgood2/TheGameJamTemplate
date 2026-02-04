@@ -2663,5 +2663,4 @@ devlog/sfx/node_modules/
 .bv/
 
 # Agent coordination and local state
-.beads/
 .flywheel/

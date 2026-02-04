@@ -401,7 +401,10 @@ std::filesystem::path make_temp_json_path(const std::string& prefix) {
     auto now = std::chrono::steady_clock::now().time_since_epoch().count();
     std::ostringstream name;
     name << prefix << "_" << now << "_" << std::this_thread::get_id() << ".json";
-    return std::filesystem::temp_directory_path() / name.str();
+    auto out_root = std::filesystem::current_path() / "tests" / "out";
+    std::error_code ec;
+    std::filesystem::create_directories(out_root, ec);
+    return out_root / name.str();
 }
 
 } // namespace

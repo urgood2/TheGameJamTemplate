@@ -61,6 +61,7 @@
 #include "../systems/ai/ai_system.hpp"
 #include "spdlog/spdlog.h"
 #include "systems/camera/camera_manager.hpp"
+#include "testing/test_mode.hpp"
 #if ENABLE_LDTK
 #include "systems/ldtk_loader/ldtk_combined.hpp"
 #endif
@@ -1359,15 +1360,19 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         luaMainUpdateFunc = ai_system::masterStateLua["main"]["update"];
         luaMainDrawFunc = ai_system::masterStateLua["main"]["draw"];
 
-        if (!luaMainInitFunc.valid()) {
-            spdlog::error("Lua init function missing on master state");
-            assert(false);
-        }
+        if (testing::is_test_mode_enabled()) {
+            spdlog::info("[test_mode] Skipping lua main.init");
+        } else {
+            if (!luaMainInitFunc.valid()) {
+                spdlog::error("Lua init function missing on master state");
+                assert(false);
+            }
 
-        auto initResult = util::safeLuaCall(luaMainInitFunc, "lua main.init");
-        if (initResult.isErr()) {
-            spdlog::error("Lua init failed: {}", initResult.error());
-            assert(false);
+            auto initResult = util::safeLuaCall(luaMainInitFunc, "lua main.init");
+            if (initResult.isErr()) {
+                spdlog::error("Lua init failed: {}", initResult.error());
+                assert(false);
+            }
         }
         
         

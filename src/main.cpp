@@ -37,6 +37,8 @@
 #endif
 
 #include "effolkronium/random.hpp" // https://github.com/effolkronium/random
+#include <cstdio>
+#include <cstdlib>
 
 #include "core/engine_context.hpp"
 #include "core/game.hpp"
@@ -165,6 +167,11 @@ void MainLoopFixedUpdateAbstraction(float dt) {
   ZONE_SCOPED("MainLoopFixedUpdateAbstraction"); // custom label
 
   updateSystems(dt);
+
+  if (testing::is_test_mode_enabled()) {
+    input::finalizeUpdateAtEndOfFrame(globals::getInputState(), dt);
+    return;
+  }
 
   // this switch statement handles only update logic, rendering is handled in
   // the mainloopRenderAbstraction function
@@ -717,6 +724,11 @@ void RunGameLoop() {
     //--------------------------------------------------------------------------------------
     CloseWindow(); // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
+
+    if (g_test_mode_configured) {
+      std::fflush(nullptr);
+      std::_Exit(g_test_mode_exit_requested ? g_test_mode_exit_code : 0);
+    }
 
     return g_test_mode_exit_requested ? g_test_mode_exit_code : 0;
   }

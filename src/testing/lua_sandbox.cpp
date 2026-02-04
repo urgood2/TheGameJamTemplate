@@ -110,17 +110,15 @@ void LuaSandbox::apply_sandbox(lua_State* L) {
     install_time_stubs(L);
     install_random_stubs(L, rng_seed_);
 
-    sol::table os = lua["os"];
-    if (!os.valid()) {
-        os = lua.create_table();
-    }
+    sol::object os_obj = lua["os"];
+    sol::table os = os_obj.is<sol::table>() ? os_obj.as<sol::table>()
+                                            : lua.create_table();
     os.set_function("execute", []() -> void { throw sol::error("os.execute disabled in test mode"); });
     lua["os"] = os;
 
-    sol::table io = lua["io"];
-    if (!io.valid()) {
-        io = lua.create_table();
-    }
+    sol::object io_obj = lua["io"];
+    sol::table io = io_obj.is<sol::table>() ? io_obj.as<sol::table>()
+                                            : lua.create_table();
     sol::function original_open = io["open"];
     io.set_function("open", [this, original_open](sol::this_state ts,
                                                   const std::string& path,
@@ -146,28 +144,29 @@ void LuaSandbox::apply_sandbox(lua_State* L) {
     io.set_function("popen", []() -> void { throw sol::error("io.popen disabled in test mode"); });
     lua["io"] = io;
 
-    sol::table package = lua["package"];
-    if (package.valid()) {
-        const std::string path = build_package_path(allowed_paths_);
-        if (!path.empty()) {
-            package["path"] = path;
-        } else {
-            package["path"] = "";
-        }
-        package["cpath"] = "";
-        sol::table searchers = package["searchers"];
-        if (searchers.valid()) {
-            sol::table new_searchers = lua.create_table();
-            if (searchers[1].valid()) {
-                new_searchers[1] = searchers[1];
-            }
-            if (searchers[2].valid()) {
-                new_searchers[2] = searchers[2];
-            }
-            package["searchers"] = new_searchers;
-        }
-        lua["package"] = package;
+    sol::object package_obj = lua["package"];
+    sol::table package = package_obj.is<sol::table>() ? package_obj.as<sol::table>()
+                                                     : lua.create_table();
+    const std::string path = build_package_path(allowed_paths_);
+    if (!path.empty()) {
+        package["path"] = path;
+    } else {
+        package["path"] = "";
     }
+    package["cpath"] = "";
+    sol::object searchers_obj = package["searchers"];
+    if (searchers_obj.is<sol::table>()) {
+        sol::table searchers = searchers_obj.as<sol::table>();
+        sol::table new_searchers = lua.create_table();
+        if (searchers[1].valid()) {
+            new_searchers[1] = searchers[1];
+        }
+        if (searchers[2].valid()) {
+            new_searchers[2] = searchers[2];
+        }
+        package["searchers"] = new_searchers;
+    }
+    lua["package"] = package;
 
     sol::function original_require = lua["require"];
     lua.set_function("require", [this, original_require](sol::this_state ts, const std::string& name) -> sol::object {
@@ -218,10 +217,9 @@ void LuaSandbox::install_time_stubs(lua_State* L) {
     }
 
     sol::state_view lua(L);
-    sol::table os = lua["os"];
-    if (!os.valid()) {
-        os = lua.create_table();
-    }
+    sol::object os_obj = lua["os"];
+    sol::table os = os_obj.is<sol::table>() ? os_obj.as<sol::table>()
+                                            : lua.create_table();
     os.set_function("time", [this]() -> lua_Integer {
         const double seconds = fixed_fps_ > 0 ? static_cast<double>(current_frame_) / fixed_fps_ : 0.0;
         return static_cast<lua_Integer>(seconds);
@@ -242,10 +240,9 @@ void LuaSandbox::install_random_stubs(lua_State* L, uint32_t seed) {
     rng_.seed(rng_seed_);
 
     sol::state_view lua(L);
-    sol::table math = lua["math"];
-    if (!math.valid()) {
-        math = lua.create_table();
-    }
+    sol::object math_obj = lua["math"];
+    sol::table math = math_obj.is<sol::table>() ? math_obj.as<sol::table>()
+                                                : lua.create_table();
 
     math.set_function("random", [this](sol::variadic_args args, sol::this_state state) -> sol::object {
         sol::state_view lua_view(state);

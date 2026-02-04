@@ -360,10 +360,9 @@ int frame_hash_c(lua_State* L) {
 namespace testing {
 
 void expose_to_lua(sol::state& lua, TestRuntime& runtime) {
-    sol::table harness = lua["test_harness"];
-    if (!harness.valid() || harness.get_type() != sol::type::table) {
-        harness = lua.create_table();
-    }
+    sol::object harness_obj = lua["test_harness"];
+    sol::table harness = harness_obj.is<sol::table>() ? harness_obj.as<sol::table>()
+                                                     : lua.create_table();
 
     const auto& config = runtime.config();
 

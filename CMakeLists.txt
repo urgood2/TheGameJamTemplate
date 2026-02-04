@@ -1033,7 +1033,6 @@ endif()
 add_executable(${PROJECT_NAME})
 target_sources(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_INCLUDE})
-target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR})
 if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.16" AND NOT EMSCRIPTEN)
     # Speed up compiles by precompiling our shared heavy header.

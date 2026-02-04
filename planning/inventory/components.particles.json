@@ -1,0 +1,356 @@
+{
+  "category": "particles",
+  "count": 6,
+  "components": [
+    {
+      "name": "ParticleTag",
+      "category": "particles",
+      "file_path": "src/systems/particles/particle.hpp",
+      "line_number": 58,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "name",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        }
+      ]
+    },
+    {
+      "name": "Particle",
+      "category": "particles",
+      "file_path": "src/systems/particles/particle.hpp",
+      "line_number": 62,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "renderType",
+          "type": "ParticleRenderType",
+          "default": "ParticleRenderType::CIRCLE_FILLED",
+          "is_complex": false
+        },
+        {
+          "name": "velocity",
+          "type": "std::optional<Vector2>",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "rotation",
+          "type": "std::optional<float>",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "rotationSpeed",
+          "type": "std::optional<float>",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "scale",
+          "type": "std::optional<float>",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "lifespan",
+          "type": "std::optional<float>",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "age",
+          "type": "std::optional<float>",
+          "default": "0.0f",
+          "is_complex": false
+        },
+        {
+          "name": "color",
+          "type": "std::optional<Color>",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "gravity",
+          "type": "std::optional<float>",
+          "default": "0.0f",
+          "is_complex": false
+        },
+        {
+          "name": "acceleration",
+          "type": "std::optional<float>",
+          "default": "0.0f",
+          "is_complex": false
+        },
+        {
+          "name": "startColor",
+          "type": "std::optional<Color>",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "endColor",
+          "type": "std::optional<Color>",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "autoAspect",
+          "type": "std::optional<bool>",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "faceVelocity",
+          "type": "std::optional<bool>",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "z",
+          "type": "std::optional<int>",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "space",
+          "type": "std::optional<RenderSpace>",
+          "default": null,
+          "is_complex": false
+        }
+      ]
+    },
+    {
+      "name": "ParticleEmitter",
+      "category": "particles",
+      "file_path": "src/systems/particles/particle.hpp",
+      "line_number": 89,
+      "is_tag": false,
+      "extraction_confidence": 0.9,
+      "notes": [
+        "1 complex types need manual review"
+      ],
+      "fields": [
+        {
+          "name": "size",
+          "type": "Vector2",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "emissionRate",
+          "type": "float",
+          "default": "0.1f",
+          "is_complex": false
+        },
+        {
+          "name": "lastEmitTime",
+          "type": "float",
+          "default": "0.0f",
+          "is_complex": false
+        },
+        {
+          "name": "particleLifespan",
+          "type": "float",
+          "default": "1.0f",
+          "is_complex": false
+        },
+        {
+          "name": "particleSpeed",
+          "type": "float",
+          "default": "1.0f",
+          "is_complex": false
+        },
+        {
+          "name": "fillArea",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "oneShot",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "oneShotParticleCount",
+          "type": "float",
+          "default": "10.f",
+          "is_complex": false
+        },
+        {
+          "name": "prewarm",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "prewarmParticleCount",
+          "type": "float",
+          "default": "10.f",
+          "is_complex": false
+        },
+        {
+          "name": "useGlobalCoords",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "speedScale",
+          "type": "float",
+          "default": "1.0f",
+          "is_complex": false
+        },
+        {
+          "name": "explosiveness",
+          "type": "float",
+          "default": "0.0f",
+          "is_complex": false
+        },
+        {
+          "name": "randomness",
+          "type": "float",
+          "default": "0.1f",
+          "is_complex": false
+        },
+        {
+          "name": "emissionSpread",
+          "type": "float",
+          "default": "0.0f",
+          "is_complex": false
+        },
+        {
+          "name": "gravityStrength",
+          "type": "float",
+          "default": "0.0f",
+          "is_complex": false
+        },
+        {
+          "name": "emissionDirection",
+          "type": "Vector2",
+          "default": "{0, -1}",
+          "is_complex": false
+        },
+        {
+          "name": "acceleration",
+          "type": "float",
+          "default": "0.0f",
+          "is_complex": false
+        },
+        {
+          "name": "blendMode",
+          "type": "BlendMode",
+          "default": "BLEND_ALPHA",
+          "is_complex": false
+        },
+        {
+          "name": "colors",
+          "type": "std::vector<Color>",
+          "default": "{WHITE, GRAY, LIGHTGRAY}",
+          "is_complex": true
+        },
+        {
+          "name": "defaultZ",
+          "type": "std::optional<int>",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "defaultSpace",
+          "type": "std::optional<RenderSpace>",
+          "default": null,
+          "is_complex": false
+        }
+      ]
+    },
+    {
+      "name": "ParticleAnimationConfig",
+      "category": "particles",
+      "file_path": "src/systems/particles/particle.hpp",
+      "line_number": 116,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "useSpriteNotAnimation",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "loop",
+          "type": "bool",
+          "default": "false",
+          "is_complex": false
+        },
+        {
+          "name": "animationName",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "fg",
+          "type": "std::optional<Color>",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "bg",
+          "type": "std::optional<Color>",
+          "default": null,
+          "is_complex": false
+        }
+      ]
+    },
+    {
+      "name": "StencilMaskSource",
+      "category": "particles",
+      "file_path": "src/systems/particles/particle.hpp",
+      "line_number": 1024,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "paddingPx",
+          "type": "float",
+          "default": "0.0f",
+          "is_complex": false
+        }
+      ]
+    },
+    {
+      "name": "StencilMaskedParticle",
+      "category": "particles",
+      "file_path": "src/systems/particles/particle.hpp",
+      "line_number": 1029,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "sourceEntity",
+          "type": "entt::entity",
+          "default": "entt::null",
+          "is_complex": false
+        },
+        {
+          "name": "zBias",
+          "type": "float",
+          "default": "0.0f",
+          "is_complex": false
+        }
+      ]
+    }
+  ]
+}

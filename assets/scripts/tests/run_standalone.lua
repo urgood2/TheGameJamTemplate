@@ -86,6 +86,9 @@ local STANDALONE_TESTS = {
     -- Standalone detection (game-only feature errors)
     "assets/scripts/tests/test_standalone_detection.lua",
 
+    -- Entity lifecycle (mocked ECS)
+    "assets/scripts/tests/test_entity_lifecycle.lua",
+
     -- UI/Input tests
     "assets/scripts/tests/test_quick_equip.lua",
     "assets/scripts/tests/test_inventory_sorting.lua",

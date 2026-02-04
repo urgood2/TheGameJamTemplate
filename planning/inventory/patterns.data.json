@@ -1,0 +1,276 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-02-03T06:35:56Z",
+  "area": "data",
+  "patterns": [
+    {
+      "pattern_id": "data.localization.L_helper",
+      "name": "Localization fallback helper",
+      "doc_id": "pattern:data.localization.L_helper",
+      "category": "localization",
+      "description": "Helper function to fetch localized text with fallback when key is missing.",
+      "source_refs": [
+        "assets/scripts/data/cards.lua:27",
+        "assets/scripts/data/skills.lua:17",
+        "assets/scripts/data/avatars.lua:26"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "data.registry.id_matches_key",
+      "name": "Registry entries with id matching key",
+      "doc_id": "pattern:data.registry.id_matches_key",
+      "category": "registry",
+      "description": "Data tables keyed by id also include matching `id` field for stable lookup.",
+      "source_refs": [
+        "assets/scripts/data/cards.lua:39",
+        "assets/scripts/data/projectiles.lua:21",
+        "assets/scripts/data/status_effects.lua:36",
+        "assets/scripts/data/equipment.lua:11"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "data.content_defaults.apply_card_defaults",
+      "name": "Apply card defaults",
+      "doc_id": "pattern:data.content_defaults.apply_card_defaults",
+      "category": "defaults",
+      "description": "Merge card defaults with explicit fields without mutating original.",
+      "source_refs": [
+        "assets/scripts/data/content_defaults.lua:178"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "data.spawn_presets.entity_template",
+      "name": "Spawn preset data template",
+      "doc_id": "pattern:data.spawn_presets.entity_template",
+      "category": "spawn",
+      "description": "Data-only entity presets with sprite, size, physics, data, and interactive sections.",
+      "source_refs": [
+        "assets/scripts/data/spawn_presets.lua:49"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "data.enemies.behaviors_declarative",
+      "name": "Declarative enemy behaviors",
+      "doc_id": "pattern:data.enemies.behaviors_declarative",
+      "category": "behavior",
+      "description": "Enemy definitions declare behaviors as strings or tables with ctx field references.",
+      "source_refs": [
+        "assets/scripts/data/enemies.lua:49"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "data.particles.define_chain",
+      "name": "Particles.define chain in data",
+      "doc_id": "pattern:data.particles.define_chain",
+      "category": "effects",
+      "description": "Define particle emitters inline with Particles.define() chaining in data tables.",
+      "source_refs": [
+        "assets/scripts/data/status_effects.lua:55",
+        "assets/scripts/data/cards.lua:180"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "data.equipment.proc_triggers",
+      "name": "Equipment proc triggers",
+      "doc_id": "pattern:data.equipment.proc_triggers",
+      "category": "equipment",
+      "description": "Equipment procs define trigger, chance, and effect callbacks using Triggers constants.",
+      "source_refs": [
+        "assets/scripts/data/equipment.lua:25"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "data.triggers.registry_flatten",
+      "name": "Trigger registry flattening",
+      "doc_id": "pattern:data.triggers.registry_flatten",
+      "category": "registry",
+      "description": "Flatten trigger categories into a single lookup map for validation.",
+      "source_refs": [
+        "assets/scripts/data/triggers.lua:106"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "data.projectiles.movement_collision",
+      "name": "Projectile movement + collision keys",
+      "doc_id": "pattern:data.projectiles.movement_collision",
+      "category": "projectiles",
+      "description": "Projectile definitions declare movement and collision behaviors as strings.",
+      "source_refs": [
+        "assets/scripts/data/projectiles.lua:24"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "data.cards.definition_schema",
+      "name": "Card definition schema",
+      "doc_id": "pattern:data.cards.definition_schema",
+      "category": "cards",
+      "description": "Card registry entries declare id/type plus action or modifier fields; defaults come from content_defaults.",
+      "source_refs": [
+        "assets/scripts/data/cards.lua:38",
+        "assets/scripts/data/cards.lua:98"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "data.enemies.definition_schema",
+      "name": "Enemy definition schema",
+      "doc_id": "pattern:data.enemies.definition_schema",
+      "category": "enemies",
+      "description": "Enemy registry entries declare stats, sprite/size, and behaviors with optional callbacks.",
+      "source_refs": [
+        "assets/scripts/data/enemies.lua:26",
+        "assets/scripts/data/enemies.lua:49"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "data.equipment.definition_schema",
+      "name": "Equipment definition schema",
+      "doc_id": "pattern:data.equipment.definition_schema",
+      "category": "equipment",
+      "description": "Equipment entries define stats, requirements, and proc triggers; optional conversions apply.",
+      "source_refs": [
+        "assets/scripts/data/equipment.lua:10",
+        "assets/scripts/data/demo_equipment.lua:12"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "data.jokers.calculate_context",
+      "name": "Joker/Artifact calculate callback",
+      "doc_id": "pattern:data.jokers.calculate_context",
+      "category": "jokers",
+      "description": "Passive items expose calculate(self, context) and return effect tables based on context.event.",
+      "source_refs": [
+        "assets/scripts/data/jokers.lua:19",
+        "assets/scripts/data/artifacts.lua:33"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "data.status_effects.definition_schema",
+      "name": "Status effect definition schema",
+      "doc_id": "pattern:data.status_effects.definition_schema",
+      "category": "status_effects",
+      "description": "Status effects declare dot_type/stack_mode, visuals, and optional particles/shader data.",
+      "source_refs": [
+        "assets/scripts/data/status_effects.lua:35",
+        "assets/scripts/data/status_effects.lua:68"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "data.disciplines.card_pools",
+      "name": "Discipline card pools",
+      "doc_id": "pattern:data.disciplines.card_pools",
+      "category": "disciplines",
+      "description": "Discipline entries list action and modifier pools plus tags for shop filtering.",
+      "source_refs": [
+        "assets/scripts/data/disciplines.lua:15",
+        "assets/scripts/data/disciplines.lua:39"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "data.skills.definition_schema",
+      "name": "Skill definition schema",
+      "doc_id": "pattern:data.skills.definition_schema",
+      "category": "skills",
+      "description": "Skill entries declare element, cost, icon, and effects array for stat buffs or triggers.",
+      "source_refs": [
+        "assets/scripts/data/skills.lua:32",
+        "assets/scripts/data/skills.lua:45"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    },
+    {
+      "pattern_id": "data.registry.accessors",
+      "name": "Registry accessor helpers",
+      "doc_id": "pattern:data.registry.accessors",
+      "category": "registry",
+      "description": "Data registries expose get/getAll/getBySlot helpers to filter table entries by id or slot.",
+      "source_refs": [
+        "assets/scripts/data/equipment.lua:402",
+        "assets/scripts/data/equipment.lua:416"
+      ],
+      "recommended": true,
+      "verified": false,
+      "test_id": null,
+      "cm_rule_id": null,
+      "anti_patterns": []
+    }
+  ]
+}

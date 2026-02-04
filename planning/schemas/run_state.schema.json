@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "run_state.schema.json",
+  "title": "Run State",
+  "description": "Test run sentinel for crash/hang detection",
+  "type": "object",
+  "required": ["schema_version", "in_progress", "run_id", "started_at"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "in_progress": {
+      "type": "boolean",
+      "description": "Whether the test run is still in progress"
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Unique identifier for this test run"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the test run started"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the test run completed (null if in_progress)"
+    },
+    "passed": {
+      "type": "boolean",
+      "description": "Whether all tests passed (null if in_progress)"
+    },
+    "last_test_started": {
+      "type": ["string", "null"],
+      "description": "test_id of last test that started"
+    },
+    "last_test_completed": {
+      "type": ["string", "null"],
+      "description": "test_id of last test that completed"
+    },
+    "partial_counts": {
+      "type": "object",
+      "properties": {
+        "passed": {"type": "integer", "minimum": 0},
+        "failed": {"type": "integer", "minimum": 0},
+        "skipped": {"type": "integer", "minimum": 0}
+      },
+      "description": "Running counts during test execution"
+    },
+    "commit": {
+      "type": ["string", "null"],
+      "description": "Git commit SHA"
+    },
+    "platform": {
+      "type": ["string", "null"],
+      "description": "Platform identifier"
+    },
+    "engine_version": {
+      "type": ["string", "null"],
+      "description": "Engine version"
+    }
+  }
+}

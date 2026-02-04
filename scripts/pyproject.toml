@@ -1,0 +1,79 @@
+# Python tooling configuration for TheGameJamTemplate scripts
+# Install: pip install -e ".[dev]" (from scripts/ directory)
+# Or:      pip install -r requirements.txt
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gamejam-scripts"
+version = "0.1.0"
+description = "Python tooling for TheGameJamTemplate: binding extraction, validation, doc generation"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+
+dependencies = [
+    # Audio analysis (optional; not supported on Python 3.13 yet)
+    "librosa==0.11.0; python_version < '3.13'",
+    "numpy==2.4.2",
+    # PDF generation (thumbnail spec)
+    "fpdf2==2.8.5",
+    # Parsing (for Sol2/component extraction)
+    "tree-sitter==0.24.0",
+    "tree-sitter-cpp==0.23.4",
+    "tree-sitter-lua==0.4.1",
+    # Validation & Config
+    "jsonschema==4.23.0",
+    "PyYAML==6.0.2",
+    # HTTP / Link checking
+    "requests==2.32.3",
+    # CLI utilities
+    "rich==13.9.4",
+    "click==8.1.8",
+]
+
+[project.optional-dependencies]
+dev = [
+    # Testing
+    "pytest==8.3.4",
+    "pytest-cov==6.0.0",
+    # Code quality
+    "ruff==0.9.10",
+    "mypy==1.15.0",
+    # Type stubs
+    "types-requests==2.32.0.20241016",
+    "types-PyYAML==6.0.12.20241230",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "C4", "UP"]
+ignore = ["E501"]  # Line length handled separately
+
+[tool.coverage.run]
+source = ["."]
+omit = ["tests/*", "__pycache__/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+]

@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "frequency.schema.json",
+  "title": "Usage Frequency",
+  "description": "Usage frequency data for bindings/components",
+  "type": "object",
+  "required": ["schema_version", "generated_at", "items"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "scan_config": {
+      "type": "object",
+      "properties": {
+        "scan_paths": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "exclude_patterns": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "alias_file": {
+          "type": "string"
+        }
+      }
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "search_pattern", "files_with_match", "total_occurrences"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Item name (binding/component)"
+          },
+          "doc_id": {
+            "type": "string",
+            "description": "Documentation identifier"
+          },
+          "search_pattern": {
+            "type": "string",
+            "description": "Regex/pattern used for search"
+          },
+          "alias_matched": {
+            "type": ["string", "null"],
+            "description": "Which alias triggered the match"
+          },
+          "files_with_match": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of files containing matches"
+          },
+          "total_occurrences": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Total number of occurrences"
+          },
+          "high_frequency": {
+            "type": "boolean",
+            "description": "Whether item is high frequency (tier 0 candidate)"
+          },
+          "sample_locations": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Sample file:line locations"
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "total_items": {"type": "integer"},
+        "high_frequency_count": {"type": "integer"},
+        "zero_usage_count": {"type": "integer"}
+      }
+    }
+  }
+}

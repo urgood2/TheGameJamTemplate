@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "test_manifest.schema.json",
+  "title": "Test Manifest",
+  "description": "Test manifest for doc_id coverage mapping",
+  "type": "object",
+  "required": ["schema_version", "generated_at", "tests"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "tests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["test_id", "test_file"],
+        "properties": {
+          "test_id": {
+            "type": "string",
+            "description": "Unique test identifier"
+          },
+          "test_file": {
+            "type": "string",
+            "description": "Path to test file"
+          },
+          "category": {
+            "type": "string",
+            "description": "Test category"
+          },
+          "doc_ids": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Documentation IDs this test verifies"
+          },
+          "tags": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Test tags for filtering"
+          },
+          "requires": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Required capabilities (screenshot, log_capture, etc.)"
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Human-readable test name"
+          }
+        }
+      }
+    },
+    "coverage_summary": {
+      "type": "object",
+      "properties": {
+        "total_tests": {"type": "integer"},
+        "doc_ids_covered": {"type": "integer"},
+        "doc_ids_uncovered": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}

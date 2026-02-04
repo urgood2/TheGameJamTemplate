@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "components_inventory.schema.json",
+  "title": "ECS Components Inventory",
+  "description": "ECS component inventory extracted from components.hpp",
+  "type": "object",
+  "required": ["schema_version", "generated_at", "components"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source_file": {
+      "type": "string",
+      "description": "Path to components.hpp"
+    },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "total": {"type": "integer", "minimum": 0},
+        "by_category": {
+          "type": "object",
+          "additionalProperties": {"type": "integer"}
+        },
+        "lua_accessible": {"type": "integer", "minimum": 0},
+        "undocumented": {"type": "integer", "minimum": 0}
+      }
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "doc_id"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Component struct/class name"
+          },
+          "category": {
+            "type": "string",
+            "description": "Component category (Core, Graphics, Physics, etc.)"
+          },
+          "doc_id": {
+            "type": "string",
+            "description": "Documentation identifier"
+          },
+          "source_ref": {
+            "type": "string",
+            "description": "Source file:line reference"
+          },
+          "lua_accessible": {
+            "type": "boolean",
+            "description": "Whether component is accessible from Lua"
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {"type": "string"},
+                "type": {"type": "string"},
+                "doc": {"type": "string"}
+              }
+            }
+          },
+          "tier": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2
+          },
+          "verified": {
+            "type": "boolean"
+          },
+          "test_id": {
+            "type": ["string", "null"]
+          }
+        }
+      }
+    }
+  }
+}

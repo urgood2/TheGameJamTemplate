@@ -1,0 +1,1083 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-02-03T02:59:38.421373+00:00",
+  "system": "scripting",
+  "source_files": [
+    "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp",
+    "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_bindings.cpp",
+    "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_system.cpp",
+    "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp"
+  ],
+  "summary": {
+    "usertypes": 13,
+    "functions": 21,
+    "constants": 0,
+    "enums": 1,
+    "methods": 0,
+    "properties": 33,
+    "low_confidence": 0,
+    "unrecognized_patterns": 60
+  },
+  "bindings": {
+    "usertypes": [
+      {
+        "lua_name": "Entity",
+        "type": "usertype",
+        "cpp_type": "entt::entity",
+        "signature": "",
+        "doc_id": "sol2_usertype_entity",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:161",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "Camera2D",
+        "type": "usertype",
+        "cpp_type": "Camera2D",
+        "signature": "",
+        "doc_id": "sol2_usertype_camera2d",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:551",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "Entity",
+        "type": "usertype",
+        "cpp_type": "entt::entity",
+        "signature": "",
+        "doc_id": "sol2_usertype_entity",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:163",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ActionResult",
+        "type": "usertype",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_usertype_actionresult",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:156",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ScriptComponent",
+        "type": "usertype",
+        "cpp_type": "ScriptComponent",
+        "signature": "",
+        "doc_id": "sol2_usertype_scriptcomponent",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_system.cpp:203",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "entt",
+        "type": "usertype",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_usertype_entt",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_system.cpp:236",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "entt.runtime_view",
+        "type": "usertype",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_usertype_entt_runtime_view",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_system.cpp:239",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "entt.registry",
+        "type": "usertype",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_usertype_entt_registry",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_system.cpp:263",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ScriptInterface",
+        "type": "usertype",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_usertype_scriptinterface",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_system.cpp:371",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "entt_module.runtime_view",
+        "type": "usertype",
+        "cpp_type": "entt::runtime_view",
+        "signature": "",
+        "doc_id": "sol2_usertype_entt_module_runtime_view",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:49",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "entt_module.registry",
+        "type": "usertype",
+        "cpp_type": "entt::registry",
+        "signature": "",
+        "doc_id": "sol2_usertype_entt_module_registry",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:70",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "entt.runtime_view",
+        "type": "usertype",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_usertype_entt_runtime_view",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:63",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "entt.registry",
+        "type": "usertype",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_usertype_entt_registry",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:169",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      }
+    ],
+    "functions": [
+      {
+        "lua_name": "stateToInit.hardReset",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_statetoinit_hardreset",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:130",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "stateToInit.add_fullscreen_shader",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_statetoinit_add_fullscreen_shader",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:316",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "stateToInit.remove_fullscreen_shader",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_statetoinit_remove_fullscreen_shader",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:318",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "stateToInit.safe_script_file",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_statetoinit_safe_script_file",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:401",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "OpenURL",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_openurl",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:456",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "Vector2",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_vector2",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:489",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "Vector3",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_vector3",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:503",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "Vector4",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_vector4",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:518",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "set_shader_texture_batching",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_set_shader_texture_batching",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:613",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "get_shader_texture_batching",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_get_shader_texture_batching",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:618",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "getSpriteFrameTextureInfo",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_getspriteframetextureinfo",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:670",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "setPaletteTexture",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_setpalettetexture",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:702",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "getEntityByAlias",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_getentitybyalias",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_bindings.cpp:18",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "setEntityAlias",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_setentityalias",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_bindings.cpp:19",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "log_debug",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_log_debug",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_bindings.cpp:31",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "log_error",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_log_error",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_bindings.cpp:94",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "log_info",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_log_info",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_bindings.cpp:158",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "log_warn",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_log_warn",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_bindings.cpp:210",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "pauseGame",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_pausegame",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_bindings.cpp:261",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "unpauseGame",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_unpausegame",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_bindings.cpp:262",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "isKeyPressed",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_iskeypressed",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_bindings.cpp:271",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      }
+    ],
+    "constants": [],
+    "enums": [
+      {
+        "lua_name": "ActionResult",
+        "type": "enum",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_enum_actionresult",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:151",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      }
+    ],
+    "methods": [],
+    "properties": [
+      {
+        "lua_name": "ActionResult.SUCCESS",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_actionresult_success",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:157",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ActionResult.FAILURE",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_actionresult_failure",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:158",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ActionResult.RUNNING",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_actionresult_running",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:159",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "Camera2D.offset",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_camera2d_offset",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:559",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "Camera2D.target",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_camera2d_target",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:560",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "Camera2D.rotation",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_camera2d_rotation",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:561",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "Camera2D.zoom",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_camera2d_zoom",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:562",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "globals.camera",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_globals_camera",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp:652",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ScriptComponent.self",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_scriptcomponent_self",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_system.cpp:228",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ScriptInterface.id",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_scriptinterface_id",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_system.cpp:383",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ScriptInterface.owner",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_scriptinterface_owner",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_system.cpp:384",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ScriptInterface.init",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_scriptinterface_init",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_system.cpp:386",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ScriptInterface.update",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_scriptinterface_update",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_system.cpp:387",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "ScriptInterface.destroy",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_scriptinterface_destroy",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_system.cpp:388",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "entt.runtime_view.size_hint",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_entt_runtime_view_size_hint",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:64",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "entt.runtime_view.contains",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_entt_runtime_view_contains",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:65",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "entt.runtime_view.each",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_entt_runtime_view_each",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:66",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "entt.registry.new",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_entt_registry_new",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:170",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "entt.registry.size",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_entt_registry_size",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:171",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "entt.registry.alive",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_entt_registry_alive",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:172",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "entt.registry.valid",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_entt_registry_valid",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:173",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "entt.registry.current",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_entt_registry_current",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:174",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "entt.registry.create",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_entt_registry_create",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:175",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "entt.registry.destroy",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_entt_registry_destroy",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:176",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "entt.registry.emplace",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_entt_registry_emplace",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:177",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "entt.registry.add_script",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_entt_registry_add_script",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:178",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "entt.registry.remove",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_entt_registry_remove",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:179",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "entt.registry.has",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_entt_registry_has",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:180",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "entt.registry.any_of",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_entt_registry_any_of",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:181",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "entt.registry.get",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_entt_registry_get",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:182",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "entt.registry.clear",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_entt_registry_clear",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:183",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "entt.registry.orphan",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_entt_registry_orphan",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:184",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "entt.registry.runtime_view",
+        "type": "property",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_property_entt_registry_runtime_view",
+        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp:185",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      }
+    ]
+  },
+  "unrecognized_patterns": [
+    {
+      "line": 95,
+      "snippet": "stateToInit.open_libraries(sol::lib::base, sol::lib::package, sol::lib::table,",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp"
+    },
+    {
+      "line": 95,
+      "snippet": "stateToInit.open_libraries(sol::lib::base, sol::lib::package, sol::lib::table,",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp"
+    },
+    {
+      "line": 95,
+      "snippet": "stateToInit.open_libraries(sol::lib::base, sol::lib::package, sol::lib::table,",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp"
+    },
+    {
+      "line": 96,
+      "snippet": "sol::lib::coroutine, sol::lib::os,",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp"
+    },
+    {
+      "line": 96,
+      "snippet": "sol::lib::coroutine, sol::lib::os,",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp"
+    },
+    {
+      "line": 97,
+      "snippet": "sol::lib::string, sol::lib::math, sol::lib::debug,",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp"
+    },
+    {
+      "line": 97,
+      "snippet": "sol::lib::string, sol::lib::math, sol::lib::debug,",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp"
+    },
+    {
+      "line": 97,
+      "snippet": "sol::lib::string, sol::lib::math, sol::lib::debug,",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp"
+    },
+    {
+      "line": 98,
+      "snippet": "sol::lib::io, sol::lib::bit32);",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp"
+    },
+    {
+      "line": 98,
+      "snippet": "sol::lib::io, sol::lib::bit32);",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp"
+    },
+    {
+      "line": 100,
+      "snippet": "stateToInit.open_libraries(sol::lib::ffi, sol::lib::jit);",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp"
+    },
+    {
+      "line": 100,
+      "snippet": "stateToInit.open_libraries(sol::lib::ffi, sol::lib::jit);",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp"
+    },
+    {
+      "line": 117,
+      "snippet": "sol::protected_function_result pfr) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp"
+    },
+    {
+      "line": 121,
+      "snippet": "SPDLOG_ERROR(\"Error setting lua path: {}\", pfr.get<sol::error>().what());",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp"
+    },
+    {
+      "line": 421,
+      "snippet": "sol::error err = load_result;",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp"
+    },
+    {
+      "line": 430,
+      "snippet": "[](lua_State *, sol::protected_function_result pfr) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp"
+    },
+    {
+      "line": 432,
+      "snippet": "sol::error err = pfr;",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp"
+    },
+    {
+      "line": 438,
+      "snippet": "[](lua_State *, sol::protected_function_result pfr) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp"
+    },
+    {
+      "line": 440,
+      "snippet": "sol::error err = pfr;",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp"
+    },
+    {
+      "line": 672,
+      "snippet": "[&lua](const std::string &identifier) -> sol::optional<sol::table> {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp"
+    },
+    {
+      "line": 679,
+      "snippet": "return sol::nullopt;",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp"
+    },
+    {
+      "line": 1081,
+      "snippet": "lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::table,",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp"
+    },
+    {
+      "line": 1081,
+      "snippet": "lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::table,",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp"
+    },
+    {
+      "line": 1081,
+      "snippet": "lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::table,",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp"
+    },
+    {
+      "line": 1082,
+      "snippet": "sol::lib::string);",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp"
+    },
+    {
+      "line": 1146,
+      "snippet": "sol::protected_function pfg = lua[\"print_filtered_globals\"];",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_functions.cpp"
+    },
+    {
+      "line": 32,
+      "snippet": "\"log_debug\", [](sol::this_state ts, sol::variadic_args va) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_bindings.cpp"
+    },
+    {
+      "line": 68,
+      "snippet": "sol::function tostr = L[\"tostring\"];",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_bindings.cpp"
+    },
+    {
+      "line": 95,
+      "snippet": "\"log_error\", [](sol::this_state ts, sol::variadic_args va) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_bindings.cpp"
+    },
+    {
+      "line": 131,
+      "snippet": "sol::function tostr = L[\"tostring\"];",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_bindings.cpp"
+    },
+    {
+      "line": 159,
+      "snippet": "\"log_info\", [](sol::this_state ts, sol::variadic_args va) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_bindings.cpp"
+    },
+    {
+      "line": 211,
+      "snippet": "\"log_warn\", [](sol::this_state ts, sol::variadic_args va) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_bindings.cpp"
+    },
+    {
+      "line": 67,
+      "snippet": "sol::protected_function pf = f;",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_system.cpp"
+    },
+    {
+      "line": 70,
+      "snippet": "sol::error err = result;",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_system.cpp"
+    },
+    {
+      "line": 99,
+      "snippet": "sol::protected_function pf = f;",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_system.cpp"
+    },
+    {
+      "line": 102,
+      "snippet": "sol::error err = result;",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_system.cpp"
+    },
+    {
+      "line": 149,
+      "snippet": "//     } catch (const sol::error& e) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_system.cpp"
+    },
+    {
+      "line": 163,
+      "snippet": "//     // std::vector<sol::coroutine> next_tasks;",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_system.cpp"
+    },
+    {
+      "line": 174,
+      "snippet": "//     //     sol::protected_function_result result = task(delta_time);",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_system.cpp"
+    },
+    {
+      "line": 176,
+      "snippet": "//     //         sol::error err = result;",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_system.cpp"
+    },
+    {
+      "line": 183,
+      "snippet": "//     //     if (task.valid() && task.status() != sol::call_status::ok) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_system.cpp"
+    },
+    {
+      "line": 452,
+      "snippet": "lua.require(\"registry\", sol::c_call<AUTO_ARG(&open_registry)>, false);",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_system.cpp"
+    },
+    {
+      "line": 474,
+      "snippet": "sol::optional<float> x = player[\"x\"];",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_system.cpp"
+    },
+    {
+      "line": 475,
+      "snippet": "sol::optional<float> y = player[\"y\"];",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/scripting_system.cpp"
+    },
+    {
+      "line": 18,
+      "snippet": "auto collect_types(const sol::variadic_args &va)",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp"
+    },
+    {
+      "line": 50,
+      "snippet": "sol::no_constructor,",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp"
+    },
+    {
+      "line": 55,
+      "snippet": "[](const entt::runtime_view &self, const sol::function &callback) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp"
+    },
+    {
+      "line": 71,
+      "snippet": "sol::meta_function::construct,",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp"
+    },
+    {
+      "line": 72,
+      "snippet": "sol::factories([]{ return entt::registry{}; }),",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp"
+    },
+    {
+      "line": 95,
+      "snippet": "if (!comp_type.valid()) return sol::make_object(s, sol::lua_nil);",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp"
+    },
+    {
+      "line": 101,
+      "snippet": "if (!maybe_any) return sol::make_object(s, sol::lua_nil);",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp"
+    },
+    {
+      "line": 104,
+      "snippet": "return (obj->valid()) ? *obj : sol::make_object(s, sol::lua_nil);",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp"
+    },
+    {
+      "line": 107,
+      "snippet": "return sol::make_object(s, sol::lua_nil);",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp"
+    },
+    {
+      "line": 125,
+      "snippet": "[](const sol::table &self, entt::entity entity, const sol::variadic_args &va) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp"
+    },
+    {
+      "line": 127,
+      "snippet": "const auto has = self[\"has\"].get<sol::function>();",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp"
+    },
+    {
+      "line": 138,
+      "snippet": "if (!maybe_any) return sol::make_object(s, sol::lua_nil);",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp"
+    },
+    {
+      "line": 140,
+      "snippet": "return (obj->valid()) ? *obj : sol::make_object(s, sol::lua_nil);",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp"
+    },
+    {
+      "line": 142,
+      "snippet": "return sol::make_object(s, sol::lua_nil);",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp"
+    },
+    {
+      "line": 145,
+      "snippet": "sol::overload(",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp"
+    },
+    {
+      "line": 155,
+      "snippet": "[](entt::registry &self, const sol::variadic_args &va) {",
+      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/scripting/registry_bond.cpp"
+    }
+  ]
+}

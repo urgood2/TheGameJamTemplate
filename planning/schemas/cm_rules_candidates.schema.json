@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cm_rules_candidates.schema.json",
+  "title": "CM Playbook Rules Candidates",
+  "description": "Schema for cm (coding memory) playbook rule candidates",
+  "type": "object",
+  "required": ["rules"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/rule"
+      }
+    }
+  },
+  "$defs": {
+    "rule": {
+      "type": "object",
+      "required": ["rule_id", "category", "rule_text", "status"],
+      "properties": {
+        "rule_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$",
+          "description": "Unique rule identifier (e.g., ui-gotcha-001)"
+        },
+        "category": {
+          "type": "string",
+          "description": "Rule category (e.g., ui-gotchas, physics-gotchas)"
+        },
+        "rule_text": {
+          "type": "string",
+          "description": "Human-readable rule description"
+        },
+        "doc_id": {
+          "type": "string",
+          "pattern": "^pattern:[a-z0-9._]+$",
+          "description": "Documentation identifier (e.g., pattern:ui.uibox_alignment.renew_after_offset)"
+        },
+        "test_ref": {
+          "type": "string",
+          "description": "Reference to test that verifies this rule (e.g., test_file.lua::test_name)"
+        },
+        "quirks_anchor": {
+          "type": "string",
+          "description": "Anchor link for quirks documentation"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["unverified", "verified", "deprecated", "proposed"],
+          "description": "Verification status of the rule"
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["error", "warn", "info"],
+          "description": "Severity level of rule violation"
+        },
+        "tags": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Tags for categorization and filtering"
+        },
+        "rationale": {
+          "type": "string",
+          "description": "Explanation of why this rule matters"
+        },
+        "example_good": {
+          "type": "string",
+          "description": "Code example showing correct usage"
+        },
+        "example_bad": {
+          "type": "string",
+          "description": "Code example showing incorrect usage (anti-pattern)"
+        },
+        "last_verified_commit": {
+          "type": "string",
+          "description": "Git commit hash when rule was last verified (or 'pending')"
+        },
+        "related_rules": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Related rule IDs"
+        },
+        "cm_rule_id": {
+          "type": ["string", "null"],
+          "description": "ID if rule has been promoted to cm playbook"
+        }
+      }
+    }
+  }
+}

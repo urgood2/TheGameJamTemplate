@@ -1,4 +1,4 @@
-# Install script for directory: /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/src/third_party/sol2
+# Install script for directory: /data/projects/roguelike-4/src/third_party/sol2
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -27,6 +27,11 @@ if(NOT CMAKE_INSTALL_COMPONENT)
   endif()
 endif()
 
+# Install shared libraries without execute permission?
+if(NOT DEFINED CMAKE_INSTALL_SO_NO_EXE)
+  set(CMAKE_INSTALL_SO_NO_EXE "1")
+endif()
+
 # Is this installation the result of a crosscompile?
 if(NOT DEFINED CMAKE_CROSSCOMPILING)
   set(CMAKE_CROSSCOMPILING "FALSE")
@@ -41,7 +46,7 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
   if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/cmake/sol2/sol2-targets.cmake")
     file(DIFFERENT _cmake_export_file_changed FILES
          "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/cmake/sol2/sol2-targets.cmake"
-         "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/src/third_party/sol2/CMakeFiles/Export/ebf4908cad80355a54bbda7e9be6ae68/sol2-targets.cmake")
+         "/data/projects/roguelike-4/build-release/src/third_party/sol2/CMakeFiles/Export/ebf4908cad80355a54bbda7e9be6ae68/sol2-targets.cmake")
     if(_cmake_export_file_changed)
       file(GLOB _cmake_old_config_files "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/cmake/sol2/sol2-targets-*.cmake")
       if(_cmake_old_config_files)
@@ -54,27 +59,27 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
     endif()
     unset(_cmake_export_file_changed)
   endif()
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/cmake/sol2" TYPE FILE FILES "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/src/third_party/sol2/CMakeFiles/Export/ebf4908cad80355a54bbda7e9be6ae68/sol2-targets.cmake")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/cmake/sol2" TYPE FILE FILES "/data/projects/roguelike-4/build-release/src/third_party/sol2/CMakeFiles/Export/ebf4908cad80355a54bbda7e9be6ae68/sol2-targets.cmake")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/include" TYPE DIRECTORY FILES "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/src/third_party/sol2/include/sol")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/include" TYPE DIRECTORY FILES "/data/projects/roguelike-4/src/third_party/sol2/include/sol")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/cmake/sol2" TYPE FILE FILES
-    "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/src/third_party/sol2/cmake/sol2-config.cmake"
-    "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/src/third_party/sol2/cmake/sol2-config-version.cmake"
+    "/data/projects/roguelike-4/build-release/src/third_party/sol2/cmake/sol2-config.cmake"
+    "/data/projects/roguelike-4/build-release/src/third_party/sol2/cmake/sol2-config-version.cmake"
     )
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/pkgconfig" TYPE FILE FILES "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/src/third_party/sol2/sol2.pc")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/pkgconfig" TYPE FILE FILES "/data/projects/roguelike-4/build-release/src/third_party/sol2/sol2.pc")
 endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
 if(CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/src/third_party/sol2/install_local_manifest.txt"
+  file(WRITE "/data/projects/roguelike-4/build-release/src/third_party/sol2/install_local_manifest.txt"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()

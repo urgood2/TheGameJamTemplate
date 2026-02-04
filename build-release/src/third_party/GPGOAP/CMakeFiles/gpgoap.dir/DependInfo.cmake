@@ -8,8 +8,8 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/src/third_party/GPGOAP/astar.c" "src/third_party/GPGOAP/CMakeFiles/gpgoap.dir/astar.c.o" "gcc" "src/third_party/GPGOAP/CMakeFiles/gpgoap.dir/astar.c.o.d"
-  "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/src/third_party/GPGOAP/goap.c" "src/third_party/GPGOAP/CMakeFiles/gpgoap.dir/goap.c.o" "gcc" "src/third_party/GPGOAP/CMakeFiles/gpgoap.dir/goap.c.o.d"
+  "/data/projects/roguelike-4/src/third_party/GPGOAP/astar.c" "src/third_party/GPGOAP/CMakeFiles/gpgoap.dir/astar.c.o" "gcc" "src/third_party/GPGOAP/CMakeFiles/gpgoap.dir/astar.c.o.d"
+  "/data/projects/roguelike-4/src/third_party/GPGOAP/goap.c" "src/third_party/GPGOAP/CMakeFiles/gpgoap.dir/goap.c.o" "gcc" "src/third_party/GPGOAP/CMakeFiles/gpgoap.dir/goap.c.o.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

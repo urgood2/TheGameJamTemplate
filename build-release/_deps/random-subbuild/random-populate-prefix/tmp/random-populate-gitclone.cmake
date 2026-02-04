@@ -1,13 +1,13 @@
 # Distributed under the OSI-approved BSD 3-Clause License.  See accompanying
-# file LICENSE.rst or https://cmake.org/licensing for details.
+# file Copyright.txt or https://cmake.org/licensing for details.
 
 cmake_minimum_required(VERSION ${CMAKE_VERSION}) # this file comes with cmake
 
-if(EXISTS "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/random-subbuild/random-populate-prefix/src/random-populate-stamp/random-populate-gitclone-lastrun.txt" AND EXISTS "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/random-subbuild/random-populate-prefix/src/random-populate-stamp/random-populate-gitinfo.txt" AND
-  "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/random-subbuild/random-populate-prefix/src/random-populate-stamp/random-populate-gitclone-lastrun.txt" IS_NEWER_THAN "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/random-subbuild/random-populate-prefix/src/random-populate-stamp/random-populate-gitinfo.txt")
+if(EXISTS "/data/projects/roguelike-4/build-release/_deps/random-subbuild/random-populate-prefix/src/random-populate-stamp/random-populate-gitclone-lastrun.txt" AND EXISTS "/data/projects/roguelike-4/build-release/_deps/random-subbuild/random-populate-prefix/src/random-populate-stamp/random-populate-gitinfo.txt" AND
+  "/data/projects/roguelike-4/build-release/_deps/random-subbuild/random-populate-prefix/src/random-populate-stamp/random-populate-gitclone-lastrun.txt" IS_NEWER_THAN "/data/projects/roguelike-4/build-release/_deps/random-subbuild/random-populate-prefix/src/random-populate-stamp/random-populate-gitinfo.txt")
   message(VERBOSE
     "Avoiding repeated git clone, stamp file is up to date: "
-    "'/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/random-subbuild/random-populate-prefix/src/random-populate-stamp/random-populate-gitclone-lastrun.txt'"
+    "'/data/projects/roguelike-4/build-release/_deps/random-subbuild/random-populate-prefix/src/random-populate-stamp/random-populate-gitclone-lastrun.txt'"
   )
   return()
 endif()
@@ -22,12 +22,12 @@ else()
 endif()
 
 execute_process(
-  COMMAND ${CMAKE_COMMAND} -E rm -rf "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/random-src"
+  COMMAND ${CMAKE_COMMAND} -E rm -rf "/data/projects/roguelike-4/build-release/_deps/random-src"
   RESULT_VARIABLE error_code
   ${maybe_show_command}
 )
 if(error_code)
-  message(FATAL_ERROR "Failed to remove directory: '/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/random-src'")
+  message(FATAL_ERROR "Failed to remove directory: '/data/projects/roguelike-4/build-release/_deps/random-src'")
 endif()
 
 # try the clone 3 times in case there is an odd git clone issue
@@ -37,7 +37,7 @@ while(error_code AND number_of_tries LESS 3)
   execute_process(
     COMMAND "/usr/bin/git"
             clone --no-checkout --depth 1 --no-single-branch --progress --config "advice.detachedHead=false" "https://github.com/ilqvya/random.git" "random-src"
-    WORKING_DIRECTORY "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps"
+    WORKING_DIRECTORY "/data/projects/roguelike-4/build-release/_deps"
     RESULT_VARIABLE error_code
     ${maybe_show_command}
   )
@@ -53,7 +53,7 @@ endif()
 execute_process(
   COMMAND "/usr/bin/git"
           checkout "v1.5.0" --
-  WORKING_DIRECTORY "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/random-src"
+  WORKING_DIRECTORY "/data/projects/roguelike-4/build-release/_deps/random-src"
   RESULT_VARIABLE error_code
   ${maybe_show_command}
 )
@@ -66,22 +66,22 @@ if(init_submodules)
   execute_process(
     COMMAND "/usr/bin/git" 
             submodule update --recursive --init 
-    WORKING_DIRECTORY "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/random-src"
+    WORKING_DIRECTORY "/data/projects/roguelike-4/build-release/_deps/random-src"
     RESULT_VARIABLE error_code
     ${maybe_show_command}
   )
 endif()
 if(error_code)
-  message(FATAL_ERROR "Failed to update submodules in: '/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/random-src'")
+  message(FATAL_ERROR "Failed to update submodules in: '/data/projects/roguelike-4/build-release/_deps/random-src'")
 endif()
 
 # Complete success, update the script-last-run stamp file:
 #
 execute_process(
-  COMMAND ${CMAKE_COMMAND} -E copy "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/random-subbuild/random-populate-prefix/src/random-populate-stamp/random-populate-gitinfo.txt" "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/random-subbuild/random-populate-prefix/src/random-populate-stamp/random-populate-gitclone-lastrun.txt"
+  COMMAND ${CMAKE_COMMAND} -E copy "/data/projects/roguelike-4/build-release/_deps/random-subbuild/random-populate-prefix/src/random-populate-stamp/random-populate-gitinfo.txt" "/data/projects/roguelike-4/build-release/_deps/random-subbuild/random-populate-prefix/src/random-populate-stamp/random-populate-gitclone-lastrun.txt"
   RESULT_VARIABLE error_code
   ${maybe_show_command}
 )
 if(error_code)
-  message(FATAL_ERROR "Failed to copy script-last-run stamp file: '/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/random-subbuild/random-populate-prefix/src/random-populate-stamp/random-populate-gitclone-lastrun.txt'")
+  message(FATAL_ERROR "Failed to copy script-last-run stamp file: '/data/projects/roguelike-4/build-release/_deps/random-subbuild/random-populate-prefix/src/random-populate-stamp/random-populate-gitclone-lastrun.txt'")
 endif()

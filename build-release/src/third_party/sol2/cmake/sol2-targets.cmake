@@ -7,7 +7,7 @@ if(CMAKE_VERSION VERSION_LESS "3.0.0")
    message(FATAL_ERROR "CMake >= 3.0.0 required")
 endif()
 cmake_policy(PUSH)
-cmake_policy(VERSION 3.0.0...3.30)
+cmake_policy(VERSION 3.0.0...3.29)
 #----------------------------------------------------------------
 # Generated CMake target import file.
 #----------------------------------------------------------------
@@ -50,7 +50,7 @@ unset(_cmake_expected_targets)
 add_library(sol2 INTERFACE IMPORTED)
 
 set_target_properties(sol2 PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/src/third_party/sol2/include"
+  INTERFACE_INCLUDE_DIRECTORIES "/data/projects/roguelike-4/src/third_party/sol2/include"
 )
 
 # This file does not depend on other imported targets which have

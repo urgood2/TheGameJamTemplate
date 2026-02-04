@@ -4,11 +4,20 @@ set(CMAKE_DEPENDS_IN_PROJECT_ONLY OFF)
 
 # The set of languages for which implicit dependencies are needed:
 set(CMAKE_DEPENDS_LANGUAGES
+  "CXX"
+  )
+# The set of files for implicit dependencies of each language:
+set(CMAKE_DEPENDS_CHECK_CXX
+  "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/src/foo.cpp" "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/foo.cpp.o"
+  )
+set(CMAKE_CXX_COMPILER_ID "GNU")
+
+# The include file search paths:
+set(CMAKE_CXX_TARGET_INCLUDE_PATH
   )
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/CMakeFiles/_CMakeLTOTest-CXX/src/foo.cpp" "CMakeFiles/foo.dir/foo.cpp.o" "gcc" "CMakeFiles/foo.dir/foo.cpp.o.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

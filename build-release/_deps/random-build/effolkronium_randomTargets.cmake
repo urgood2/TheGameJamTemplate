@@ -7,7 +7,7 @@ if(CMAKE_VERSION VERSION_LESS "3.0.0")
    message(FATAL_ERROR "CMake >= 3.0.0 required")
 endif()
 cmake_policy(PUSH)
-cmake_policy(VERSION 3.0.0...3.30)
+cmake_policy(VERSION 3.0.0...3.29)
 #----------------------------------------------------------------
 # Generated CMake target import file.
 #----------------------------------------------------------------
@@ -50,7 +50,7 @@ unset(_cmake_expected_targets)
 add_library(effolkronium_random INTERFACE IMPORTED)
 
 set_target_properties(effolkronium_random PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/random-src/include"
+  INTERFACE_INCLUDE_DIRECTORIES "/data/projects/roguelike-4/build-release/_deps/random-src/include"
 )
 
 # This file does not depend on other imported targets which have

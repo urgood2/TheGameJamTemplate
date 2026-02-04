@@ -7,7 +7,7 @@ if(CMAKE_VERSION VERSION_LESS "3.0.0")
    message(FATAL_ERROR "CMake >= 3.0.0 required")
 endif()
 cmake_policy(PUSH)
-cmake_policy(VERSION 3.0.0...3.30)
+cmake_policy(VERSION 3.0.0...3.29)
 #----------------------------------------------------------------
 # Generated CMake target import file.
 #----------------------------------------------------------------
@@ -51,7 +51,7 @@ add_library(EnTT::EnTT INTERFACE IMPORTED)
 
 set_target_properties(EnTT::EnTT PROPERTIES
   INTERFACE_COMPILE_FEATURES "cxx_std_17"
-  INTERFACE_INCLUDE_DIRECTORIES "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/entt-src/src"
+  INTERFACE_INCLUDE_DIRECTORIES "/data/projects/roguelike-4/build-release/_deps/entt-src/src"
 )
 
 # This file does not depend on other imported targets which have

@@ -1,4 +1,4 @@
-# Install script for directory: /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/random-src
+# Install script for directory: /data/projects/roguelike-4/build-release/_deps/random-src
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -27,6 +27,11 @@ if(NOT CMAKE_INSTALL_COMPONENT)
   endif()
 endif()
 
+# Install shared libraries without execute permission?
+if(NOT DEFINED CMAKE_INSTALL_SO_NO_EXE)
+  set(CMAKE_INSTALL_SO_NO_EXE "1")
+endif()
+
 # Is this installation the result of a crosscompile?
 if(NOT DEFINED CMAKE_CROSSCOMPILING)
   set(CMAKE_CROSSCOMPILING "FALSE")
@@ -38,14 +43,14 @@ if(NOT DEFINED CMAKE_OBJDUMP)
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/include" TYPE DIRECTORY FILES "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/random-src/include/effolkronium")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/include" TYPE DIRECTORY FILES "/data/projects/roguelike-4/build-release/_deps/random-src/include/effolkronium")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/cmake/effolkronium_randomTargets.cmake")
     file(DIFFERENT _cmake_export_file_changed FILES
          "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/cmake/effolkronium_randomTargets.cmake"
-         "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/random-build/CMakeFiles/Export/272ceadb8458515b2ae4b5630a6029cc/effolkronium_randomTargets.cmake")
+         "/data/projects/roguelike-4/build-release/_deps/random-build/CMakeFiles/Export/272ceadb8458515b2ae4b5630a6029cc/effolkronium_randomTargets.cmake")
     if(_cmake_export_file_changed)
       file(GLOB _cmake_old_config_files "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/cmake/effolkronium_randomTargets-*.cmake")
       if(_cmake_old_config_files)
@@ -58,19 +63,19 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
     endif()
     unset(_cmake_export_file_changed)
   endif()
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/cmake" TYPE FILE FILES "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/random-build/CMakeFiles/Export/272ceadb8458515b2ae4b5630a6029cc/effolkronium_randomTargets.cmake")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/cmake" TYPE FILE FILES "/data/projects/roguelike-4/build-release/_deps/random-build/CMakeFiles/Export/272ceadb8458515b2ae4b5630a6029cc/effolkronium_randomTargets.cmake")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/cmake" TYPE FILE FILES
-    "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/random-build/effolkronium_randomConfig.cmake"
-    "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/random-build/effolkronium_randomConfigVersion.cmake"
+    "/data/projects/roguelike-4/build-release/_deps/random-build/effolkronium_randomConfig.cmake"
+    "/data/projects/roguelike-4/build-release/_deps/random-build/effolkronium_randomConfigVersion.cmake"
     )
 endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
 if(CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/random-build/install_local_manifest.txt"
+  file(WRITE "/data/projects/roguelike-4/build-release/_deps/random-build/install_local_manifest.txt"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()

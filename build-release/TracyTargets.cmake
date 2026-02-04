@@ -7,7 +7,7 @@ if(CMAKE_VERSION VERSION_LESS "2.8.3")
    message(FATAL_ERROR "CMake >= 2.8.3 required")
 endif()
 cmake_policy(PUSH)
-cmake_policy(VERSION 2.8.3...3.30)
+cmake_policy(VERSION 2.8.3...3.29)
 #----------------------------------------------------------------
 # Generated CMake target import file.
 #----------------------------------------------------------------
@@ -52,15 +52,15 @@ add_library(Tracy::TracyClient OBJECT IMPORTED)
 set_target_properties(Tracy::TracyClient PROPERTIES
   INTERFACE_COMPILE_DEFINITIONS "TRACY_ENABLE;TRACY_CALLSTACK"
   INTERFACE_COMPILE_FEATURES "cxx_std_11"
-  INTERFACE_INCLUDE_DIRECTORIES "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/src/third_party/tracy-master/public"
-  INTERFACE_LINK_LIBRARIES "Threads::Threads"
+  INTERFACE_INCLUDE_DIRECTORIES "/data/projects/roguelike-4/src/third_party/tracy-master/public"
+  INTERFACE_LINK_LIBRARIES "Threads::Threads;dl"
 )
 
 # Import target "Tracy::TracyClient" for configuration "Release"
 set_property(TARGET Tracy::TracyClient APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
 set_target_properties(Tracy::TracyClient PROPERTIES
   IMPORTED_COMMON_LANGUAGE_RUNTIME_RELEASE ""
-  IMPORTED_OBJECTS_RELEASE "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/src/third_party/tracy-master/CMakeFiles/TracyClient.dir/public/TracyClient.cpp.o"
+  IMPORTED_OBJECTS_RELEASE "/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/TracyClient.dir/public/TracyClient.cpp.o"
   )
 
 # This file does not depend on other imported targets which have

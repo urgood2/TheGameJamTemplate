@@ -1,14 +1,14 @@
-if(NOT EXISTS "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/install_manifest.txt")
-  message(FATAL_ERROR "Cannot find install manifest: /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/install_manifest.txt")
+if(NOT EXISTS "/data/projects/roguelike-4/build-release/install_manifest.txt")
+  message(FATAL_ERROR "Cannot find install manifest: /data/projects/roguelike-4/build-release/install_manifest.txt")
 endif()
 
-file(READ "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/install_manifest.txt" files)
+file(READ "/data/projects/roguelike-4/build-release/install_manifest.txt" files)
 string(REGEX REPLACE "\n" ";" files "${files}")
 foreach(file ${files})
   message(STATUS "Uninstalling $ENV{DESTDIR}${file}")
   if(IS_SYMLINK "$ENV{DESTDIR}${file}" OR EXISTS "$ENV{DESTDIR}${file}")
     exec_program(
-      "/opt/homebrew/bin/cmake" ARGS "-E remove \"$ENV{DESTDIR}${file}\""
+      "/usr/bin/cmake" ARGS "-E remove \"$ENV{DESTDIR}${file}\""
       OUTPUT_VARIABLE rm_out
       RETURN_VALUE rm_retval
       )

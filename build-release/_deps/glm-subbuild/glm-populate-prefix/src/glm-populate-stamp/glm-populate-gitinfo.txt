@@ -3,9 +3,9 @@
 # No other meaning or use of this file is supported.
 
 method=git
-command=/opt/homebrew/bin/cmake;-DCMAKE_MESSAGE_LOG_LEVEL=VERBOSE;-P;/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/glm-subbuild/glm-populate-prefix/tmp/glm-populate-gitclone.cmake
-source_dir=/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/glm-src
-work_dir=/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps
+command=/usr/bin/cmake;-DCMAKE_MESSAGE_LOG_LEVEL=VERBOSE;-P;/data/projects/roguelike-4/build-release/_deps/glm-subbuild/glm-populate-prefix/tmp/glm-populate-gitclone.cmake
+source_dir=/data/projects/roguelike-4/build-release/_deps/glm-src
+work_dir=/data/projects/roguelike-4/build-release/_deps
 repository=https://github.com/g-truc/glm.git
 remote=origin
 init_submodules=TRUE

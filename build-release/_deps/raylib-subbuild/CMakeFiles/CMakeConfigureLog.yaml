@@ -4,19 +4,8 @@ events:
   -
     kind: "message-v1"
     backtrace:
-      - "/Applications/CMake.app/Contents/share/cmake-3.28/Modules/CMakeDetermineSystem.cmake:233 (message)"
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineSystem.cmake:205 (message)"
       - "CMakeLists.txt:16 (project)"
     message: |
-      The system is: Darwin - 24.4.0 - arm64
-...
-
----
-events:
-  -
-    kind: "message-v1"
-    backtrace:
-      - "/opt/homebrew/share/cmake/Modules/CMakeDetermineSystem.cmake:205 (message)"
-      - "CMakeLists.txt:16 (project)"
-    message: |
-      The system is: Darwin - 24.4.0 - arm64
+      The system is: Linux - 6.17.0-12-generic - x86_64
 ...

@@ -1,4 +1,4 @@
-# Install script for directory: /Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston
+# Install script for directory: /data/projects/roguelike-4
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -27,6 +27,11 @@ if(NOT CMAKE_INSTALL_COMPONENT)
   endif()
 endif()
 
+# Install shared libraries without execute permission?
+if(NOT DEFINED CMAKE_INSTALL_SO_NO_EXE)
+  set(CMAKE_INSTALL_SO_NO_EXE "1")
+endif()
+
 # Is this installation the result of a crosscompile?
 if(NOT DEFINED CMAKE_CROSSCOMPILING)
   set(CMAKE_CROSSCOMPILING "FALSE")
@@ -39,88 +44,88 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/raylib-build/cmake_install.cmake")
+  include("/data/projects/roguelike-4/build-release/_deps/raylib-build/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/src/third_party/fmt/cmake_install.cmake")
+  include("/data/projects/roguelike-4/build-release/src/third_party/fmt/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/json-build/cmake_install.cmake")
+  include("/data/projects/roguelike-4/build-release/_deps/json-build/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/spdlog-build/cmake_install.cmake")
+  include("/data/projects/roguelike-4/build-release/_deps/spdlog-build/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/random-build/cmake_install.cmake")
+  include("/data/projects/roguelike-4/build-release/_deps/random-build/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/entt-build/cmake_install.cmake")
+  include("/data/projects/roguelike-4/build-release/_deps/entt-build/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/magic_enum-build/cmake_install.cmake")
+  include("/data/projects/roguelike-4/build-release/_deps/magic_enum-build/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/glm-build/cmake_install.cmake")
+  include("/data/projects/roguelike-4/build-release/_deps/glm-build/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/stduuid-build/cmake_install.cmake")
+  include("/data/projects/roguelike-4/build-release/_deps/stduuid-build/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/snowhouse-build/cmake_install.cmake")
+  include("/data/projects/roguelike-4/build-release/_deps/snowhouse-build/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/src/third_party/GPGOAP/cmake_install.cmake")
+  include("/data/projects/roguelike-4/build-release/src/third_party/GPGOAP/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/src/third_party/chipmunk/cmake_install.cmake")
+  include("/data/projects/roguelike-4/build-release/src/third_party/chipmunk/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/src/third_party/tracy-master/cmake_install.cmake")
+  include("/data/projects/roguelike-4/build-release/src/third_party/tracy-master/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/src/third_party/objectpool-master/cmake_install.cmake")
+  include("/data/projects/roguelike-4/build-release/src/third_party/objectpool-master/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/src/third_party/sol2/cmake_install.cmake")
+  include("/data/projects/roguelike-4/build-release/src/third_party/sol2/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/_deps/lua-build/cmake_install.cmake")
+  include("/data/projects/roguelike-4/build-release/_deps/lua-build/cmake_install.cmake")
 endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
 if(CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/install_local_manifest.txt"
+  file(WRITE "/data/projects/roguelike-4/build-release/install_local_manifest.txt"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()
 if(CMAKE_INSTALL_COMPONENT)
@@ -136,6 +141,6 @@ else()
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "/Users/joshuashin/conductor/workspaces/TheGameJamTemplate/boston/build-release/${CMAKE_INSTALL_MANIFEST}"
+  file(WRITE "/data/projects/roguelike-4/build-release/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()

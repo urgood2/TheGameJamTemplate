@@ -1,2 +1,2 @@
-"/usr/bin/ar" qc libfmt.a CMakeFiles/fmt.dir/src/format.cc.o
-"/usr/bin/ranlib" libfmt.a
+"/usr/bin/gcc-ar-15" qc libfmt.a CMakeFiles/fmt.dir/src/format.cc.o
+"/usr/bin/gcc-ranlib-15" libfmt.a

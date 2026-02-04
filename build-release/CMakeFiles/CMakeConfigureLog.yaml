@@ -2143,3 +2143,1391 @@ events:
         
       exitCode: 0
 ...
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineSystem.cmake:205 (message)"
+      - "CMakeLists.txt:20 (project)"
+    message: |
+      The system is: Linux - 6.17.0-12-generic - x86_64
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:20 (project)"
+    message: |
+      Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+      Compiler: /usr/bin/c++ 
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      0
+      
+      
+      Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "a.out"
+      
+      The CXX compiler identification is GNU, found in:
+        /data/projects/roguelike-4/build-release/CMakeFiles/3.31.6/CompilerIdCXX/a.out
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCCompiler.cmake:123 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:20 (project)"
+    message: |
+      Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+      Compiler: /usr/bin/cc 
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      0
+      
+      
+      Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "a.out"
+      
+      The C compiler identification is GNU, found in:
+        /data/projects/roguelike-4/build-release/CMakeFiles/3.31.6/CompilerIdC/a.out
+      
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerABI.cmake:74 (try_compile)"
+      - "/usr/share/cmake-3.31/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:20 (project)"
+    checks:
+      - "Detecting CXX compiler ABI info"
+    directories:
+      source: "/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-eTlkqj"
+      binary: "/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-eTlkqj"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: ""
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_CXX_SCAN_FOR_MODULES: "OFF"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_CXX_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-eTlkqj'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_4ed35/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_4ed35.dir/build.make CMakeFiles/cmTC_4ed35.dir/build
+        gmake[1]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-eTlkqj'
+        Building CXX object CMakeFiles/cmTC_4ed35.dir/CMakeCXXCompilerABI.cpp.o
+        /usr/bin/c++   -v -o CMakeFiles/cmTC_4ed35.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake-3.31/Modules/CMakeCXXCompilerABI.cpp
+        Using built-in specs.
+        COLLECT_GCC=/usr/bin/c++
+        OFFLOAD_TARGET_NAMES=nvptx-none:amdgcn-amdhsa
+        OFFLOAD_TARGET_DEFAULT=1
+        Target: x86_64-linux-gnu
+        Configured with: ../src/configure -v --with-pkgversion='Ubuntu 15.2.0-4ubuntu4' --with-bugurl=file:///usr/share/doc/gcc-15/README.Bugs --enable-languages=c,ada,c++,go,d,fortran,objc,obj-c++,m2,rust,cobol,algol68 --prefix=/usr --with-gcc-major-version-only --program-suffix=-15 --program-prefix=x86_64-linux-gnu- --enable-shared --enable-linker-build-id --libexecdir=/usr/libexec --without-included-gettext --enable-threads=posix --libdir=/usr/lib --enable-nls --enable-bootstrap --enable-clocale=gnu --enable-libstdcxx-debug --enable-libstdcxx-time=yes --with-default-libstdcxx-abi=new --enable-libstdcxx-backtrace --enable-gnu-unique-object --disable-vtable-verify --enable-plugin --enable-default-pie --with-system-zlib --enable-libphobos-checking=release --with-target-system-zlib=auto --enable-objc-gc=auto --enable-multiarch --disable-werror --enable-cet --with-arch-32=i686 --with-abi=m64 --with-multilib-list=m32,m64,mx32 --enable-multilib --with-tune=generic --enable-offload-targets=nvptx-none=/build/gcc-15-deiAlw/gcc-15-15.2.0/debian/tmp-nvptx/usr,amdgcn-amdhsa=/build/gcc-15-deiAlw/gcc-15-15.2.0/debian/tmp-gcn/usr --enable-offload-defaulted --without-cuda-driver --enable-checking=release --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=x86_64-linux-gnu --with-build-config=bootstrap-lto-lean --enable-link-serialization=2
+        Thread model: posix
+        Supported LTO compression algorithms: zlib zstd
+        gcc version 15.2.0 (Ubuntu 15.2.0-4ubuntu4) 
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_4ed35.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_4ed35.dir/'
+         /usr/libexec/gcc/x86_64-linux-gnu/15/cc1plus -quiet -v -imultiarch x86_64-linux-gnu -D_GNU_SOURCE /usr/share/cmake-3.31/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles/cmTC_4ed35.dir/ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mtune=generic -march=x86-64 -version -fasynchronous-unwind-tables -fstack-protector-strong -Wformat -Wformat-security -fstack-clash-protection -fcf-protection -fzero-init-padding-bits=all -Wbidi-chars=any -o /tmp/ccRgnZLQ.s
+        GNU C++17 (Ubuntu 15.2.0-4ubuntu4) version 15.2.0 (x86_64-linux-gnu)
+        	compiled by GNU C version 15.2.0, GMP version 6.3.0, MPFR version 4.2.2, MPC version 1.3.1, isl version isl-0.27-GMP
+        
+        GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+        ignoring duplicate directory "/usr/include/x86_64-linux-gnu/c++/15"
+        ignoring nonexistent directory "/usr/local/include/x86_64-linux-gnu"
+        ignoring nonexistent directory "/usr/lib/gcc/x86_64-linux-gnu/15/include-fixed/x86_64-linux-gnu"
+        ignoring nonexistent directory "/usr/lib/gcc/x86_64-linux-gnu/15/include-fixed"
+        ignoring nonexistent directory "/usr/lib/gcc/x86_64-linux-gnu/15/../../../../x86_64-linux-gnu/include"
+        #include "..." search starts here:
+        #include <...> search starts here:
+         /usr/include/c++/15
+         /usr/include/x86_64-linux-gnu/c++/15
+         /usr/include/c++/15/backward
+         /usr/lib/gcc/x86_64-linux-gnu/15/include
+         /usr/local/include
+         /usr/include/x86_64-linux-gnu
+         /usr/include
+        End of search list.
+        Compiler executable checksum: 303b1f6d80e10fe55145457c37243669
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_4ed35.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_4ed35.dir/'
+         /usr/bin/x86_64-linux-gnu-as -v --64 -o CMakeFiles/cmTC_4ed35.dir/CMakeCXXCompilerABI.cpp.o /tmp/ccRgnZLQ.s
+        GNU assembler version 2.45 (x86_64-linux-gnu) using BFD version (GNU Binutils for Ubuntu) 2.45
+        COMPILER_PATH=/usr/libexec/gcc/x86_64-linux-gnu/15/:/usr/libexec/gcc/x86_64-linux-gnu/15/:/usr/libexec/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/15/:/usr/lib/gcc/x86_64-linux-gnu/
+        LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/15/:/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/15/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/15/../../../:/lib/:/usr/lib/
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_4ed35.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_4ed35.dir/CMakeCXXCompilerABI.cpp.'
+        Linking CXX executable cmTC_4ed35
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_4ed35.dir/link.txt --verbose=1
+        Using built-in specs.
+        COLLECT_GCC=/usr/bin/c++
+        COLLECT_LTO_WRAPPER=/usr/libexec/gcc/x86_64-linux-gnu/15/lto-wrapper
+        OFFLOAD_TARGET_NAMES=nvptx-none:amdgcn-amdhsa
+        OFFLOAD_TARGET_DEFAULT=1
+        Target: x86_64-linux-gnu
+        Configured with: ../src/configure -v --with-pkgversion='Ubuntu 15.2.0-4ubuntu4' --with-bugurl=file:///usr/share/doc/gcc-15/README.Bugs --enable-languages=c,ada,c++,go,d,fortran,objc,obj-c++,m2,rust,cobol,algol68 --prefix=/usr --with-gcc-major-version-only --program-suffix=-15 --program-prefix=x86_64-linux-gnu- --enable-shared --enable-linker-build-id --libexecdir=/usr/libexec --without-included-gettext --enable-threads=posix --libdir=/usr/lib --enable-nls --enable-bootstrap --enable-clocale=gnu --enable-libstdcxx-debug --enable-libstdcxx-time=yes --with-default-libstdcxx-abi=new --enable-libstdcxx-backtrace --enable-gnu-unique-object --disable-vtable-verify --enable-plugin --enable-default-pie --with-system-zlib --enable-libphobos-checking=release --with-target-system-zlib=auto --enable-objc-gc=auto --enable-multiarch --disable-werror --enable-cet --with-arch-32=i686 --with-abi=m64 --with-multilib-list=m32,m64,mx32 --enable-multilib --with-tune=generic --enable-offload-targets=nvptx-none=/build/gcc-15-deiAlw/gcc-15-15.2.0/debian/tmp-nvptx/usr,amdgcn-amdhsa=/build/gcc-15-deiAlw/gcc-15-15.2.0/debian/tmp-gcn/usr --enable-offload-defaulted --without-cuda-driver --enable-checking=release --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=x86_64-linux-gnu --with-build-config=bootstrap-lto-lean --enable-link-serialization=2
+        Thread model: posix
+        Supported LTO compression algorithms: zlib zstd
+        gcc version 15.2.0 (Ubuntu 15.2.0-4ubuntu4) 
+        COMPILER_PATH=/usr/libexec/gcc/x86_64-linux-gnu/15/:/usr/libexec/gcc/x86_64-linux-gnu/15/:/usr/libexec/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/15/:/usr/lib/gcc/x86_64-linux-gnu/
+        LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/15/:/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/15/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/15/../../../:/lib/:/usr/lib/
+        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_4ed35' '-foffload-options=-l_GCC_stdc++' '-foffload-options=-l_GCC_m' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_4ed35.'
+         /usr/libexec/gcc/x86_64-linux-gnu/15/collect2 -plugin /usr/libexec/gcc/x86_64-linux-gnu/15/liblto_plugin.so -plugin-opt=/usr/libexec/gcc/x86_64-linux-gnu/15/lto-wrapper -plugin-opt=-fresolution=/tmp/ccM7bSic.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -z now -z relro -o cmTC_4ed35 /usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/15/crtbeginS.o -L/usr/lib/gcc/x86_64-linux-gnu/15 -L/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/15/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/15/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_4ed35.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-linux-gnu/15/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/crtn.o
+        collect2 version 15.2.0
+        /usr/bin/ld -plugin /usr/libexec/gcc/x86_64-linux-gnu/15/liblto_plugin.so -plugin-opt=/usr/libexec/gcc/x86_64-linux-gnu/15/lto-wrapper -plugin-opt=-fresolution=/tmp/ccM7bSic.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -z now -z relro -o cmTC_4ed35 /usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/15/crtbeginS.o -L/usr/lib/gcc/x86_64-linux-gnu/15 -L/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/15/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/15/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_4ed35.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-linux-gnu/15/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/crtn.o
+        GNU ld (GNU Binutils for Ubuntu) 2.45
+        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_4ed35' '-foffload-options=-l_GCC_stdc++' '-foffload-options=-l_GCC_m' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_4ed35.'
+        /usr/bin/c++  -v -Wl,-v CMakeFiles/cmTC_4ed35.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_4ed35
+        gmake[1]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-eTlkqj'
+        
+      exitCode: 0
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerABI.cmake:182 (message)"
+      - "/usr/share/cmake-3.31/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:20 (project)"
+    message: |
+      Parsed CXX implicit include dir info: rv=done
+        found start of include info
+        found start of implicit include info
+          add: [/usr/include/c++/15]
+          add: [/usr/include/x86_64-linux-gnu/c++/15]
+          add: [/usr/include/c++/15/backward]
+          add: [/usr/lib/gcc/x86_64-linux-gnu/15/include]
+          add: [/usr/local/include]
+          add: [/usr/include/x86_64-linux-gnu]
+          add: [/usr/include]
+        end of search list found
+        collapse include dir [/usr/include/c++/15] ==> [/usr/include/c++/15]
+        collapse include dir [/usr/include/x86_64-linux-gnu/c++/15] ==> [/usr/include/x86_64-linux-gnu/c++/15]
+        collapse include dir [/usr/include/c++/15/backward] ==> [/usr/include/c++/15/backward]
+        collapse include dir [/usr/lib/gcc/x86_64-linux-gnu/15/include] ==> [/usr/lib/gcc/x86_64-linux-gnu/15/include]
+        collapse include dir [/usr/local/include] ==> [/usr/local/include]
+        collapse include dir [/usr/include/x86_64-linux-gnu] ==> [/usr/include/x86_64-linux-gnu]
+        collapse include dir [/usr/include] ==> [/usr/include]
+        implicit include dirs: [/usr/include/c++/15;/usr/include/x86_64-linux-gnu/c++/15;/usr/include/c++/15/backward;/usr/lib/gcc/x86_64-linux-gnu/15/include;/usr/local/include;/usr/include/x86_64-linux-gnu;/usr/include]
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerABI.cmake:218 (message)"
+      - "/usr/share/cmake-3.31/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:20 (project)"
+    message: |
+      Parsed CXX implicit link information:
+        link line regex: [^( *|.*[/\\])(ld[0-9]*(\\.[a-z]+)?|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
+        linker tool regex: [^[ 	]*(->|")?[ 	]*(([^"]*[/\\])?(ld[0-9]*(\\.[a-z]+)?))("|,| |$)]
+        ignore line: [Change Dir: '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-eTlkqj']
+        ignore line: []
+        ignore line: [Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_4ed35/fast]
+        ignore line: [/usr/bin/gmake  -f CMakeFiles/cmTC_4ed35.dir/build.make CMakeFiles/cmTC_4ed35.dir/build]
+        ignore line: [gmake[1]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-eTlkqj']
+        ignore line: [Building CXX object CMakeFiles/cmTC_4ed35.dir/CMakeCXXCompilerABI.cpp.o]
+        ignore line: [/usr/bin/c++   -v -o CMakeFiles/cmTC_4ed35.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake-3.31/Modules/CMakeCXXCompilerABI.cpp]
+        ignore line: [Using built-in specs.]
+        ignore line: [COLLECT_GCC=/usr/bin/c++]
+        ignore line: [OFFLOAD_TARGET_NAMES=nvptx-none:amdgcn-amdhsa]
+        ignore line: [OFFLOAD_TARGET_DEFAULT=1]
+        ignore line: [Target: x86_64-linux-gnu]
+        ignore line: [Configured with: ../src/configure -v --with-pkgversion='Ubuntu 15.2.0-4ubuntu4' --with-bugurl=file:///usr/share/doc/gcc-15/README.Bugs --enable-languages=c ada c++ go d fortran objc obj-c++ m2 rust cobol algol68 --prefix=/usr --with-gcc-major-version-only --program-suffix=-15 --program-prefix=x86_64-linux-gnu- --enable-shared --enable-linker-build-id --libexecdir=/usr/libexec --without-included-gettext --enable-threads=posix --libdir=/usr/lib --enable-nls --enable-bootstrap --enable-clocale=gnu --enable-libstdcxx-debug --enable-libstdcxx-time=yes --with-default-libstdcxx-abi=new --enable-libstdcxx-backtrace --enable-gnu-unique-object --disable-vtable-verify --enable-plugin --enable-default-pie --with-system-zlib --enable-libphobos-checking=release --with-target-system-zlib=auto --enable-objc-gc=auto --enable-multiarch --disable-werror --enable-cet --with-arch-32=i686 --with-abi=m64 --with-multilib-list=m32 m64 mx32 --enable-multilib --with-tune=generic --enable-offload-targets=nvptx-none=/build/gcc-15-deiAlw/gcc-15-15.2.0/debian/tmp-nvptx/usr amdgcn-amdhsa=/build/gcc-15-deiAlw/gcc-15-15.2.0/debian/tmp-gcn/usr --enable-offload-defaulted --without-cuda-driver --enable-checking=release --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=x86_64-linux-gnu --with-build-config=bootstrap-lto-lean --enable-link-serialization=2]
+        ignore line: [Thread model: posix]
+        ignore line: [Supported LTO compression algorithms: zlib zstd]
+        ignore line: [gcc version 15.2.0 (Ubuntu 15.2.0-4ubuntu4) ]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_4ed35.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_4ed35.dir/']
+        ignore line: [ /usr/libexec/gcc/x86_64-linux-gnu/15/cc1plus -quiet -v -imultiarch x86_64-linux-gnu -D_GNU_SOURCE /usr/share/cmake-3.31/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles/cmTC_4ed35.dir/ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mtune=generic -march=x86-64 -version -fasynchronous-unwind-tables -fstack-protector-strong -Wformat -Wformat-security -fstack-clash-protection -fcf-protection -fzero-init-padding-bits=all -Wbidi-chars=any -o /tmp/ccRgnZLQ.s]
+        ignore line: [GNU C++17 (Ubuntu 15.2.0-4ubuntu4) version 15.2.0 (x86_64-linux-gnu)]
+        ignore line: [	compiled by GNU C version 15.2.0  GMP version 6.3.0  MPFR version 4.2.2  MPC version 1.3.1  isl version isl-0.27-GMP]
+        ignore line: []
+        ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
+        ignore line: [ignoring duplicate directory "/usr/include/x86_64-linux-gnu/c++/15"]
+        ignore line: [ignoring nonexistent directory "/usr/local/include/x86_64-linux-gnu"]
+        ignore line: [ignoring nonexistent directory "/usr/lib/gcc/x86_64-linux-gnu/15/include-fixed/x86_64-linux-gnu"]
+        ignore line: [ignoring nonexistent directory "/usr/lib/gcc/x86_64-linux-gnu/15/include-fixed"]
+        ignore line: [ignoring nonexistent directory "/usr/lib/gcc/x86_64-linux-gnu/15/../../../../x86_64-linux-gnu/include"]
+        ignore line: [#include "..." search starts here:]
+        ignore line: [#include <...> search starts here:]
+        ignore line: [ /usr/include/c++/15]
+        ignore line: [ /usr/include/x86_64-linux-gnu/c++/15]
+        ignore line: [ /usr/include/c++/15/backward]
+        ignore line: [ /usr/lib/gcc/x86_64-linux-gnu/15/include]
+        ignore line: [ /usr/local/include]
+        ignore line: [ /usr/include/x86_64-linux-gnu]
+        ignore line: [ /usr/include]
+        ignore line: [End of search list.]
+        ignore line: [Compiler executable checksum: 303b1f6d80e10fe55145457c37243669]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_4ed35.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_4ed35.dir/']
+        ignore line: [ /usr/bin/x86_64-linux-gnu-as -v --64 -o CMakeFiles/cmTC_4ed35.dir/CMakeCXXCompilerABI.cpp.o /tmp/ccRgnZLQ.s]
+        ignore line: [GNU assembler version 2.45 (x86_64-linux-gnu) using BFD version (GNU Binutils for Ubuntu) 2.45]
+        ignore line: [COMPILER_PATH=/usr/libexec/gcc/x86_64-linux-gnu/15/:/usr/libexec/gcc/x86_64-linux-gnu/15/:/usr/libexec/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/15/:/usr/lib/gcc/x86_64-linux-gnu/]
+        ignore line: [LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/15/:/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/15/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/15/../../../:/lib/:/usr/lib/]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_4ed35.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_4ed35.dir/CMakeCXXCompilerABI.cpp.']
+        ignore line: [Linking CXX executable cmTC_4ed35]
+        ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_4ed35.dir/link.txt --verbose=1]
+        ignore line: [Using built-in specs.]
+        ignore line: [COLLECT_GCC=/usr/bin/c++]
+        ignore line: [COLLECT_LTO_WRAPPER=/usr/libexec/gcc/x86_64-linux-gnu/15/lto-wrapper]
+        ignore line: [OFFLOAD_TARGET_NAMES=nvptx-none:amdgcn-amdhsa]
+        ignore line: [OFFLOAD_TARGET_DEFAULT=1]
+        ignore line: [Target: x86_64-linux-gnu]
+        ignore line: [Configured with: ../src/configure -v --with-pkgversion='Ubuntu 15.2.0-4ubuntu4' --with-bugurl=file:///usr/share/doc/gcc-15/README.Bugs --enable-languages=c ada c++ go d fortran objc obj-c++ m2 rust cobol algol68 --prefix=/usr --with-gcc-major-version-only --program-suffix=-15 --program-prefix=x86_64-linux-gnu- --enable-shared --enable-linker-build-id --libexecdir=/usr/libexec --without-included-gettext --enable-threads=posix --libdir=/usr/lib --enable-nls --enable-bootstrap --enable-clocale=gnu --enable-libstdcxx-debug --enable-libstdcxx-time=yes --with-default-libstdcxx-abi=new --enable-libstdcxx-backtrace --enable-gnu-unique-object --disable-vtable-verify --enable-plugin --enable-default-pie --with-system-zlib --enable-libphobos-checking=release --with-target-system-zlib=auto --enable-objc-gc=auto --enable-multiarch --disable-werror --enable-cet --with-arch-32=i686 --with-abi=m64 --with-multilib-list=m32 m64 mx32 --enable-multilib --with-tune=generic --enable-offload-targets=nvptx-none=/build/gcc-15-deiAlw/gcc-15-15.2.0/debian/tmp-nvptx/usr amdgcn-amdhsa=/build/gcc-15-deiAlw/gcc-15-15.2.0/debian/tmp-gcn/usr --enable-offload-defaulted --without-cuda-driver --enable-checking=release --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=x86_64-linux-gnu --with-build-config=bootstrap-lto-lean --enable-link-serialization=2]
+        ignore line: [Thread model: posix]
+        ignore line: [Supported LTO compression algorithms: zlib zstd]
+        ignore line: [gcc version 15.2.0 (Ubuntu 15.2.0-4ubuntu4) ]
+        ignore line: [COMPILER_PATH=/usr/libexec/gcc/x86_64-linux-gnu/15/:/usr/libexec/gcc/x86_64-linux-gnu/15/:/usr/libexec/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/15/:/usr/lib/gcc/x86_64-linux-gnu/]
+        ignore line: [LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/15/:/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/15/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/15/../../../:/lib/:/usr/lib/]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_4ed35' '-foffload-options=-l_GCC_stdc++' '-foffload-options=-l_GCC_m' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_4ed35.']
+        link line: [ /usr/libexec/gcc/x86_64-linux-gnu/15/collect2 -plugin /usr/libexec/gcc/x86_64-linux-gnu/15/liblto_plugin.so -plugin-opt=/usr/libexec/gcc/x86_64-linux-gnu/15/lto-wrapper -plugin-opt=-fresolution=/tmp/ccM7bSic.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -z now -z relro -o cmTC_4ed35 /usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/15/crtbeginS.o -L/usr/lib/gcc/x86_64-linux-gnu/15 -L/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/15/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/15/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_4ed35.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-linux-gnu/15/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/crtn.o]
+          arg [/usr/libexec/gcc/x86_64-linux-gnu/15/collect2] ==> ignore
+          arg [-plugin] ==> ignore
+          arg [/usr/libexec/gcc/x86_64-linux-gnu/15/liblto_plugin.so] ==> ignore
+          arg [-plugin-opt=/usr/libexec/gcc/x86_64-linux-gnu/15/lto-wrapper] ==> ignore
+          arg [-plugin-opt=-fresolution=/tmp/ccM7bSic.res] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+          arg [-plugin-opt=-pass-through=-lc] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+          arg [--build-id] ==> ignore
+          arg [--eh-frame-hdr] ==> ignore
+          arg [-m] ==> ignore
+          arg [elf_x86_64] ==> ignore
+          arg [--hash-style=gnu] ==> ignore
+          arg [--as-needed] ==> ignore
+          arg [-dynamic-linker] ==> ignore
+          arg [/lib64/ld-linux-x86-64.so.2] ==> ignore
+          arg [-pie] ==> ignore
+          arg [-znow] ==> ignore
+          arg [-zrelro] ==> ignore
+          arg [-o] ==> ignore
+          arg [cmTC_4ed35] ==> ignore
+          arg [/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/Scrt1.o] ==> obj [/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/Scrt1.o]
+          arg [/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/crti.o] ==> obj [/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/crti.o]
+          arg [/usr/lib/gcc/x86_64-linux-gnu/15/crtbeginS.o] ==> obj [/usr/lib/gcc/x86_64-linux-gnu/15/crtbeginS.o]
+          arg [-L/usr/lib/gcc/x86_64-linux-gnu/15] ==> dir [/usr/lib/gcc/x86_64-linux-gnu/15]
+          arg [-L/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu] ==> dir [/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu]
+          arg [-L/usr/lib/gcc/x86_64-linux-gnu/15/../../../../lib] ==> dir [/usr/lib/gcc/x86_64-linux-gnu/15/../../../../lib]
+          arg [-L/lib/x86_64-linux-gnu] ==> dir [/lib/x86_64-linux-gnu]
+          arg [-L/lib/../lib] ==> dir [/lib/../lib]
+          arg [-L/usr/lib/x86_64-linux-gnu] ==> dir [/usr/lib/x86_64-linux-gnu]
+          arg [-L/usr/lib/../lib] ==> dir [/usr/lib/../lib]
+          arg [-L/usr/lib/gcc/x86_64-linux-gnu/15/../../..] ==> dir [/usr/lib/gcc/x86_64-linux-gnu/15/../../..]
+          arg [-L/lib] ==> dir [/lib]
+          arg [-L/usr/lib] ==> dir [/usr/lib]
+          arg [-v] ==> ignore
+          arg [CMakeFiles/cmTC_4ed35.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
+          arg [-lstdc++] ==> lib [stdc++]
+          arg [-lm] ==> lib [m]
+          arg [-lgcc_s] ==> lib [gcc_s]
+          arg [-lgcc] ==> lib [gcc]
+          arg [-lc] ==> lib [c]
+          arg [-lgcc_s] ==> lib [gcc_s]
+          arg [-lgcc] ==> lib [gcc]
+          arg [/usr/lib/gcc/x86_64-linux-gnu/15/crtendS.o] ==> obj [/usr/lib/gcc/x86_64-linux-gnu/15/crtendS.o]
+          arg [/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/crtn.o] ==> obj [/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/crtn.o]
+        ignore line: [collect2 version 15.2.0]
+        ignore line: [/usr/bin/ld -plugin /usr/libexec/gcc/x86_64-linux-gnu/15/liblto_plugin.so -plugin-opt=/usr/libexec/gcc/x86_64-linux-gnu/15/lto-wrapper -plugin-opt=-fresolution=/tmp/ccM7bSic.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -z now -z relro -o cmTC_4ed35 /usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/15/crtbeginS.o -L/usr/lib/gcc/x86_64-linux-gnu/15 -L/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/15/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/15/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_4ed35.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-linux-gnu/15/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/crtn.o]
+        linker tool for 'CXX': /usr/bin/ld
+        collapse obj [/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/Scrt1.o] ==> [/usr/lib/x86_64-linux-gnu/Scrt1.o]
+        collapse obj [/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/crti.o] ==> [/usr/lib/x86_64-linux-gnu/crti.o]
+        collapse obj [/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/crtn.o] ==> [/usr/lib/x86_64-linux-gnu/crtn.o]
+        collapse library dir [/usr/lib/gcc/x86_64-linux-gnu/15] ==> [/usr/lib/gcc/x86_64-linux-gnu/15]
+        collapse library dir [/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu] ==> [/usr/lib/x86_64-linux-gnu]
+        collapse library dir [/usr/lib/gcc/x86_64-linux-gnu/15/../../../../lib] ==> [/usr/lib]
+        collapse library dir [/lib/x86_64-linux-gnu] ==> [/lib/x86_64-linux-gnu]
+        collapse library dir [/lib/../lib] ==> [/lib]
+        collapse library dir [/usr/lib/x86_64-linux-gnu] ==> [/usr/lib/x86_64-linux-gnu]
+        collapse library dir [/usr/lib/../lib] ==> [/usr/lib]
+        collapse library dir [/usr/lib/gcc/x86_64-linux-gnu/15/../../..] ==> [/usr/lib]
+        collapse library dir [/lib] ==> [/lib]
+        collapse library dir [/usr/lib] ==> [/usr/lib]
+        implicit libs: [stdc++;m;gcc_s;gcc;c;gcc_s;gcc]
+        implicit objs: [/usr/lib/x86_64-linux-gnu/Scrt1.o;/usr/lib/x86_64-linux-gnu/crti.o;/usr/lib/gcc/x86_64-linux-gnu/15/crtbeginS.o;/usr/lib/gcc/x86_64-linux-gnu/15/crtendS.o;/usr/lib/x86_64-linux-gnu/crtn.o]
+        implicit dirs: [/usr/lib/gcc/x86_64-linux-gnu/15;/usr/lib/x86_64-linux-gnu;/usr/lib;/lib/x86_64-linux-gnu;/lib]
+        implicit fwks: []
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/Internal/CMakeDetermineLinkerId.cmake:40 (message)"
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerABI.cmake:255 (cmake_determine_linker_id)"
+      - "/usr/share/cmake-3.31/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:20 (project)"
+    message: |
+      Running the CXX compiler's linker: "/usr/bin/ld" "-v"
+      GNU ld (GNU Binutils for Ubuntu) 2.45
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerABI.cmake:74 (try_compile)"
+      - "/usr/share/cmake-3.31/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:20 (project)"
+    checks:
+      - "Detecting C compiler ABI info"
+    directories:
+      source: "/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-dp0Mdd"
+      binary: "/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-dp0Mdd"
+    cmakeVariables:
+      CMAKE_C_FLAGS: ""
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_C_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-dp0Mdd'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_8d2f7/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_8d2f7.dir/build.make CMakeFiles/cmTC_8d2f7.dir/build
+        gmake[1]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-dp0Mdd'
+        Building C object CMakeFiles/cmTC_8d2f7.dir/CMakeCCompilerABI.c.o
+        /usr/bin/cc   -v -o CMakeFiles/cmTC_8d2f7.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake-3.31/Modules/CMakeCCompilerABI.c
+        Using built-in specs.
+        COLLECT_GCC=/usr/bin/cc
+        OFFLOAD_TARGET_NAMES=nvptx-none:amdgcn-amdhsa
+        OFFLOAD_TARGET_DEFAULT=1
+        Target: x86_64-linux-gnu
+        Configured with: ../src/configure -v --with-pkgversion='Ubuntu 15.2.0-4ubuntu4' --with-bugurl=file:///usr/share/doc/gcc-15/README.Bugs --enable-languages=c,ada,c++,go,d,fortran,objc,obj-c++,m2,rust,cobol,algol68 --prefix=/usr --with-gcc-major-version-only --program-suffix=-15 --program-prefix=x86_64-linux-gnu- --enable-shared --enable-linker-build-id --libexecdir=/usr/libexec --without-included-gettext --enable-threads=posix --libdir=/usr/lib --enable-nls --enable-bootstrap --enable-clocale=gnu --enable-libstdcxx-debug --enable-libstdcxx-time=yes --with-default-libstdcxx-abi=new --enable-libstdcxx-backtrace --enable-gnu-unique-object --disable-vtable-verify --enable-plugin --enable-default-pie --with-system-zlib --enable-libphobos-checking=release --with-target-system-zlib=auto --enable-objc-gc=auto --enable-multiarch --disable-werror --enable-cet --with-arch-32=i686 --with-abi=m64 --with-multilib-list=m32,m64,mx32 --enable-multilib --with-tune=generic --enable-offload-targets=nvptx-none=/build/gcc-15-deiAlw/gcc-15-15.2.0/debian/tmp-nvptx/usr,amdgcn-amdhsa=/build/gcc-15-deiAlw/gcc-15-15.2.0/debian/tmp-gcn/usr --enable-offload-defaulted --without-cuda-driver --enable-checking=release --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=x86_64-linux-gnu --with-build-config=bootstrap-lto-lean --enable-link-serialization=2
+        Thread model: posix
+        Supported LTO compression algorithms: zlib zstd
+        gcc version 15.2.0 (Ubuntu 15.2.0-4ubuntu4) 
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_8d2f7.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_8d2f7.dir/'
+         /usr/libexec/gcc/x86_64-linux-gnu/15/cc1 -quiet -v -imultiarch x86_64-linux-gnu /usr/share/cmake-3.31/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_8d2f7.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mtune=generic -march=x86-64 -version -fasynchronous-unwind-tables -fstack-protector-strong -Wformat -Wformat-security -fstack-clash-protection -fcf-protection -fzero-init-padding-bits=all -Wbidi-chars=any -o /tmp/ccvOJDHw.s
+        GNU C23 (Ubuntu 15.2.0-4ubuntu4) version 15.2.0 (x86_64-linux-gnu)
+        	compiled by GNU C version 15.2.0, GMP version 6.3.0, MPFR version 4.2.2, MPC version 1.3.1, isl version isl-0.27-GMP
+        
+        GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+        ignoring nonexistent directory "/usr/local/include/x86_64-linux-gnu"
+        ignoring nonexistent directory "/usr/lib/gcc/x86_64-linux-gnu/15/include-fixed/x86_64-linux-gnu"
+        ignoring nonexistent directory "/usr/lib/gcc/x86_64-linux-gnu/15/include-fixed"
+        ignoring nonexistent directory "/usr/lib/gcc/x86_64-linux-gnu/15/../../../../x86_64-linux-gnu/include"
+        #include "..." search starts here:
+        #include <...> search starts here:
+         /usr/lib/gcc/x86_64-linux-gnu/15/include
+         /usr/local/include
+         /usr/include/x86_64-linux-gnu
+         /usr/include
+        End of search list.
+        Compiler executable checksum: 0221f9d323e9ceb852d229511dac4b77
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_8d2f7.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_8d2f7.dir/'
+         /usr/bin/x86_64-linux-gnu-as -v --64 -o CMakeFiles/cmTC_8d2f7.dir/CMakeCCompilerABI.c.o /tmp/ccvOJDHw.s
+        GNU assembler version 2.45 (x86_64-linux-gnu) using BFD version (GNU Binutils for Ubuntu) 2.45
+        COMPILER_PATH=/usr/libexec/gcc/x86_64-linux-gnu/15/:/usr/libexec/gcc/x86_64-linux-gnu/15/:/usr/libexec/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/15/:/usr/lib/gcc/x86_64-linux-gnu/
+        LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/15/:/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/15/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/15/../../../:/lib/:/usr/lib/
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_8d2f7.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_8d2f7.dir/CMakeCCompilerABI.c.'
+        Linking C executable cmTC_8d2f7
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_8d2f7.dir/link.txt --verbose=1
+        Using built-in specs.
+        COLLECT_GCC=/usr/bin/cc
+        COLLECT_LTO_WRAPPER=/usr/libexec/gcc/x86_64-linux-gnu/15/lto-wrapper
+        OFFLOAD_TARGET_NAMES=nvptx-none:amdgcn-amdhsa
+        OFFLOAD_TARGET_DEFAULT=1
+        Target: x86_64-linux-gnu
+        Configured with: ../src/configure -v --with-pkgversion='Ubuntu 15.2.0-4ubuntu4' --with-bugurl=file:///usr/share/doc/gcc-15/README.Bugs --enable-languages=c,ada,c++,go,d,fortran,objc,obj-c++,m2,rust,cobol,algol68 --prefix=/usr --with-gcc-major-version-only --program-suffix=-15 --program-prefix=x86_64-linux-gnu- --enable-shared --enable-linker-build-id --libexecdir=/usr/libexec --without-included-gettext --enable-threads=posix --libdir=/usr/lib --enable-nls --enable-bootstrap --enable-clocale=gnu --enable-libstdcxx-debug --enable-libstdcxx-time=yes --with-default-libstdcxx-abi=new --enable-libstdcxx-backtrace --enable-gnu-unique-object --disable-vtable-verify --enable-plugin --enable-default-pie --with-system-zlib --enable-libphobos-checking=release --with-target-system-zlib=auto --enable-objc-gc=auto --enable-multiarch --disable-werror --enable-cet --with-arch-32=i686 --with-abi=m64 --with-multilib-list=m32,m64,mx32 --enable-multilib --with-tune=generic --enable-offload-targets=nvptx-none=/build/gcc-15-deiAlw/gcc-15-15.2.0/debian/tmp-nvptx/usr,amdgcn-amdhsa=/build/gcc-15-deiAlw/gcc-15-15.2.0/debian/tmp-gcn/usr --enable-offload-defaulted --without-cuda-driver --enable-checking=release --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=x86_64-linux-gnu --with-build-config=bootstrap-lto-lean --enable-link-serialization=2
+        Thread model: posix
+        Supported LTO compression algorithms: zlib zstd
+        gcc version 15.2.0 (Ubuntu 15.2.0-4ubuntu4) 
+        COMPILER_PATH=/usr/libexec/gcc/x86_64-linux-gnu/15/:/usr/libexec/gcc/x86_64-linux-gnu/15/:/usr/libexec/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/15/:/usr/lib/gcc/x86_64-linux-gnu/
+        LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/15/:/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/15/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/15/../../../:/lib/:/usr/lib/
+        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_8d2f7' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_8d2f7.'
+         /usr/libexec/gcc/x86_64-linux-gnu/15/collect2 -plugin /usr/libexec/gcc/x86_64-linux-gnu/15/liblto_plugin.so -plugin-opt=/usr/libexec/gcc/x86_64-linux-gnu/15/lto-wrapper -plugin-opt=-fresolution=/tmp/ccpeuA0E.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -z now -z relro -o cmTC_8d2f7 /usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/15/crtbeginS.o -L/usr/lib/gcc/x86_64-linux-gnu/15 -L/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/15/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/15/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_8d2f7.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-linux-gnu/15/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/crtn.o
+        collect2 version 15.2.0
+        /usr/bin/ld -plugin /usr/libexec/gcc/x86_64-linux-gnu/15/liblto_plugin.so -plugin-opt=/usr/libexec/gcc/x86_64-linux-gnu/15/lto-wrapper -plugin-opt=-fresolution=/tmp/ccpeuA0E.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -z now -z relro -o cmTC_8d2f7 /usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/15/crtbeginS.o -L/usr/lib/gcc/x86_64-linux-gnu/15 -L/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/15/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/15/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_8d2f7.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-linux-gnu/15/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/crtn.o
+        GNU ld (GNU Binutils for Ubuntu) 2.45
+        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_8d2f7' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_8d2f7.'
+        /usr/bin/cc  -v -Wl,-v CMakeFiles/cmTC_8d2f7.dir/CMakeCCompilerABI.c.o -o cmTC_8d2f7
+        gmake[1]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-dp0Mdd'
+        
+      exitCode: 0
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerABI.cmake:182 (message)"
+      - "/usr/share/cmake-3.31/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:20 (project)"
+    message: |
+      Parsed C implicit include dir info: rv=done
+        found start of include info
+        found start of implicit include info
+          add: [/usr/lib/gcc/x86_64-linux-gnu/15/include]
+          add: [/usr/local/include]
+          add: [/usr/include/x86_64-linux-gnu]
+          add: [/usr/include]
+        end of search list found
+        collapse include dir [/usr/lib/gcc/x86_64-linux-gnu/15/include] ==> [/usr/lib/gcc/x86_64-linux-gnu/15/include]
+        collapse include dir [/usr/local/include] ==> [/usr/local/include]
+        collapse include dir [/usr/include/x86_64-linux-gnu] ==> [/usr/include/x86_64-linux-gnu]
+        collapse include dir [/usr/include] ==> [/usr/include]
+        implicit include dirs: [/usr/lib/gcc/x86_64-linux-gnu/15/include;/usr/local/include;/usr/include/x86_64-linux-gnu;/usr/include]
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerABI.cmake:218 (message)"
+      - "/usr/share/cmake-3.31/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:20 (project)"
+    message: |
+      Parsed C implicit link information:
+        link line regex: [^( *|.*[/\\])(ld[0-9]*(\\.[a-z]+)?|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
+        linker tool regex: [^[ 	]*(->|")?[ 	]*(([^"]*[/\\])?(ld[0-9]*(\\.[a-z]+)?))("|,| |$)]
+        ignore line: [Change Dir: '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-dp0Mdd']
+        ignore line: []
+        ignore line: [Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_8d2f7/fast]
+        ignore line: [/usr/bin/gmake  -f CMakeFiles/cmTC_8d2f7.dir/build.make CMakeFiles/cmTC_8d2f7.dir/build]
+        ignore line: [gmake[1]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-dp0Mdd']
+        ignore line: [Building C object CMakeFiles/cmTC_8d2f7.dir/CMakeCCompilerABI.c.o]
+        ignore line: [/usr/bin/cc   -v -o CMakeFiles/cmTC_8d2f7.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake-3.31/Modules/CMakeCCompilerABI.c]
+        ignore line: [Using built-in specs.]
+        ignore line: [COLLECT_GCC=/usr/bin/cc]
+        ignore line: [OFFLOAD_TARGET_NAMES=nvptx-none:amdgcn-amdhsa]
+        ignore line: [OFFLOAD_TARGET_DEFAULT=1]
+        ignore line: [Target: x86_64-linux-gnu]
+        ignore line: [Configured with: ../src/configure -v --with-pkgversion='Ubuntu 15.2.0-4ubuntu4' --with-bugurl=file:///usr/share/doc/gcc-15/README.Bugs --enable-languages=c ada c++ go d fortran objc obj-c++ m2 rust cobol algol68 --prefix=/usr --with-gcc-major-version-only --program-suffix=-15 --program-prefix=x86_64-linux-gnu- --enable-shared --enable-linker-build-id --libexecdir=/usr/libexec --without-included-gettext --enable-threads=posix --libdir=/usr/lib --enable-nls --enable-bootstrap --enable-clocale=gnu --enable-libstdcxx-debug --enable-libstdcxx-time=yes --with-default-libstdcxx-abi=new --enable-libstdcxx-backtrace --enable-gnu-unique-object --disable-vtable-verify --enable-plugin --enable-default-pie --with-system-zlib --enable-libphobos-checking=release --with-target-system-zlib=auto --enable-objc-gc=auto --enable-multiarch --disable-werror --enable-cet --with-arch-32=i686 --with-abi=m64 --with-multilib-list=m32 m64 mx32 --enable-multilib --with-tune=generic --enable-offload-targets=nvptx-none=/build/gcc-15-deiAlw/gcc-15-15.2.0/debian/tmp-nvptx/usr amdgcn-amdhsa=/build/gcc-15-deiAlw/gcc-15-15.2.0/debian/tmp-gcn/usr --enable-offload-defaulted --without-cuda-driver --enable-checking=release --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=x86_64-linux-gnu --with-build-config=bootstrap-lto-lean --enable-link-serialization=2]
+        ignore line: [Thread model: posix]
+        ignore line: [Supported LTO compression algorithms: zlib zstd]
+        ignore line: [gcc version 15.2.0 (Ubuntu 15.2.0-4ubuntu4) ]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_8d2f7.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_8d2f7.dir/']
+        ignore line: [ /usr/libexec/gcc/x86_64-linux-gnu/15/cc1 -quiet -v -imultiarch x86_64-linux-gnu /usr/share/cmake-3.31/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_8d2f7.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mtune=generic -march=x86-64 -version -fasynchronous-unwind-tables -fstack-protector-strong -Wformat -Wformat-security -fstack-clash-protection -fcf-protection -fzero-init-padding-bits=all -Wbidi-chars=any -o /tmp/ccvOJDHw.s]
+        ignore line: [GNU C23 (Ubuntu 15.2.0-4ubuntu4) version 15.2.0 (x86_64-linux-gnu)]
+        ignore line: [	compiled by GNU C version 15.2.0  GMP version 6.3.0  MPFR version 4.2.2  MPC version 1.3.1  isl version isl-0.27-GMP]
+        ignore line: []
+        ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
+        ignore line: [ignoring nonexistent directory "/usr/local/include/x86_64-linux-gnu"]
+        ignore line: [ignoring nonexistent directory "/usr/lib/gcc/x86_64-linux-gnu/15/include-fixed/x86_64-linux-gnu"]
+        ignore line: [ignoring nonexistent directory "/usr/lib/gcc/x86_64-linux-gnu/15/include-fixed"]
+        ignore line: [ignoring nonexistent directory "/usr/lib/gcc/x86_64-linux-gnu/15/../../../../x86_64-linux-gnu/include"]
+        ignore line: [#include "..." search starts here:]
+        ignore line: [#include <...> search starts here:]
+        ignore line: [ /usr/lib/gcc/x86_64-linux-gnu/15/include]
+        ignore line: [ /usr/local/include]
+        ignore line: [ /usr/include/x86_64-linux-gnu]
+        ignore line: [ /usr/include]
+        ignore line: [End of search list.]
+        ignore line: [Compiler executable checksum: 0221f9d323e9ceb852d229511dac4b77]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_8d2f7.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_8d2f7.dir/']
+        ignore line: [ /usr/bin/x86_64-linux-gnu-as -v --64 -o CMakeFiles/cmTC_8d2f7.dir/CMakeCCompilerABI.c.o /tmp/ccvOJDHw.s]
+        ignore line: [GNU assembler version 2.45 (x86_64-linux-gnu) using BFD version (GNU Binutils for Ubuntu) 2.45]
+        ignore line: [COMPILER_PATH=/usr/libexec/gcc/x86_64-linux-gnu/15/:/usr/libexec/gcc/x86_64-linux-gnu/15/:/usr/libexec/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/15/:/usr/lib/gcc/x86_64-linux-gnu/]
+        ignore line: [LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/15/:/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/15/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/15/../../../:/lib/:/usr/lib/]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_8d2f7.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_8d2f7.dir/CMakeCCompilerABI.c.']
+        ignore line: [Linking C executable cmTC_8d2f7]
+        ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_8d2f7.dir/link.txt --verbose=1]
+        ignore line: [Using built-in specs.]
+        ignore line: [COLLECT_GCC=/usr/bin/cc]
+        ignore line: [COLLECT_LTO_WRAPPER=/usr/libexec/gcc/x86_64-linux-gnu/15/lto-wrapper]
+        ignore line: [OFFLOAD_TARGET_NAMES=nvptx-none:amdgcn-amdhsa]
+        ignore line: [OFFLOAD_TARGET_DEFAULT=1]
+        ignore line: [Target: x86_64-linux-gnu]
+        ignore line: [Configured with: ../src/configure -v --with-pkgversion='Ubuntu 15.2.0-4ubuntu4' --with-bugurl=file:///usr/share/doc/gcc-15/README.Bugs --enable-languages=c ada c++ go d fortran objc obj-c++ m2 rust cobol algol68 --prefix=/usr --with-gcc-major-version-only --program-suffix=-15 --program-prefix=x86_64-linux-gnu- --enable-shared --enable-linker-build-id --libexecdir=/usr/libexec --without-included-gettext --enable-threads=posix --libdir=/usr/lib --enable-nls --enable-bootstrap --enable-clocale=gnu --enable-libstdcxx-debug --enable-libstdcxx-time=yes --with-default-libstdcxx-abi=new --enable-libstdcxx-backtrace --enable-gnu-unique-object --disable-vtable-verify --enable-plugin --enable-default-pie --with-system-zlib --enable-libphobos-checking=release --with-target-system-zlib=auto --enable-objc-gc=auto --enable-multiarch --disable-werror --enable-cet --with-arch-32=i686 --with-abi=m64 --with-multilib-list=m32 m64 mx32 --enable-multilib --with-tune=generic --enable-offload-targets=nvptx-none=/build/gcc-15-deiAlw/gcc-15-15.2.0/debian/tmp-nvptx/usr amdgcn-amdhsa=/build/gcc-15-deiAlw/gcc-15-15.2.0/debian/tmp-gcn/usr --enable-offload-defaulted --without-cuda-driver --enable-checking=release --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=x86_64-linux-gnu --with-build-config=bootstrap-lto-lean --enable-link-serialization=2]
+        ignore line: [Thread model: posix]
+        ignore line: [Supported LTO compression algorithms: zlib zstd]
+        ignore line: [gcc version 15.2.0 (Ubuntu 15.2.0-4ubuntu4) ]
+        ignore line: [COMPILER_PATH=/usr/libexec/gcc/x86_64-linux-gnu/15/:/usr/libexec/gcc/x86_64-linux-gnu/15/:/usr/libexec/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/15/:/usr/lib/gcc/x86_64-linux-gnu/]
+        ignore line: [LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/15/:/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/15/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/15/../../../:/lib/:/usr/lib/]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_8d2f7' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_8d2f7.']
+        link line: [ /usr/libexec/gcc/x86_64-linux-gnu/15/collect2 -plugin /usr/libexec/gcc/x86_64-linux-gnu/15/liblto_plugin.so -plugin-opt=/usr/libexec/gcc/x86_64-linux-gnu/15/lto-wrapper -plugin-opt=-fresolution=/tmp/ccpeuA0E.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -z now -z relro -o cmTC_8d2f7 /usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/15/crtbeginS.o -L/usr/lib/gcc/x86_64-linux-gnu/15 -L/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/15/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/15/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_8d2f7.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-linux-gnu/15/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/crtn.o]
+          arg [/usr/libexec/gcc/x86_64-linux-gnu/15/collect2] ==> ignore
+          arg [-plugin] ==> ignore
+          arg [/usr/libexec/gcc/x86_64-linux-gnu/15/liblto_plugin.so] ==> ignore
+          arg [-plugin-opt=/usr/libexec/gcc/x86_64-linux-gnu/15/lto-wrapper] ==> ignore
+          arg [-plugin-opt=-fresolution=/tmp/ccpeuA0E.res] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+          arg [-plugin-opt=-pass-through=-lc] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+          arg [--build-id] ==> ignore
+          arg [--eh-frame-hdr] ==> ignore
+          arg [-m] ==> ignore
+          arg [elf_x86_64] ==> ignore
+          arg [--hash-style=gnu] ==> ignore
+          arg [--as-needed] ==> ignore
+          arg [-dynamic-linker] ==> ignore
+          arg [/lib64/ld-linux-x86-64.so.2] ==> ignore
+          arg [-pie] ==> ignore
+          arg [-znow] ==> ignore
+          arg [-zrelro] ==> ignore
+          arg [-o] ==> ignore
+          arg [cmTC_8d2f7] ==> ignore
+          arg [/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/Scrt1.o] ==> obj [/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/Scrt1.o]
+          arg [/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/crti.o] ==> obj [/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/crti.o]
+          arg [/usr/lib/gcc/x86_64-linux-gnu/15/crtbeginS.o] ==> obj [/usr/lib/gcc/x86_64-linux-gnu/15/crtbeginS.o]
+          arg [-L/usr/lib/gcc/x86_64-linux-gnu/15] ==> dir [/usr/lib/gcc/x86_64-linux-gnu/15]
+          arg [-L/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu] ==> dir [/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu]
+          arg [-L/usr/lib/gcc/x86_64-linux-gnu/15/../../../../lib] ==> dir [/usr/lib/gcc/x86_64-linux-gnu/15/../../../../lib]
+          arg [-L/lib/x86_64-linux-gnu] ==> dir [/lib/x86_64-linux-gnu]
+          arg [-L/lib/../lib] ==> dir [/lib/../lib]
+          arg [-L/usr/lib/x86_64-linux-gnu] ==> dir [/usr/lib/x86_64-linux-gnu]
+          arg [-L/usr/lib/../lib] ==> dir [/usr/lib/../lib]
+          arg [-L/usr/lib/gcc/x86_64-linux-gnu/15/../../..] ==> dir [/usr/lib/gcc/x86_64-linux-gnu/15/../../..]
+          arg [-L/lib] ==> dir [/lib]
+          arg [-L/usr/lib] ==> dir [/usr/lib]
+          arg [-v] ==> ignore
+          arg [CMakeFiles/cmTC_8d2f7.dir/CMakeCCompilerABI.c.o] ==> ignore
+          arg [-lgcc] ==> lib [gcc]
+          arg [--push-state] ==> ignore
+          arg [--as-needed] ==> ignore
+          arg [-lgcc_s] ==> lib [gcc_s]
+          arg [--pop-state] ==> ignore
+          arg [-lc] ==> lib [c]
+          arg [-lgcc] ==> lib [gcc]
+          arg [--push-state] ==> ignore
+          arg [--as-needed] ==> ignore
+          arg [-lgcc_s] ==> lib [gcc_s]
+          arg [--pop-state] ==> ignore
+          arg [/usr/lib/gcc/x86_64-linux-gnu/15/crtendS.o] ==> obj [/usr/lib/gcc/x86_64-linux-gnu/15/crtendS.o]
+          arg [/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/crtn.o] ==> obj [/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/crtn.o]
+        ignore line: [collect2 version 15.2.0]
+        ignore line: [/usr/bin/ld -plugin /usr/libexec/gcc/x86_64-linux-gnu/15/liblto_plugin.so -plugin-opt=/usr/libexec/gcc/x86_64-linux-gnu/15/lto-wrapper -plugin-opt=-fresolution=/tmp/ccpeuA0E.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -z now -z relro -o cmTC_8d2f7 /usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/15/crtbeginS.o -L/usr/lib/gcc/x86_64-linux-gnu/15 -L/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/15/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/15/../../.. -L/lib -L/usr/lib -v CMakeFiles/cmTC_8d2f7.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-linux-gnu/15/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/crtn.o]
+        linker tool for 'C': /usr/bin/ld
+        collapse obj [/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/Scrt1.o] ==> [/usr/lib/x86_64-linux-gnu/Scrt1.o]
+        collapse obj [/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/crti.o] ==> [/usr/lib/x86_64-linux-gnu/crti.o]
+        collapse obj [/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu/crtn.o] ==> [/usr/lib/x86_64-linux-gnu/crtn.o]
+        collapse library dir [/usr/lib/gcc/x86_64-linux-gnu/15] ==> [/usr/lib/gcc/x86_64-linux-gnu/15]
+        collapse library dir [/usr/lib/gcc/x86_64-linux-gnu/15/../../../x86_64-linux-gnu] ==> [/usr/lib/x86_64-linux-gnu]
+        collapse library dir [/usr/lib/gcc/x86_64-linux-gnu/15/../../../../lib] ==> [/usr/lib]
+        collapse library dir [/lib/x86_64-linux-gnu] ==> [/lib/x86_64-linux-gnu]
+        collapse library dir [/lib/../lib] ==> [/lib]
+        collapse library dir [/usr/lib/x86_64-linux-gnu] ==> [/usr/lib/x86_64-linux-gnu]
+        collapse library dir [/usr/lib/../lib] ==> [/usr/lib]
+        collapse library dir [/usr/lib/gcc/x86_64-linux-gnu/15/../../..] ==> [/usr/lib]
+        collapse library dir [/lib] ==> [/lib]
+        collapse library dir [/usr/lib] ==> [/usr/lib]
+        implicit libs: [gcc;gcc_s;c;gcc;gcc_s]
+        implicit objs: [/usr/lib/x86_64-linux-gnu/Scrt1.o;/usr/lib/x86_64-linux-gnu/crti.o;/usr/lib/gcc/x86_64-linux-gnu/15/crtbeginS.o;/usr/lib/gcc/x86_64-linux-gnu/15/crtendS.o;/usr/lib/x86_64-linux-gnu/crtn.o]
+        implicit dirs: [/usr/lib/gcc/x86_64-linux-gnu/15;/usr/lib/x86_64-linux-gnu;/usr/lib;/lib/x86_64-linux-gnu;/lib]
+        implicit fwks: []
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/Internal/CMakeDetermineLinkerId.cmake:40 (message)"
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerABI.cmake:255 (cmake_determine_linker_id)"
+      - "/usr/share/cmake-3.31/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:20 (project)"
+    message: |
+      Running the C compiler's linker: "/usr/bin/ld" "-v"
+      GNU ld (GNU Binutils for Ubuntu) 2.45
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CheckIPOSupported.cmake:138 (try_compile)"
+      - "/usr/share/cmake-3.31/Modules/CheckIPOSupported.cmake:261 (_ipo_run_language_check)"
+      - "CMakeLists.txt:212 (check_ipo_supported)"
+    directories:
+      source: "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/src"
+      binary: "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin"
+    buildResult:
+      variable: "_IPO_LANGUAGE_CHECK_RESULT"
+      cached: true
+      stdout: |
+        Change Dir: '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile
+        /usr/bin/cmake -S/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/src -B/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin --check-build-system CMakeFiles/Makefile.cmake 0
+        /usr/bin/cmake -E cmake_progress_start /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin//CMakeFiles/progress.marks
+        /usr/bin/gmake  -f CMakeFiles/Makefile2 all
+        gmake[1]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        /usr/bin/gmake  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/depend
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        cd /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/src /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/src /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/DependInfo.cmake
+        Dependee "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/DependInfo.cmake" is newer than depender "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/depend.internal".
+        Dependee "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/depend.internal".
+        Scanning dependencies of target foo
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        /usr/bin/gmake  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/build
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        [ 25%] Building CXX object CMakeFiles/foo.dir/foo.cpp.o
+        /usr/bin/c++   -flto=auto -fno-fat-lto-objects -o CMakeFiles/foo.dir/foo.cpp.o -c /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/src/foo.cpp
+        [ 50%] Linking CXX static library libfoo.a
+        /usr/bin/cmake -P CMakeFiles/foo.dir/cmake_clean_target.cmake
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/foo.dir/link.txt --verbose=1
+        "/usr/bin/gcc-ar-15" qc libfoo.a CMakeFiles/foo.dir/foo.cpp.o
+        "/usr/bin/gcc-ranlib-15" libfoo.a
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        [ 50%] Built target foo
+        /usr/bin/gmake  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/depend
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        cd /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/src /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/src /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/DependInfo.cmake
+        Dependee "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/DependInfo.cmake" is newer than depender "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/depend.internal".
+        Dependee "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/depend.internal".
+        Scanning dependencies of target boo
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        /usr/bin/gmake  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/build
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        [ 75%] Building CXX object CMakeFiles/boo.dir/main.cpp.o
+        /usr/bin/c++   -flto=auto -fno-fat-lto-objects -o CMakeFiles/boo.dir/main.cpp.o -c /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/src/main.cpp
+        [100%] Linking CXX executable boo
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/boo.dir/link.txt --verbose=1
+        /usr/bin/c++ -flto=auto -fno-fat-lto-objects CMakeFiles/boo.dir/main.cpp.o -o boo  libfoo.a
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        [100%] Built target boo
+        gmake[1]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        /usr/bin/cmake -E cmake_progress_start /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles 0
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CheckIPOSupported.cmake:138 (try_compile)"
+      - "/usr/share/cmake-3.31/Modules/CheckIPOSupported.cmake:261 (_ipo_run_language_check)"
+      - "CMakeLists.txt:212 (check_ipo_supported)"
+    directories:
+      source: "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/src"
+      binary: "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin"
+    buildResult:
+      variable: "_IPO_LANGUAGE_CHECK_RESULT"
+      cached: true
+      stdout: |
+        Change Dir: '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile
+        /usr/bin/cmake -S/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/src -B/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin --check-build-system CMakeFiles/Makefile.cmake 0
+        /usr/bin/cmake -E cmake_progress_start /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin//CMakeFiles/progress.marks
+        /usr/bin/gmake  -f CMakeFiles/Makefile2 all
+        gmake[1]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        /usr/bin/gmake  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/depend
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        cd /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/src /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/src /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/DependInfo.cmake
+        Dependee "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/DependInfo.cmake" is newer than depender "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/depend.internal".
+        Dependee "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/depend.internal".
+        Scanning dependencies of target foo
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        /usr/bin/gmake  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/build
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        [ 25%] Building C object CMakeFiles/foo.dir/foo.c.o
+        /usr/bin/cc   -flto=auto -fno-fat-lto-objects -o CMakeFiles/foo.dir/foo.c.o -c /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/src/foo.c
+        [ 50%] Linking C static library libfoo.a
+        /usr/bin/cmake -P CMakeFiles/foo.dir/cmake_clean_target.cmake
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/foo.dir/link.txt --verbose=1
+        "/usr/bin/gcc-ar-15" qc libfoo.a CMakeFiles/foo.dir/foo.c.o
+        "/usr/bin/gcc-ranlib-15" libfoo.a
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        [ 50%] Built target foo
+        /usr/bin/gmake  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/depend
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        cd /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/src /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/src /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/DependInfo.cmake
+        Dependee "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/DependInfo.cmake" is newer than depender "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/depend.internal".
+        Dependee "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/depend.internal".
+        Scanning dependencies of target boo
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        /usr/bin/gmake  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/build
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        [ 75%] Building C object CMakeFiles/boo.dir/main.c.o
+        /usr/bin/cc   -flto=auto -fno-fat-lto-objects -o CMakeFiles/boo.dir/main.c.o -c /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/src/main.c
+        [100%] Linking C executable boo
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/boo.dir/link.txt --verbose=1
+        /usr/bin/cc -flto=auto -fno-fat-lto-objects CMakeFiles/boo.dir/main.c.o -o boo  libfoo.a
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        [100%] Built target boo
+        gmake[1]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        /usr/bin/cmake -E cmake_progress_start /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles 0
+        
+      exitCode: 0
+...
+
+---
+events:
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CheckIPOSupported.cmake:138 (try_compile)"
+      - "/usr/share/cmake-3.31/Modules/CheckIPOSupported.cmake:261 (_ipo_run_language_check)"
+      - "CMakeLists.txt:212 (check_ipo_supported)"
+    directories:
+      source: "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/src"
+      binary: "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin"
+    buildResult:
+      variable: "_IPO_LANGUAGE_CHECK_RESULT"
+      cached: true
+      stdout: |
+        Change Dir: '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile
+        /usr/bin/cmake -S/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/src -B/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin --check-build-system CMakeFiles/Makefile.cmake 0
+        /usr/bin/cmake -E cmake_progress_start /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin//CMakeFiles/progress.marks
+        /usr/bin/gmake  -f CMakeFiles/Makefile2 all
+        gmake[1]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        /usr/bin/gmake  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/depend
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        cd /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/src /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/src /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/DependInfo.cmake
+        Dependee "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/DependInfo.cmake" is newer than depender "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/depend.internal".
+        Dependee "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/depend.internal".
+        Scanning dependencies of target foo
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        /usr/bin/gmake  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/build
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        [ 25%] Building CXX object CMakeFiles/foo.dir/foo.cpp.o
+        /usr/bin/c++   -flto=auto -fno-fat-lto-objects -o CMakeFiles/foo.dir/foo.cpp.o -c /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/src/foo.cpp
+        [ 50%] Linking CXX static library libfoo.a
+        /usr/bin/cmake -P CMakeFiles/foo.dir/cmake_clean_target.cmake
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/foo.dir/link.txt --verbose=1
+        "/usr/bin/gcc-ar-15" qc libfoo.a CMakeFiles/foo.dir/foo.cpp.o
+        "/usr/bin/gcc-ranlib-15" libfoo.a
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        [ 50%] Built target foo
+        /usr/bin/gmake  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/depend
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        cd /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/src /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/src /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/DependInfo.cmake
+        Dependee "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/DependInfo.cmake" is newer than depender "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/depend.internal".
+        Dependee "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/depend.internal".
+        Scanning dependencies of target boo
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        /usr/bin/gmake  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/build
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        [ 75%] Building CXX object CMakeFiles/boo.dir/main.cpp.o
+        /usr/bin/c++   -flto=auto -fno-fat-lto-objects -o CMakeFiles/boo.dir/main.cpp.o -c /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/src/main.cpp
+        [100%] Linking CXX executable boo
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/boo.dir/link.txt --verbose=1
+        /usr/bin/c++ -flto=auto -fno-fat-lto-objects CMakeFiles/boo.dir/main.cpp.o -o boo  libfoo.a
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        [100%] Built target boo
+        gmake[1]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        /usr/bin/cmake -E cmake_progress_start /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles 0
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CheckIPOSupported.cmake:138 (try_compile)"
+      - "/usr/share/cmake-3.31/Modules/CheckIPOSupported.cmake:261 (_ipo_run_language_check)"
+      - "CMakeLists.txt:212 (check_ipo_supported)"
+    directories:
+      source: "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/src"
+      binary: "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin"
+    buildResult:
+      variable: "_IPO_LANGUAGE_CHECK_RESULT"
+      cached: true
+      stdout: |
+        Change Dir: '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile
+        /usr/bin/cmake -S/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/src -B/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin --check-build-system CMakeFiles/Makefile.cmake 0
+        /usr/bin/cmake -E cmake_progress_start /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin//CMakeFiles/progress.marks
+        /usr/bin/gmake  -f CMakeFiles/Makefile2 all
+        gmake[1]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        /usr/bin/gmake  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/depend
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        cd /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/src /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/src /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/DependInfo.cmake
+        Dependee "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/DependInfo.cmake" is newer than depender "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/depend.internal".
+        Dependee "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/depend.internal".
+        Scanning dependencies of target foo
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        /usr/bin/gmake  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/build
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        [ 25%] Building C object CMakeFiles/foo.dir/foo.c.o
+        /usr/bin/cc   -flto=auto -fno-fat-lto-objects -o CMakeFiles/foo.dir/foo.c.o -c /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/src/foo.c
+        [ 50%] Linking C static library libfoo.a
+        /usr/bin/cmake -P CMakeFiles/foo.dir/cmake_clean_target.cmake
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/foo.dir/link.txt --verbose=1
+        "/usr/bin/gcc-ar-15" qc libfoo.a CMakeFiles/foo.dir/foo.c.o
+        "/usr/bin/gcc-ranlib-15" libfoo.a
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        [ 50%] Built target foo
+        /usr/bin/gmake  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/depend
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        cd /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/src /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/src /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/DependInfo.cmake
+        Dependee "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/DependInfo.cmake" is newer than depender "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/depend.internal".
+        Dependee "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/depend.internal".
+        Scanning dependencies of target boo
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        /usr/bin/gmake  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/build
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        [ 75%] Building C object CMakeFiles/boo.dir/main.c.o
+        /usr/bin/cc   -flto=auto -fno-fat-lto-objects -o CMakeFiles/boo.dir/main.c.o -c /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/src/main.c
+        [100%] Linking C executable boo
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/boo.dir/link.txt --verbose=1
+        /usr/bin/cc -flto=auto -fno-fat-lto-objects CMakeFiles/boo.dir/main.c.o -o boo  libfoo.a
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        [100%] Built target boo
+        gmake[1]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        /usr/bin/cmake -E cmake_progress_start /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles 0
+        
+      exitCode: 0
+...
+
+---
+events:
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CheckIPOSupported.cmake:138 (try_compile)"
+      - "/usr/share/cmake-3.31/Modules/CheckIPOSupported.cmake:261 (_ipo_run_language_check)"
+      - "CMakeLists.txt:212 (check_ipo_supported)"
+    directories:
+      source: "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/src"
+      binary: "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin"
+    buildResult:
+      variable: "_IPO_LANGUAGE_CHECK_RESULT"
+      cached: true
+      stdout: |
+        Change Dir: '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile
+        /usr/bin/cmake -S/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/src -B/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin --check-build-system CMakeFiles/Makefile.cmake 0
+        /usr/bin/cmake -E cmake_progress_start /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin//CMakeFiles/progress.marks
+        /usr/bin/gmake  -f CMakeFiles/Makefile2 all
+        gmake[1]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        /usr/bin/gmake  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/depend
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        cd /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/src /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/src /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/DependInfo.cmake
+        Dependee "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/DependInfo.cmake" is newer than depender "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/depend.internal".
+        Dependee "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/depend.internal".
+        Scanning dependencies of target foo
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        /usr/bin/gmake  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/build
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        [ 25%] Building CXX object CMakeFiles/foo.dir/foo.cpp.o
+        /usr/bin/c++   -flto=auto -fno-fat-lto-objects -o CMakeFiles/foo.dir/foo.cpp.o -c /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/src/foo.cpp
+        [ 50%] Linking CXX static library libfoo.a
+        /usr/bin/cmake -P CMakeFiles/foo.dir/cmake_clean_target.cmake
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/foo.dir/link.txt --verbose=1
+        "/usr/bin/gcc-ar-15" qc libfoo.a CMakeFiles/foo.dir/foo.cpp.o
+        "/usr/bin/gcc-ranlib-15" libfoo.a
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        [ 50%] Built target foo
+        /usr/bin/gmake  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/depend
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        cd /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/src /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/src /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/DependInfo.cmake
+        Dependee "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/DependInfo.cmake" is newer than depender "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/depend.internal".
+        Dependee "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/depend.internal".
+        Scanning dependencies of target boo
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        /usr/bin/gmake  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/build
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        [ 75%] Building CXX object CMakeFiles/boo.dir/main.cpp.o
+        /usr/bin/c++   -flto=auto -fno-fat-lto-objects -o CMakeFiles/boo.dir/main.cpp.o -c /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/src/main.cpp
+        [100%] Linking CXX executable boo
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/boo.dir/link.txt --verbose=1
+        /usr/bin/c++ -flto=auto -fno-fat-lto-objects CMakeFiles/boo.dir/main.cpp.o -o boo  libfoo.a
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        [100%] Built target boo
+        gmake[1]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        /usr/bin/cmake -E cmake_progress_start /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles 0
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CheckIPOSupported.cmake:138 (try_compile)"
+      - "/usr/share/cmake-3.31/Modules/CheckIPOSupported.cmake:261 (_ipo_run_language_check)"
+      - "CMakeLists.txt:212 (check_ipo_supported)"
+    directories:
+      source: "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/src"
+      binary: "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin"
+    buildResult:
+      variable: "_IPO_LANGUAGE_CHECK_RESULT"
+      cached: true
+      stdout: |
+        Change Dir: '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile
+        /usr/bin/cmake -S/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/src -B/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin --check-build-system CMakeFiles/Makefile.cmake 0
+        /usr/bin/cmake -E cmake_progress_start /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin//CMakeFiles/progress.marks
+        /usr/bin/gmake  -f CMakeFiles/Makefile2 all
+        gmake[1]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        /usr/bin/gmake  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/depend
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        cd /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/src /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/src /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/DependInfo.cmake
+        Dependee "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/DependInfo.cmake" is newer than depender "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/depend.internal".
+        Dependee "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/depend.internal".
+        Scanning dependencies of target foo
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        /usr/bin/gmake  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/build
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        [ 25%] Building C object CMakeFiles/foo.dir/foo.c.o
+        /usr/bin/cc   -flto=auto -fno-fat-lto-objects -o CMakeFiles/foo.dir/foo.c.o -c /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/src/foo.c
+        [ 50%] Linking C static library libfoo.a
+        /usr/bin/cmake -P CMakeFiles/foo.dir/cmake_clean_target.cmake
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/foo.dir/link.txt --verbose=1
+        "/usr/bin/gcc-ar-15" qc libfoo.a CMakeFiles/foo.dir/foo.c.o
+        "/usr/bin/gcc-ranlib-15" libfoo.a
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        [ 50%] Built target foo
+        /usr/bin/gmake  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/depend
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        cd /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/src /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/src /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/DependInfo.cmake
+        Dependee "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/DependInfo.cmake" is newer than depender "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/depend.internal".
+        Dependee "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/depend.internal".
+        Scanning dependencies of target boo
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        /usr/bin/gmake  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/build
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        [ 75%] Building C object CMakeFiles/boo.dir/main.c.o
+        /usr/bin/cc   -flto=auto -fno-fat-lto-objects -o CMakeFiles/boo.dir/main.c.o -c /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/src/main.c
+        [100%] Linking C executable boo
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/boo.dir/link.txt --verbose=1
+        /usr/bin/cc -flto=auto -fno-fat-lto-objects CMakeFiles/boo.dir/main.c.o -o boo  libfoo.a
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        [100%] Built target boo
+        gmake[1]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin'
+        /usr/bin/cmake -E cmake_progress_start /data/projects/roguelike-4/build-release/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles 0
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/Internal/CheckSourceCompiles.cmake:108 (try_compile)"
+      - "/usr/share/cmake-3.31/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.31/Modules/CheckCCompilerFlag.cmake:56 (cmake_check_compiler_flag)"
+      - "build-release/_deps/raylib-src/cmake/AddIfFlagCompiles.cmake:3 (CHECK_C_COMPILER_FLAG)"
+      - "build-release/_deps/raylib-src/cmake/CompilerFlags.cmake:5 (add_if_flag_compiles)"
+      - "build-release/_deps/raylib-src/CMakeLists.txt:34 (include)"
+    checks:
+      - "Performing Test COMPILER_HAS_THOSE_TOGGLES"
+    directories:
+      source: "/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-Gk2C6b"
+      binary: "/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-Gk2C6b"
+    cmakeVariables:
+      CMAKE_C_FLAGS: ""
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: "/data/projects/roguelike-4/build-release/_deps/raylib-src/cmake"
+    buildResult:
+      variable: "COMPILER_HAS_THOSE_TOGGLES"
+      cached: true
+      stdout: |
+        Change Dir: '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-Gk2C6b'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_11557/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_11557.dir/build.make CMakeFiles/cmTC_11557.dir/build
+        gmake[1]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-Gk2C6b'
+        Building C object CMakeFiles/cmTC_11557.dir/src.c.o
+        /usr/bin/cc -DCOMPILER_HAS_THOSE_TOGGLES  -Werror=pointer-arith -o CMakeFiles/cmTC_11557.dir/src.c.o -c /data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-Gk2C6b/src.c
+        Linking C executable cmTC_11557
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_11557.dir/link.txt --verbose=1
+        /usr/bin/cc CMakeFiles/cmTC_11557.dir/src.c.o -o cmTC_11557
+        gmake[1]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-Gk2C6b'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/Internal/CheckSourceCompiles.cmake:108 (try_compile)"
+      - "/usr/share/cmake-3.31/Modules/CheckCSourceCompiles.cmake:58 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.31/Modules/FindThreads.cmake:97 (CHECK_C_SOURCE_COMPILES)"
+      - "/usr/share/cmake-3.31/Modules/FindThreads.cmake:163 (_threads_check_libc)"
+      - "build-release/_deps/raylib-src/src/external/glfw/CMakeLists.txt:60 (find_package)"
+    checks:
+      - "Performing Test CMAKE_HAVE_LIBC_PTHREAD"
+    directories:
+      source: "/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-ppP4rJ"
+      binary: "/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-ppP4rJ"
+    cmakeVariables:
+      CMAKE_C_FLAGS: "-fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith "
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: "/data/projects/roguelike-4/build-release/_deps/raylib-src/cmake;/data/projects/roguelike-4/build-release/_deps/raylib-src/src/external/glfw/CMake/modules"
+    buildResult:
+      variable: "CMAKE_HAVE_LIBC_PTHREAD"
+      cached: true
+      stdout: |
+        Change Dir: '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-ppP4rJ'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_11dfc/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_11dfc.dir/build.make CMakeFiles/cmTC_11dfc.dir/build
+        gmake[1]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-ppP4rJ'
+        Building C object CMakeFiles/cmTC_11dfc.dir/src.c.o
+        /usr/bin/cc -DCMAKE_HAVE_LIBC_PTHREAD  -fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith   -o CMakeFiles/cmTC_11dfc.dir/src.c.o -c /data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-ppP4rJ/src.c
+        Linking C executable cmTC_11dfc
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_11dfc.dir/link.txt --verbose=1
+        /usr/bin/cc -fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith   CMakeFiles/cmTC_11dfc.dir/src.c.o -o cmTC_11dfc
+        gmake[1]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-ppP4rJ'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CheckLibraryExists.cmake:78 (try_compile)"
+      - "/usr/share/cmake-3.31/Modules/FindX11.cmake:693 (check_library_exists)"
+      - "build-release/_deps/raylib-src/src/external/glfw/src/CMakeLists.txt:181 (find_package)"
+    checks:
+      - "Looking for XOpenDisplay in /usr/lib/x86_64-linux-gnu/libX11.so;/usr/lib/x86_64-linux-gnu/libXext.so"
+    directories:
+      source: "/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-PWTzzz"
+      binary: "/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-PWTzzz"
+    cmakeVariables:
+      CMAKE_C_FLAGS: "-fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith "
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: "/data/projects/roguelike-4/build-release/_deps/raylib-src/cmake;/data/projects/roguelike-4/build-release/_deps/raylib-src/src/external/glfw/CMake/modules"
+    buildResult:
+      variable: "X11_LIB_X11_SOLO"
+      cached: true
+      stdout: |
+        Change Dir: '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-PWTzzz'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_3f2c5/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_3f2c5.dir/build.make CMakeFiles/cmTC_3f2c5.dir/build
+        gmake[1]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-PWTzzz'
+        Building C object CMakeFiles/cmTC_3f2c5.dir/CheckFunctionExists.c.o
+        /usr/bin/cc   -fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith  -DCHECK_FUNCTION_EXISTS=XOpenDisplay -std=gnu99 -o CMakeFiles/cmTC_3f2c5.dir/CheckFunctionExists.c.o -c /data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-PWTzzz/CheckFunctionExists.c
+        Linking C executable cmTC_3f2c5
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_3f2c5.dir/link.txt --verbose=1
+        /usr/bin/cc -fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith  -DCHECK_FUNCTION_EXISTS=XOpenDisplay CMakeFiles/cmTC_3f2c5.dir/CheckFunctionExists.c.o -o cmTC_3f2c5  /usr/lib/x86_64-linux-gnu/libX11.so /usr/lib/x86_64-linux-gnu/libXext.so
+        gmake[1]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-PWTzzz'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CheckFunctionExists.cmake:93 (try_compile)"
+      - "/usr/share/cmake-3.31/Modules/FindX11.cmake:708 (check_function_exists)"
+      - "build-release/_deps/raylib-src/src/external/glfw/src/CMakeLists.txt:181 (find_package)"
+    checks:
+      - "Looking for gethostbyname"
+    directories:
+      source: "/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-ePxKOW"
+      binary: "/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-ePxKOW"
+    cmakeVariables:
+      CMAKE_C_FLAGS: "-fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith "
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: "/data/projects/roguelike-4/build-release/_deps/raylib-src/cmake;/data/projects/roguelike-4/build-release/_deps/raylib-src/src/external/glfw/CMake/modules"
+    buildResult:
+      variable: "CMAKE_HAVE_GETHOSTBYNAME"
+      cached: true
+      stdout: |
+        Change Dir: '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-ePxKOW'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_13e5a/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_13e5a.dir/build.make CMakeFiles/cmTC_13e5a.dir/build
+        gmake[1]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-ePxKOW'
+        Building C object CMakeFiles/cmTC_13e5a.dir/CheckFunctionExists.c.o
+        /usr/bin/cc   -fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith  -DCHECK_FUNCTION_EXISTS=gethostbyname -std=gnu99 -o CMakeFiles/cmTC_13e5a.dir/CheckFunctionExists.c.o -c /data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-ePxKOW/CheckFunctionExists.c
+        Linking C executable cmTC_13e5a
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_13e5a.dir/link.txt --verbose=1
+        /usr/bin/cc -fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith  -DCHECK_FUNCTION_EXISTS=gethostbyname CMakeFiles/cmTC_13e5a.dir/CheckFunctionExists.c.o -o cmTC_13e5a
+        gmake[1]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-ePxKOW'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CheckFunctionExists.cmake:93 (try_compile)"
+      - "/usr/share/cmake-3.31/Modules/FindX11.cmake:722 (check_function_exists)"
+      - "build-release/_deps/raylib-src/src/external/glfw/src/CMakeLists.txt:181 (find_package)"
+    checks:
+      - "Looking for connect"
+    directories:
+      source: "/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-bpgdDq"
+      binary: "/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-bpgdDq"
+    cmakeVariables:
+      CMAKE_C_FLAGS: "-fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith "
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: "/data/projects/roguelike-4/build-release/_deps/raylib-src/cmake;/data/projects/roguelike-4/build-release/_deps/raylib-src/src/external/glfw/CMake/modules"
+    buildResult:
+      variable: "CMAKE_HAVE_CONNECT"
+      cached: true
+      stdout: |
+        Change Dir: '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-bpgdDq'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_07876/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_07876.dir/build.make CMakeFiles/cmTC_07876.dir/build
+        gmake[1]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-bpgdDq'
+        Building C object CMakeFiles/cmTC_07876.dir/CheckFunctionExists.c.o
+        /usr/bin/cc   -fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith  -DCHECK_FUNCTION_EXISTS=connect -std=gnu99 -o CMakeFiles/cmTC_07876.dir/CheckFunctionExists.c.o -c /data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-bpgdDq/CheckFunctionExists.c
+        Linking C executable cmTC_07876
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_07876.dir/link.txt --verbose=1
+        /usr/bin/cc -fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith  -DCHECK_FUNCTION_EXISTS=connect CMakeFiles/cmTC_07876.dir/CheckFunctionExists.c.o -o cmTC_07876
+        gmake[1]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-bpgdDq'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CheckFunctionExists.cmake:93 (try_compile)"
+      - "/usr/share/cmake-3.31/Modules/FindX11.cmake:731 (check_function_exists)"
+      - "build-release/_deps/raylib-src/src/external/glfw/src/CMakeLists.txt:181 (find_package)"
+    checks:
+      - "Looking for remove"
+    directories:
+      source: "/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-u323RH"
+      binary: "/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-u323RH"
+    cmakeVariables:
+      CMAKE_C_FLAGS: "-fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith "
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: "/data/projects/roguelike-4/build-release/_deps/raylib-src/cmake;/data/projects/roguelike-4/build-release/_deps/raylib-src/src/external/glfw/CMake/modules"
+    buildResult:
+      variable: "CMAKE_HAVE_REMOVE"
+      cached: true
+      stdout: |
+        Change Dir: '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-u323RH'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_aa7c4/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_aa7c4.dir/build.make CMakeFiles/cmTC_aa7c4.dir/build
+        gmake[1]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-u323RH'
+        Building C object CMakeFiles/cmTC_aa7c4.dir/CheckFunctionExists.c.o
+        /usr/bin/cc   -fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith  -DCHECK_FUNCTION_EXISTS=remove -std=gnu99 -o CMakeFiles/cmTC_aa7c4.dir/CheckFunctionExists.c.o -c /data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-u323RH/CheckFunctionExists.c
+        Linking C executable cmTC_aa7c4
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_aa7c4.dir/link.txt --verbose=1
+        /usr/bin/cc -fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith  -DCHECK_FUNCTION_EXISTS=remove CMakeFiles/cmTC_aa7c4.dir/CheckFunctionExists.c.o -o cmTC_aa7c4
+        gmake[1]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-u323RH'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CheckFunctionExists.cmake:93 (try_compile)"
+      - "/usr/share/cmake-3.31/Modules/FindX11.cmake:740 (check_function_exists)"
+      - "build-release/_deps/raylib-src/src/external/glfw/src/CMakeLists.txt:181 (find_package)"
+    checks:
+      - "Looking for shmat"
+    directories:
+      source: "/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-kNY4aA"
+      binary: "/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-kNY4aA"
+    cmakeVariables:
+      CMAKE_C_FLAGS: "-fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith "
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: "/data/projects/roguelike-4/build-release/_deps/raylib-src/cmake;/data/projects/roguelike-4/build-release/_deps/raylib-src/src/external/glfw/CMake/modules"
+    buildResult:
+      variable: "CMAKE_HAVE_SHMAT"
+      cached: true
+      stdout: |
+        Change Dir: '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-kNY4aA'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_b5493/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_b5493.dir/build.make CMakeFiles/cmTC_b5493.dir/build
+        gmake[1]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-kNY4aA'
+        Building C object CMakeFiles/cmTC_b5493.dir/CheckFunctionExists.c.o
+        /usr/bin/cc   -fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith  -DCHECK_FUNCTION_EXISTS=shmat -std=gnu99 -o CMakeFiles/cmTC_b5493.dir/CheckFunctionExists.c.o -c /data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-kNY4aA/CheckFunctionExists.c
+        Linking C executable cmTC_b5493
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b5493.dir/link.txt --verbose=1
+        /usr/bin/cc -fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith  -DCHECK_FUNCTION_EXISTS=shmat CMakeFiles/cmTC_b5493.dir/CheckFunctionExists.c.o -o cmTC_b5493
+        gmake[1]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-kNY4aA'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/Internal/CheckSourceCompiles.cmake:108 (try_compile)"
+      - "/usr/share/cmake-3.31/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.31/Modules/CheckCXXCompilerFlag.cmake:55 (cmake_check_compiler_flag)"
+      - "src/third_party/fmt/support/cmake/cxx14.cmake:6 (check_cxx_compiler_flag)"
+      - "src/third_party/fmt/support/cmake/cxx14.cmake:16 (fmt_check_cxx_compiler_flag)"
+      - "src/third_party/fmt/CMakeLists.txt:176 (include)"
+    checks:
+      - "Performing Test has_std_20_flag"
+    directories:
+      source: "/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-OZsGcC"
+      binary: "/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-OZsGcC"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: ""
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: "/data/projects/roguelike-4/src/third_party/fmt/support/cmake"
+    buildResult:
+      variable: "has_std_20_flag"
+      cached: true
+      stdout: |
+        Change Dir: '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-OZsGcC'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_2d8c4/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_2d8c4.dir/build.make CMakeFiles/cmTC_2d8c4.dir/build
+        gmake[1]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-OZsGcC'
+        Building CXX object CMakeFiles/cmTC_2d8c4.dir/src.cxx.o
+        /usr/bin/c++ -Dhas_std_20_flag  -std=c++20 -o CMakeFiles/cmTC_2d8c4.dir/src.cxx.o -c /data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-OZsGcC/src.cxx
+        Linking CXX executable cmTC_2d8c4
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_2d8c4.dir/link.txt --verbose=1
+        /usr/bin/c++ CMakeFiles/cmTC_2d8c4.dir/src.cxx.o -o cmTC_2d8c4
+        gmake[1]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-OZsGcC'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/Internal/CheckSourceCompiles.cmake:108 (try_compile)"
+      - "/usr/share/cmake-3.31/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.31/Modules/CheckCXXCompilerFlag.cmake:55 (cmake_check_compiler_flag)"
+      - "src/third_party/fmt/support/cmake/cxx14.cmake:6 (check_cxx_compiler_flag)"
+      - "src/third_party/fmt/support/cmake/cxx14.cmake:17 (fmt_check_cxx_compiler_flag)"
+      - "src/third_party/fmt/CMakeLists.txt:176 (include)"
+    checks:
+      - "Performing Test has_std_2a_flag"
+    directories:
+      source: "/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-JSBIXA"
+      binary: "/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-JSBIXA"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: ""
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: "/data/projects/roguelike-4/src/third_party/fmt/support/cmake"
+    buildResult:
+      variable: "has_std_2a_flag"
+      cached: true
+      stdout: |
+        Change Dir: '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-JSBIXA'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_ff44b/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_ff44b.dir/build.make CMakeFiles/cmTC_ff44b.dir/build
+        gmake[1]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-JSBIXA'
+        Building CXX object CMakeFiles/cmTC_ff44b.dir/src.cxx.o
+        /usr/bin/c++ -Dhas_std_2a_flag  -std=c++2a -o CMakeFiles/cmTC_ff44b.dir/src.cxx.o -c /data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-JSBIXA/src.cxx
+        Linking CXX executable cmTC_ff44b
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_ff44b.dir/link.txt --verbose=1
+        /usr/bin/c++ CMakeFiles/cmTC_ff44b.dir/src.cxx.o -o cmTC_ff44b
+        gmake[1]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-JSBIXA'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CheckIPOSupported.cmake:138 (try_compile)"
+      - "/usr/share/cmake-3.31/Modules/CheckIPOSupported.cmake:261 (_ipo_run_language_check)"
+      - "src/third_party/tracy-master/CMakeLists.txt:27 (check_ipo_supported)"
+    directories:
+      source: "/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/src"
+      binary: "/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin"
+    buildResult:
+      variable: "_IPO_LANGUAGE_CHECK_RESULT"
+      cached: true
+      stdout: |
+        Change Dir: '/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile
+        /usr/bin/cmake -S/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/src -B/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin --check-build-system CMakeFiles/Makefile.cmake 0
+        /usr/bin/cmake -E cmake_progress_start /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin//CMakeFiles/progress.marks
+        /usr/bin/gmake  -f CMakeFiles/Makefile2 all
+        gmake[1]: Entering directory '/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        /usr/bin/gmake  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/depend
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        cd /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/src /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/src /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/DependInfo.cmake
+        Dependee "/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/DependInfo.cmake" is newer than depender "/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/depend.internal".
+        Dependee "/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/depend.internal".
+        Scanning dependencies of target foo
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        /usr/bin/gmake  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/build
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        [ 25%] Building CXX object CMakeFiles/foo.dir/foo.cpp.o
+        /usr/bin/c++   -flto=auto -fno-fat-lto-objects -o CMakeFiles/foo.dir/foo.cpp.o -c /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/src/foo.cpp
+        [ 50%] Linking CXX static library libfoo.a
+        /usr/bin/cmake -P CMakeFiles/foo.dir/cmake_clean_target.cmake
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/foo.dir/link.txt --verbose=1
+        "/usr/bin/gcc-ar-15" qc libfoo.a CMakeFiles/foo.dir/foo.cpp.o
+        "/usr/bin/gcc-ranlib-15" libfoo.a
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        [ 50%] Built target foo
+        /usr/bin/gmake  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/depend
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        cd /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/src /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/src /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/DependInfo.cmake
+        Dependee "/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/DependInfo.cmake" is newer than depender "/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/depend.internal".
+        Dependee "/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/depend.internal".
+        Scanning dependencies of target boo
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        /usr/bin/gmake  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/build
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        [ 75%] Building CXX object CMakeFiles/boo.dir/main.cpp.o
+        /usr/bin/c++   -flto=auto -fno-fat-lto-objects -o CMakeFiles/boo.dir/main.cpp.o -c /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/src/main.cpp
+        [100%] Linking CXX executable boo
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/boo.dir/link.txt --verbose=1
+        /usr/bin/c++ -flto=auto -fno-fat-lto-objects CMakeFiles/boo.dir/main.cpp.o -o boo  libfoo.a
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        [100%] Built target boo
+        gmake[1]: Leaving directory '/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        /usr/bin/cmake -E cmake_progress_start /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles 0
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CheckIPOSupported.cmake:138 (try_compile)"
+      - "/usr/share/cmake-3.31/Modules/CheckIPOSupported.cmake:261 (_ipo_run_language_check)"
+      - "src/third_party/tracy-master/CMakeLists.txt:27 (check_ipo_supported)"
+    directories:
+      source: "/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/src"
+      binary: "/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin"
+    buildResult:
+      variable: "_IPO_LANGUAGE_CHECK_RESULT"
+      cached: true
+      stdout: |
+        Change Dir: '/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile
+        /usr/bin/cmake -S/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/src -B/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin --check-build-system CMakeFiles/Makefile.cmake 0
+        /usr/bin/cmake -E cmake_progress_start /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin//CMakeFiles/progress.marks
+        /usr/bin/gmake  -f CMakeFiles/Makefile2 all
+        gmake[1]: Entering directory '/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin'
+        /usr/bin/gmake  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/depend
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin'
+        cd /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/src /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/src /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/DependInfo.cmake
+        Dependee "/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/DependInfo.cmake" is newer than depender "/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/depend.internal".
+        Dependee "/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/depend.internal".
+        Scanning dependencies of target foo
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin'
+        /usr/bin/gmake  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/build
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin'
+        [ 25%] Building C object CMakeFiles/foo.dir/foo.c.o
+        /usr/bin/cc   -flto=auto -fno-fat-lto-objects -o CMakeFiles/foo.dir/foo.c.o -c /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/src/foo.c
+        [ 50%] Linking C static library libfoo.a
+        /usr/bin/cmake -P CMakeFiles/foo.dir/cmake_clean_target.cmake
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/foo.dir/link.txt --verbose=1
+        "/usr/bin/gcc-ar-15" qc libfoo.a CMakeFiles/foo.dir/foo.c.o
+        "/usr/bin/gcc-ranlib-15" libfoo.a
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin'
+        [ 50%] Built target foo
+        /usr/bin/gmake  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/depend
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin'
+        cd /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/src /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/src /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/DependInfo.cmake
+        Dependee "/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/DependInfo.cmake" is newer than depender "/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/depend.internal".
+        Dependee "/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/depend.internal".
+        Scanning dependencies of target boo
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin'
+        /usr/bin/gmake  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/build
+        gmake[2]: Entering directory '/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin'
+        [ 75%] Building C object CMakeFiles/boo.dir/main.c.o
+        /usr/bin/cc   -flto=auto -fno-fat-lto-objects -o CMakeFiles/boo.dir/main.c.o -c /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/src/main.c
+        [100%] Linking C executable boo
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/boo.dir/link.txt --verbose=1
+        /usr/bin/cc -flto=auto -fno-fat-lto-objects CMakeFiles/boo.dir/main.c.o -o boo  libfoo.a
+        gmake[2]: Leaving directory '/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin'
+        [100%] Built target boo
+        gmake[1]: Leaving directory '/data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin'
+        /usr/bin/cmake -E cmake_progress_start /data/projects/roguelike-4/build-release/src/third_party/tracy-master/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles 0
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CheckLibraryExists.cmake:78 (try_compile)"
+      - "build-release/_deps/lua-src/CMakeLists.txt:34 (check_library_exists)"
+    checks:
+      - "Looking for sin in m"
+    directories:
+      source: "/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-bnA0Yv"
+      binary: "/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-bnA0Yv"
+    cmakeVariables:
+      CMAKE_C_FLAGS: ""
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_LIB_M"
+      cached: true
+      stdout: |
+        Change Dir: '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-bnA0Yv'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_e983f/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_e983f.dir/build.make CMakeFiles/cmTC_e983f.dir/build
+        gmake[1]: Entering directory '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-bnA0Yv'
+        Building C object CMakeFiles/cmTC_e983f.dir/CheckFunctionExists.c.o
+        /usr/bin/cc   -DCHECK_FUNCTION_EXISTS=sin -o CMakeFiles/cmTC_e983f.dir/CheckFunctionExists.c.o -c /data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-bnA0Yv/CheckFunctionExists.c
+        <command-line>: warning: conflicting types for built-in function ‘sin’; expected ‘double(double)’ [-Wbuiltin-declaration-mismatch]
+        /data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-bnA0Yv/CheckFunctionExists.c:7:3: note: in expansion of macro ‘CHECK_FUNCTION_EXISTS’
+            7 |   CHECK_FUNCTION_EXISTS(void);
+              |   ^~~~~~~~~~~~~~~~~~~~~
+        /data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-bnA0Yv/CheckFunctionExists.c:1:1: note: ‘sin’ is declared in header ‘<math.h>’
+          +++ |+#include <math.h>
+            1 | #ifdef CHECK_FUNCTION_EXISTS
+        Linking C executable cmTC_e983f
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_e983f.dir/link.txt --verbose=1
+        /usr/bin/cc  -DCHECK_FUNCTION_EXISTS=sin CMakeFiles/cmTC_e983f.dir/CheckFunctionExists.c.o -o cmTC_e983f  -lm
+        gmake[1]: Leaving directory '/data/projects/roguelike-4/build-release/CMakeFiles/CMakeScratch/TryCompile-bnA0Yv'
+        
+      exitCode: 0
+...

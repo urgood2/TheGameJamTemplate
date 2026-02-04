@@ -1,0 +1,1 @@
+Basic run with move/attack/wait that forces boss defeat on floor 7.

@@ -1,0 +1,1 @@
+bargain.v1|seed=123|floor=7|turn=1|phase=ENEMY_ACTIONS|run=victory|caps=0|hp=10|stats=hp_lost_total=0;turns_elapsed=1;damage_dealt_total=0;damage_taken_total=0;forced_actions_count=0;denied_actions_count=0;visible_tiles_count=0;resources_spent_total=0|deals=

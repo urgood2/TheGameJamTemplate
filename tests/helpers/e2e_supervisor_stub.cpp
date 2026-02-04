@@ -39,6 +39,7 @@ int main(int argc, char** argv) {
     std::string stdout_msg;
     std::string stderr_msg;
     std::string list_path;
+    bool skip_list_write = false;
     std::string report_path;
     std::string junit_path;
 
@@ -72,6 +73,8 @@ int main(int argc, char** argv) {
             stderr_msg = argv[++i];
         } else if (arg == "--list-tests-json" && i + 1 < argc) {
             list_path = argv[++i];
+        } else if (arg == "--skip-list-write") {
+            skip_list_write = true;
         } else if (arg == "--write-report" && i + 1 < argc) {
             report_path = argv[++i];
         } else if (arg == "--write-junit" && i + 1 < argc) {
@@ -79,7 +82,7 @@ int main(int argc, char** argv) {
         }
     }
 
-    if (!list_path.empty()) {
+    if (!list_path.empty() && !skip_list_write) {
         std::filesystem::path path(list_path);
         std::filesystem::create_directories(path.parent_path());
         std::ofstream out(path);

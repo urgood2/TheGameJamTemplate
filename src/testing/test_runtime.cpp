@@ -257,13 +257,13 @@ bool TestRuntime::initialize(const TestModeConfig& config) {
         perf_tracker_->initialize(config_);
     }
     if (screenshot_capture_) {
-        screenshot_capture_->set_size(config_.resolution_width, config_.resolution_height);
+        screenshot_capture_->initialize(config_);
     }
     if (forensics_) {
         forensics_->initialize(config_, *this);
     }
     if (timeline_writer_) {
-        timeline_writer_->open(config_.forensics_dir / "timeline.jsonl");
+        timeline_writer_->initialize(config_);
     }
 
     running_ = true;

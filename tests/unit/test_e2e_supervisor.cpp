@@ -227,6 +227,23 @@ TEST(E2ESupervisor, RunListCommandTimeout) {
     EXPECT_EQ(code, 3);
 }
 
+TEST(E2ESupervisor, RunListCommandMissingOutput) {
+    fs::path stub = find_stub_path();
+    ASSERT_FALSE(stub.empty());
+
+    e2e_supervisor::ParsedArgs parsed;
+    parsed.subcommand = "list";
+    parsed.options.timeout_seconds = 5;
+    parsed.game_args = {stub.string(), "--skip-list-write"};
+
+    std::string out_stdout;
+    std::string out_stderr;
+    int code = e2e_supervisor::run_list_command(parsed, out_stdout, out_stderr);
+
+    EXPECT_EQ(code, 2);
+    EXPECT_NE(out_stderr.find("list output missing"), std::string::npos);
+}
+
 TEST(E2ESupervisor, SalvageOnTimeoutWritesManifestAndStderr) {
     fs::path stub = find_stub_path();
     ASSERT_FALSE(stub.empty());
@@ -300,6 +317,22 @@ TEST(E2ESupervisor, RunRunCommandCapturesStdoutStderr) {
     EXPECT_EQ(code, 0);
     EXPECT_NE(out_stdout.find("hello"), std::string::npos);
     EXPECT_NE(out_stderr.find("oops"), std::string::npos);
+}
+
+TEST(E2ESupervisor, RunRunCommandUnknownExitMapsToCrash) {
+    fs::path stub = find_stub_path();
+    ASSERT_FALSE(stub.empty());
+
+    e2e_supervisor::ParsedArgs parsed;
+    parsed.subcommand = "run";
+    parsed.options.timeout_seconds = 5;
+    parsed.game_args = {stub.string(), "--exit-code", "5"};
+
+    std::string out_stdout;
+    std::string out_stderr;
+    int code = e2e_supervisor::run_run_command(parsed, out_stdout, out_stderr);
+
+    EXPECT_EQ(code, 4);
 }
 
 } // namespace

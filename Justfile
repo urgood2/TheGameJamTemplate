@@ -122,6 +122,26 @@ ui-test-all: test-ui-sizing
 	@(AUTO_START_MAIN_GAME=1 RUN_REAL_INVENTORY_TEST=1 AUTO_EXIT_AFTER_TEST=1 ./build/raylib-cpp-cmake-template 2>&1 & sleep 15; kill $! 2>/dev/null) | grep -E "(VALIDATION|PASS|FAIL|warning|error)" || true
 
 # =============================================================================
+# Bargain MVP Testing (Headless)
+# =============================================================================
+
+# Run Bargain tests in headless mode (no window init)
+# Requires a built binary. Uses RUN_BARGAIN_TESTS=1 env var.
+test-bargain:
+	@echo "Running Bargain tests in headless mode..."
+	RUN_BARGAIN_TESTS=1 ./build-debug/raylib-cpp-cmake-template
+
+# Run Bargain tests with release build
+test-bargain-release:
+	@echo "Running Bargain tests (release) in headless mode..."
+	RUN_BARGAIN_TESTS=1 ./build-release/raylib-cpp-cmake-template
+
+# Build and run Bargain tests
+build-and-test-bargain:
+	@just build-debug-fast
+	@just test-bargain
+
+# =============================================================================
 # Utilities
 # =============================================================================
 ccache-stats:

@@ -50,6 +50,7 @@ local Constants = {}
 ---@field SENSOR string
 ---@field SPIKE_HAZARD string
 ---@field PICKUP string
+---@field SERPENT_SEGMENT string
 Constants.CollisionTags = {
     PLAYER = "player",
     ENEMY = "enemy",
@@ -59,6 +60,7 @@ Constants.CollisionTags = {
     SENSOR = "sensor",
     SPIKE_HAZARD = "spike_hazard",
     PICKUP = "pickup",
+    SERPENT_SEGMENT = "serpent_segment",
 }
 
 --===========================================================================
@@ -398,6 +400,20 @@ Constants.Colors = {
     UI_BACKGROUND = { r = 30, g = 30, b = 40, a = 220 },
     UI_TEXT = { r = 240, g = 240, b = 240, a = 255 },
     UI_TEXT_DIM = { r = 160, g = 160, b = 160, a = 255 },
+}
+
+--===========================================================================
+-- TIMER GROUPS
+-- Named groups for timer management and cleanup
+--===========================================================================
+---@class TimerGroups
+---@field SERPENT string Serpent minigame timer group
+---@field MAIN string Main game timer group
+---@field UI string UI timer group
+Constants.TimerGroups = {
+    SERPENT = "serpent",
+    MAIN = "main",
+    UI = "ui",
 }
 
 --===========================================================================

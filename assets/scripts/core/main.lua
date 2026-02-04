@@ -28,6 +28,7 @@ local TutorialDialogueDemo = require("tutorial.dialogue.demo")
 local LightingDemo = require("demos.lighting_demo")
 local UIFillerDemo = require("demos.ui_filler_demo")
 -- local RenderGroupsTest = require("tests.test_render_groups_visual") -- Visual test for render groups (disabled: DrawRenderGroup command not registered)
+local Serpent = require("serpent.Serpent")
 local SpecialItem = require("core.special_item")
 SaveManager = require("core.save_manager") -- Global for C++ debug UI access
 local PatchNotesModal = require("ui.patch_notes_modal")
@@ -44,7 +45,8 @@ PROFILE_ENABLED = false -- set to true to enable profiling
 -- Game state (used only in lua)
 GAMESTATE = {
     MAIN_MENU = 0,
-    IN_GAME = 1
+    IN_GAME = 1,
+    SERPENT = 2
 }
 
 shapeAnimationPhase = 0
@@ -274,6 +276,13 @@ function initMainMenu()
                 -- Open character select instead of starting directly
                 CharacterSelect.open()
                 CharacterSelect.spawnPanel()
+            end
+        },
+        {
+            label = localization.get("ui.serpent_button"),
+            onClick = function()
+                record_telemetry("serpent_game_clicked", { scene = "main_menu" })
+                changeGameState(GAMESTATE.SERPENT)
             end
         },
         {
@@ -1093,11 +1102,24 @@ function changeGameState(newState)
     if currentGameState == GAMESTATE.MAIN_MENU and newState ~= GAMESTATE.MAIN_MENU then
         clearMainMenu()
     end
+    if currentGameState == GAMESTATE.SERPENT and newState ~= GAMESTATE.SERPENT then
+        local serpent = Serpent or require("serpent.serpent_main")
+        Serpent = serpent
+        if serpent and serpent.cleanup then
+            serpent.cleanup()
+        end
+    end
 
     if newState == GAMESTATE.MAIN_MENU then
         initMainMenu()
     elseif newState == GAMESTATE.IN_GAME then
         initMainGame()
+    elseif newState == GAMESTATE.SERPENT then
+        local serpent = Serpent or require("serpent.serpent_main")
+        Serpent = serpent
+        if serpent and serpent.init then
+            serpent.init()
+        end
     else
         error("Invalid game state: " .. tostring(newState))
     end
@@ -1391,6 +1413,10 @@ function main.update(dt)
                 mainMenuEntities.mainMenuButtons.handleKeyDown("ENTER")
             end
         end
+    end
+
+    if (currentGameState == GAMESTATE.SERPENT) then
+        Serpent.update(dt)
     end
 
     if isPaused then

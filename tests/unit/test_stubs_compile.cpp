@@ -2,6 +2,7 @@
 
 #include <filesystem>
 
+#include "sol/sol.hpp"
 #include "testing/artifact_index.hpp"
 #include "testing/artifact_store.hpp"
 #include "testing/baseline_manager.hpp"
@@ -43,9 +44,17 @@ TEST(StubsCompile, AllHeadersIncludable) {
     testing::TestInputEvent out_event{};
     EXPECT_TRUE(provider.dequeue(out_event));
 
+    sol::state lua;
+    lua.open_libraries(sol::lib::base);
+    testing::TestApiRegistry registry;
+    registry.register_state_path({"root", "string", true, "root value"});
     testing::LuaStateQuery query;
-    std::string out;
-    EXPECT_FALSE(query.query_path("root", out));
+    query.initialize(registry, lua.lua_state());
+    auto root_value = query.get_state("root");
+    EXPECT_TRUE(root_value.ok());
+    testing::LuaValue new_value;
+    new_value.value = sol::make_object(lua, "ready");
+    EXPECT_TRUE(query.set_state("root", new_value));
 
     testing::LuaSandbox sandbox;
     sandbox.set_enabled(true);
@@ -63,8 +72,8 @@ TEST(StubsCompile, AllHeadersIncludable) {
     EXPECT_FALSE(logs.empty());
 
     testing::BaselineManager baseline;
-    baseline.set_root("tests/baselines");
-    EXPECT_FALSE(baseline.resolve("key").empty());
+    baseline.initialize(config);
+    EXPECT_FALSE(baseline.get_baseline_dir("key").empty());
 
     testing::PathSandbox sandbox_paths;
     config.run_root = fs::path("tests") / "out" / "stubs_run";
@@ -91,10 +100,11 @@ TEST(StubsCompile, AllHeadersIncludable) {
     guard.end_frame();
 
     testing::PerfTracker perf;
-    perf.record_frame_ms(1.0);
-    EXPECT_GT(perf.average_ms(), 0.0);
+    config.perf_mode = testing::PerfMode::Collect;
+    perf.initialize(config);
+    perf.record_frame(1, 1.0f, 2.0f);
+    EXPECT_EQ(perf.get_current_metrics().frame_count, 1);
 
-    testing::TestApiRegistry registry;
     registry.set_version("1.0.0");
     registry.register_state_path({"game.ready", "boolean", false, "Game ready flag"});
     registry.register_query({"ui.element_rect", {{"name", "string", true, "element name"}}, "table", "Get rect"});

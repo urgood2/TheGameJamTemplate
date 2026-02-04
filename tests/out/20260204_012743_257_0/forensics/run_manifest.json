@@ -1,0 +1,20 @@
+{
+  "args": [],
+  "determinism_pins": {
+    "ftz_daz": true,
+    "locale": "C",
+    "network_mode": "deny",
+    "rounding": "nearest",
+    "thread_mode": "single",
+    "timezone": "UTC"
+  },
+  "platform": "linux",
+  "resolution": "1280x720",
+  "schema_version": "1.0.0",
+  "seed": 1,
+  "shard": 1,
+  "test_api_fingerprint": "fnv64:afaa3fc944f8004b",
+  "timeout_seconds": 600,
+  "timestamp": "2026-02-04T01:27:49Z",
+  "total_shards": 1
+}

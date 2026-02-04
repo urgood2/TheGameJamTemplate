@@ -1,0 +1,50 @@
+{
+  "capabilities": {
+    "screenshots": true
+  },
+  "commands": [
+    {
+      "arguments": [
+        {
+          "description": "scene name",
+          "name": "name",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "description": "Load scene",
+      "name": "scene.load"
+    }
+  ],
+  "queries": [
+    {
+      "arguments": [
+        {
+          "description": "element name",
+          "name": "name",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "description": "Get rect",
+      "name": "ui.element_rect",
+      "returns": "table"
+    }
+  ],
+  "schema_version": "1.0.0",
+  "state_paths": [
+    {
+      "description": "Game ready flag",
+      "path": "game.ready",
+      "type": "boolean",
+      "writable": false
+    },
+    {
+      "description": "root value",
+      "path": "root",
+      "type": "string",
+      "writable": true
+    }
+  ],
+  "version": "1.0.0"
+}

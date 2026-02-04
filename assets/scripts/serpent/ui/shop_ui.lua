@@ -309,6 +309,12 @@ end
 --- @return table View model with affordability and labels
 function shop_ui.get_view_model(shop_state, snake_state, gold, unit_defs)
     local offers = shop_state and shop_state.offers or {}
+
+    -- Calculate ready button enabled state based on minimum snake length
+    local snake_len = snake_state and snake_state.segments and #snake_state.segments or 0
+    local min_len = snake_state and snake_state.min_len or 3
+    local ready_enabled = snake_len >= min_len
+
     local view_model = {
         gold = gold,
         offers = {},
@@ -317,7 +323,9 @@ function shop_ui.get_view_model(shop_state, snake_state, gold, unit_defs)
             can_afford = false,
         },
         ready = {
-            enabled = true,
+            enabled = ready_enabled,
+            current_length = snake_len,
+            min_length = min_len
         }
     }
 
@@ -345,6 +353,63 @@ function shop_ui.get_view_model(shop_state, snake_state, gold, unit_defs)
         end
 
         view_model.offers[i] = slot_data
+    end
+
+    return view_model
+end
+
+--- Get sell button view-model data for all snake segments
+--- @param snake_state table Current snake state
+--- @param unit_defs table Unit definitions for display names
+--- @return table View model with segments and sell status
+function shop_ui.get_sell_view_model(snake_state, unit_defs)
+    local snake_logic = require("serpent.snake_logic")
+
+    local view_model = {
+        segments = {},
+        any_sellable = false,
+        total_segments = 0,
+        min_length = 3,
+        can_sell_count = 0
+    }
+
+    if not snake_state or not snake_state.segments then
+        return view_model
+    end
+
+    local segments = snake_state.segments
+    view_model.total_segments = #segments
+    view_model.min_length = snake_state.min_len or 3
+
+    for i, segment in ipairs(segments) do
+        if segment then
+            local can_sell = snake_logic.can_sell(snake_state, segment.instance_id)
+            local unit_def = unit_defs and unit_defs[segment.def_id]
+
+            local segment_data = {
+                index = i,
+                instance_id = segment.instance_id,
+                def_id = segment.def_id,
+                unit_name = unit_def and unit_def.name or segment.def_id,
+                level = segment.level or 1,
+                hp = segment.hp or 0,
+                hp_max = segment.hp_max_base or 100,
+                can_sell = can_sell,
+                sell_blocked_reason = nil
+            }
+
+            -- Provide reason if sell is blocked
+            if not can_sell then
+                segment_data.sell_blocked_reason = "Would reduce snake below minimum length"
+            end
+
+            if can_sell then
+                view_model.can_sell_count = view_model.can_sell_count + 1
+                view_model.any_sellable = true
+            end
+
+            view_model.segments[i] = segment_data
+        end
     end
 
     return view_model

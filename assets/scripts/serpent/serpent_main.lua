@@ -10,6 +10,10 @@ local serpent_main = serpent_main or {}
 local snake_entity_adapter = require("serpent.snake_entity_adapter")
 local contact_collector_adapter = require("serpent.contact_collector_adapter")
 local C = require("core.constants")
+local signal = require("external.hump.signal")
+
+-- Track if signal handlers are registered (avoid duplicate registration)
+local signal_handlers_registered = false
 
 -- MODE_STATE enum for the Serpent game state machine
 MODE_STATE = {
@@ -22,6 +26,18 @@ MODE_STATE = {
 -- Current game state
 local currentMode = MODE_STATE.SHOP
 
+-- Run statistics for end screens
+local run_stats = {
+    waves_cleared = 0,
+    gold_earned = 0,
+    units_purchased = 0,
+    enemies_killed = 0,
+    damage_dealt = 0,
+    damage_taken = 0,
+    run_start_time = 0,
+    run_end_time = 0
+}
+
 -- Physics callback registration (global, once only)
 local physics_callbacks_registered = false
 
@@ -31,6 +47,9 @@ function serpent_main.init()
 
     -- Reset to initial state
     currentMode = MODE_STATE.SHOP
+
+    -- Reset run statistics for new game
+    serpent_main.reset_run_stats()
 
     -- Register physics callbacks once globally
     if not physics_callbacks_registered then
@@ -47,6 +66,9 @@ function serpent_main.init()
 
     -- Spawn test segment entities to verify SERPENT_SEGMENT tagging
     spawn_test_segments()
+
+    -- Register signal handlers for UI callbacks
+    serpent_main.register_signal_handlers()
 
     -- TODO: Initialize game systems
     -- - Shop UI
@@ -89,6 +111,9 @@ function serpent_main.cleanup()
     if timer and timer.kill_group then
         timer.kill_group(C.TimerGroups.SERPENT)
     end
+
+    -- Unregister signal handlers
+    serpent_main.unregister_signal_handlers()
 
     -- TODO: Cleanup game systems
     -- - Destroy entities
@@ -144,6 +169,83 @@ function serpent_main.getMode()
     return currentMode
 end
 
+--- Reset run stats for a new run
+function serpent_main.reset_run_stats()
+    run_stats.waves_cleared = 0
+    run_stats.gold_earned = 0
+    run_stats.units_purchased = 0
+    run_stats.enemies_killed = 0
+    run_stats.damage_dealt = 0
+    run_stats.damage_taken = 0
+    run_stats.run_start_time = love and love.timer and love.timer.getTime() or os.time()
+    run_stats.run_end_time = 0
+    log_debug("[Serpent] Run stats reset")
+end
+
+--- Get current run stats (returns a copy to prevent external modification)
+--- @return table Copy of current run stats
+function serpent_main.get_run_stats()
+    return {
+        waves_cleared = run_stats.waves_cleared,
+        gold_earned = run_stats.gold_earned,
+        units_purchased = run_stats.units_purchased,
+        enemies_killed = run_stats.enemies_killed,
+        damage_dealt = run_stats.damage_dealt,
+        damage_taken = run_stats.damage_taken,
+        run_duration = (run_stats.run_end_time > 0 and run_stats.run_end_time or
+                       (love and love.timer and love.timer.getTime() or os.time())) - run_stats.run_start_time
+    }
+end
+
+--- Record a wave being cleared
+function serpent_main.record_wave_cleared()
+    run_stats.waves_cleared = run_stats.waves_cleared + 1
+    log_debug(string.format("[Serpent] Wave cleared, total: %d", run_stats.waves_cleared))
+end
+
+--- Record gold earned
+--- @param amount number Amount of gold earned
+function serpent_main.record_gold_earned(amount)
+    if amount and amount > 0 then
+        run_stats.gold_earned = run_stats.gold_earned + amount
+        log_debug(string.format("[Serpent] Gold earned: +%d, total: %d", amount, run_stats.gold_earned))
+    end
+end
+
+--- Record a unit purchase
+function serpent_main.record_unit_purchased()
+    run_stats.units_purchased = run_stats.units_purchased + 1
+    log_debug(string.format("[Serpent] Unit purchased, total: %d", run_stats.units_purchased))
+end
+
+--- Record an enemy kill
+function serpent_main.record_enemy_killed()
+    run_stats.enemies_killed = run_stats.enemies_killed + 1
+end
+
+--- Record damage dealt
+--- @param amount number Amount of damage dealt
+function serpent_main.record_damage_dealt(amount)
+    if amount and amount > 0 then
+        run_stats.damage_dealt = run_stats.damage_dealt + amount
+    end
+end
+
+--- Record damage taken
+--- @param amount number Amount of damage taken
+function serpent_main.record_damage_taken(amount)
+    if amount and amount > 0 then
+        run_stats.damage_taken = run_stats.damage_taken + amount
+    end
+end
+
+--- Mark run as ended (for duration calculation)
+function serpent_main.end_run()
+    run_stats.run_end_time = love and love.timer and love.timer.getTime() or os.time()
+    log_debug(string.format("[Serpent] Run ended. Stats: waves=%d, gold=%d, units=%d, kills=%d",
+        run_stats.waves_cleared, run_stats.gold_earned, run_stats.units_purchased, run_stats.enemies_killed))
+end
+
 -- State machine transition functions
 function serpent_main.transitionToCombat()
     if currentMode == MODE_STATE.SHOP then
@@ -179,6 +281,8 @@ function serpent_main.transitionToVictory()
     if currentMode == MODE_STATE.COMBAT then
         log_debug("[Serpent] Transitioning from COMBAT to VICTORY")
         currentMode = MODE_STATE.VICTORY
+        -- Mark run as ended for stats calculation
+        serpent_main.end_run()
         -- TODO: Handle victory
         -- - Calculate rewards
         -- - Show victory screen
@@ -193,11 +297,79 @@ end
 function serpent_main.transitionToGameOver()
     log_debug(string.format("[Serpent] Transitioning from mode %d to GAME_OVER", currentMode))
     currentMode = MODE_STATE.GAME_OVER
+    -- Mark run as ended for stats calculation
+    serpent_main.end_run()
     -- TODO: Handle game over
     -- - Save high score
     -- - Show game over screen
     -- - Prepare restart options
     return true
+end
+
+-- Signal handler: Main menu button callback
+-- Performs full cleanup and transitions to GAMESTATE.MAIN_MENU
+function serpent_main._handleMainMenuSignal()
+    log_debug("[Serpent] Main menu signal received - performing cleanup and exit")
+
+    -- Perform full cleanup
+    serpent_main.cleanup()
+
+    -- Transition to main menu via global changeGameState if available
+    if changeGameState and GAMESTATE and GAMESTATE.MAIN_MENU then
+        changeGameState(GAMESTATE.MAIN_MENU)
+    else
+        log_warning("[Serpent] changeGameState not available - cannot transition to main menu")
+    end
+end
+
+-- Signal handler: Restart/retry button callback
+-- Performs full cleanup and re-initializes for a new run
+function serpent_main._handleRestartSignal()
+    log_debug("[Serpent] Restart signal received - reinitializing game")
+
+    -- Perform full cleanup
+    serpent_main.cleanup()
+
+    -- Re-initialize for a new run
+    serpent_main.init()
+end
+
+-- Register signal handlers for UI callbacks
+function serpent_main.register_signal_handlers()
+    if signal_handlers_registered then
+        log_debug("[Serpent] Signal handlers already registered")
+        return
+    end
+
+    -- Register main menu callback (from game_over_screen and victory_screen)
+    signal.register("game_main_menu", serpent_main._handleMainMenuSignal)
+
+    -- Register restart/retry callback (from game_over_screen)
+    signal.register("game_restart", serpent_main._handleRestartSignal)
+
+    -- Register continue callback (from victory_screen - continues to next wave)
+    signal.register("continue_game", function()
+        log_debug("[Serpent] Continue signal received - transitioning to shop")
+        serpent_main.transitionToShop()
+    end)
+
+    signal_handlers_registered = true
+    log_debug("[Serpent] Signal handlers registered")
+end
+
+-- Unregister signal handlers on cleanup
+function serpent_main.unregister_signal_handlers()
+    if not signal_handlers_registered then
+        return
+    end
+
+    signal.remove("game_main_menu", serpent_main._handleMainMenuSignal)
+    signal.remove("game_restart", serpent_main._handleRestartSignal)
+    -- Note: anonymous function for continue_game cannot be removed by reference
+    -- but will be cleaned up when signal system is cleared
+
+    signal_handlers_registered = false
+    log_debug("[Serpent] Signal handlers unregistered")
 end
 
 -- Mode-specific update functions

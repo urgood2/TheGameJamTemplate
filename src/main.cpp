@@ -77,6 +77,7 @@ using json = nlohmann::json;
 // #include "spine/spine.h"
 // #include "third_party/spine_impl/spine_raylib.hpp"
 
+#include "raylib.h"
 #include "raymath.h"
 
 // #include "systems/physics/physics_world.hpp"
@@ -95,6 +96,8 @@ using json = nlohmann::json;
 #include "systems/shaders/shader_system.hpp"
 #include "systems/sound/sound_system.hpp"
 #include "systems/timer/timer.hpp"
+#include "testing/test_mode.hpp"
+#include "testing/test_mode_config.hpp"
 
 using std::string, std::unique_ptr, std::vector;
 using namespace std::literals;
@@ -102,6 +105,26 @@ using namespace std::literals;
 using Random =
     effolkronium::random_static; // get base random alias which is auto seeded
                                  // and has static API and internal state
+
+namespace {
+testing::TestMode g_test_mode;
+testing::TestModeConfig g_test_mode_config;
+bool g_test_mode_configured = false;
+bool g_test_mode_exit_requested = false;
+int g_test_mode_exit_code = 0;
+
+const char* renderer_mode_label(testing::RendererMode mode) {
+  switch (mode) {
+  case testing::RendererMode::Null:
+    return "null";
+  case testing::RendererMode::Offscreen:
+    return "offscreen";
+  case testing::RendererMode::Windowed:
+    return "windowed";
+  }
+  return "unknown";
+}
+} // namespace
 
 // update methods
 auto updateSystems(float dt) -> void;
@@ -244,6 +267,9 @@ auto updatePhysics(float dt, float alpha) -> void {
 void RunGameLoop() {
   // ---------- Initialization ----------
   float lastFrameTime = GetTime();
+  const bool render_enabled =
+      !g_test_mode_configured ||
+      g_test_mode_config.renderer != testing::RendererMode::Null;
 
   // Optional frame smoothing (helps even out jitter in GetFrameTime)
   const int frameSmoothingCount = 10;
@@ -257,10 +283,10 @@ void RunGameLoop() {
   double fpsLastTime = GetTime();
 
 #ifndef __EMSCRIPTEN__
-  while (!WindowShouldClose()) {
+  while (!WindowShouldClose() && !g_test_mode_exit_requested) {
     ZONE_SCOPED("RunGameLoop"); // custom label
 #endif
-    {
+    if (render_enabled) {
       ZONE_SCOPED("BeginDrawing/rlImGuiBegin call");
       BeginDrawing();
 
@@ -342,6 +368,10 @@ void RunGameLoop() {
 #endif
     }
 
+    if (testing::is_test_mode_enabled()) {
+      g_test_mode.on_frame_begin(main_loop::mainLoop.renderFrame + 1);
+    }
+
     // ---------- Step 1: Measure REAL frame time ----------
     float rawDeltaTime =
         std::max(GetFrameTime(), 0.001f); // real delta, unaffected by timescale
@@ -409,31 +439,36 @@ void RunGameLoop() {
     {
 
       MainLoopFixedUpdateAbstraction(scaledStep);
+      if (testing::is_test_mode_enabled()) {
+        g_test_mode.update();
+      }
       // SPDLOG_DEBUG("scaled update step: {}", scaledStep);
     }
 
-    // Render-time timers must run before we enqueue draw commands, otherwise
-    // anything they queue gets wiped by layer::Begin() next frame.
-    timer::TimerSystem::update_render_timers(deltaTime * mainLoop.timescale);
+    if (render_enabled) {
+      // Render-time timers must run before we enqueue draw commands, otherwise
+      // anything they queue gets wiped by layer::Begin() next frame.
+      timer::TimerSystem::update_render_timers(deltaTime * mainLoop.timescale);
 
-    // Pass real render deltaTime to renderer
-    MainLoopRenderAbstraction(scaledStep);
+      // Pass real render deltaTime to renderer
+      MainLoopRenderAbstraction(scaledStep);
 
-    // Update performance overlay metrics AFTER rendering so draw call stats are populated
-    perf_overlay::update(globals::getRegistry());
+      // Update performance overlay metrics AFTER rendering so draw call stats are populated
+      perf_overlay::update(globals::getRegistry());
 
-    // Render performance overlay (uses ImGui)
-    perf_overlay::render();
+      // Render performance overlay (uses ImGui)
+      perf_overlay::render();
 
-    // Render GOAP debug window (uses ImGui)
-    goap_debug::render();
+      // Render GOAP debug window (uses ImGui)
+      goap_debug::render();
 
 #ifndef __EMSCRIPTEN__
-    // Draw ImGui console (toggle with ` backtick key)
-    if (globals::getUseImGUI() && gui::showConsole && gui::consolePtr) {
-      gui::consolePtr->Draw();
-    }
+      // Draw ImGui console (toggle with ` backtick key)
+      if (globals::getUseImGUI() && gui::showConsole && gui::consolePtr) {
+        gui::consolePtr->Draw();
+      }
 #endif
+    }
 
     // ---------- Step 6: FPS counter ----------
     frameCounter++;
@@ -444,7 +479,7 @@ void RunGameLoop() {
       fpsLastTime = now;
     }
 
-    {
+    if (render_enabled) {
       ZONE_SCOPED("EndDrawing/rlImGuiEnd call");
 
 #ifndef __EMSCRIPTEN__
@@ -452,6 +487,14 @@ void RunGameLoop() {
         rlImGuiEnd();
 #endif
       EndDrawing();
+    }
+
+    if (testing::is_test_mode_enabled()) {
+      g_test_mode.on_frame_end(main_loop::mainLoop.renderFrame + 1);
+      if (g_test_mode.is_complete()) {
+        g_test_mode_exit_requested = true;
+        g_test_mode_exit_code = g_test_mode.get_exit_code();
+      }
     }
 
     mainLoop.renderFrame++; // ✅ Count this as one rendered frame
@@ -463,11 +506,50 @@ void RunGameLoop() {
 #endif
   }
 
-  int main(void) {
+  int main(int argc, char** argv) {
 
   // --------------------------------------------------------------------------------------
   // game init
   // --------------------------------------------------------------------------------------
+
+  bool test_mode_requested = false;
+  for (int i = 1; i < argc; ++i) {
+    if (argv[i] && std::string(argv[i]) == "--test-mode") {
+      test_mode_requested = true;
+      break;
+    }
+  }
+
+  if (test_mode_requested) {
+    std::string error;
+    if (!testing::parse_test_mode_args(argc, argv, g_test_mode_config, error)) {
+      std::cerr << error << std::endl;
+      return 2;
+    }
+    if (!testing::validate_and_finalize(g_test_mode_config, error)) {
+      std::cerr << error << std::endl;
+      return 2;
+    }
+    g_test_mode_configured = g_test_mode_config.enabled;
+    if (g_test_mode_configured) {
+      testing::set_active_test_mode_config(&g_test_mode_config);
+      if (g_test_mode_config.renderer == testing::RendererMode::Offscreen) {
+        SPDLOG_WARN("[renderer] offscreen mode requested; falling back to hidden window");
+      }
+      const bool use_hidden =
+          g_test_mode_config.headless ||
+          g_test_mode_config.renderer != testing::RendererMode::Windowed;
+      if (use_hidden) {
+        SetConfigFlags(FLAG_WINDOW_HIDDEN);
+      }
+      SPDLOG_INFO("[renderer] mode={} resolution={}x{} headless={} hidden_window={}",
+                  renderer_mode_label(g_test_mode_config.renderer),
+                  g_test_mode_config.resolution_width,
+                  g_test_mode_config.resolution_height,
+                  g_test_mode_config.headless,
+                  use_hidden);
+    }
+  }
 
   crash_reporter::Config crashConfig{};
 #if defined(__EMSCRIPTEN__)
@@ -490,6 +572,10 @@ void RunGameLoop() {
     SetTargetFPS(main_loop::mainLoop.framerate);
 
     SetExitKey(-1);
+
+    if (g_test_mode_configured) {
+      g_test_mode.initialize(g_test_mode_config);
+    }
 
 #ifndef __EMSCRIPTEN__
     globals::setCurrentGameState(GameState::LOADING_SCREEN);
@@ -572,7 +658,7 @@ void RunGameLoop() {
   // try {
 
   // Main game loop
-  while (!WindowShouldClose()) { // Detect window close button or ESC key
+  while (!WindowShouldClose() && !g_test_mode_exit_requested) { // Detect window close button or ESC key
     // FrameMark; // marks one frame
     RunGameLoop();
   }
@@ -622,7 +708,7 @@ void RunGameLoop() {
     CloseWindow(); // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
 
-    return 0;
+    return g_test_mode_exit_requested ? g_test_mode_exit_code : 0;
   }
 
   /// @brief Update the systems that operate on ECS components. Note: dt is in

@@ -25,6 +25,7 @@
 #include "../systems/shaders/shader_presets.hpp"
 #include "../systems/sound/sound_system.hpp"
 #include "../systems/telemetry/telemetry.hpp"
+#include "testing/test_mode_config.hpp"
 
 #ifndef __EMSCRIPTEN__
 #include "../systems/loading_screen/loading_screen.hpp"
@@ -860,7 +861,19 @@ auto base_init() -> void {
 
   {
     startup_timer::ScopedPhase phase("window_graphics_init");
+    bool hide_window = false;
+    if (const auto* test_config = testing::get_active_test_mode_config()) {
+      if (test_config->enabled) {
+        globals::screenWidth = test_config->resolution_width;
+        globals::screenHeight = test_config->resolution_height;
+        hide_window = test_config->headless ||
+                      test_config->renderer != testing::RendererMode::Windowed;
+      }
+    }
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+    if (hide_window) {
+      SetConfigFlags(FLAG_WINDOW_HIDDEN);
+    }
     InitWindow(globals::getScreenWidth(), globals::getScreenHeight(), "Game");
     SetTextureFilter(GetFontDefault().texture, TEXTURE_FILTER_POINT);
 

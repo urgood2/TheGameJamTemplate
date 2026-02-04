@@ -463,7 +463,24 @@ void RunGameLoop() {
 #endif
   }
 
+  // Forward declaration for headless test runner
+  static int runHeadlessBargainTests();
+
   int main(void) {
+
+  // --------------------------------------------------------------------------------------
+  // Headless test mode check (BEFORE any window/raylib initialization)
+  // --------------------------------------------------------------------------------------
+
+  // Check for RUN_BARGAIN_TESTS environment variable
+  if (const char* bargainTestsEnv = std::getenv("RUN_BARGAIN_TESTS")) {
+    std::string envVal = bargainTestsEnv;
+    std::transform(envVal.begin(), envVal.end(), envVal.begin(), ::tolower);
+    if (envVal == "1" || envVal == "true" || envVal == "yes") {
+      // Run headless tests and exit immediately - NO window init
+      return runHeadlessBargainTests();
+    }
+  }
 
   // --------------------------------------------------------------------------------------
   // game init
@@ -713,5 +730,116 @@ void RunGameLoop() {
     {
       ZONE_SCOPED("ai_system::updateHumanAI");
       ai_system::updateHumanAI(dt); // update the GOAP AI system for creatures
+    }
+  }
+
+  /// @brief Runs Bargain tests in headless mode (no window initialization)
+  /// @return 0 on success, non-zero on failure
+  static int runHeadlessBargainTests() {
+    // Set up minimal logging for headless mode
+    spdlog::set_level(spdlog::level::info);
+    SPDLOG_INFO("[Headless] Starting Bargain tests (no window init)");
+
+    try {
+      // Create a standalone Lua state for testing
+      sol::state lua;
+      lua.open_libraries(
+          sol::lib::base,
+          sol::lib::package,
+          sol::lib::string,
+          sol::lib::table,
+          sol::lib::math,
+          sol::lib::os,
+          sol::lib::io,
+          sol::lib::debug,
+          sol::lib::coroutine
+      );
+
+      // Set up package path to find test scripts
+      std::string assetsPath = "assets/scripts/";
+      lua["package"]["path"] = lua["package"]["path"].get<std::string>() +
+          ";" + assetsPath + "?.lua" +
+          ";" + assetsPath + "?/init.lua" +
+          ";" + assetsPath + "tests/?.lua" +
+          ";" + assetsPath + "tests/?/init.lua";
+
+      // Expose a marker that we're in headless mode
+      lua["HEADLESS_MODE"] = true;
+      lua["BARGAIN_TEST_MODE"] = true;
+
+      // Run the bargain test entry point
+      // Headless entry: assets/scripts/tests/run_bargain_headless.lua
+      auto result = lua.safe_script_file(assetsPath + "tests/run_bargain_headless.lua",
+                                          sol::script_pass_on_error);
+
+      if (!result.valid()) {
+        sol::error err = result;
+        // Print repro JSON for CI
+        std::cout << R"({"type":"repro","error":")" << err.what() << R"(","stage":"load_test_runner"})" << std::endl;
+        SPDLOG_ERROR("[Headless] Failed to load test runner: {}", err.what());
+        return 1;
+      }
+
+      // Check if run_tests function exists and call it
+      sol::protected_function run_tests = lua["run_bargain_tests"];
+      if (!run_tests.valid()) {
+        // Try alternative: the script may return a result directly
+        sol::optional<bool> directResult = lua["BARGAIN_TESTS_PASSED"];
+        if (directResult.has_value()) {
+          if (directResult.value()) {
+            SPDLOG_INFO("[Headless] All Bargain tests passed");
+            return 0;
+          } else {
+            SPDLOG_ERROR("[Headless] Some Bargain tests failed");
+            return 1;
+          }
+        }
+
+        // If no function and no result, check for test_results table
+        sol::optional<int> exitCode = lua["BARGAIN_EXIT_CODE"];
+        if (exitCode.has_value()) {
+          return exitCode.value();
+        }
+
+        SPDLOG_INFO("[Headless] Test script executed (no explicit result)");
+        return 0;
+      }
+
+      // Call run_tests function
+      sol::protected_function_result testResult = run_tests();
+      if (!testResult.valid()) {
+        sol::error err = testResult;
+        std::cout << R"({"type":"repro","error":")" << err.what() << R"(","stage":"run_tests"})" << std::endl;
+        SPDLOG_ERROR("[Headless] Test execution error: {}", err.what());
+        return 1;
+      }
+
+      // Check return value
+      if (testResult.get_type() == sol::type::boolean) {
+        bool passed = testResult.get<bool>();
+        if (passed) {
+          SPDLOG_INFO("[Headless] All Bargain tests passed");
+          return 0;
+        } else {
+          SPDLOG_ERROR("[Headless] Some Bargain tests failed");
+          return 1;
+        }
+      } else if (testResult.get_type() == sol::type::number) {
+        int code = testResult.get<int>();
+        if (code == 0) {
+          SPDLOG_INFO("[Headless] All Bargain tests passed");
+        } else {
+          SPDLOG_ERROR("[Headless] Tests failed with code {}", code);
+        }
+        return code;
+      }
+
+      SPDLOG_INFO("[Headless] Tests completed");
+      return 0;
+
+    } catch (const std::exception& e) {
+      std::cout << R"({"type":"repro","error":")" << e.what() << R"(","stage":"exception"})" << std::endl;
+      SPDLOG_ERROR("[Headless] Exception during tests: {}", e.what());
+      return 1;
     }
   }

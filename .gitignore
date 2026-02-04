@@ -2664,3 +2664,6 @@ devlog/sfx/node_modules/
 
 # Agent coordination and local state
 .flywheel/
+build-e2e-supervisor/
+build-game-*/
+build-tests-*/

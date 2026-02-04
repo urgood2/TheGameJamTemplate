@@ -1,0 +1,75 @@
+{
+  "version": "1.0",
+  "created_at": "2026-02-03T18:44:31.466088658+01:00",
+  "updated_at": "2026-02-03T18:46:01.810550793+01:00",
+  "events": [
+    {
+      "issue_id": "bd-1or",
+      "action": "ignore",
+      "score": 0.4135319651919947,
+      "timestamp": "2026-02-03T18:44:31.501493079+01:00"
+    },
+    {
+      "issue_id": "bd-1or",
+      "action": "ignore",
+      "score": 0.41353798753676585,
+      "timestamp": "2026-02-03T18:46:01.81054411+01:00"
+    }
+  ],
+  "adjustments": [
+    {
+      "name": "PageRank",
+      "adjustment": 0.9851571656721785,
+      "samples": 2,
+      "last_updated": "2026-02-03T18:46:01.81054942+01:00"
+    },
+    {
+      "name": "Betweenness",
+      "adjustment": 0.9888000000000001,
+      "samples": 2,
+      "last_updated": "2026-02-03T18:46:01.81054959+01:00"
+    },
+    {
+      "name": "BlockerRatio",
+      "adjustment": 0.9714285714285715,
+      "samples": 2,
+      "last_updated": "2026-02-03T18:46:01.810549751+01:00"
+    },
+    {
+      "name": "Staleness",
+      "adjustment": 0.9999999600302112,
+      "samples": 2,
+      "last_updated": "2026-02-03T18:46:01.810549891+01:00"
+    },
+    {
+      "name": "PriorityBoost",
+      "adjustment": 0.9700000000000002,
+      "samples": 2,
+      "last_updated": "2026-02-03T18:46:01.810550051+01:00"
+    },
+    {
+      "name": "TimeToImpact",
+      "adjustment": 0.9783000000000002,
+      "samples": 2,
+      "last_updated": "2026-02-03T18:46:01.810550191+01:00"
+    },
+    {
+      "name": "Urgency",
+      "adjustment": 0.9960831221032073,
+      "samples": 2,
+      "last_updated": "2026-02-03T18:46:01.810550332+01:00"
+    },
+    {
+      "name": "Risk",
+      "adjustment": 0.9824000000000002,
+      "samples": 2,
+      "last_updated": "2026-02-03T18:46:01.810550462+01:00"
+    }
+  ],
+  "stats": {
+    "total_accepted": 0,
+    "total_ignored": 2,
+    "avg_accept_score": 0,
+    "avg_ignore_score": 0.4135349763643803
+  }
+}

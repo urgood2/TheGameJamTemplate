@@ -42,7 +42,9 @@
 #include "systems/camera/camera_bindings.hpp"
 #include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 #include "systems/input/controller_nav.hpp"
+#if ENABLE_LDTK
 #include "systems/ldtk_loader/ldtk_combined.hpp"
+#endif
 #include "systems/main_loop_enhancement/main_loop.hpp"
 #include "systems/physics/physics_lua_bindings.hpp"
 #include "systems/spring/spring_lua_bindings.hpp"
@@ -282,7 +284,9 @@ auto initLuaMasterState(sol::state &stateToInit,
   //---------------------------------------------------------
   // LDtk helpers (config-driven, entity iteration)
   //---------------------------------------------------------
+#if ENABLE_LDTK
   ldtk_loader::exposeToLua(stateToInit);
+#endif
 
 
   //---------------------------------------------------------

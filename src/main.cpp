@@ -43,7 +43,9 @@
 #include "core/globals.hpp"
 #include "core/graphics.hpp"
 #include "core/gui.hpp"
+#if ENABLE_IMGUI_CONSOLE
 #include "third_party/imgui_console/imgui_console.h"
+#endif
 #include "core/init.hpp"
 #include "core/ownership.hpp"
 #include "systems/loading_screen/loading_screen.hpp"
@@ -51,7 +53,9 @@
 
 #include "util/utilities.hpp" // global utilty methods
 #include "util/perf_overlay.hpp"
+#if ENABLE_GOAP
 #include "systems/ai/goap_debug_window.hpp"
+#endif
 
 #define JSON_DIAGNOSTICS 1
 #include <nlohmann/json.hpp> // nlohmann JSON parsing
@@ -347,7 +351,9 @@ void RunGameLoop() {
     }
 
     if (IsKeyPressed(KEY_F9)) {
+#if ENABLE_GOAP
       goap_debug::toggle();
+#endif
     }
 
     if (crash_reporter::IsEnabled() && IsKeyPressed(KEY_F10)) {
@@ -460,13 +466,17 @@ void RunGameLoop() {
       perf_overlay::render();
 
       // Render GOAP debug window (uses ImGui)
+#if ENABLE_GOAP
       goap_debug::render();
+#endif
 
 #ifndef __EMSCRIPTEN__
       // Draw ImGui console (toggle with ` backtick key)
+#if ENABLE_IMGUI_CONSOLE
       if (globals::getUseImGUI() && gui::showConsole && gui::consolePtr) {
         gui::consolePtr->Draw();
       }
+#endif
 #endif
     }
 

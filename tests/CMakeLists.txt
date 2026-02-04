@@ -230,6 +230,28 @@ target_link_libraries(screenshot_capture_tests PRIVATE
 
 gtest_discover_tests(screenshot_capture_tests)
 
+# ======================================================================
+# Lua State Query Unit Tests (lightweight target)
+# ======================================================================
+add_executable(lua_state_query_tests
+    unit/test_lua_state_query.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/lua_state_query.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/test_api_registry.cpp
+)
+
+target_include_directories(lua_state_query_tests PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(lua_state_query_tests PRIVATE
+    gtest_main
+    CommonSettings
+)
+
+gtest_discover_tests(lua_state_query_tests)
+
 # Link Tracy if enabled (needed by shader_system, physics_world, layer_command_buffer)
 if(TRACY_ENABLE AND NOT EMSCRIPTEN)
     target_link_libraries(unit_tests PRIVATE Tracy::TracyClient)

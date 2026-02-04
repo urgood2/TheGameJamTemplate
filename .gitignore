@@ -2669,5 +2669,4 @@ test_output/**
 !test_output/artifacts/.gitkeep
 
 # Agent coordination and local state
-.beads/
 .flywheel/

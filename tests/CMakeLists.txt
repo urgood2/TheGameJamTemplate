@@ -168,6 +168,68 @@ add_dependencies(e2e_supervisor_tests e2e_supervisor_stub)
 
 gtest_discover_tests(e2e_supervisor_tests)
 
+# ======================================================================
+# Timeline Writer Unit Tests (lightweight target)
+# ======================================================================
+add_executable(timeline_writer_tests
+    unit/test_timeline_writer.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/timeline_writer.cpp
+)
+
+target_include_directories(timeline_writer_tests PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(timeline_writer_tests PRIVATE
+    gtest_main
+)
+
+gtest_discover_tests(timeline_writer_tests)
+
+# ======================================================================
+# Screenshot Compare Unit Tests (lightweight target)
+# ======================================================================
+add_executable(screenshot_compare_tests
+    unit/test_screenshot_compare.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/screenshot_compare.cpp
+)
+
+target_include_directories(screenshot_compare_tests PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(screenshot_compare_tests PRIVATE
+    gtest_main
+    CommonSettings
+)
+
+gtest_discover_tests(screenshot_compare_tests)
+
+# ======================================================================
+# Screenshot Capture Unit Tests (lightweight target)
+# ======================================================================
+add_executable(screenshot_capture_tests
+    unit/test_screenshot_capture.cpp
+    ${CMAKE_SOURCE_DIR}/src/testing/screenshot_capture.cpp
+)
+
+target_include_directories(screenshot_capture_tests PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(screenshot_capture_tests PRIVATE
+    gtest_main
+    CommonSettings
+)
+
+gtest_discover_tests(screenshot_capture_tests)
+
 # Link Tracy if enabled (needed by shader_system, physics_world, layer_command_buffer)
 if(TRACY_ENABLE AND NOT EMSCRIPTEN)
     target_link_libraries(unit_tests PRIVATE Tracy::TracyClient)

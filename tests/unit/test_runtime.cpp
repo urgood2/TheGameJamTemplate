@@ -32,6 +32,7 @@ testing::TestModeConfig make_config() {
     config.baseline_staging_dir = root / "baselines";
     config.resolution_width = 800;
     config.resolution_height = 450;
+    config.exit_on_schema_failure = false;
     return config;
 }
 
@@ -51,7 +52,7 @@ TEST(TestRuntime, InitializeCreatesSubsystems) {
     EXPECT_EQ(runtime.input_provider().size(), 1u);
 
     EXPECT_TRUE(runtime.path_sandbox().is_allowed("artifact.txt"));
-    EXPECT_FALSE(runtime.baseline_manager().resolve("key").empty());
+    EXPECT_FALSE(runtime.baseline_manager().baseline_key().empty());
 }
 
 TEST(TestRuntime, FrameAdvancementAndWait) {
@@ -76,15 +77,16 @@ TEST(TestRuntime, RetryMechanismResetsSubsystems) {
     testing::TestRuntime runtime;
     auto config = make_config();
     config.retry_failures = 1;
+    config.perf_mode = testing::PerfMode::Collect;
     ASSERT_TRUE(runtime.initialize(config));
 
     runtime.on_test_start("case", 1);
     EXPECT_TRUE(runtime.should_retry_test("case", testing::TestStatus::Fail));
 
     runtime.input_provider().enqueue({"mouse", 0, 1.0f, 1.0f});
-    runtime.log_capture().add({"msg", "cat", 1});
+    runtime.log_capture().add({0, "msg", "cat", "info", ""});
     runtime.forensics().record_event("event");
-    runtime.perf_tracker().record_frame_ms(5.0);
+    runtime.perf_tracker().record_frame(1, 5.0f, 0.0f);
     EXPECT_TRUE(runtime.timeline_writer().open("timeline.jsonl"));
 
     runtime.prepare_for_retry("case");
@@ -92,7 +94,7 @@ TEST(TestRuntime, RetryMechanismResetsSubsystems) {
     EXPECT_EQ(runtime.input_provider().size(), 0u);
     EXPECT_TRUE(runtime.log_capture().empty());
     EXPECT_TRUE(runtime.forensics().events().empty());
-    EXPECT_EQ(runtime.perf_tracker().average_ms(), 0.0);
+    EXPECT_EQ(runtime.perf_tracker().get_current_metrics().avg_frame_ms, 0.0f);
     EXPECT_FALSE(runtime.timeline_writer().is_open());
 }
 
@@ -139,6 +141,14 @@ TEST(TestRuntime, SchemaValidationProducesValidJson) {
     ASSERT_TRUE(testing::load_json_file("tests/schemas/report.schema.json", schema, err));
     auto result = testing::validate_json_against_schema(report, schema);
     EXPECT_TRUE(result.ok);
+
+    auto manifest_path = config.run_root / "run_manifest.json";
+    nlohmann::json manifest;
+    ASSERT_TRUE(testing::load_json_file(manifest_path, manifest, err));
+    ASSERT_TRUE(manifest.contains("determinism_pins"));
+    ASSERT_TRUE(manifest.contains("test_api_fingerprint"));
+    EXPECT_TRUE(manifest["determinism_pins"].is_object());
+    EXPECT_TRUE(manifest["test_api_fingerprint"].is_string());
 }
 
 TEST(TestRuntime, SchemaValidationDetectsInvalidPayload) {

@@ -59,20 +59,23 @@ TEST(StubsCompile, AllHeadersIncludable) {
     EXPECT_FALSE(diff.matches);
 
     testing::LogCapture logs;
-    logs.add({"msg", "category", 1});
+    logs.add({0, "msg", "category", "info", ""});
     EXPECT_FALSE(logs.empty());
 
     testing::BaselineManager baseline;
     baseline.set_root("tests/baselines");
     EXPECT_FALSE(baseline.resolve("key").empty());
 
-    testing::ArtifactStore artifacts;
-    artifacts.set_root("tests/out");
-    EXPECT_FALSE(artifacts.write_text("artifact.txt", "data"));
-
     testing::PathSandbox sandbox_paths;
-    sandbox_paths.set_root("tests/out");
+    config.run_root = fs::path("tests") / "out" / "stubs_run";
+    config.artifacts_dir = config.run_root / "artifacts";
+    config.forensics_dir = config.run_root / "forensics";
+    sandbox_paths.initialize(config);
     EXPECT_TRUE(sandbox_paths.is_allowed("artifact.txt"));
+
+    testing::ArtifactStore artifacts;
+    artifacts.initialize(config, sandbox_paths);
+    EXPECT_TRUE(artifacts.write_text("artifact.txt", "data"));
 
     testing::TestForensics forensics;
     forensics.record_event("event");

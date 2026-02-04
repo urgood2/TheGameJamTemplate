@@ -11,6 +11,7 @@
 
 namespace testing {
 namespace {
+const TestModeConfig* g_active_test_config = nullptr;
 
 std::string to_lower(std::string value) {
     std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
@@ -418,6 +419,14 @@ std::string test_mode_usage() {
     oss << "Usage: --test-mode [options]\n";
     oss << "See planning/PLAN.md section 2 for full CLI contract.";
     return oss.str();
+}
+
+const TestModeConfig* get_active_test_mode_config() {
+    return g_active_test_config;
+}
+
+void set_active_test_mode_config(const TestModeConfig* config) {
+    g_active_test_config = config;
 }
 
 bool parse_test_mode_args(int argc, char** argv, TestModeConfig& out, std::string& err) {

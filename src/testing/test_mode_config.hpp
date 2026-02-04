@@ -135,11 +135,14 @@ struct TestModeConfig {
     std::filesystem::path report_junit_path;
     std::filesystem::path run_root;
     std::filesystem::path forensics_dir;
+    bool exit_on_schema_failure = true;
     std::string run_id;
 };
 
 bool parse_test_mode_args(int argc, char** argv, TestModeConfig& out, std::string& err);
 bool validate_and_finalize(TestModeConfig& config, std::string& err);
 std::string test_mode_usage();
+const TestModeConfig* get_active_test_mode_config();
+void set_active_test_mode_config(const TestModeConfig* config);
 
 } // namespace testing

@@ -15,6 +15,11 @@ A C++20 + Lua game-jam scaffold built on Raylib. It comes with a fast render pip
 ## Getting Started
 Prerequisites: CMake (≥3.14), a C++20 toolchain, and [just](https://github.com/casey/just). For web builds you also need [emsdk](https://emscripten.org/).
 
+Linux (Ubuntu/Debian) native build deps:
+```bash
+sudo apt-get install libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libgl1-mesa-dev
+```
+
 Clone (init submodules if present):
 ```bash
 git clone <repo-url>
@@ -102,4 +107,3 @@ Web users see a notification with a "Copy to Clipboard" button for easy sharing.
 ## Credits & Licensing
 - Project scaffold originally based on https://github.com/tupini07/raylib-cpp-cmake-template.
 - All new code/assets are © Chugget. Please do not reuse without permission or explicit licensing.
-

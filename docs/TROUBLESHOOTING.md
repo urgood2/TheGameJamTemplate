@@ -667,6 +667,24 @@ cmake -B build -DTRACY_ENABLE=OFF
 
 ---
 
+## Linux Build Issues
+
+### CMake Fails to Find X11
+
+**Problem:** CMake configure fails with errors like:
+```
+Could NOT find X11 (missing: X11_X11_INCLUDE_PATH X11_X11_LIB)
+```
+
+**Cause:** Missing X11/GLFW development libraries required by Raylib on Linux.
+
+**Solution (Ubuntu/Debian):**
+```bash
+sudo apt-get install libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libgl1-mesa-dev
+```
+
+---
+
 ## Audio Issues
 
 ### Sound Effects Delayed When Developer Console is Open

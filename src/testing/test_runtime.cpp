@@ -262,6 +262,9 @@ bool TestRuntime::initialize(const TestModeConfig& config) {
     if (forensics_) {
         forensics_->initialize(config_, *this);
     }
+    if (timeline_writer_) {
+        timeline_writer_->open(config_.forensics_dir / "timeline.jsonl");
+    }
 
     running_ = true;
     return true;

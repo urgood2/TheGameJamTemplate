@@ -124,4 +124,20 @@ uint64_t DeterministicRng::getStateHash() const {
     return hash;
 }
 
+DeterministicRng::State DeterministicRng::get_state() const {
+    State out;
+    out.state = state_;
+    out.inc = inc_;
+    out.has_cached_normal = has_cached_normal_;
+    out.cached_normal = cached_normal_;
+    return out;
+}
+
+void DeterministicRng::set_state(const State& state) {
+    state_ = state.state;
+    inc_ = state.inc;
+    has_cached_normal_ = state.has_cached_normal;
+    cached_normal_ = state.cached_normal;
+}
+
 } // namespace lockstep

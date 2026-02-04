@@ -343,6 +343,7 @@ function test.test_player_info_nil()
     test.assert_eq(info.gold, 0, "Nil state has 0 gold")
     test.assert_eq(info.total_gold_earned, 0, "Nil state has 0 total gold")
     test.assert_eq(info.kills, 0, "Nil state has 0 kills")
+    test.assert_eq(info.seed, 0, "Nil state has 0 seed")
 
     print("\226\156\147 Nil player info handled correctly")
 end
@@ -355,7 +356,8 @@ function test.test_player_info_basic()
         total_gold_earned = 500,
         time_played = 180,
         kills = 25,
-        waves_completed = 4
+        waves_completed = 4,
+        seed = 12345
     }
 
     local info = hud._get_player_info(player_state)
@@ -364,8 +366,34 @@ function test.test_player_info_basic()
     test.assert_eq(info.time_played, 180, "Time is 180 seconds")
     test.assert_eq(info.kills, 25, "Kills is 25")
     test.assert_eq(info.waves_completed, 4, "Waves completed is 4")
+    test.assert_eq(info.seed, 12345, "Seed is 12345")
 
     print("\226\156\147 Player info extraction correct")
+end
+
+function test.test_player_info_seed_fallback()
+    print("\n=== Test: Player Info Seed Fallback ===")
+
+    -- Test run_seed fallback (for systems that use run_seed instead of seed)
+    local player_state_alt = {
+        gold = 100,
+        run_seed = 67890
+    }
+
+    local info = hud._get_player_info(player_state_alt)
+    test.assert_eq(info.seed, 67890, "run_seed falls back correctly")
+
+    -- Test seed takes priority over run_seed
+    local player_state_both = {
+        gold = 100,
+        seed = 11111,
+        run_seed = 22222
+    }
+
+    info = hud._get_player_info(player_state_both)
+    test.assert_eq(info.seed, 11111, "seed takes priority over run_seed")
+
+    print("\226\156\147 Seed fallback correct")
 end
 
 --===========================================================================

@@ -1,8 +1,10 @@
 #include "gui.hpp"
 #include "../components/components.hpp"
 #include "../third_party/rlImGui/imgui.h"
+#if ENABLE_IMGUI_CONSOLE
 #include "../third_party/imgui_console/imgui_console.h"
 #include "../third_party/imgui_console/csys_console_sink.hpp"
+#endif
 #include "../systems/ai/ai_system.hpp"
 #include "../systems/shaders/shader_system.hpp"
 #include "../systems/spring/spring.hpp"
@@ -21,8 +23,11 @@
 namespace gui
 {
 
+#if ENABLE_IMGUI_CONSOLE
     std::unique_ptr<ImGuiConsole> consolePtr{};
     bool showConsole = true;  // Console visible by default (toggle with ` backtick)
+#endif
+    bool showTutorial = false;
 
     auto showGUI() -> void
     {
@@ -61,6 +66,7 @@ static ImU32 LerpColor(ImU32 c1, ImU32 c2, float t) {
     // redirect the output of the console to the game log
     // This is not perfect, and it changes the default logger in the middle of everything so i don't know if it's a good idea
 
+#if ENABLE_IMGUI_CONSOLE
     namespace {
         std::string escape_lua_string(const std::string& s) {
             std::string result;
@@ -440,6 +446,11 @@ static ImU32 LerpColor(ImU32 c1, ImU32 c2, float t) {
     // ---------------------------------------------------------
     // End ImGUI Console
     // ---------------------------------------------------------
+
+    }
+#else
+    auto initConsole() -> void {}
+#endif
 
     // ---------------------------------------------------------
     // NinePatch

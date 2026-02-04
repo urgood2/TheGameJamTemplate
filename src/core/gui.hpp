@@ -39,11 +39,17 @@ struct NinePatchData {
 
 enum class LogMessageType { SYSTEM, NORMAL, TIP };
 
+#if ENABLE_IMGUI_CONSOLE
 extern std::unique_ptr<ImGuiConsole> consolePtr;
 extern bool showConsole;
-extern bool showTutorial;
 
 extern auto initConsole() -> void;
+#else
+inline constexpr bool showConsole = false;
+inline auto initConsole() -> void {}
+#endif
+
+extern bool showTutorial;
 
 // ---------------------------------------------------------
 // NinePatch

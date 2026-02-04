@@ -61,7 +61,9 @@
 #include "../systems/ai/ai_system.hpp"
 #include "spdlog/spdlog.h"
 #include "systems/camera/camera_manager.hpp"
+#if ENABLE_LDTK
 #include "systems/ldtk_loader/ldtk_combined.hpp"
+#endif
 #include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 #include "rlgl.h"
 #include "systems/physics/physics_world.hpp"
@@ -1076,8 +1078,12 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
                     globals::setDrawPhysicsDebug(!globals::drawPhysicsDebug);
                     SPDLOG_INFO("Physics debug toggled via event bus: {}", globals::drawPhysicsDebug);
                 } else if (ev.keyCode == KEY_GRAVE) {
+#if ENABLE_IMGUI_CONSOLE
                     gui::showConsole = !gui::showConsole;
                     SPDLOG_INFO("Console toggled via ` (backtick): {}", gui::showConsole);
+#else
+                    SPDLOG_INFO("Console toggle ignored (ImGui console disabled)");
+#endif
                 } else if (ev.keyCode == KEY_F10) {
                     // Generate debug report
                     SPDLOG_INFO("F10 pressed - generating debug report");
@@ -2170,6 +2176,7 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
         
         {
             ZONE_SCOPED("Tilemap draw");
+#if ENABLE_LDTK
             if (ldtk_loader::HasActiveProject() && ldtk_loader::HasActiveLevel() && worldCamera) {
                 // simple camera-based culling rectangle (pad to avoid pop-in)
                 Rectangle view = ldtk_loader::CameraViewRect(
@@ -2179,6 +2186,9 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
                     64.0f);
                 ldtk_loader::DrawAllLayers(sprites, ldtk_loader::GetActiveLevel(), 1.0f, 0, &view);
             }
+#else
+            (void)worldCamera;
+#endif
         }
         
         

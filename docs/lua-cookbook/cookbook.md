@@ -159,6 +159,18 @@ local component_cache, entity_cache, timer, signal = imports.core()
 | Save/load game state | \pageref{recipe:save-manager} |
 | Track statistics (kills, playtime) | \pageref{recipe:statistics} |
 | Handle save file migrations | \pageref{recipe:save-migrations} |
+| **Testing** | |
+| Write BDD-style tests | \pageref{recipe:test-runner} |
+| Use fluent assertions (expect) | \pageref{recipe:expect-matchers} |
+| Organize test suites | \pageref{recipe:test-organization} |
+| Register tests with metadata | \pageref{recipe:test-registration} |
+| Run tests (CLI and in-engine) | \pageref{recipe:running-tests} |
+| Create new test file | \pageref{recipe:test-template} |
+| Use C++ test harness | \pageref{recipe:test-harness-cpp} |
+| Use framework DSL runner | \pageref{recipe:framework-test-runner} |
+| Generate TAP reports | \pageref{recipe:tap-reporter} |
+| Mock engine globals | \pageref{recipe:test-mocking} |
+| Test UI DSL components | \pageref{recipe:test-dsl} |
 
 \newpage
 
@@ -15188,6 +15200,767 @@ States.GAME_OVER      -- Final defeat state
 ***
 
 \newpage
+
+# Chapter 12: Testing Framework
+
+\label{chapter:testing}
+
+The engine provides a comprehensive testing infrastructure with two layers: a Lua test runner for gameplay/content testing, and a C++ test harness for engine integration testing.
+
+## Test Runner Overview
+
+\label{recipe:test-runner}
+
+**When to use:** Write unit tests for Lua modules, UI components, game logic, and content validation.
+
+```lua
+local t = require("tests.test_runner")
+
+t.describe("MyModule", function()
+    t.it("should do something", function()
+        t.expect(1 + 1).to_be(2)
+    end)
+end)
+
+t.run()
+```
+
+*— from tests/test_runner.lua*
+
+The test runner provides:
+- **BDD-style API**: `describe()`, `it()`, `before_each()`, `after_each()`
+- **Fluent assertions**: `expect().to_be()`, `to_contain()`, `to_throw()`, etc.
+- **Test discovery**: Auto-finds `test_*.lua` files
+- **Sharding**: Split tests across CI runners with `--shard-count` and `--shard-index`
+- **Reports**: Generates Markdown, JSON, and JUnit XML output
+
+**Gotcha:** Tests must be in `assets/scripts/tests/` directory with `test_` prefix to be auto-discovered.
+
+***
+
+## Expect Matchers (Fluent Assertions)
+
+\label{recipe:expect-matchers}
+
+**When to use:** Make assertions in tests with clear, readable syntax.
+
+```lua
+local t = require("tests.test_runner")
+
+-- Strict equality
+t.expect(value).to_be(42)
+t.expect(value).never().to_be(0)  -- Negation
+
+-- Deep table equality
+t.expect({a = 1, b = 2}).to_equal({a = 1, b = 2})
+
+-- Containment (strings and tables)
+t.expect("hello world").to_contain("world")
+t.expect({1, 2, 3}).to_contain(2)
+t.expect({foo = "bar"}).to_contain("foo")  -- Key exists
+
+-- Truthy/falsy
+t.expect(entity).to_be_truthy()
+t.expect(nil).to_be_falsy()
+
+-- Type checking
+t.expect(42).to_be_type("number")
+t.expect({}).to_be_type("table")
+t.expect(nil).to_be_nil()
+
+-- Error checking
+t.expect(function()
+    error("validation failed")
+end).to_throw("validation")  -- Pattern match
+
+t.expect(function()
+    return 1
+end).never().to_throw()  -- Should not throw
+```
+
+*— from tests/test_runner.lua:405-601*
+
+**Available matchers:**
+
+| Matcher | Description |
+|---------|-------------|
+| `.to_be(v)` | Strict equality (`==`) |
+| `.to_equal(t)` | Deep table equality |
+| `.to_contain(x)` | String substring or table element/key |
+| `.to_be_truthy()` | Not nil and not false |
+| `.to_be_falsy()` | Nil or false |
+| `.to_be_nil()` | Is nil |
+| `.to_be_type(s)` | Type matches (e.g., "number", "table") |
+| `.to_throw(p?)` | Function throws error (optional pattern) |
+| `.never()` | Negate the next matcher |
+
+**Gotcha:** Error messages include "expected" vs "actual" labels. Use `.never()` before the matcher, not after.
+
+***
+
+## Test Suite Organization
+
+\label{recipe:test-organization}
+
+**When to use:** Structure tests with setup/teardown and nested describe blocks.
+
+```lua
+local t = require("tests.test_runner")
+
+t.describe("EntityBuilder", function()
+    local entity
+
+    t.before_each(function()
+        -- Runs before each test in this suite
+        entity = EntityBuilder.create({ sprite = "test" })
+    end)
+
+    t.after_each(function()
+        -- Runs after each test
+        if entity then
+            destroyEntity(entity)
+            entity = nil
+        end
+    end)
+
+    t.describe("creation", function()
+        t.it("creates entity with sprite", function()
+            t.expect(entity).to_be_truthy()
+        end)
+
+        t.it("initializes script table", function()
+            local script = getScriptTableFromEntityID(entity)
+            t.expect(script).to_be_truthy()
+        end)
+    end)
+
+    t.describe("physics", function()
+        t.it("can add physics body", function()
+            PhysicsBuilder.for_entity(entity):circle():apply()
+            -- Assertions...
+        end)
+    end)
+
+    -- Skip a test (marks as skipped in output)
+    t.xit("TODO: implement later", function()
+        -- This won't run
+    end)
+end)
+
+t.run()
+```
+
+*— from tests/test_runner.lua:325-395*
+
+**Gotcha:** `before_each` and `after_each` hooks are scoped to their describe block and apply to nested blocks too.
+
+***
+
+## Registration-Based Tests (Phase 1 API)
+
+\label{recipe:test-registration}
+
+**When to use:** Register tests with metadata like tags, documentation IDs, and performance budgets.
+
+```lua
+local t = require("tests.test_runner")
+
+t.TestRunner:register("collision_tags_work", "physics", function()
+    -- Test implementation
+    local entity = EntityBuilder.create({ sprite = "test" })
+    PhysicsBuilder.for_entity(entity):circle():tag("enemy"):apply()
+    t.expect(physics.HasTag(PhysicsManager.get_world("world"), entity, "enemy")).to_be(true)
+end, {
+    tags = {"fast", "physics", "core"},
+    doc_ids = {"PHYSICS-001"},
+    timeout_frames = 300,
+    perf_budget_ms = 50,
+    requires = {"reset_world"},  -- Skip if capability missing
+})
+
+t.TestRunner:run({
+    shard_count = 4,
+    shard_index = 0,  -- 0-based
+})
+```
+
+*— from tests/test_runner.lua:251-273*
+
+**Options:**
+
+| Option | Description |
+|--------|-------------|
+| `tags` | Array of tag strings for filtering |
+| `doc_ids` | Documentation references |
+| `requires` | Required capabilities (skip if missing) |
+| `timeout_frames` | Max frames before timeout |
+| `perf_budget_ms` | Performance warning threshold |
+| `source_ref` | Optional file:line reference |
+
+***
+
+## Running Tests
+
+\label{recipe:running-tests}
+
+**When to use:** Execute tests from command line or in-engine.
+
+### Command Line
+
+```bash
+# Run all tests in default directory
+lua assets/scripts/tests/test_runner.lua
+
+# Run specific test file
+lua assets/scripts/tests/test_entity_builder.lua
+
+# Filter by pattern
+lua assets/scripts/tests/test_runner.lua --filter "physics"
+
+# Verbose output with timing
+lua assets/scripts/tests/test_runner.lua --verbose
+
+# Watch mode (re-run on file changes)
+lua assets/scripts/tests/test_runner.lua --watch
+
+# CI sharding (run 1st of 4 shards)
+lua assets/scripts/tests/test_runner.lua --shard-count 4 --shard-index 0
+```
+
+### In-Engine
+
+```lua
+-- Run single test file
+local test = require("tests.test_ui_dsl")
+test.run()
+
+-- Run with filter
+local t = require("tests.test_runner")
+t.configure({ filter = "vbox", verbose = true })
+t.run_directory("./assets/scripts/tests")
+```
+
+*— from tests/test_runner.lua:1669-1780*
+
+**Output files (in `test_output/`):**
+
+| File | Description |
+|------|-------------|
+| `report.md` | Human-readable Markdown report |
+| `status.json` | Summary (passed/failed counts) |
+| `results.json` | Detailed results with timings |
+| `junit.xml` | JUnit format for CI integration |
+
+***
+
+## Test File Template
+
+\label{recipe:test-template}
+
+**When to use:** Create a new test file with proper structure.
+
+```lua
+-- assets/scripts/tests/test_my_module.lua
+--[[
+================================================================================
+TEST: My Module
+================================================================================
+Validates that my module meets acceptance criteria:
+- [x] Creates instances correctly
+- [x] Handles edge cases
+
+Run standalone: lua assets/scripts/tests/test_my_module.lua
+================================================================================
+]]
+
+-- Setup package path for standalone execution
+package.path = package.path .. ";./assets/scripts/?.lua"
+
+-- Load mocks for standalone execution
+local standalone = not _G.registry
+if standalone then
+    pcall(require, "tests.mocks.engine_mock")
+end
+
+-- Mock globals not covered by engine_mock
+_G.AlignmentFlag = _G.AlignmentFlag or {
+    HORIZONTAL_CENTER = 1,
+    VERTICAL_CENTER = 2,
+}
+
+-- Load test runner
+local t = require("tests.test_runner")
+
+-- Reset any previous state
+t.reset()
+
+--------------------------------------------------------------------------------
+-- Tests
+--------------------------------------------------------------------------------
+
+t.describe("MyModule", function()
+    t.before_each(function()
+        -- Setup
+    end)
+
+    t.after_each(function()
+        -- Cleanup
+    end)
+
+    t.describe("basic functionality", function()
+        t.it("creates instance", function()
+            t.expect(true).to_be_truthy()
+        end)
+
+        t.it("handles nil input", function()
+            t.expect(function()
+                MyModule.create(nil)
+            end).to_throw("expected")
+        end)
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- Run Tests
+--------------------------------------------------------------------------------
+
+local success = t.run()
+t.reset()
+os.exit(success and 0 or 1)
+```
+
+*— adapted from tests/test_expect_matchers.lua*
+
+**Gotcha:** Always call `t.reset()` at the start if tests may be re-run in the same session.
+
+***
+
+## Framework Test Harness (C++ Integration)
+
+\label{recipe:test-harness-cpp}
+
+**When to use:** Write tests that need engine integration (input, snapshots, screenshots).
+
+The C++ test harness exposes `test_harness` global to Lua when running in test mode:
+
+```lua
+-- Available via test_harness global
+local harness = test_harness
+
+-- Configuration
+print(harness.args.seed)              -- RNG seed
+print(harness.args.headless)          -- Headless mode?
+print(harness.args.artifacts_dir)     -- Output directory
+print(harness.test_api_version)       -- API version string
+
+-- Capabilities
+if harness.capabilities.screenshot then
+    harness.screenshot("my_screenshot")
+end
+
+-- Wait for frames (coroutine-based)
+harness.wait_frames(60)  -- Wait 1 second at 60fps
+
+-- Skip test
+harness.skip("reason")
+
+-- Mark as expected failure
+harness.xfail("known issue #123")
+
+-- Snapshots (save/restore game state)
+harness.snapshot_create("before_combat")
+-- ... make changes ...
+harness.snapshot_restore("before_combat")
+
+-- Log capture
+local mark = harness.log_mark()  -- Get current position
+-- ... do something that logs ...
+local found, idx, msg = harness.find_log("pattern", { since = mark })
+
+-- Assert no errors logged
+harness.assert_no_log_level("error", { since = mark })
+
+-- Frame hash for determinism testing
+local hash = harness.frame_hash("test_api")
+
+-- Exit test run
+harness.exit(0)  -- Success
+harness.exit(1)  -- Failure
+```
+
+*— from src/testing/test_harness_lua.cpp*
+
+**Capabilities:**
+
+| Capability | Description |
+|------------|-------------|
+| `screenshot` | Take screenshots |
+| `snapshot` | Save/restore game state |
+| `determinism` | Frame hashing for regression |
+| `logs` | Log capture and search |
+| `input` | Inject input events |
+| `headless` | Running without display |
+
+**Gotcha:** `wait_frames()` yields the coroutine. Use it at the top level of tests, not inside callbacks.
+
+***
+
+## Framework Test Runner (DSL API)
+
+\label{recipe:framework-test-runner}
+
+**When to use:** Write tests using the framework's describe/it DSL with tag filtering.
+
+```lua
+local runner = require("tests.framework.test_runner")
+
+runner.reset()
+
+runner.describe("Physics System", function()
+    runner.beforeAll(function()
+        -- Run once before all tests in suite
+    end)
+
+    runner.afterAll(function()
+        -- Run once after all tests in suite
+    end)
+
+    runner.beforeEach(function()
+        -- Run before each test
+    end)
+
+    runner.afterEach(function()
+        -- Run after each test
+    end)
+
+    runner.it("creates collision", {
+        id = "physics.collision_basic",  -- Stable ID
+        tags = { "smoke", "physics" },
+        timeout_frames = 600,
+    }, function()
+        -- Test implementation
+    end)
+
+    runner.it("handles high speed", {
+        tags = { "physics", "slow" },
+    }, function()
+        -- Another test
+    end)
+end)
+
+local result = runner.run({
+    include_tags = { "smoke" },     -- Only run smoke tests
+    exclude_tags = { "slow" },      -- Skip slow tests
+    fail_fast = true,               -- Stop on first failure
+    shuffle_tests = true,           -- Randomize order
+    shuffle_seed = 12345,           -- Deterministic shuffle
+})
+
+print("Passed:", result.passed)
+print("Failed:", result.failed)
+print("Skipped:", result.skipped)
+```
+
+*— from tests/framework/test_runner.lua*
+
+**Test options:**
+
+| Option | Description |
+|--------|-------------|
+| `id` | Stable test ID (auto-generated if omitted) |
+| `tags` | Array of tags for filtering |
+| `timeout_frames` | Max frames before timeout |
+| `skip` | Skip this test |
+| `skip_reason` | Reason for skipping |
+| `xfail` | Mark as expected failure |
+| `xfail_reason` | Reason for expected failure |
+| `retry_count` | Number of retries on failure |
+
+**Run options:**
+
+| Option | Description |
+|--------|-------------|
+| `include_tags` | Only run tests with these tags |
+| `exclude_tags` | Skip tests with these tags |
+| `run_quarantined` | Include quarantined tests |
+| `fail_fast` | Stop on first failure |
+| `max_failures` | Stop after N failures |
+| `shuffle_tests` | Randomize test order |
+| `shuffle_seed` | Seed for deterministic shuffle |
+| `rng_scope` | "run" or "test" for RNG seeding |
+
+***
+
+## TAP Reporter
+
+\label{recipe:tap-reporter}
+
+**When to use:** Generate TAP (Test Anything Protocol) output for CI systems.
+
+```lua
+local runner = require("tests.framework.test_runner")
+local tap = require("tests.framework.reporters.tap")
+
+-- Run tests
+runner.describe("MyTests", function()
+    runner.it("passes", function() end)
+    runner.it("fails", function() error("oops") end)
+end)
+
+local result = runner.run()
+
+-- Generate TAP output
+local tap_output = tap.render(result)
+print(tap_output)
+
+-- Or write to file
+tap.write(result, "test_output/results.tap")
+```
+
+**TAP output format:**
+
+```
+TAP version 14
+1..2
+ok 1 - passes
+not ok 2 - fails
+  ---
+  failure_kind: error
+  message: |
+    oops
+  ...
+```
+
+*— from tests/framework/reporters/tap.lua*
+
+***
+
+## Mocking Engine Globals
+
+\label{recipe:test-mocking}
+
+**When to use:** Run tests standalone without the full engine.
+
+```lua
+-- Mock alignment flags
+_G.AlignmentFlag = {
+    HORIZONTAL_LEFT = 1,
+    HORIZONTAL_CENTER = 2,
+    HORIZONTAL_RIGHT = 4,
+    VERTICAL_TOP = 8,
+    VERTICAL_CENTER = 16,
+    VERTICAL_BOTTOM = 32,
+}
+
+-- Mock bit operations
+_G.bit = {
+    bor = function(a, b) return (a or 0) + (b or 0) end,
+    band = function(a, b) return math.min(a or 0, b or 0) end,
+}
+
+-- Mock Color constructor
+_G.Color = {
+    new = function(r, g, b, a)
+        return { r = r, g = g, b = b, a = a }
+    end
+}
+
+-- Mock registry
+_G.registry = _G.registry or {
+    valid = function() return true end,
+    get = function() return {} end,
+    emplace = function() return {} end,
+}
+
+-- Mock entity cache
+_G.entity_cache = {
+    valid = function() return true end,
+    active = function() return true end,
+}
+
+-- Mock animation system
+_G.animation_system = {
+    createAnimatedObjectWithTransform = function(id, ...)
+        return { _mockEntity = true, sprite = id }
+    end,
+    resizeAnimationObjectsInEntityToFit = function() end,
+}
+
+-- Mock globals
+_G.globals = _G.globals or {
+    screenWidth = 1920,
+    screenHeight = 1080,
+}
+```
+
+*— adapted from docs/ui/writing-ui-tests.md*
+
+**Gotcha:** Check for standalone execution with `local standalone = not _G.registry` before loading mocks.
+
+***
+
+## Testing DSL Components
+
+\label{recipe:test-dsl}
+
+**When to use:** Test UI DSL functions and strict validation.
+
+```lua
+local t = require("tests.test_runner")
+local dsl = require("ui.ui_syntax_sugar")
+
+t.describe("dsl.text", function()
+    t.it("creates text definition", function()
+        local result = dsl.text("Hello")
+        t.expect(result).to_be_truthy()
+        t.expect(result.type).to_be("TEXT")
+    end)
+
+    t.it("accepts fontSize option", function()
+        local result = dsl.text("Hello", { fontSize = 24 })
+        t.expect(result.config.fontSize).to_be(24)
+    end)
+end)
+
+t.describe("dsl.strict validation", function()
+    t.it("catches typos with suggestions", function()
+        local ok, err = pcall(function()
+            dsl.strict.text("Hello", { fontsize = 16 })  -- Wrong case
+        end)
+        t.expect(ok).to_be(false)
+        t.expect(tostring(err)).to_contain("did you mean 'fontSize'")
+    end)
+
+    t.it("validates type mismatches", function()
+        local ok, err = pcall(function()
+            dsl.strict.text("Hello", { fontSize = "large" })
+        end)
+        t.expect(ok).to_be(false)
+        t.expect(tostring(err)).to_contain("expected number")
+    end)
+end)
+```
+
+*— adapted from docs/ui/writing-ui-tests.md*
+
+***
+
+## Complete Test Example
+
+\label{recipe:test-complete}
+
+**When to use:** Reference for a full test file with all patterns.
+
+```lua
+-- assets/scripts/tests/test_physics_builder.lua
+--[[
+================================================================================
+TEST: PhysicsBuilder
+================================================================================
+Validates PhysicsBuilder fluent API for physics body creation.
+
+Run standalone: lua assets/scripts/tests/test_physics_builder.lua
+================================================================================
+]]
+
+package.path = package.path .. ";./assets/scripts/?.lua"
+
+local standalone = not _G.registry
+if standalone then
+    pcall(require, "tests.mocks.engine_mock")
+    _G.PhysicsManager = { get_world = function() return {} end }
+    _G.physics = {
+        AddBody = function() return 1 end,
+        SetTag = function() end,
+        HasTag = function() return true end,
+    }
+end
+
+local t = require("tests.test_runner")
+t.reset()
+
+--------------------------------------------------------------------------------
+-- Tests
+--------------------------------------------------------------------------------
+
+t.describe("PhysicsBuilder", function()
+    local PhysicsBuilder = require("core.physics_builder")
+    local entity
+
+    t.before_each(function()
+        entity = 12345  -- Mock entity ID
+    end)
+
+    t.describe("creation", function()
+        t.it("creates builder for entity", function()
+            local builder = PhysicsBuilder.for_entity(entity)
+            t.expect(builder).to_be_truthy()
+            t.expect(builder._entity).to_be(entity)
+        end)
+
+        t.it("requires entity argument", function()
+            t.expect(function()
+                PhysicsBuilder.for_entity(nil)
+            end).to_throw()
+        end)
+    end)
+
+    t.describe("shape methods", function()
+        t.it("supports circle shape", function()
+            local builder = PhysicsBuilder.for_entity(entity):circle()
+            t.expect(builder._shape).to_be("circle")
+        end)
+
+        t.it("supports rectangle shape", function()
+            local builder = PhysicsBuilder.for_entity(entity):rectangle()
+            t.expect(builder._shape).to_be("rectangle")
+        end)
+    end)
+
+    t.describe("fluent chaining", function()
+        t.it("chains all methods", function()
+            local builder = PhysicsBuilder.for_entity(entity)
+                :circle()
+                :tag("player")
+                :bullet()
+                :fixedRotation()
+                :collideWith({"enemy", "projectile"})
+
+            t.expect(builder._tag).to_be("player")
+            t.expect(builder._bullet).to_be(true)
+            t.expect(builder._fixedRotation).to_be(true)
+        end)
+    end)
+
+    t.describe("apply", function()
+        t.it("creates physics body", function()
+            local builder = PhysicsBuilder.for_entity(entity)
+                :circle()
+                :tag("test")
+
+            -- In real tests, this would create actual physics
+            local result = builder:apply()
+            t.expect(result).to_be_truthy()
+        end)
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- Run
+--------------------------------------------------------------------------------
+
+local success = t.run()
+t.reset()
+if standalone then
+    os.exit(success and 0 or 1)
+end
+
+return t
+```
+
+***
+
+\newpage
 \appendix
 
 # Appendix A: Function Index
@@ -15312,6 +16085,32 @@ Alphabetical listing of all documented functions and APIs.
 | `unpauseGame()` | Global | \pageref{recipe:game-control} |
 | `util.getColor()` | `util.util` | \pageref{recipe:util-colors} |
 | `util.makeSimpleTooltip()` | `util.util` | \pageref{recipe:tooltip} |
+| `TestRunner.describe()` | `tests.test_runner` | \pageref{recipe:test-runner} |
+| `TestRunner.it()` | `tests.test_runner` | \pageref{recipe:test-runner} |
+| `TestRunner.expect()` | `tests.test_runner` | \pageref{recipe:expect-matchers} |
+| `TestRunner.before_each()` | `tests.test_runner` | \pageref{recipe:test-organization} |
+| `TestRunner.after_each()` | `tests.test_runner` | \pageref{recipe:test-organization} |
+| `TestRunner.run()` | `tests.test_runner` | \pageref{recipe:running-tests} |
+| `TestRunner.reset()` | `tests.test_runner` | \pageref{recipe:test-template} |
+| `TestRunner.configure()` | `tests.test_runner` | \pageref{recipe:running-tests} |
+| `TestRunner:register()` | `tests.test_runner` | \pageref{recipe:test-registration} |
+| `runner.describe()` | `tests.framework.test_runner` | \pageref{recipe:framework-test-runner} |
+| `runner.it()` | `tests.framework.test_runner` | \pageref{recipe:framework-test-runner} |
+| `runner.beforeAll()` | `tests.framework.test_runner` | \pageref{recipe:framework-test-runner} |
+| `runner.afterAll()` | `tests.framework.test_runner` | \pageref{recipe:framework-test-runner} |
+| `runner.beforeEach()` | `tests.framework.test_runner` | \pageref{recipe:framework-test-runner} |
+| `runner.afterEach()` | `tests.framework.test_runner` | \pageref{recipe:framework-test-runner} |
+| `runner.run()` | `tests.framework.test_runner` | \pageref{recipe:framework-test-runner} |
+| `tap.render()` | `tests.framework.reporters.tap` | \pageref{recipe:tap-reporter} |
+| `tap.write()` | `tests.framework.reporters.tap` | \pageref{recipe:tap-reporter} |
+| `test_harness.wait_frames()` | C++ binding | \pageref{recipe:test-harness-cpp} |
+| `test_harness.skip()` | C++ binding | \pageref{recipe:test-harness-cpp} |
+| `test_harness.xfail()` | C++ binding | \pageref{recipe:test-harness-cpp} |
+| `test_harness.snapshot_create()` | C++ binding | \pageref{recipe:test-harness-cpp} |
+| `test_harness.snapshot_restore()` | C++ binding | \pageref{recipe:test-harness-cpp} |
+| `test_harness.log_mark()` | C++ binding | \pageref{recipe:test-harness-cpp} |
+| `test_harness.find_log()` | C++ binding | \pageref{recipe:test-harness-cpp} |
+| `test_harness.exit()` | C++ binding | \pageref{recipe:test-harness-cpp} |
 
 \newpage
 
@@ -15459,6 +16258,39 @@ ProjectileSystem.spawn({
     velocity = { x = vx, y = vy },
     preset = "fireball"  -- or inline config
 })
+```
+
+## Testing Quick
+
+```lua
+-- BDD-style test
+local t = require("tests.test_runner")
+
+t.describe("MyModule", function()
+    t.before_each(function()
+        -- Setup
+    end)
+
+    t.it("does something", function()
+        t.expect(1 + 1).to_be(2)
+        t.expect({a = 1}).to_contain("a")
+        t.expect(fn).to_throw("error")
+    end)
+end)
+
+t.run()
+
+-- Fluent matchers
+t.expect(value).to_be(42)           -- Equality
+t.expect(tbl).to_equal({a: 1})      -- Deep equality
+t.expect(str).to_contain("sub")     -- Contains
+t.expect(val).to_be_truthy()        -- Not nil/false
+t.expect(val).to_be_type("number")  -- Type check
+t.expect(val).never().to_be(0)      -- Negation
+
+-- Run with options
+t.configure({ filter = "physics", verbose = true })
+t.run({ shard_count = 4, shard_index = 0 })
 ```
 
 ***

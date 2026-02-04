@@ -216,7 +216,7 @@ TEST_F(GOAPWatchMaskTest, BuildWatchMaskIgnoresUnknownAtomsInWatch) {
 
 class GOAPReplanDiffTest : public ::testing::Test {
 protected:
-    actionplanner_t ap;
+    actionplanner_t ap{};
 
     void SetUp() override {
         goap_actionplanner_clear(&ap);
@@ -375,7 +375,7 @@ TEST_F(GOAPReplanDiffTest, CombinedScenario) {
 
 class GOAPPlanDriftTest : public ::testing::Test {
 protected:
-    actionplanner_t ap;
+    actionplanner_t ap{};
 
     void SetUp() override {
         goap_actionplanner_clear(&ap);
@@ -490,7 +490,7 @@ TEST_F(GOAPPlanDriftTest, MultipleDriftBits) {
 
 class GOAPAtomCapTest : public ::testing::Test {
 protected:
-    actionplanner_t ap;
+    actionplanner_t ap{};
 
     void SetUp() override {
         goap_actionplanner_clear(&ap);
@@ -708,7 +708,7 @@ TEST(GOAPVersioningTransactionalTest, FailedLoadBetweenSuccessfulLoads) {
 
 class GOAPReplanToGoalTest : public ::testing::Test {
 protected:
-    actionplanner_t ap;
+    actionplanner_t ap{};
 
     void SetUp() override {
         goap_actionplanner_clear(&ap);

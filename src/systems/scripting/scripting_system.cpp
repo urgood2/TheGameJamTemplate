@@ -512,6 +512,9 @@ namespace scripting
 
         void shutdown(entt::registry &registry)
         {
+            // Clear crash reporter callback to avoid dangling references to registry/lua
+            crash_reporter::SetGameStateCallback(nullptr);
+
             // Avoid firing release_script during registry.clear on shutdown.
             registry.on_destroy<ScriptComponent>().disconnect<&release_script>();
 

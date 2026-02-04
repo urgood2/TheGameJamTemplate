@@ -36,6 +36,9 @@ TEST_F(ScriptingBindingsTest, InitBindsContextIntoLuaWhenProvided) {
 
     auto& registryFromLua = lua["registry"].get<entt::registry&>();
     EXPECT_EQ(&registryFromLua, &registry);
+
+    // Clean up before local registry/lua go out of scope
+    scripting::monobehavior_system::shutdown(registry);
 }
 
 TEST_F(ScriptingBindingsTest, InitLeavesCtxNilWhenNotProvided) {
@@ -50,6 +53,9 @@ TEST_F(ScriptingBindingsTest, InitLeavesCtxNilWhenNotProvided) {
 
     auto& registryFromLua = lua["registry"].get<entt::registry&>();
     EXPECT_EQ(&registryFromLua, &registry);
+
+    // Clean up before local registry/lua go out of scope
+    scripting::monobehavior_system::shutdown(registry);
 }
 
 TEST_F(ScriptingBindingsTest, AtlasHelperPrefersContextOverGlobals) {

@@ -509,6 +509,7 @@ function test.run_all()
     -- Player info tests
     test.test_player_info_nil()
     test.test_player_info_basic()
+    test.test_player_info_seed_fallback()
 
     -- View model tests
     test.test_combat_view_model_structure()

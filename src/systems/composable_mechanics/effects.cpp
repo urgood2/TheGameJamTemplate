@@ -8,7 +8,7 @@
 #include <unordered_map>
 
 // ----- Small helpers -----
-static inline float  S(const Stats& s, StatId id)      { return s.final[(size_t)id]; }
+static inline float  EffectStat(const Stats& s, StatId id) { return s.final[(size_t)id]; }
 static inline float& SB(Stats& s,    StatId id)        { return s.base[(size_t)id]; }
 
 // Turn counter for LimitPerTurn
@@ -289,7 +289,7 @@ static void Run_StatCopyFrom(const Op_StatCopyFrom_Params& p, Context& cx, const
     auto& from = cx.world.get<Stats>(targets[0]);
     for (size_t i = 1; i < targets.size(); ++i) {
         auto& to = cx.world.get<Stats>(targets[i]);
-        SB(to, p.what) = S(from, p.what);
+        SB(to, p.what) = EffectStat(from, p.what);
         to.RecomputeFinal();
     }
 }

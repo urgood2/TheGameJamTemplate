@@ -6,6 +6,13 @@ namespace lockstep {
 
 class DeterministicRng {
 public:
+    struct State {
+        uint64_t state = 0;
+        uint64_t inc = 0;
+        bool has_cached_normal = false;
+        double cached_normal = 0.0;
+    };
+
     void seed(uint64_t seed, uint64_t stream = 0xda3e39cb94b95bdbULL);
 
     uint32_t nextU32();
@@ -18,6 +25,8 @@ public:
     double normal(double mean, double stddev);
 
     uint64_t getStateHash() const;
+    State get_state() const;
+    void set_state(const State& state);
 
 private:
     uint64_t state_ = 0;

@@ -447,7 +447,6 @@ static ImU32 LerpColor(ImU32 c1, ImU32 c2, float t) {
     // End ImGUI Console
     // ---------------------------------------------------------
 
-    }
 #else
     auto initConsole() -> void {}
 #endif

@@ -1,3 +1,5 @@
+#ifndef GAME_CORE_GUI_HPP
+#define GAME_CORE_GUI_HPP
 #pragma once
 
 #include "raylib.h"
@@ -70,3 +72,5 @@ void drawImGuiNinepatch(Rectangle &boundingRect,
                         ImTextureID textureID);
 
 } // namespace gui
+
+#endif // GAME_CORE_GUI_HPP

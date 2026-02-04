@@ -343,6 +343,10 @@ if (EMSCRIPTEN)
     set(TRACY_ENABLE OFF CACHE BOOL "Tracy disabled on Web" FORCE)
 endif()
 
+if(ENABLE_UNIT_TESTS AND TRACY_ENABLE AND NOT EMSCRIPTEN)
+    set(TRACY_TIMER_FALLBACK ON CACHE BOOL "Use lower resolution timers for Tracy in unit tests" FORCE)
+endif()
+
 if (TRACY_ENABLE AND NOT EMSCRIPTEN)
     message(STATUS "Tracy ENABLED for this build")
     add_compile_definitions(

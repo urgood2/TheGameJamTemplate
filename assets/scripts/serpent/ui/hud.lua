@@ -148,7 +148,8 @@ function hud._get_player_info(player_state)
         total_gold_earned = 0,
         time_played = 0,
         kills = 0,
-        waves_completed = 0
+        waves_completed = 0,
+        seed = 0
     }
 
     if player_state then
@@ -157,6 +158,7 @@ function hud._get_player_info(player_state)
         player_info.time_played = player_state.time_played or 0
         player_info.kills = player_state.kills or 0
         player_info.waves_completed = player_state.waves_completed or 0
+        player_info.seed = player_state.seed or player_state.run_seed or 0
     end
 
     return player_info

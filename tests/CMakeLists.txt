@@ -74,6 +74,7 @@ add_executable(unit_tests
     unit/test_save_file_io.cpp
     unit/test_replace_children.cpp
     unit/test_mode_config.cpp
+    unit/test_forensics.cpp
     unit/test_stubs_compile.cpp
     helpers/test_stubs.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_system.cpp
@@ -212,7 +213,19 @@ gtest_discover_tests(test_api_registry_tests)
 # ======================================================================
 add_executable(test_runtime_tests
     unit/test_runtime.cpp
+    unit/test_artifact_store.cpp
+    unit/test_determinism_audit.cpp
+    unit/test_determinism_guard.cpp
+    unit/test_harness_lua.cpp
+    unit/test_log_harness_lua.cpp
+    unit/test_log_capture.cpp
+    unit/test_lua_sandbox.cpp
+    unit/test_path_sandbox.cpp
+    unit/test_baseline_manager.cpp
+    unit/test_perf_tracker.cpp
     unit/test_schema_validation.cpp
+    unit/test_forensics.cpp
+    unit/test_tap_reporter.cpp
     ${TESTING_STUB_SOURCES}
 )
 
@@ -225,6 +238,11 @@ target_include_directories(test_runtime_tests PRIVATE
 target_link_libraries(test_runtime_tests PRIVATE
     gtest_main
     CommonSettings
+)
+
+target_compile_definitions(test_runtime_tests PRIVATE
+    UNIT_TESTS
+    ASSETS_PATH="${CMAKE_SOURCE_DIR}/assets/"
 )
 
 gtest_discover_tests(test_runtime_tests)

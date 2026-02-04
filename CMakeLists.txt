@@ -1050,6 +1050,11 @@ endif()
 # target_include_directories(${PROJECT_NAME} PUBLIC "${PROJECT_INCLUDE}/fudge_pathfinding/util")
 # target_include_directories(${PROJECT_NAME} PUBLIC "${PROJECT_INCLUDE}/GPGOAP")
 
+add_executable(e2e_supervisor tools/e2e_supervisor.cpp)
+set_target_properties(e2e_supervisor PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/tools"
+)
+
 
 # ------------------------------------------------------------
 # Web build helpers (shared)

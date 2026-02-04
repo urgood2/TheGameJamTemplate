@@ -36,10 +36,19 @@ int main(int argc, char** argv) {
     std::string stdout_msg;
     std::string stderr_msg;
     std::string list_path;
+    std::string report_path;
+    std::string junit_path;
 
     const char* dump_env = std::getenv("E2E_SUPERVISOR_DUMP_PATH");
     if (dump_env) {
         g_dump_path = dump_env;
+        if (!g_dump_path.empty()) {
+            std::error_code ec;
+            std::filesystem::path dump_parent = std::filesystem::path(g_dump_path).parent_path();
+            if (!dump_parent.empty()) {
+                std::filesystem::create_directories(dump_parent, ec);
+            }
+        }
     }
 
 #if !defined(_WIN32)
@@ -60,6 +69,10 @@ int main(int argc, char** argv) {
             stderr_msg = argv[++i];
         } else if (arg == "--list-tests-json" && i + 1 < argc) {
             list_path = argv[++i];
+        } else if (arg == "--write-report" && i + 1 < argc) {
+            report_path = argv[++i];
+        } else if (arg == "--write-junit" && i + 1 < argc) {
+            junit_path = argv[++i];
         }
     }
 
@@ -68,6 +81,20 @@ int main(int argc, char** argv) {
         std::filesystem::create_directories(path.parent_path());
         std::ofstream out(path);
         out << "{\"tests\":[{\"id\":\"stub.test\"}]}";
+    }
+
+    if (!report_path.empty()) {
+        std::filesystem::path path(report_path);
+        std::filesystem::create_directories(path.parent_path());
+        std::ofstream out(path);
+        out << "{\"schema_version\":\"1.0.0\",\"tests\":[]}";
+    }
+
+    if (!junit_path.empty()) {
+        std::filesystem::path path(junit_path);
+        std::filesystem::create_directories(path.parent_path());
+        std::ofstream out(path);
+        out << "<testsuite name=\"stub\" tests=\"0\"></testsuite>";
     }
 
     if (!stdout_msg.empty()) {

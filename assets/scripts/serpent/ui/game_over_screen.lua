@@ -29,11 +29,11 @@ local cachedRunStats = nil
 --- Show the game over screen
 --- @param run_stats table Run statistics (waves cleared, gold earned, units purchased, final wave, etc.)
 function game_over_screen.show(run_stats)
-    if GameOverScreen.isVisible then return end
-    GameOverScreen.isVisible = true
+    if game_over_screen.isVisible then return end
+    game_over_screen.isVisible = true
 
     -- Cache stats for display
-    cachedStats = stats or {}
+    cachedRunStats = run_stats or {}
 
     local screenW = globals.screenWidth()
     local screenH = globals.screenHeight()
@@ -41,7 +41,7 @@ function game_over_screen.show(run_stats)
     local centerY = screenH / 2
 
     -- Clear any existing handles
-    GameOverScreen.hide()
+    game_over_screen.hide()
 
     -- "GAME OVER" title - large, red, dramatic
     local titleRecipe = Text.define()
@@ -56,7 +56,7 @@ function game_over_screen.show(run_stats)
     table.insert(activeHandles, titleHandle)
 
     -- Display final stats if provided
-    GameOverScreen._renderStats(centerX, centerY - 40)
+    game_over_screen._renderStats(centerX, centerY - 40)
 
     -- "Restart" button
     local restartRecipe = Text.define()
@@ -99,9 +99,9 @@ function game_over_screen.show(run_stats)
 end
 
 --- Hide the game over screen
-function GameOverScreen.hide()
-    if not GameOverScreen.isVisible then return end
-    GameOverScreen.isVisible = false
+function game_over_screen.hide()
+    if not game_over_screen.isVisible then return end
+    game_over_screen.isVisible = false
 
     -- Stop all active text handles
     for _, handle in ipairs(activeHandles) do
@@ -111,7 +111,7 @@ function GameOverScreen.hide()
     end
     activeHandles = {}
     buttonBounds = {}
-    cachedStats = nil
+    cachedRunStats = nil
 
     log_debug("[GameOverScreen] Hidden")
 end
@@ -119,31 +119,31 @@ end
 --- Render game statistics
 --- @param centerX number Center X position for stats
 --- @param centerY number Center Y position for stats
-function GameOverScreen._renderStats(centerX, centerY)
-    if not cachedStats then return end
+function game_over_screen._renderStats(centerX, centerY)
+    if not cachedRunStats then return end
 
     local statsText = {}
 
     -- Wave reached
-    if cachedStats.wave_reached then
-        table.insert(statsText, string.format("Wave Reached: %d", cachedStats.wave_reached))
+    if cachedRunStats.wave_reached then
+        table.insert(statsText, string.format("Wave Reached: %d", cachedRunStats.wave_reached))
     end
 
     -- Enemies killed
-    if cachedStats.enemies_killed then
-        table.insert(statsText, string.format("Enemies Killed: %d", cachedStats.enemies_killed))
+    if cachedRunStats.enemies_killed then
+        table.insert(statsText, string.format("Enemies Killed: %d", cachedRunStats.enemies_killed))
     end
 
     -- Time survived
-    if cachedStats.time_survived then
-        local minutes = math.floor(cachedStats.time_survived / 60)
-        local seconds = math.floor(cachedStats.time_survived % 60)
+    if cachedRunStats.time_survived then
+        local minutes = math.floor(cachedRunStats.time_survived / 60)
+        local seconds = math.floor(cachedRunStats.time_survived % 60)
         table.insert(statsText, string.format("Time Survived: %02d:%02d", minutes, seconds))
     end
 
     -- Gold earned
-    if cachedStats.gold_earned then
-        table.insert(statsText, string.format("Gold Earned: %d", cachedStats.gold_earned))
+    if cachedRunStats.gold_earned then
+        table.insert(statsText, string.format("Gold Earned: %d", cachedRunStats.gold_earned))
     end
 
     -- Render stats if we have any
@@ -165,35 +165,35 @@ end
 --- @param mouseX number Mouse X position
 --- @param mouseY number Mouse Y position
 --- @param clicked boolean Whether mouse was clicked this frame
-function GameOverScreen.checkClick(mouseX, mouseY, clicked)
-    if not GameOverScreen.isVisible or not clicked then return end
+function game_over_screen.checkClick(mouseX, mouseY, clicked)
+    if not game_over_screen.isVisible or not clicked then return end
 
     -- Check restart button
     local restartBounds = buttonBounds["restart"]
-    if restartBounds and GameOverScreen._pointInBounds(mouseX, mouseY, restartBounds) then
-        GameOverScreen._handleRestartClick()
+    if restartBounds and game_over_screen._pointInBounds(mouseX, mouseY, restartBounds) then
+        game_over_screen._handleRestartClick()
         return
     end
 
     -- Check main menu button
     local menuBounds = buttonBounds["menu"]
-    if menuBounds and GameOverScreen._pointInBounds(mouseX, mouseY, menuBounds) then
-        GameOverScreen._handleMenuClick()
+    if menuBounds and game_over_screen._pointInBounds(mouseX, mouseY, menuBounds) then
+        game_over_screen._handleMenuClick()
         return
     end
 end
 
 --- Handle restart button click
-function GameOverScreen._handleRestartClick()
+function game_over_screen._handleRestartClick()
     log_debug("[GameOverScreen] Restart clicked")
-    GameOverScreen.hide()
+    game_over_screen.hide()
     signal.emit("game_restart")
 end
 
 --- Handle main menu button click
-function GameOverScreen._handleMenuClick()
+function game_over_screen._handleMenuClick()
     log_debug("[GameOverScreen] Main menu clicked")
-    GameOverScreen.hide()
+    game_over_screen.hide()
     signal.emit("game_main_menu")
 end
 
@@ -202,16 +202,16 @@ end
 --- @param y number Point Y coordinate
 --- @param bounds table Bounds with x, y, w, h
 --- @return boolean True if point is within bounds
-function GameOverScreen._pointInBounds(x, y, bounds)
+function game_over_screen._pointInBounds(x, y, bounds)
     return x >= bounds.x and x <= bounds.x + bounds.w and
            y >= bounds.y and y <= bounds.y + bounds.h
 end
 
 --- Alternative: handle any click to restart (simpler UX)
-function GameOverScreen.handleAnyClick()
-    if not GameOverScreen.isVisible then return end
+function game_over_screen.handleAnyClick()
+    if not game_over_screen.isVisible then return end
     log_debug("[GameOverScreen] Any click - restarting game")
-    GameOverScreen.hide()
+    game_over_screen.hide()
     signal.emit("game_restart")
 end
 

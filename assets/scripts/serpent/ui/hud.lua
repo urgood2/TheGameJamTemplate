@@ -270,12 +270,17 @@ end
 --- @return string Formatted number string
 function hud.format_number(num)
     local formatted = tostring(math.floor(num))
-    local k = 3
-    while k < #formatted do
-        formatted = formatted:sub(1, k) .. "," .. formatted:sub(k + 1)
-        k = k + 4
+    -- Insert commas from right to left
+    local result = ""
+    local count = 0
+    for i = #formatted, 1, -1 do
+        if count > 0 and count % 3 == 0 then
+            result = "," .. result
+        end
+        result = formatted:sub(i, i) .. result
+        count = count + 1
     end
-    return formatted
+    return result
 end
 
 --- Get health color based on percentage

@@ -14,9 +14,7 @@ Run with: lua assets/scripts/serpent/tests/test_screens.lua
 
 package.path = package.path .. ";./assets/scripts/?.lua;./assets/scripts/?/init.lua"
 
-local t = require("tests.test_runner")
-
--- Mock dependencies
+-- Mock dependencies BEFORE requiring modules
 _G.log_debug = function(msg) end
 _G.log_warning = function(msg) end
 _G.globals = {
@@ -24,8 +22,8 @@ _G.globals = {
     screenHeight = function() return 600 end
 }
 
--- Mock Text system
-_G.Text = {
+-- Mock Text system - must be injected into package.loaded before require
+local MockText = {
     define = function()
         return {
             content = function(self, content) self._content = content; return self end,
@@ -49,13 +47,22 @@ _G.Text = {
     end
 }
 
--- Mock signal system
-_G.signal = {
-    emit = function(signal_name, ...)
-        _G.signal.last_emitted = signal_name
-        _G.signal.last_args = {...}
-    end
+-- Mock signal system (emit defined after table to avoid self-reference issue)
+local MockSignal = {
+    last_emitted = nil,
+    last_args = {},
 }
+function MockSignal.emit(signal_name, ...)
+    MockSignal.last_emitted = signal_name
+    MockSignal.last_args = {...}
+end
+_G.signal = MockSignal
+
+-- Inject mocks into package.loaded BEFORE requiring test modules
+package.loaded["core.text"] = MockText
+package.loaded["external.hump.signal"] = MockSignal
+
+local t = require("tests.test_runner")
 
 t.describe("game_over_screen.lua - Screen Requirements", function()
     t.it("has required labels present", function()
@@ -192,30 +199,37 @@ end)
 
 t.describe("victory_screen.lua - Screen Requirements", function()
     t.it("has required labels present", function()
-        local victory_screen = require("serpent.ui.victory_screen")
+        -- Clear cached victory_screen to allow fresh require with capturing mock
+        package.loaded["serpent.ui.victory_screen"] = nil
 
-        -- Mock the show function to capture text content
+        -- Create a capturing mock for Text
         local captured_content = {}
-        _G.Text.define = function()
-            return {
-                content = function(self, content)
-                    table.insert(captured_content, content)
-                    return self
-                end,
-                size = function(self, size) return self end,
-                anchor = function(self, anchor) return self end,
-                space = function(self, space) return self end,
-                z = function(self, z) return self end,
-                pop = function(self, pop) return self end,
-                spawn = function(self)
-                    return {
-                        at = function(self, x, y)
-                            return { stop = function() end }
-                        end
-                    }
-                end
-            }
-        end
+        local CapturingMockText = {
+            define = function()
+                return {
+                    content = function(self, content)
+                        table.insert(captured_content, content)
+                        return self
+                    end,
+                    size = function(self, size) return self end,
+                    anchor = function(self, anchor) return self end,
+                    space = function(self, space) return self end,
+                    z = function(self, z) return self end,
+                    pop = function(self, pop) return self end,
+                    spawn = function(self)
+                        return {
+                            at = function(self, x, y)
+                                return { stop = function() end }
+                            end
+                        }
+                    end
+                }
+            end
+        }
+        package.loaded["core.text"] = CapturingMockText
+
+        -- Fresh require with capturing mock
+        local victory_screen = require("serpent.ui.victory_screen")
 
         -- Show victory screen to capture labels
         victory_screen.show()
@@ -236,6 +250,9 @@ t.describe("victory_screen.lua - Screen Requirements", function()
         t.expect(has_continue_button).to_be(true)
 
         victory_screen.hide()
+
+        -- Restore standard mock
+        package.loaded["core.text"] = MockText
     end)
 
     t.it("has button configured correctly", function()
@@ -258,7 +275,7 @@ t.describe("victory_screen.lua - Screen Requirements", function()
         local victory_screen = require("serpent.ui.victory_screen")
 
         -- Reset signal tracking
-        _G.signal.last_emitted = nil
+        MockSignal.last_emitted = nil
 
         victory_screen.show()
 
@@ -270,14 +287,14 @@ t.describe("victory_screen.lua - Screen Requirements", function()
         victory_screen.checkClick(click_x, click_y, true)
 
         -- Check that continue signal was emitted
-        t.expect(_G.signal.last_emitted).to_be("continue_game")
+        t.expect(MockSignal.last_emitted).to_be("continue_game")
 
         -- Test any click functionality
-        _G.signal.last_emitted = nil
+        MockSignal.last_emitted = nil
         victory_screen.show() -- Show again since checkClick hides it
 
         victory_screen.handleAnyClick()
-        t.expect(_G.signal.last_emitted).to_be("continue_game")
+        t.expect(MockSignal.last_emitted).to_be("continue_game")
     end)
 
     t.it("manages visibility state correctly", function()
@@ -305,7 +322,7 @@ t.describe("victory_screen.lua - Screen Requirements", function()
     t.it("ignores clicks when not visible", function()
         local victory_screen = require("serpent.ui.victory_screen")
 
-        _G.signal.last_emitted = nil
+        MockSignal.last_emitted = nil
 
         -- Ensure screen is hidden
         victory_screen.hide()
@@ -315,7 +332,7 @@ t.describe("victory_screen.lua - Screen Requirements", function()
         victory_screen.handleAnyClick()
 
         -- Should not emit signal
-        t.expect(_G.signal.last_emitted).to_be_nil()
+        t.expect(MockSignal.last_emitted).to_be_nil()
     end)
 end)
 
@@ -359,14 +376,14 @@ t.describe("screens.lua - Cross-Screen Consistency", function()
         local game_over_screen = require("serpent.ui.game_over_screen")
         local victory_screen = require("serpent.ui.victory_screen")
 
-        _G.signal.last_emitted = nil
+        MockSignal.last_emitted = nil
 
         -- Game over screen should emit appropriate signals
         -- Note: game_over_screen uses signal emission in its internal functions
         -- We test the victory screen since it's simpler and more predictable
         victory_screen.show()
         victory_screen.handleAnyClick()
-        t.expect(_G.signal.last_emitted).to_be("continue_game")
+        t.expect(MockSignal.last_emitted).to_be("continue_game")
 
         victory_screen.hide()
     end)

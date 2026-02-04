@@ -20,7 +20,10 @@ void handle_sigusr1(int) {
     if (g_dump_path.empty()) {
         return;
     }
-    std::ofstream out(g_dump_path);
+    std::filesystem::path path(g_dump_path);
+    std::error_code ec;
+    std::filesystem::create_directories(path.parent_path(), ec);
+    std::ofstream out(path);
     if (out) {
         out << "hang dump";
     }

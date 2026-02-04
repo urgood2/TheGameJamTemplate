@@ -2,6 +2,7 @@
 // TODO: Implement timeline_writer
 
 #include <filesystem>
+#include <fstream>
 #include <string>
 
 namespace testing {
@@ -15,6 +16,8 @@ public:
 
 private:
     bool open_ = false;
+    std::filesystem::path path_;
+    std::ofstream out_;
 };
 
 } // namespace testing

@@ -128,6 +128,39 @@ t.describe("Test Runner Watch Mode", function()
 end)
 
 --------------------------------------------------------------------------------
+-- Quarantine Support
+--------------------------------------------------------------------------------
+
+t.describe("Test Runner Quarantine", function()
+    t.it("should have quarantine configuration helpers", function()
+        t.expect(t.set_quarantine_path).to_be_type("function")
+        t.expect(t.set_quarantine_mode).to_be_type("function")
+        t.expect(t.set_quarantine_platform).to_be_type("function")
+        t.expect(t.check_quarantine).to_be_type("function")
+    end)
+
+    t.it("should load quarantine entries and detect expiry", function()
+        t.set_quarantine_path("assets/scripts/tests/_fixtures/visual_quarantine.json")
+        t.set_quarantine_mode("pr")
+
+        local active = t.check_quarantine("visual.test.active")
+        t.expect(active.quarantined).to_be(true)
+        t.expect(active.expired).to_be(false)
+
+        local expired = t.check_quarantine("visual.test.expired")
+        t.expect(expired.quarantined).to_be(true)
+        t.expect(expired.expired).to_be(true)
+
+        local missing = t.check_quarantine("visual.test.missing")
+        t.expect(missing.quarantined).to_be(false)
+
+        -- Restore defaults for the rest of the suite
+        t.set_quarantine_path("test_baselines/visual_quarantine.json")
+        t.set_quarantine_mode(nil)
+    end)
+end)
+
+--------------------------------------------------------------------------------
 -- Reset Functionality
 --------------------------------------------------------------------------------
 

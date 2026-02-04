@@ -55,11 +55,32 @@ Examples:
 ]]
 
 local TestRunner = {}
+local json = require("external.json")
 
 -- State
 local suites = {}           -- Registered describe blocks
 local current_suite = nil   -- Current suite being defined
-local results = { passed = 0, failed = 0, skipped = 0, errors = {}, timings = {}, total_time = 0 }
+local function init_results()
+    return {
+        passed = 0,
+        failed = 0,
+        skipped = 0,
+        errors = {},
+        timings = {},
+        total_time = 0,
+        quarantine = {
+            active = 0,
+            expired = 0,
+            failures = 0,
+            blocking_failures = 0,
+            mode = nil,
+            failures_list = {},
+            expired_list = {},
+        },
+    }
+end
+
+local results = init_results()
 
 -- Configuration
 local config = {
@@ -67,6 +88,9 @@ local config = {
     verbose = false,        -- Show detailed assertion output
     watch = false,          -- Watch mode (re-run on file changes)
     show_timing = true,     -- Show timing statistics
+    quarantine_path = "test_baselines/visual_quarantine.json",
+    quarantine_mode = nil,  -- pr | nightly | verify | local (defaults inferred)
+    quarantine_platform = nil,
 }
 
 -- ANSI colors (disable if not supported)
@@ -123,6 +147,27 @@ function TestRunner.set_timing(enabled)
     config.show_timing = enabled
 end
 
+--- Set quarantine file path
+--- @param path string Path to quarantine JSON
+function TestRunner.set_quarantine_path(path)
+    config.quarantine_path = path
+    TestRunner._quarantine_state = nil
+end
+
+--- Set quarantine mode (pr | nightly | verify | local)
+--- @param mode string
+function TestRunner.set_quarantine_mode(mode)
+    config.quarantine_mode = mode
+    TestRunner._quarantine_state = nil
+end
+
+--- Set quarantine platform override (e.g. "linux", "windows", "macos")
+--- @param platform string
+function TestRunner.set_quarantine_platform(platform)
+    config.quarantine_platform = platform
+    TestRunner._quarantine_state = nil
+end
+
 --- Configure the test runner
 --- @param opts table Configuration options
 function TestRunner.configure(opts)
@@ -130,6 +175,266 @@ function TestRunner.configure(opts)
     if opts.verbose ~= nil then config.verbose = opts.verbose end
     if opts.watch ~= nil then config.watch = opts.watch end
     if opts.show_timing ~= nil then config.show_timing = opts.show_timing end
+    if opts.quarantine_path ~= nil then config.quarantine_path = opts.quarantine_path end
+    if opts.quarantine_mode ~= nil then config.quarantine_mode = opts.quarantine_mode end
+    if opts.quarantine_platform ~= nil then config.quarantine_platform = opts.quarantine_platform end
+    TestRunner._quarantine_state = nil
+end
+
+--------------------------------------------------------------------------------
+-- Quarantine Utilities
+--------------------------------------------------------------------------------
+
+local function read_file(path)
+    local handle = io.open(path, "r")
+    if not handle then
+        return nil
+    end
+    local content = handle:read("*a")
+    handle:close()
+    return content
+end
+
+local function utc_offset_seconds()
+    local now = os.time()
+    local utc = os.time(os.date("!*t", now))
+    return os.difftime(now, utc)
+end
+
+local function parse_iso_utc(iso)
+    if type(iso) ~= "string" then
+        return nil
+    end
+    local year, month, day, hour, min, sec = iso:match("^(%d%d%d%d)%-(%d%d)%-(%d%d)T(%d%d):(%d%d):(%d%d)Z$")
+    if not year then
+        return nil
+    end
+    local epoch = os.time({
+        year = tonumber(year),
+        month = tonumber(month),
+        day = tonumber(day),
+        hour = tonumber(hour),
+        min = tonumber(min),
+        sec = tonumber(sec),
+        isdst = false,
+    })
+    if not epoch then
+        return nil
+    end
+    return epoch - utc_offset_seconds()
+end
+
+local function iso_date(iso)
+    if type(iso) ~= "string" then
+        return "unknown"
+    end
+    return iso:match("^(%d%d%d%d%-%d%d%-%d%d)") or iso
+end
+
+local function normalize_platform(value)
+    if not value then
+        return nil
+    end
+    return tostring(value):lower()
+end
+
+local function detect_platform()
+    local override = normalize_platform(config.quarantine_platform)
+    if override and override ~= "" then
+        return override
+    end
+    local env = normalize_platform(os.getenv("TEST_PLATFORM") or os.getenv("RUNNER_OS"))
+    if env and env ~= "" then
+        return env
+    end
+    if jit and jit.os then
+        return normalize_platform(jit.os)
+    end
+    if package.config:sub(1, 1) == "\\" then
+        return "windows"
+    end
+    return "linux"
+end
+
+local function platform_matches(platforms, current_platform)
+    if type(platforms) == "string" then
+        platforms = { platforms }
+    end
+    if not platforms or #platforms == 0 then
+        return true
+    end
+    for _, entry in ipairs(platforms) do
+        local value = normalize_platform(entry)
+        if value == "*" then
+            return true
+        end
+        if value == current_platform then
+            return true
+        end
+        if value and current_platform and current_platform:find(value, 1, true) then
+            return true
+        end
+    end
+    return false
+end
+
+local function detect_quarantine_mode()
+    local mode = normalize_platform(config.quarantine_mode)
+        or normalize_platform(os.getenv("TEST_QUARANTINE_MODE"))
+        or normalize_platform(os.getenv("QUARANTINE_MODE"))
+    if mode and mode ~= "" then
+        return mode
+    end
+    if os.getenv("CI") then
+        return "pr"
+    end
+    return "local"
+end
+
+local function quarantine_mode_blocks(mode)
+    return mode == "nightly" or mode == "verify" or mode == "full"
+end
+
+function TestRunner.load_quarantine(path)
+    local quarantine_path = path or config.quarantine_path
+    local content = read_file(quarantine_path)
+    if not content then
+        return {
+            schema_version = "1.0",
+            updated_at = nil,
+            default_expiry_days = 14,
+            quarantined_tests = {},
+            _missing = true,
+        }, quarantine_path
+    end
+
+    local ok, data = pcall(json.decode, content)
+    if not ok or type(data) ~= "table" then
+        return {
+            schema_version = "1.0",
+            updated_at = nil,
+            default_expiry_days = 14,
+            quarantined_tests = {},
+            _invalid = true,
+        }, quarantine_path
+    end
+
+    data.schema_version = data.schema_version or "1.0"
+    data.default_expiry_days = data.default_expiry_days or 14
+    data.quarantined_tests = data.quarantined_tests or {}
+    return data, quarantine_path
+end
+
+local function build_quarantine_state()
+    local data, path = TestRunner.load_quarantine()
+    local now = os.time()
+    local platform = detect_platform()
+    local mode = detect_quarantine_mode()
+    return {
+        data = data,
+        path = path,
+        now = now,
+        platform = platform,
+        mode = mode,
+    }
+end
+
+local function get_quarantine_state()
+    if not TestRunner._quarantine_state then
+        TestRunner._quarantine_state = build_quarantine_state()
+    end
+    return TestRunner._quarantine_state
+end
+
+local function compute_expired(entry, now_epoch)
+    if not entry.expires_at then
+        return true
+    end
+    local expiry_epoch = parse_iso_utc(entry.expires_at)
+    if not expiry_epoch then
+        return true
+    end
+    return now_epoch >= expiry_epoch
+end
+
+local function summarize_quarantine_entries(state)
+    local active = {}
+    local expired = {}
+
+    for _, entry in ipairs(state.data.quarantined_tests or {}) do
+        if entry.test_id and platform_matches(entry.platforms or { "*" }, state.platform) then
+            local is_expired = compute_expired(entry, state.now)
+            if is_expired then
+                table.insert(expired, entry)
+            else
+                table.insert(active, entry)
+            end
+        end
+    end
+
+    return active, expired
+end
+
+function TestRunner.check_quarantine(test_id)
+    if not test_id then
+        return { quarantined = false }
+    end
+    local state = get_quarantine_state()
+    for _, entry in ipairs(state.data.quarantined_tests or {}) do
+        if entry.test_id == test_id and platform_matches(entry.platforms or { "*" }, state.platform) then
+            return {
+                quarantined = true,
+                expired = compute_expired(entry, state.now),
+                reason = entry.reason,
+                owner = entry.owner,
+                issue_link = entry.issue_link,
+                expires_at = entry.expires_at,
+                entry = entry,
+            }
+        end
+    end
+    return { quarantined = false }
+end
+
+local function log_quarantine_status(state)
+    local active, expired = summarize_quarantine_entries(state)
+    results.quarantine.active = #active
+    results.quarantine.expired = #expired
+    results.quarantine.mode = state.mode
+    results.quarantine.expired_list = expired
+
+    print("[QUARANTINE] === Quarantine Status ===")
+    print(string.format("[QUARANTINE] Active quarantines: %d", #active))
+    for _, entry in ipairs(active) do
+        print(string.format("[QUARANTINE]   - %s (expires: %s)", entry.test_id, iso_date(entry.expires_at)))
+    end
+    for _, entry in ipairs(expired) do
+        print(string.format("[QUARANTINE]   - %s (expires: %s, EXPIRED!)", entry.test_id, iso_date(entry.expires_at)))
+    end
+    print("")
+end
+
+local function log_quarantine_test(entry, status, mode, blocking)
+    print(string.format("[QUARANTINE] Test: %s", entry.test_id))
+    print(string.format("[QUARANTINE]   Status: %s", status))
+    if entry.reason then
+        print(string.format("[QUARANTINE]   Reason: %s", entry.reason))
+    end
+    if entry.owner then
+        print(string.format("[QUARANTINE]   Owner: %s", entry.owner))
+    end
+    if entry.issue_link then
+        print(string.format("[QUARANTINE]   Issue: %s", entry.issue_link))
+    end
+    if entry.expires_at then
+        print(string.format("[QUARANTINE]   Expires: %s", iso_date(entry.expires_at)))
+    end
+    if blocking then
+        print(string.format("[QUARANTINE]   Action: Error (%s)", mode))
+    else
+        print("[QUARANTINE]   Action: Warning only (PR CI)")
+    end
+    print("")
 end
 
 --------------------------------------------------------------------------------
@@ -224,12 +529,40 @@ end
 
 --- Define a test case within a describe block
 --- @param name string Test description
---- @param fn function Test implementation
-function TestRunner.it(name, fn)
+--- @param opts_or_fn table|function Options or test function
+--- @param maybe_fn function? Test implementation if opts provided
+function TestRunner.it(name, opts_or_fn, maybe_fn)
     if not current_suite then
         error("it() must be called inside a describe() block")
     end
-    table.insert(current_suite.tests, { name = name, fn = fn })
+    local opts = {}
+    local fn = maybe_fn
+    if type(opts_or_fn) == "function" then
+        fn = opts_or_fn
+    elseif type(opts_or_fn) == "table" then
+        opts = opts_or_fn
+    end
+    if not fn then
+        error("it() requires a test function")
+    end
+    table.insert(current_suite.tests, {
+        name = name,
+        fn = fn,
+        test_id = opts.test_id,
+        has_visual = opts.has_visual or opts.visual,
+    })
+end
+
+--- Define a visual test case with quarantine metadata
+--- @param name string Test description
+--- @param test_id string Unique test identifier
+--- @param fn function Test implementation
+--- @param opts table? Additional metadata
+function TestRunner.it_visual(name, test_id, fn, opts)
+    opts = opts or {}
+    opts.test_id = test_id
+    opts.has_visual = true
+    TestRunner.it(name, opts, fn)
 end
 
 --- Define setup to run before each test
@@ -577,6 +910,7 @@ function TestRunner._run_suite(suite, indent)
     indent = indent or ""
     local suite_start = get_time()
     local suite_has_matching_tests = false
+    local quarantine_state = get_quarantine_state()
 
     -- Pre-check if any tests match the filter
     if config.filter then
@@ -631,6 +965,16 @@ function TestRunner._run_suite(suite, indent)
                 end
             end
 
+            local test_id = test.test_id
+            local quarantine_status = nil
+            if test.has_visual then
+                test_id = test_id or (suite.name .. "::" .. test.name)
+                quarantine_status = TestRunner.check_quarantine(test_id)
+                if quarantine_status.quarantined then
+                    quarantine_status.entry.test_id = test_id
+                end
+            end
+
             -- Run test
             local ok, err = pcall(test.fn)
             local test_duration = get_time() - test_start
@@ -653,29 +997,63 @@ function TestRunner._run_suite(suite, indent)
                     print(indent .. "    " .. COLORS.dim .. "(all assertions passed)" .. COLORS.reset)
                 end
             else
-                results.failed = results.failed + 1
                 local trace = format_stack_trace(err)
-                table.insert(results.errors, {
-                    suite = suite.name,
-                    name = test.name,
-                    error = err,
-                    trace = trace,
-                })
                 local timing_str = config.show_timing and (" " .. COLORS.dim .. "(" .. format_duration(test_duration) .. ")" .. COLORS.reset) or ""
-                print(indent .. "  " .. COLORS.red .. "✗ " .. test.name .. COLORS.reset .. timing_str)
 
-                -- Show inline error (always shown, but more detail in verbose mode)
-                if config.verbose then
-                    print(indent .. "    " .. COLORS.dim .. tostring(err) .. COLORS.reset)
-                    if trace and trace ~= "" then
-                        for line in trace:gmatch("[^\n]+") do
-                            print(indent .. "    " .. COLORS.dim .. line .. COLORS.reset)
-                        end
+                if quarantine_status and quarantine_status.quarantined and test.has_visual then
+                    local status = quarantine_status.expired and "quarantine_expired" or "quarantine_fail"
+                    local blocking = quarantine_status.expired or quarantine_mode_blocks(quarantine_state.mode)
+
+                    results.quarantine.failures = results.quarantine.failures + 1
+                    table.insert(results.quarantine.failures_list, {
+                        test_id = test_id,
+                        status = status,
+                        reason = quarantine_status.reason,
+                        owner = quarantine_status.owner,
+                        issue_link = quarantine_status.issue_link,
+                        expires_at = quarantine_status.expires_at,
+                        blocking = blocking,
+                    })
+
+                    if blocking then
+                        results.failed = results.failed + 1
+                        results.quarantine.blocking_failures = results.quarantine.blocking_failures + 1
+                        table.insert(results.errors, {
+                            suite = suite.name,
+                            name = test.name .. " (" .. status .. ")",
+                            error = err,
+                            trace = trace,
+                        })
+                        print(indent .. "  " .. COLORS.red .. "✗ " .. test.name .. " (quarantined)" .. COLORS.reset .. timing_str)
+                    else
+                        print(indent .. "  " .. COLORS.yellow .. "⚠ " .. test.name .. " (quarantined)" .. COLORS.reset .. timing_str)
                     end
+
+                    local entry = quarantine_status.entry or { test_id = test_id }
+                    log_quarantine_test(entry, status, quarantine_state.mode, blocking)
                 else
-                    -- Show just first line of error
-                    local err_line = tostring(err):match("^[^\n]+") or tostring(err)
-                    print(indent .. "    " .. COLORS.dim .. err_line .. COLORS.reset)
+                    results.failed = results.failed + 1
+                    table.insert(results.errors, {
+                        suite = suite.name,
+                        name = test.name,
+                        error = err,
+                        trace = trace,
+                    })
+                    print(indent .. "  " .. COLORS.red .. "✗ " .. test.name .. COLORS.reset .. timing_str)
+
+                    -- Show inline error (always shown, but more detail in verbose mode)
+                    if config.verbose then
+                        print(indent .. "    " .. COLORS.dim .. tostring(err) .. COLORS.reset)
+                        if trace and trace ~= "" then
+                            for line in trace:gmatch("[^\n]+") do
+                                print(indent .. "    " .. COLORS.dim .. line .. COLORS.reset)
+                            end
+                        end
+                    else
+                        -- Show just first line of error
+                        local err_line = tostring(err):match("^[^\n]+") or tostring(err)
+                        print(indent .. "    " .. COLORS.dim .. err_line .. COLORS.reset)
+                    end
                 end
             end
 
@@ -698,7 +1076,7 @@ end
 --- Run all registered test suites
 --- @return boolean True if all tests passed
 function TestRunner.run()
-    results = { passed = 0, failed = 0, skipped = 0, errors = {}, timings = {}, total_time = 0 }
+    results = init_results()
     local run_start = get_time()
 
     print("\n" .. COLORS.cyan .. "═══════════════════════════════════════════════════════════════" .. COLORS.reset)
@@ -713,6 +1091,9 @@ function TestRunner.run()
         print(COLORS.yellow .. "  Mode: verbose" .. COLORS.reset)
     end
     print("")
+
+    TestRunner._quarantine_state = build_quarantine_state()
+    log_quarantine_status(TestRunner._quarantine_state)
 
     for _, suite in ipairs(suites) do
         TestRunner._run_suite(suite)
@@ -760,6 +1141,17 @@ function TestRunner.run()
 
     print(COLORS.cyan .. "───────────────────────────────────────────────────────────────" .. COLORS.reset)
 
+    -- Quarantine summary
+    print("\n[QUARANTINE] Summary:")
+    local total_quarantined = results.quarantine.active + results.quarantine.expired
+    print(string.format("[QUARANTINE]   Quarantined tests: %d", total_quarantined))
+    print(string.format("[QUARANTINE]   Quarantine failures: %d", results.quarantine.failures))
+    if results.quarantine.expired > 0 then
+        print(string.format("[QUARANTINE]   Expired quarantines: %d (blocking!)", results.quarantine.expired))
+    else
+        print("[QUARANTINE]   Expired quarantines: 0")
+    end
+
     -- Detailed failures
     if #results.errors > 0 then
         print("\n" .. COLORS.red .. "FAILURES:" .. COLORS.reset)
@@ -772,8 +1164,16 @@ function TestRunner.run()
         end
     end
 
-    local success = results.failed == 0
-    print("\n" .. (success and COLORS.green .. "✓ All tests passed!" or COLORS.red .. "✗ Some tests failed") .. COLORS.reset .. "\n")
+    local success = results.failed == 0 and results.quarantine.expired == 0
+    local final_message
+    if success then
+        final_message = COLORS.green .. "✓ All tests passed!"
+    elseif results.failed > 0 then
+        final_message = COLORS.red .. "✗ Some tests failed"
+    else
+        final_message = COLORS.red .. "✗ Quarantine expired"
+    end
+    print("\n" .. final_message .. COLORS.reset .. "\n")
 
     return success
 end
@@ -785,10 +1185,14 @@ TestRunner.run_all = TestRunner.run
 function TestRunner.reset()
     suites = {}
     current_suite = nil
-    results = { passed = 0, failed = 0, skipped = 0, errors = {}, timings = {}, total_time = 0 }
+    results = init_results()
     -- Also reset config to defaults
     config.filter = nil
     config.verbose = false
+    config.quarantine_path = "test_baselines/visual_quarantine.json"
+    config.quarantine_mode = nil
+    config.quarantine_platform = nil
+    TestRunner._quarantine_state = nil
 end
 
 --- Get the results of the last test run

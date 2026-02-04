@@ -43,7 +43,7 @@ end
 
 TestRunner.describe("Inventory Grid Containment", function()
 
-    TestRunner.it("all slots stay within panel bounds", function()
+    TestRunner.it_visual("all slots stay within panel bounds", "ui.inventory.containment.slots", function()
         local gridDef = createTestInventoryGrid()
         local entity = UITestUtils.spawnAndWait(gridDef, { x = 100, y = 100 })
 
@@ -52,7 +52,7 @@ TestRunner.describe("Inventory Grid Containment", function()
         UITestUtils.cleanup(entity)
     end)
 
-    TestRunner.it("grid title stays within panel bounds", function()
+    TestRunner.it_visual("grid title stays within panel bounds", "ui.inventory.containment.title", function()
         local gridDef = createTestInventoryGrid()
         local entity = UITestUtils.spawnAndWait(gridDef, { x = 100, y = 100 })
 
@@ -65,7 +65,7 @@ end)
 
 TestRunner.describe("Inventory Grid Window Bounds", function()
 
-    TestRunner.it("inventory panel stays within window", function()
+    TestRunner.it_visual("inventory panel stays within window", "ui.inventory.window_bounds", function()
         local gridDef = createTestInventoryGrid()
         -- Spawn in safe area
         local entity = UITestUtils.spawnAndWait(gridDef, { x = 200, y = 200 })
@@ -79,7 +79,7 @@ end)
 
 TestRunner.describe("Inventory Grid Z-Order", function()
 
-    TestRunner.it("slots have correct z-order relative to panel", function()
+    TestRunner.it_visual("slots have correct z-order relative to panel", "ui.inventory.z_order", function()
         local gridDef = createTestInventoryGrid()
         local entity = UITestUtils.spawnAndWait(gridDef, { x = 100, y = 100 })
 
@@ -96,7 +96,7 @@ end)
 
 TestRunner.describe("Inventory Slot Non-Overlap", function()
 
-    TestRunner.it("adjacent slots do not overlap", function()
+    TestRunner.it_visual("adjacent slots do not overlap", "ui.inventory.slot_overlap", function()
         local gridDef = createTestInventoryGrid()
         local entity = UITestUtils.spawnAndWait(gridDef, { x = 100, y = 100 })
 

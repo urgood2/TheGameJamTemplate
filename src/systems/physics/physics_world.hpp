@@ -46,6 +46,7 @@ namespace physics {
       void set_elasticity(float e) const;
       void set_surface_velocity(float vx, float vy) const;
       void ignore() const;
+      void set_enabled(bool enabled) const;
   };
   
   static inline std::string MakeKey(const std::string& a, const std::string& b){

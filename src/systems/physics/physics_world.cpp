@@ -69,6 +69,16 @@ void LuaArbiter::set_surface_velocity(float vx, float vy) const {
 }
 void LuaArbiter::ignore() const { cpArbiterIgnore(arb); }
 
+void LuaArbiter::set_enabled(bool enabled) const {
+  if (enabled) {
+    // Re-enable the collision by setting state to normal
+    arb->state = CP_ARBITER_STATE_NORMAL;
+  } else {
+    // Disable the collision by setting state to ignore
+    arb->state = CP_ARBITER_STATE_IGNORE;
+  }
+}
+
 static inline uintptr_t EID(entt::entity e) {
   return static_cast<uintptr_t>(e);
 }

@@ -202,39 +202,142 @@ print(string.format("[VERIFY] %s | pos: (%.1f, %.1f) | size: %dx%d | state: %s",
 
 ### Automated Test Harness Integration
 
-*(Coming soon - will be merged to master)*
+The engine provides a comprehensive testing infrastructure with two layers:
 
-> **TODO:** Document actual commands when harness is merged. Update this section with:
-> - Actual `just` command name
-> - Real output format
-> - Assertion syntax
-> - Integration examples
+| Layer | Location | Purpose |
+|-------|----------|---------|
+| **Lua Test Runner** | `tests/test_runner.lua` | BDD-style unit tests |
+| **C++ Test Harness** | `src/testing/test_harness_lua.cpp` | Engine integration (snapshots, determinism) |
 
-The automated game testing harness will provide:
-- Headless execution for CI/CD
-- State capture at key frames
-- Regression detection
-- Performance benchmarking
+**Full documentation:** See Lua Cookbook Chapter 12: Testing Framework
 
-**Planned usage pattern (placeholder - update when merged):**
+#### Quick Start: BDD-Style Tests
 
-```bash
-# Run test harness against prototype
-just test-harness prototypes/auto-achra
+```lua
+-- assets/scripts/tests/test_my_prototype.lua
+package.path = package.path .. ";./assets/scripts/?.lua"
+local t = require("tests.test_runner")
+t.reset()
 
-# Expected output:
-# [HARNESS] Frame 0: 4 entities spawned
-# [HARNESS] Frame 60: Combat initiated, 2 enemies in range
-# [HARNESS] Frame 120: Player HP: 85/100
-# [HARNESS] PASS: All assertions met (2.4s)
+t.describe("Auto-Achra Combat", function()
+    t.before_each(function()
+        -- Setup: spawn test entities
+    end)
+
+    t.it("spawns knight at room center", function()
+        local knight = spawn_unit("knight", room_center)
+        t.expect(knight).to_be_truthy()
+        t.expect(knight.x).to_be(room_center.x)
+    end)
+
+    t.it("GOAP selects attack when enemy in range", function()
+        local knight = spawn_unit("knight", {x=100, y=100})
+        local enemy = spawn_unit("skeleton", {x=120, y=100})
+        local action = knight:get_next_action()
+        t.expect(action.name).to_be("attack")
+    end)
+end)
+
+local success = t.run()
+os.exit(success and 0 or 1)
 ```
 
-**Integration with cass:**
+#### Running Tests
 
 ```bash
-# After harness passes, patterns can be submitted
-cm add --verified-by "test-harness:auto-achra:frame120" \
-       --rule "Spawn enemies at room centers, not doorways"
+# Run single test file
+lua assets/scripts/tests/test_my_prototype.lua
+
+# Run all tests with filtering
+lua assets/scripts/tests/test_runner.lua --filter "combat" --verbose
+
+# Watch mode (auto-rerun on file changes)
+lua assets/scripts/tests/test_runner.lua --watch
+
+# CI sharding (parallel test runs)
+lua assets/scripts/tests/test_runner.lua --shard-count 4 --shard-index 0
+```
+
+#### Fluent Assertions (expect API)
+
+```lua
+-- Equality
+t.expect(value).to_be(42)
+t.expect(tbl).to_equal({x = 1, y = 2})  -- Deep equality
+
+-- Containment
+t.expect("hello world").to_contain("world")
+t.expect({1, 2, 3}).to_contain(2)
+t.expect({foo = "bar"}).to_contain("foo")  -- Key exists
+
+-- Type checking
+t.expect(entity).to_be_truthy()
+t.expect(nil).to_be_falsy()
+t.expect(42).to_be_type("number")
+
+-- Error checking
+t.expect(function()
+    invalid_operation()
+end).to_throw("expected error pattern")
+
+-- Negation
+t.expect(value).never().to_be(0)
+```
+
+#### C++ Test Harness (Engine Integration)
+
+For tests requiring engine features (snapshots, frame waiting, determinism):
+
+```lua
+-- Available via test_harness global when running in test mode
+local harness = test_harness
+
+-- Wait for frames (physics, animations)
+harness.wait_frames(60)  -- Wait 1 second at 60fps
+
+-- Snapshots (save/restore game state)
+harness.snapshot_create("before_combat")
+-- ... run combat ...
+harness.snapshot_restore("before_combat")  -- Reset to clean state
+
+-- Log assertions
+local mark = harness.log_mark()
+-- ... do something that should log ...
+local found, idx, msg = harness.find_log("pattern", { since = mark })
+harness.assert_no_log_level("error", { since = mark })
+
+-- Skip or mark expected failure
+harness.skip("reason")
+harness.xfail("known issue #123")
+```
+
+#### Output Reports
+
+Tests generate output in `test_output/`:
+
+| File | Format | Use |
+|------|--------|-----|
+| `report.md` | Markdown | Human-readable summary |
+| `status.json` | JSON | CI pass/fail check |
+| `results.json` | JSON | Detailed results with timings |
+| `junit.xml` | JUnit XML | CI integration (GitHub Actions, etc.) |
+
+#### Integration with Cass Memory
+
+After tests pass, patterns can be submitted with verification:
+
+```bash
+# After running tests successfully
+cm add --verified-by "test:test_auto_achra.lua:combat_spawns_at_center" \
+       --rule "Spawn enemies at room centers using room.center property"
+```
+
+**Verification log format:**
+```lua
+-- Add to your code for easy pattern extraction
+print(string.format("[VERIFY] %s | pos: (%.1f, %.1f) | state: %s",
+    entity.name, entity.x, entity.y, entity.state))
+-- Output: [VERIFY] knight | pos: (120.0, 80.0) | state: idle
 ```
 
 ### Pattern Submission: WHERE and HOW
@@ -1030,6 +1133,25 @@ just build-debug-ninja       # Faster with Ninja
 ./build/raylib-cpp-cmake-template  # Run (user does this, not Claude)
 ```
 
+### Test Commands
+
+```bash
+# Run single test file
+lua assets/scripts/tests/test_my_prototype.lua
+
+# Run all tests with filter
+lua assets/scripts/tests/test_runner.lua --filter "combat"
+
+# Watch mode (auto-rerun on changes)
+lua assets/scripts/tests/test_runner.lua --watch
+
+# Verbose output with timing
+lua assets/scripts/tests/test_runner.lua --verbose
+
+# CI sharding
+lua assets/scripts/tests/test_runner.lua --shard-count 4 --shard-index 0
+```
+
 ### Lua Runtime Debug
 
 ```bash
@@ -1051,6 +1173,30 @@ timer.after(delay, callback)
 timer.every(interval, callback)
 timer.tween(duration, target, values, easing, callback)
 timer.during(duration, update_callback, finish_callback)
+```
+
+### Testing Patterns
+
+```lua
+local t = require("tests.test_runner")
+
+-- BDD-style structure
+t.describe("System", function()
+    t.before_each(function() --[[ setup ]] end)
+    t.after_each(function() --[[ cleanup ]] end)
+    t.it("does something", function()
+        t.expect(result).to_be(expected)
+    end)
+end)
+t.run()
+
+-- Fluent assertions
+t.expect(value).to_be(42)           -- Strict equality
+t.expect(tbl).to_equal({a = 1})     -- Deep equality
+t.expect(str).to_contain("sub")     -- String/table contains
+t.expect(val).to_be_truthy()        -- Not nil/false
+t.expect(fn).to_throw("pattern")    -- Error expected
+t.expect(val).never().to_be(0)      -- Negation
 ```
 
 ### Common Debugging Patterns
@@ -1178,4 +1324,4 @@ print("[DEBUG] Body type:", entity.body_type)  -- static, dynamic, kinematic
 
 ---
 
-*Last updated: 2026-02-04 (v2 - implemented 14 improvements from review)*
+*Last updated: 2026-02-04 (v3 - added testing harness documentation)*

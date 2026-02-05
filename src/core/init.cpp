@@ -927,7 +927,7 @@ auto base_init() -> void {
 // Initializes the necessary systems for the application to run.
 // This includes initializing the Lua state shared by all systems and calling
 // name_gen::init().
-auto initSystems() -> void {
+auto initSystems(bool allowShaderCompile) -> void {
   ai_system::init();
 
   // Check if lazy shader loading is enabled in config
@@ -937,6 +937,11 @@ auto initSystems() -> void {
     if (shaders::enableLazyShaderLoading) {
       SPDLOG_INFO("Lazy shader loading enabled via config.json");
     }
+  }
+
+  if (!allowShaderCompile) {
+    shaders::enableLazyShaderLoading = true;
+    SPDLOG_INFO("Lazy shader loading forced for async init (GL context not on this thread).");
   }
 
   shaders::loadShadersFromJSON("shaders/shaders.json");
@@ -964,7 +969,7 @@ auto startInit() -> void {
 
   {
     startup_timer::ScopedPhase phase("systems_init");
-    initSystems();
+    initSystems(true);
   }
 
   globals::loadingStateIndex++;
@@ -1123,7 +1128,7 @@ auto startInitAsync(int loadingThreads) -> void {
     updateStage("Initializing systems...");
     {
       startup_timer::ScopedPhase phase("systems_init_async");
-      initSystems();
+      initSystems(false);
     }
     
     updateStage("Initializing ECS...");
@@ -1138,8 +1143,9 @@ auto startInitAsync(int loadingThreads) -> void {
       localization::setFallbackLanguage("en_us");
       localization::loadLanguage("en_us", util::getRawAssetPathNoUUID("localization/"));
       localization::loadLanguage("ko_kr", util::getRawAssetPathNoUUID("localization/"));
-      localization::setCurrentLanguage("en_us");
-      localization::loadFontData(util::getRawAssetPathNoUUID("localization/fonts.json"));
+      // NOTE: setCurrentLanguage is deferred to main thread (after waitForInitAsync)
+      // because it triggers Lua callbacks that may call loadFontData, which requires
+      // the OpenGL context (only available on the main thread).
     }
     
     updateStage("Finalizing...");

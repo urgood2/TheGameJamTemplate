@@ -50,6 +50,7 @@
 #endif
 #include "core/init.hpp"
 #include "core/ownership.hpp"
+#include "systems/localization/localization.hpp"
 #include "systems/loading_screen/loading_screen.hpp"
 #include "systems/loading_screen/loading_progress.hpp"
 
@@ -613,6 +614,11 @@ void RunGameLoop() {
     }
     
     init::waitForInitAsync();
+    localization::loadFontData(
+        util::getRawAssetPathNoUUID("localization/fonts.json"));
+    // setCurrentLanguage must happen on main thread because it triggers Lua callbacks
+    // that may call loadFontData, which requires the OpenGL context.
+    localization::setCurrentLanguage("en_us");
     loading_screen::shutdownExecutor();
     loading_screen::shutdown();
 #else

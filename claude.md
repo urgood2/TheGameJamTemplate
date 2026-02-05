@@ -7,6 +7,28 @@ This file provides guidance to Claude Code when working with this repository.
 - **Always show full file paths.** When referencing files, always display the complete absolute path (e.g., `/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/docs/specs/example.md`), not just the relative path.
 - **Always dispatch a new agent for review purposes at the end of a feature.** Use the `superpowers:requesting-code-review` skill.
 - **Save progress before context compaction.** Commit WIP changes, note current task/next steps, push to remote.
+- **Sync WezTerm config changes to repo.** After modifying `~/.config/wezterm/wezterm.lua`, sync to the wezterm-devbox-config repo:
+  ```bash
+  cp ~/.config/wezterm/wezterm.lua ~/Projects/wezterm-devbox-config/
+  cd ~/Projects/wezterm-devbox-config && git add -A && git commit -m "feat: <description>" && git push
+  ```
+  Repo: https://github.com/urgood2/wezterm-devbox-config
+- **Sync flywheel script changes.** After modifying the flywheel system on the VPS (`~/.local/bin/flywheel`, `~/.local/bin/flywheel-watchdog`), update the local flywheel-workflow repo and cheatsheet:
+  ```bash
+  # On VPS: Copy current script
+  cat ~/.local/bin/flywheel
+
+  # Locally: Update the repo
+  cd ~/Projects/flywheel-workflow
+  # Update setup-feature.sh or create flywheel-vps.sh with changes
+  git add -A && git commit -m "feat: <description>" && git push
+  ```
+  VPS location: `ubuntu@161.97.94.111:~/.local/bin/flywheel`
+  Local repo: `~/Projects/flywheel-workflow`
+
+## Engine Quirks
+
+For comprehensive documentation of engine gotchas and workarounds, see [Engine Quirks](docs/quirks.md).
 
 ## Notifications
 
@@ -45,38 +67,6 @@ cmake -B build -DUSE_LUAJIT=OFF && cmake --build build               # Lua 5.4.4
 - **200 local variable limit**: Per function scope (see Common Mistakes)
 - **Bitwise operations**: Use `bit.bor()`, `bit.band()`, etc. from `bit_compat.lua` - NOT raw Lua 5.3+ operators
 
-## Pixquare iPad Workflow
-
-Sync pixel art from iPad (Pixquare app) via iCloud:
-
-```bash
-just watch-pixquare    # Watch mode (continuous)
-just sync-pixquare-once # One-time sync
-```
-
-**Auto-start on login (recommended):**
-```bash
-just install-pixquare-service   # Install and start
-just pixquare-service-status    # Check status
-just uninstall-pixquare-service # Remove service
-```
-
-The service logs to `~/Library/Logs/pixquare-watcher.log`.
-
-**iCloud folder setup (one-time):**
-```bash
-mkdir -p ~/Library/Mobile\ Documents/com~apple~CloudDocs/pixquare-animations
-mkdir -p ~/Library/Mobile\ Documents/com~apple~CloudDocs/pixquare-sprites
-```
-
-**Workflow:**
-- Animations: Export .aseprite to `pixquare-animations/` → auto-copied to `assets/animations/`
-- Static sprites: Export .aseprite to `pixquare-sprites/` → layers merged into `auto_export_assets.aseprite`
-
-Processed files are moved to `processed/` subfolder. To update an existing sprite, delete its `{name}_*` layers from `auto_export_assets.aseprite` first.
-
-See `docs/plans/2026-02-03-pixquare-ipad-sync-design.md` for full design.
-
 ## Lua Runtime Debugging
 
 ```bash
@@ -94,47 +84,9 @@ See `docs/plans/2026-02-03-pixquare-ipad-sync-design.md` for full design.
 
 ---
 
-## C++ Bindings vs Lua Modules (CRITICAL)
+## C++ Bindings vs Lua Modules
 
-**Many "modules" are C++ globals, NOT Lua files you can `require()`!**
-
-```lua
--- WRONG: These will fail with "module not found"
-local shader_pipeline = require("shaders.shader_pipeline")  -- ERROR!
-local registry = require("core.registry")                    -- ERROR!
-
--- CORRECT: Access C++ bindings from _G
-local shader_pipeline = _G.shader_pipeline
-local registry = _G.registry  -- or just use `registry` directly
-```
-
-### C++ Globals (use `_G.name` or bare name)
-| Global | Purpose |
-|--------|---------|
-| `registry` | EnTT entity registry |
-| `component_cache` | Cached component access |
-| `shader_pipeline` | Shader pipeline manager |
-| `physics` | Physics system bindings |
-| `globals` | Game state and screen dimensions |
-| `localization` | Localization system |
-| `animation_system` | Animation creation/control |
-| `layer_order_system` | Z-ordering system |
-| `command_buffer` | Draw command queue |
-| `layers` | Layer references (sprites, ui, etc.) |
-| `z_orders` | Z-order constants |
-| `globalShaderUniforms` | Shader uniform manager |
-
-### Lua Modules (use `require()`)
-| Module | Path |
-|--------|------|
-| Timer | `require("core.timer")` |
-| Signal | `require("external.hump.signal")` |
-| Component Cache | `require("core.component_cache")` |
-| UI DSL | `require("ui.ui_syntax_sugar")` |
-| EntityBuilder | `require("core.entity_builder")` |
-| ShaderBuilder | `require("core.shader_builder")` |
-
-**Rule of thumb:** If it's defined in C++ (check `chugget_code_definitions.lua` for hints), use `_G.name`. If it's a `.lua` file in `assets/scripts/`, use `require()`.
+Canonical guidance lives in [Engine Quirks](docs/quirks.md) under "Lua / C++ Bindings". Keep this file lean and link to quirks for details.
 
 ---
 
@@ -162,109 +114,7 @@ local registry = _G.registry  -- or just use `registry` directly
 
 ## Common Mistakes to Avoid
 
-> **Full Reference**: See [COMMON_PITFALLS.md](docs/guides/COMMON_PITFALLS.md) for 183 documented pitfalls across 8 categories.
-
-### Critical One-Liners (Most Frequent Causes of Bugs)
-
-| Category | Pitfall | Quick Fix |
-|----------|---------|-----------|
-| **Data Loss** | Data assigned AFTER `attach_ecs()` | Assign ALL data BEFORE `attach_ecs()` |
-| **UI Clicks** | Missing `ScreenSpaceCollisionMarker` | Add to ALL clickable UI entities |
-| **UI Position** | Wrong `DrawCommandSpace` | Use `Screen` for HUD, `World` for game |
-| **Callbacks** | Entity destroyed mid-callback | Always check `entity:valid()` first |
-| **Physics** | Using old `globals.physicsWorld` | Use `PhysicsManager:getWorld("name")` |
-| **Signals** | Using deprecated `publishLuaEvent()` | Use `signal.emit()` instead |
-| **Timers** | Chain/tween never started | Call `:start()` or `:go()` to execute |
-| **Timers** | Timer outlives entity | Use timer groups + `timer.kill_group()` |
-| **Shaders** | Helper function used before defined | Define all functions before use in GLSL |
-| **LuaJIT** | 200+ locals in one file | Group related locals into tables |
-| **Jokers** | Effect returns nothing | Always return modified value |
-| **Content** | Table key ≠ id field | Keep table key and `id` synchronized |
-
----
-
-### Don't: Store data in GameObject component
-```lua
-local gameObj = component_cache.get(entity, GameObject)
-gameObj.myData = {}  -- WRONG - bypasses script table system
-```
-
-### Don't: Call attach_ecs before assigning data
-```lua
-script:attach_ecs { ... }
-script.data = {}  -- WRONG - data is lost!
-```
-
-### Do: Initialize properly (see [Entity Scripts Guide](docs/guides/entity-scripts.md))
-```lua
-local script = EntityType {}
-script.data = {}              -- Assign FIRST
-script:attach_ecs { ... }     -- Attach LAST
-```
-
-### Don't: Exceed LuaJIT's 200 local variable limit
-```lua
--- WRONG: File-scope locals accumulate
-local sound1, sound2, sound3 = ...  -- 197 more = CRASH
-
--- RIGHT: Group into tables
-local sounds = { footsteps = { ... } }
-```
-
-### Don't: Forget ScreenSpaceCollisionMarker for UI elements
-```lua
--- WRONG: UI element won't receive clicks
-local button = createUIElement(...)
-
--- RIGHT: Add collision marker for click detection
-registry:emplace(button, ScreenSpaceCollisionMarker {})
-```
-
-### Don't: Implement UI panels without reading the guide
-**For ANY UI panel work (skill trees, equipment windows, inventory, character sheets):**
-→ **READ FIRST**: [UI Panel Implementation Guide](docs/guides/UI_PANEL_IMPLEMENTATION_GUIDE.md)
-
-Critical patterns that WILL break if done wrong:
-- Must move BOTH entity Transform AND `UIBoxComponent.uiRoot` for visibility
-- Must call `ui.box.AddStateTagToUIBox` after spawn AND after `ReplaceChildren`
-- Must call `ui.box.RenewAlignment` after ANY `ReplaceChildren` operation
-- Must clean all 3 registries on grid destroy: `itemRegistry`, `grid`, `dsl.cleanupGrid`
-- NEVER add `ObjectAttachedToUITag` to draggable cards/items
-
-### Don't: Use ChildBuilder.setOffset on UIBox without RenewAlignment
-```lua
--- WRONG: Children inside UIBox won't reposition after offset change
-ChildBuilder.setOffset(uiContainer, x, y)
-
--- RIGHT: Call RenewAlignment after changing offset to force child layout update
-ChildBuilder.setOffset(uiContainer, x, y)
-ui.box.RenewAlignment(registry, uiContainer)
-```
-
-### Don't: Mix World and Screen DrawCommandSpace carelessly
-```lua
--- WRONG: HUD follows camera
-command_buffer.queueDraw(layers.ui, fn, z, layer.DrawCommandSpace.World)
-
--- RIGHT: Use Screen for fixed HUD
-command_buffer.queueDraw(layers.ui, fn, z, layer.DrawCommandSpace.Screen)
-```
-
-### UI Decorations: Slot Underlays
-- To render a slot decoration behind the slot sprite (e.g., wand trigger backdrop), use a decoration with `zOffset < 0` on a sprite-panel slot.
-- Inventory grid slot decorations are supported via `slotConfig.decorations` or `gridConfig.slotDecorations`. When a slot uses a sprite panel, decorations are scaled by `ui_scale.SPRITE_SCALE` at definition time.
-
-### Quick Diagnostic Checklist
-
-**UI Not Responding?** → ScreenSpaceCollisionMarker? → DrawCommandSpace? → Z-order? → UIRoot transform?
-
-**Entity Data Nil?** → Data before attach_ecs? → Using global component name (not string)? → Entity valid?
-
-**Physics Broken?** → PhysicsManager:getWorld()? → Same world? → Collision categories match?
-
-**Timer Not Firing?** → :start()/:go() called? → Scope not destroyed? → Entity valid in callback?
-
----
+See [Engine Quirks](docs/quirks.md) for the canonical list of engine gotchas and required ordering patterns.
 
 ## Global Helper Functions
 

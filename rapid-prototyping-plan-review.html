@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rapid Prototyping Master Plan Review</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #1a1a1a;
+      --surface: #252525;
+      --surface2: #2d2d2d;
+      --border: #3a3a3a;
+      --text: #e0e0e0;
+      --text-dim: #888;
+      --accent: #6b9fff;
+      --amber: #bf8700;
+      --green: #3fb950;
+      --red: #f85149;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      grid-template-rows: auto 1fr auto;
+      height: 100vh;
+      gap: 1px;
+      background: var(--border);
+    }
+
+    header {
+      grid-column: 1 / -1;
+      background: var(--surface);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header h1 {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .stats {
+      display: flex;
+      gap: 16px;
+      font-size: 13px;
+    }
+
+    .stat {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .stat-dot.pending { background: var(--amber); }
+    .stat-dot.approved { background: var(--green); }
+    .stat-dot.rejected { background: var(--red); }
+
+    .doc-panel {
+      background: var(--bg);
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .suggestions-panel {
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .filter-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      padding: 0 12px;
+    }
+
+    .filter-tab {
+      padding: 10px 14px;
+      font-size: 13px;
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+    }
+
+    .filter-tab:hover { color: var(--text); }
+    .filter-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    .suggestions-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+    }
+
+    .suggestion-card {
+      background: var(--surface2);
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-left: 3px solid var(--amber);
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    .suggestion-card:hover {
+      transform: translateX(2px);
+    }
+
+    .suggestion-card.approved { border-left-color: var(--green); }
+    .suggestion-card.rejected { border-left-color: var(--red); opacity: 0.6; }
+
+    .suggestion-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .suggestion-section {
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .suggestion-category {
+      font-size: 10px;
+      padding: 2px 6px;
+      background: var(--border);
+      border-radius: 3px;
+      color: var(--text-dim);
+    }
+
+    .suggestion-text {
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .suggestion-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .action-btn {
+      padding: 5px 10px;
+      font-size: 11px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .action-btn.approve {
+      background: rgba(63, 185, 80, 0.15);
+      color: var(--green);
+    }
+    .action-btn.approve:hover { background: rgba(63, 185, 80, 0.25); }
+
+    .action-btn.reject {
+      background: rgba(248, 81, 73, 0.15);
+      color: var(--red);
+    }
+    .action-btn.reject:hover { background: rgba(248, 81, 73, 0.25); }
+
+    .action-btn.comment {
+      background: var(--border);
+      color: var(--text-dim);
+    }
+    .action-btn.comment:hover { background: var(--surface); }
+
+    .action-btn.reset {
+      background: var(--border);
+      color: var(--text-dim);
+    }
+
+    .comment-input {
+      margin-top: 8px;
+    }
+
+    .comment-input textarea {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      padding: 8px;
+      font-size: 12px;
+      font-family: inherit;
+      resize: vertical;
+      min-height: 60px;
+    }
+
+    .comment-input textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .prompt-panel {
+      grid-column: 1 / -1;
+      background: var(--surface);
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .prompt-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .prompt-header h3 {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .copy-btn {
+      padding: 6px 14px;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .copy-btn:hover { opacity: 0.9; }
+    .copy-btn.copied {
+      background: var(--green);
+    }
+
+    .prompt-output {
+      font-family: 'SF Mono', Monaco, 'Consolas', monospace;
+      font-size: 12px;
+      background: var(--bg);
+      padding: 12px;
+      border-radius: 6px;
+      max-height: 150px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      color: var(--text-dim);
+    }
+
+    /* Document styling */
+    .doc-content {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .doc-section {
+      margin-bottom: 24px;
+      padding: 16px;
+      border-radius: 8px;
+      border-left: 3px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .doc-section.has-suggestion {
+      border-left-color: var(--amber);
+      background: rgba(191, 135, 0, 0.05);
+    }
+
+    .doc-section.approved {
+      border-left-color: var(--green);
+      background: rgba(63, 185, 80, 0.05);
+    }
+
+    .doc-section.rejected {
+      border-left-color: var(--red);
+      background: rgba(248, 81, 73, 0.05);
+      opacity: 0.7;
+    }
+
+    .doc-section h2 {
+      font-size: 18px;
+      color: var(--accent);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .doc-section h3 {
+      font-size: 14px;
+      color: var(--text);
+      margin: 16px 0 8px;
+    }
+
+    .doc-section p {
+      font-size: 13px;
+      margin-bottom: 8px;
+      color: var(--text-dim);
+    }
+
+    .doc-section ul, .doc-section ol {
+      font-size: 13px;
+      margin-left: 20px;
+      margin-bottom: 12px;
+      color: var(--text-dim);
+    }
+
+    .doc-section li {
+      margin-bottom: 4px;
+    }
+
+    .doc-section code {
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 12px;
+      background: var(--surface);
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    .doc-section pre {
+      background: var(--surface);
+      padding: 12px;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin: 12px 0;
+      font-size: 11px;
+    }
+
+    .doc-section pre code {
+      background: none;
+      padding: 0;
+    }
+
+    .section-badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: var(--border);
+      color: var(--text-dim);
+    }
+
+    .section-badge.pending { background: rgba(191, 135, 0, 0.2); color: var(--amber); }
+    .section-badge.approved { background: rgba(63, 185, 80, 0.2); color: var(--green); }
+    .section-badge.rejected { background: rgba(248, 81, 73, 0.2); color: var(--red); }
+
+    .highlight-box {
+      background: var(--surface);
+      border-left: 3px solid var(--accent);
+      padding: 10px 14px;
+      margin: 12px 0;
+      font-size: 13px;
+    }
+
+    .key-point {
+      color: var(--green);
+      font-weight: 600;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin: 12px 0;
+    }
+
+    th, td {
+      padding: 8px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: var(--surface);
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    td {
+      color: var(--text-dim);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Rapid Prototyping Master Plan Review</h1>
+      <div class="stats">
+        <div class="stat">
+          <span class="stat-dot pending"></span>
+          <span id="pending-count">0</span> Pending
+        </div>
+        <div class="stat">
+          <span class="stat-dot approved"></span>
+          <span id="approved-count">0</span> Approved
+        </div>
+        <div class="stat">
+          <span class="stat-dot rejected"></span>
+          <span id="rejected-count">0</span> Rejected
+        </div>
+      </div>
+    </header>
+
+    <div class="doc-panel">
+      <div class="doc-content" id="doc-content">
+        <!-- Document content will be rendered here -->
+      </div>
+    </div>
+
+    <div class="suggestions-panel">
+      <div class="filter-tabs">
+        <button class="filter-tab active" data-filter="all">All</button>
+        <button class="filter-tab" data-filter="pending">Pending</button>
+        <button class="filter-tab" data-filter="approved">Approved</button>
+        <button class="filter-tab" data-filter="rejected">Rejected</button>
+      </div>
+      <div class="suggestions-list" id="suggestions-list">
+        <!-- Suggestions will be rendered here -->
+      </div>
+    </div>
+
+    <div class="prompt-panel">
+      <div class="prompt-header">
+        <h3>Generated Feedback Prompt</h3>
+        <button class="copy-btn" id="copy-btn">Copy Prompt</button>
+      </div>
+      <div class="prompt-output" id="prompt-output">
+        Review the document and approve/reject suggestions to generate feedback...
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Document sections with content
+    const sections = [
+      {
+        id: 'executive',
+        title: 'Executive Summary',
+        part: null,
+        content: `
+          <p>This document defines a structured approach to rapid prototyping that combines:</p>
+          <ol>
+            <li><strong>Cass Memory</strong> for procedural knowledge and pattern retrieval (used extensively)</li>
+            <li><strong>Automated Testing Harness</strong> for verification-driven development</li>
+            <li><strong>Design Principles</strong> derived from a327ex's Anchor philosophy</li>
+            <li><strong>Constrained Asset Pipeline</strong> using dungeon_mode sprites exclusively</li>
+            <li><strong>Project Plan Templates</strong> for consistent session bootstrapping</li>
+            <li><strong>Dwarf Fortress-Style Animation</strong> for minimal art overhead</li>
+          </ol>
+          <div class="highlight-box">
+            <span class="key-point">Critical Rule:</span> New patterns are ONLY added to cass memory after being VERIFIED through working code with FULLY TESTED, verifiable output (logs, screenshots, metrics).
+          </div>
+        `
+      },
+      {
+        id: 'bootstrap',
+        title: 'Part 1: Session Bootstrap Protocol',
+        part: 1,
+        content: `
+          <h3>Pre-Session Checklist</h3>
+          <pre><code># 1. Query cass for relevant patterns
+cm context "your prototype concept" | head -40
+
+# 2. Check playbook for anti-patterns to avoid
+cm context "common mistakes prototype" | head -20
+
+# 3. Verify asset availability
+ls assets/images/dungeon_tiles/dungeon_mode/ | wc -l
+
+# 4. Read the prototype plan file (if exists)
+cat docs/plans/prototypes/[prototype-name]-plan.md</code></pre>
+          <h3>Session Start Message Template</h3>
+          <pre><code>Prototype: [NAME]
+Goal: [One sentence description]
+Constraints:
+- Assets: dungeon_mode sprites only (258 tiles)
+- Animation: DF-style (color, swap, blink, squeeze)
+- Engine: TheGameJamTemplate (C++/Lua/Raylib)
+- Desktop: Borderless window
+Design Philosophy: Locality, No Bureaucracy, Intuition-First</code></pre>
+        `
+      },
+      {
+        id: 'cass',
+        title: 'Part 2: Cass Memory Integration',
+        part: 2,
+        content: `
+          <h3>Philosophy: Learn from Verified Patterns</h3>
+          <p>Cass memory is the <strong>primary knowledge source</strong> for this workflow. It contains 5000+ rules learned from past coding sessions. Use it extensively:</p>
+          <ul>
+            <li><strong>Before starting ANY task</strong> - query for relevant patterns</li>
+            <li><strong>When debugging</strong> - query for known failure modes</li>
+            <li><strong>When implementing</strong> - query for proven approaches</li>
+            <li><strong>After completing</strong> - contribute back verified patterns</li>
+          </ul>
+
+          <h3>Contributing New Patterns (VERIFICATION REQUIRED)</h3>
+          <p><strong>DO NOT add patterns to cass unless they meet ALL criteria:</strong></p>
+          <table>
+            <tr><th>Verification Type</th><th>Example</th></tr>
+            <tr><td>Console logs</td><td><code>[DEBUG] Entity spawned at (120, 80), size: 16x16</code></td></tr>
+            <tr><td>Screenshot</td><td>Visual proof of rendering, UI layout, etc.</td></tr>
+            <tr><td>Metrics</td><td>Performance numbers, frame times, entity counts</td></tr>
+            <tr><td>Test output</td><td><code>PASS: test_entity_spawn (0.003s)</code></td></tr>
+          </table>
+
+          <h3>Automated Test Harness Integration</h3>
+          <p><em>(Coming soon - will be merged to master)</em></p>
+          <pre><code># Run test harness against prototype
+just test-harness prototypes/auto-achra
+
+# Expected output:
+# [HARNESS] Frame 0: 4 entities spawned
+# [HARNESS] Frame 60: Combat initiated, 2 enemies in range
+# [HARNESS] PASS: All assertions met (2.4s)</code></pre>
+        `
+      },
+      {
+        id: 'principles',
+        title: 'Part 3: Design Principles (from a327ex)',
+        part: 3,
+        content: `
+          <h3>Core Values</h3>
+          <p><strong>1. Locality Above All</strong> - Code should be understandable by looking at <strong>one place</strong>.</p>
+          <p><strong>2. No Bureaucracy</strong> - Avoid imports, exports, dependency injection, configuration objects.</p>
+          <p><strong>3. Intuition-First Design</strong> - "Would this feel right to use?" matters as much as "Is this technically sound?"</p>
+
+          <h3>Feature Evaluation Checklist</h3>
+          <ol>
+            <li>Does the engine already have this?</li>
+            <li>Does this fit the locality principle?</li>
+            <li>What's the bureaucracy cost?</li>
+            <li>Is this C-level (performance-critical) or Lua-level (game logic)?</li>
+            <li>Does the solo developer actually need this?</li>
+            <li>Would it feel right to use?</li>
+          </ol>
+        `
+      },
+      {
+        id: 'working',
+        title: 'Part 4: Working Style',
+        part: 4,
+        content: `
+          <h3>When to Ask vs Proceed</h3>
+          <p><strong>Ask first:</strong> Architecture decisions, API design, gameplay feel, mechanics</p>
+          <p><strong>Proceed, then explain:</strong> Clear implementation details, optimization</p>
+
+          <h3>Pacing Rules</h3>
+          <ul>
+            <li>Work incrementally — complete one piece, test, get feedback</li>
+            <li>After completing a task, give the user a turn before starting the next</li>
+            <li>Don't chain tasks or build large systems autonomously</li>
+            <li>One method at a time — small incremental changes</li>
+          </ul>
+        `
+      },
+      {
+        id: 'assets',
+        title: 'Part 5: Asset Pipeline',
+        part: 5,
+        content: `
+          <h3>dungeon_mode (258 sprites)</h3>
+          <table>
+            <tr><th>Range</th><th>Category</th></tr>
+            <tr><td>dm_144-147</td><td>Heroes (knight, mage, rogue, archer)</td></tr>
+            <tr><td>dm_148-159</td><td>Enemies (skeleton through dragon)</td></tr>
+            <tr><td>dm_160-191</td><td>Equipment (weapons, armor, items)</td></tr>
+            <tr><td>dm_192-231</td><td>Terrain & Props</td></tr>
+            <tr><td>dm_232-255</td><td>UI elements</td></tr>
+          </table>
+
+          <h3>dungeon_437 (256 sprites)</h3>
+          <p>CP437 ASCII tileset for true roguelike aesthetic.</p>
+        `
+      },
+      {
+        id: 'animation',
+        title: 'Part 6: Animation System (DF-Style)',
+        part: 6,
+        content: `
+          <h3>Core Techniques</h3>
+          <ul>
+            <li><strong>Color Tinting</strong> - Flash white on hit, poison pulse</li>
+            <li><strong>Sprite Swapping</strong> - Walk frames, damaged states</li>
+            <li><strong>Blinking</strong> - Invincibility, attention</li>
+            <li><strong>Transform Effects</strong> - Squeeze/stretch, shake, rotation</li>
+            <li><strong>Position Offsets</strong> - Hop on selection, breathing bob</li>
+          </ul>
+          <pre><code>AnimPresets = {
+    hit_flash = function(e)
+        e.tint = WHITE
+        timer.after(0.1, function() e.tint = nil end)
+    end,
+    spawn_pop = function(e)
+        e.scale_x, e.scale_y = 0, 0
+        timer.tween(0.2, e, {scale_x = 1.2, scale_y = 1.2}, ...)
+    end,
+}</code></pre>
+        `
+      },
+      {
+        id: 'template',
+        title: 'Part 7: Prototype Template',
+        part: 7,
+        content: `
+          <h3>File Structure</h3>
+          <pre><code>docs/plans/prototypes/
+├── [name]-plan.md           # Design document
+├── [name]-session-log.md    # Session notes (optional)
+└── [name]-decisions.md      # Key decisions made (optional)
+
+assets/scripts/prototypes/
+└── [name]/
+    ├── main.lua             # Entry point
+    ├── config.lua           # Constants, tuning values
+    ├── entities.lua         # Entity definitions
+    └── systems.lua          # Game systems</code></pre>
+        `
+      },
+      {
+        id: 'example',
+        title: 'Part 8: Example Prototype - Auto-Achra Colony',
+        part: 8,
+        content: `
+          <p>An <strong>automated roguelike colony sim</strong> inspired by Path of Achra meets Dwarf Fortress:</p>
+          <ul>
+            <li>Units explore dungeon automatically using AI behaviors</li>
+            <li>Player can optionally select upgrades OR let AI pick</li>
+            <li>Colony grows, acquires resources, unlocks new unit types</li>
+            <li>Desktop borderless app for ambient play</li>
+          </ul>
+
+          <h3>Entity Mapping</h3>
+          <table>
+            <tr><th>Entity</th><th>Sprite</th><th>Role</th></tr>
+            <tr><td>Knight</td><td>dm_144</td><td>Melee tank, high HP</td></tr>
+            <tr><td>Mage</td><td>dm_145</td><td>Ranged caster, AoE</td></tr>
+            <tr><td>Skeleton</td><td>dm_148</td><td>Basic melee enemy</td></tr>
+            <tr><td>Dragon</td><td>dm_159</td><td>Boss enemy</td></tr>
+          </table>
+        `
+      },
+      {
+        id: 'reference',
+        title: 'Part 9: Quick Reference',
+        part: 9,
+        content: `
+          <h3>Cass Memory Commands</h3>
+          <pre><code>cm context "query"           # Get relevant rules
+cm context "query" | head -N # Limit results
+cm-sync                      # Sync from VPS</code></pre>
+
+          <h3>Build Commands</h3>
+          <pre><code>just build-debug             # Debug build
+just build-debug-ninja       # Faster with Ninja</code></pre>
+
+          <h3>Common Lua Patterns</h3>
+          <pre><code>if ensure_entity(eid) then ... end
+local script = safe_script_get(eid)
+timer.after(delay, callback)
+timer.tween(duration, target, values, easing)</code></pre>
+        `
+      }
+    ];
+
+    // Suggestions for improvements
+    const suggestions = [
+      {
+        id: 1,
+        sectionId: 'cass',
+        category: 'completeness',
+        text: 'Add examples of BAD vs GOOD cass submissions to make the verification criteria clearer',
+        status: 'pending',
+        comment: ''
+      },
+      {
+        id: 2,
+        sectionId: 'cass',
+        category: 'clarity',
+        text: 'Specify WHERE cass patterns should be submitted (VPS path, command syntax)',
+        status: 'pending',
+        comment: ''
+      },
+      {
+        id: 3,
+        sectionId: 'cass',
+        category: 'completeness',
+        text: 'Add a section on how to QUERY cass effectively - common query patterns, fuzzy matching tips',
+        status: 'pending',
+        comment: ''
+      },
+      {
+        id: 4,
+        sectionId: 'bootstrap',
+        category: 'ux',
+        text: 'Add a copy-pasteable session start template that Claude can fill in',
+        status: 'pending',
+        comment: ''
+      },
+      {
+        id: 5,
+        sectionId: 'principles',
+        category: 'clarity',
+        text: 'Add concrete EXAMPLES of locality violations vs good patterns from the codebase',
+        status: 'pending',
+        comment: ''
+      },
+      {
+        id: 6,
+        sectionId: 'animation',
+        category: 'completeness',
+        text: 'Add timing guidelines - what durations feel good for each animation type',
+        status: 'pending',
+        comment: ''
+      },
+      {
+        id: 7,
+        sectionId: 'example',
+        category: 'completeness',
+        text: 'Add estimated scope/effort for each milestone to set expectations',
+        status: 'pending',
+        comment: ''
+      },
+      {
+        id: 8,
+        sectionId: 'executive',
+        category: 'clarity',
+        text: 'Add a "When NOT to use this workflow" section - edge cases, exceptions',
+        status: 'pending',
+        comment: ''
+      },
+      {
+        id: 9,
+        sectionId: 'working',
+        category: 'completeness',
+        text: 'Add guidelines for WHEN to create a new prototype vs extend an existing one',
+        status: 'pending',
+        comment: ''
+      },
+      {
+        id: 10,
+        sectionId: 'assets',
+        category: 'ux',
+        text: 'Add visual sprite sheet preview or reference image link',
+        status: 'pending',
+        comment: ''
+      },
+      {
+        id: 11,
+        sectionId: 'cass',
+        category: 'completeness',
+        text: 'Document the test harness command syntax more completely once merged',
+        status: 'pending',
+        comment: ''
+      },
+      {
+        id: 12,
+        sectionId: 'template',
+        category: 'completeness',
+        text: 'Add a "Lessons Learned" section template for post-prototype retrospectives',
+        status: 'pending',
+        comment: ''
+      },
+      {
+        id: 13,
+        sectionId: 'reference',
+        category: 'completeness',
+        text: 'Add common debugging patterns section (Lua errors, physics issues, rendering)',
+        status: 'pending',
+        comment: ''
+      },
+      {
+        id: 14,
+        sectionId: 'example',
+        category: 'clarity',
+        text: 'Specify which systems in the example are "must have" vs "nice to have"',
+        status: 'pending',
+        comment: ''
+      }
+    ];
+
+    let state = {
+      suggestions: [...suggestions],
+      activeFilter: 'all',
+      activeSuggestionId: null,
+      showCommentFor: null
+    };
+
+    function renderDocument() {
+      const container = document.getElementById('doc-content');
+      container.innerHTML = sections.map(section => {
+        const sectionSuggestions = state.suggestions.filter(s => s.sectionId === section.id);
+        const hasApproved = sectionSuggestions.some(s => s.status === 'approved');
+        const hasRejected = sectionSuggestions.every(s => s.status === 'rejected') && sectionSuggestions.length > 0;
+        const hasPending = sectionSuggestions.some(s => s.status === 'pending');
+
+        let statusClass = '';
+        let badgeClass = '';
+        let badgeText = '';
+
+        if (hasPending) {
+          statusClass = 'has-suggestion';
+          badgeClass = 'pending';
+          badgeText = `${sectionSuggestions.filter(s => s.status === 'pending').length} suggestion(s)`;
+        } else if (hasApproved) {
+          statusClass = 'approved';
+          badgeClass = 'approved';
+          badgeText = 'Updated';
+        } else if (hasRejected) {
+          statusClass = 'rejected';
+          badgeClass = 'rejected';
+          badgeText = 'Kept as-is';
+        }
+
+        return `
+          <div class="doc-section ${statusClass}" id="section-${section.id}">
+            <h2>
+              ${section.title}
+              ${badgeText ? `<span class="section-badge ${badgeClass}">${badgeText}</span>` : ''}
+            </h2>
+            ${section.content}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderSuggestions() {
+      const container = document.getElementById('suggestions-list');
+      const filtered = state.activeFilter === 'all'
+        ? state.suggestions
+        : state.suggestions.filter(s => s.status === state.activeFilter);
+
+      container.innerHTML = filtered.map(s => {
+        const section = sections.find(sec => sec.id === s.sectionId);
+        const showComment = state.showCommentFor === s.id;
+
+        return `
+          <div class="suggestion-card ${s.status}" data-id="${s.id}" onclick="scrollToSection('${s.sectionId}')">
+            <div class="suggestion-header">
+              <span class="suggestion-section">${section ? section.title.replace('Part ', 'P') : 'General'}</span>
+              <span class="suggestion-category">${s.category}</span>
+            </div>
+            <div class="suggestion-text">${s.text}</div>
+            <div class="suggestion-actions">
+              ${s.status === 'pending' ? `
+                <button class="action-btn approve" onclick="event.stopPropagation(); setStatus(${s.id}, 'approved')">Approve</button>
+                <button class="action-btn reject" onclick="event.stopPropagation(); setStatus(${s.id}, 'rejected')">Reject</button>
+                <button class="action-btn comment" onclick="event.stopPropagation(); toggleComment(${s.id})">Comment</button>
+              ` : `
+                <button class="action-btn reset" onclick="event.stopPropagation(); setStatus(${s.id}, 'pending')">Reset</button>
+                <button class="action-btn comment" onclick="event.stopPropagation(); toggleComment(${s.id})">Comment</button>
+              `}
+            </div>
+            ${showComment ? `
+              <div class="comment-input">
+                <textarea placeholder="Add your notes or modifications..."
+                  onchange="updateComment(${s.id}, this.value)"
+                  onclick="event.stopPropagation()">${s.comment}</textarea>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('') || '<p style="color: var(--text-dim); padding: 20px; text-align: center;">No suggestions in this category</p>';
+    }
+
+    function updateStats() {
+      document.getElementById('pending-count').textContent = state.suggestions.filter(s => s.status === 'pending').length;
+      document.getElementById('approved-count').textContent = state.suggestions.filter(s => s.status === 'approved').length;
+      document.getElementById('rejected-count').textContent = state.suggestions.filter(s => s.status === 'rejected').length;
+    }
+
+    function updatePrompt() {
+      const output = document.getElementById('prompt-output');
+      const approved = state.suggestions.filter(s => s.status === 'approved');
+      const withComments = state.suggestions.filter(s => s.comment.trim());
+
+      if (approved.length === 0 && withComments.length === 0) {
+        output.textContent = 'Review the document and approve/reject suggestions to generate feedback...';
+        return;
+      }
+
+      let prompt = 'Please update the Rapid Prototyping Master Plan with these changes:\n\n';
+
+      if (approved.length > 0) {
+        prompt += '## Approved Improvements\n\n';
+        approved.forEach(s => {
+          const section = sections.find(sec => sec.id === s.sectionId);
+          prompt += `**${section ? section.title : 'General'}:** ${s.text}`;
+          if (s.comment.trim()) {
+            prompt += `\n  → Note: ${s.comment.trim()}`;
+          }
+          prompt += '\n\n';
+        });
+      }
+
+      const commentOnly = withComments.filter(s => s.status !== 'approved');
+      if (commentOnly.length > 0) {
+        prompt += '## Additional Notes\n\n';
+        commentOnly.forEach(s => {
+          const section = sections.find(sec => sec.id === s.sectionId);
+          prompt += `**${section ? section.title : 'General'}:** ${s.comment.trim()}\n\n`;
+        });
+      }
+
+      const rejected = state.suggestions.filter(s => s.status === 'rejected');
+      if (rejected.length > 0) {
+        prompt += '## Kept As-Is (for context)\n\n';
+        rejected.forEach(s => {
+          prompt += `- ${s.text}\n`;
+        });
+      }
+
+      output.textContent = prompt;
+    }
+
+    function setStatus(id, status) {
+      const s = state.suggestions.find(s => s.id === id);
+      if (s) s.status = status;
+      renderAll();
+    }
+
+    function toggleComment(id) {
+      state.showCommentFor = state.showCommentFor === id ? null : id;
+      renderSuggestions();
+    }
+
+    function updateComment(id, value) {
+      const s = state.suggestions.find(s => s.id === id);
+      if (s) s.comment = value;
+      updatePrompt();
+    }
+
+    function scrollToSection(sectionId) {
+      const el = document.getElementById('section-' + sectionId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.style.boxShadow = '0 0 0 2px var(--accent)';
+        setTimeout(() => el.style.boxShadow = '', 1000);
+      }
+    }
+
+    function renderAll() {
+      renderDocument();
+      renderSuggestions();
+      updateStats();
+      updatePrompt();
+    }
+
+    // Event listeners
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        state.activeFilter = tab.dataset.filter;
+        renderSuggestions();
+      });
+    });
+
+    document.getElementById('copy-btn').addEventListener('click', async () => {
+      const text = document.getElementById('prompt-output').textContent;
+      await navigator.clipboard.writeText(text);
+      const btn = document.getElementById('copy-btn');
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'Copy Prompt';
+        btn.classList.remove('copied');
+      }, 1500);
+    });
+
+    // Initialize
+    renderAll();
+  </script>
+</body>
+</html>

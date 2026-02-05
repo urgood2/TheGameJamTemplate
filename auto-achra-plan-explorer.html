@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auto-Achra Plan Explorer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      padding: 12px 20px;
+      background: #16213e;
+      border-bottom: 1px solid #0f3460;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 { font-size: 18px; font-weight: 600; color: #e94560; }
+    .preset-bar {
+      display: flex;
+      gap: 8px;
+    }
+    .preset-btn {
+      padding: 6px 12px;
+      background: #0f3460;
+      border: 1px solid #e94560;
+      color: #eee;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .preset-btn:hover { background: #e94560; }
+    .preset-btn.active { background: #e94560; }
+
+    .main-container {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 280px;
+      background: #16213e;
+      border-right: 1px solid #0f3460;
+      overflow-y: auto;
+      padding: 16px;
+    }
+
+    .sidebar h2 {
+      font-size: 13px;
+      text-transform: uppercase;
+      color: #e94560;
+      margin-bottom: 12px;
+      letter-spacing: 0.5px;
+    }
+
+    .phase-card {
+      background: #1a1a2e;
+      border: 1px solid #0f3460;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+    .phase-header {
+      padding: 10px 12px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0f3460;
+    }
+    .phase-header:hover { background: #1a3a6e; }
+    .phase-title { font-weight: 600; font-size: 13px; }
+    .phase-status {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .status-pending { background: #444; color: #aaa; }
+    .status-active { background: #e94560; color: white; }
+    .status-complete { background: #2ecc71; color: white; }
+
+    .phase-tasks {
+      padding: 0;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    .phase-tasks.expanded { max-height: 500px; padding: 8px 12px; }
+
+    .task-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 6px 0;
+      border-bottom: 1px solid #0f3460;
+      font-size: 12px;
+    }
+    .task-item:last-child { border-bottom: none; }
+    .task-checkbox {
+      width: 16px;
+      height: 16px;
+      accent-color: #e94560;
+      cursor: pointer;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .task-label { flex: 1; line-height: 1.4; }
+    .task-owner {
+      font-size: 10px;
+      color: #888;
+      background: #0f3460;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    .canvas-area {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      background: #1a1a2e;
+    }
+
+    .tooltip {
+      position: absolute;
+      background: #16213e;
+      border: 1px solid #e94560;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      max-width: 280px;
+      pointer-events: none;
+      display: none;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    .tooltip h4 { color: #e94560; margin-bottom: 6px; }
+    .tooltip p { color: #ccc; line-height: 1.5; }
+
+    .prompt-area {
+      background: #0d0d1a;
+      border-top: 1px solid #0f3460;
+      padding: 16px 20px;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+    .prompt-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .prompt-header h3 { font-size: 12px; color: #888; text-transform: uppercase; }
+    .copy-btn {
+      padding: 6px 14px;
+      background: #e94560;
+      border: none;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .copy-btn:hover { background: #ff6b8a; }
+    .copy-btn.copied { background: #2ecc71; }
+    .prompt-text {
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #ccc;
+      white-space: pre-wrap;
+    }
+
+    .legend {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(22, 33, 62, 0.9);
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 11px;
+    }
+    .legend-item { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
+    .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🏰 Auto-Achra Implementation Plan Explorer</h1>
+    <div class="preset-bar">
+      <button class="preset-btn active" onclick="setPreset('overview')">Overview</button>
+      <button class="preset-btn" onclick="setPreset('phase1')">Phase 1 Focus</button>
+      <button class="preset-btn" onclick="setPreset('ai')">AI Systems</button>
+      <button class="preset-btn" onclick="setPreset('world')">World Gen</button>
+      <button class="preset-btn" onclick="setPreset('full')">Full Plan</button>
+    </div>
+  </header>
+
+  <div class="main-container">
+    <div class="sidebar">
+      <h2>Phases & Tasks</h2>
+      <div id="phase-list"></div>
+    </div>
+
+    <div class="canvas-area">
+      <canvas id="canvas"></canvas>
+      <div class="tooltip" id="tooltip"></div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#e94560"></div> Core System</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#3498db"></div> AI Module</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#2ecc71"></div> World/Gen</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f39c12"></div> UI/Colony</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#9b59b6"></div> Entities</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="prompt-area">
+    <div class="prompt-header">
+      <h3>Generated Prompt</h3>
+      <button class="copy-btn" onclick="copyPrompt()">Copy to Clipboard</button>
+    </div>
+    <div class="prompt-text" id="prompt-output"></div>
+  </div>
+
+<script>
+// ============ DATA ============
+const phases = [
+  {
+    id: 0, name: "Phase 0: Scaffolding", status: "pending",
+    tasks: [
+      { id: "0.1", name: "Prototype entry + state machine", owner: "Integration", done: false },
+      { id: "0.2", name: "Config + sprite/tile mapping", owner: "Systems", done: false },
+      { id: "0.3", name: "Deterministic time scaling", owner: "Runtime", done: false }
+    ]
+  },
+  {
+    id: 1, name: "Phase 1: AI Foundation", status: "pending",
+    tasks: [
+      { id: "1.1", name: "Test harness scene", owner: "Integration", done: false },
+      { id: "1.2", name: "Minimal world tiles + pathfinding", owner: "World", done: false },
+      { id: "1.3", name: "Combat + gathering systems", owner: "Systems", done: false },
+      { id: "1.4", name: "Inventory system", owner: "Systems", done: false },
+      { id: "1.5", name: "GOAP-lite actions + planner", owner: "AI", done: false },
+      { id: "1.6", name: "Debug expedition HUD", owner: "UI", done: false },
+      { id: "1.7", name: "Phase 1 Integration Demo", owner: "Integration", done: false }
+    ]
+  },
+  {
+    id: 2, name: "Phase 2: The World", status: "pending",
+    tasks: [
+      { id: "2.1", name: "Seeded dungeon generation (BSP)", owner: "World", done: false },
+      { id: "2.2", name: "Fog of war system", owner: "World", done: false },
+      { id: "2.3", name: "World rendering + camera", owner: "World", done: false },
+      { id: "2.4", name: "Spawn rules for entities", owner: "World", done: false },
+      { id: "2.5", name: "Exploration behavior", owner: "AI", done: false },
+      { id: "2.6", name: "Phase 2 Integration Demo", owner: "Integration", done: false }
+    ]
+  },
+  {
+    id: 3, name: "Phase 3: Party Dynamics", status: "pending",
+    tasks: [
+      { id: "3.1", name: "Unit factory + archetypes", owner: "Entities", done: false },
+      { id: "3.2", name: "Party state + coordinator", owner: "AI", done: false },
+      { id: "3.3", name: "Formation + follow behavior", owner: "AI", done: false },
+      { id: "3.4", name: "Protect ally behavior", owner: "AI", done: false },
+      { id: "3.5", name: "Mid-expedition recruitment", owner: "Systems", done: false },
+      { id: "3.6", name: "Phase 3 Integration Demo", owner: "Integration", done: false }
+    ]
+  },
+  {
+    id: 4, name: "Phase 4: Resource Loop", status: "pending",
+    tasks: [
+      { id: "4.1", name: "Resource definitions + valuation", owner: "Systems", done: false },
+      { id: "4.2", name: "Return-to-entrance behavior", owner: "AI", done: false },
+      { id: "4.3", name: "Expedition session summary", owner: "Integration", done: false },
+      { id: "4.4", name: "Phase 4 Integration Demo", owner: "Integration", done: false }
+    ]
+  },
+  {
+    id: 5, name: "Phase 5: Colony Integration", status: "pending",
+    tasks: [
+      { id: "5.1", name: "Colony state management", owner: "Systems", done: false },
+      { id: "5.2", name: "Upgrades registry", owner: "Systems", done: false },
+      { id: "5.3", name: "Colony screen UI", owner: "UI", done: false },
+      { id: "5.4", name: "Save/load with versioning", owner: "Integration", done: false },
+      { id: "5.5", name: "Phase 5 Integration Demo", owner: "Integration", done: false }
+    ]
+  },
+  {
+    id: 6, name: "Phase 6: Polish & Content", status: "pending",
+    tasks: [
+      { id: "6.1", name: "Enemy roster + behaviors", owner: "Entities", done: false },
+      { id: "6.2", name: "Expedition HUD completion", owner: "UI", done: false },
+      { id: "6.3", name: "Audio feedback", owner: "UI", done: false },
+      { id: "6.4", name: "Tutorial/onboarding", owner: "UI", done: false },
+      { id: "6.5", name: "Performance + stability pass", owner: "All", done: false }
+    ]
+  }
+];
+
+const nodes = [
+  // Core
+  { id: "main", label: "main.lua", cat: "core", x: 400, y: 100, desc: "Prototype entry point, state machine (COLONY ↔ EXPEDITION → RESULTS)" },
+  { id: "config", label: "config.lua", cat: "core", x: 550, y: 100, desc: "Time scales, AI tick interval, map size, sprite IDs, detection ranges" },
+  { id: "expedition_mgr", label: "expedition_manager", cat: "core", x: 400, y: 200, desc: "Orchestrates expedition flow, tick order, end conditions" },
+
+  // AI
+  { id: "world_state", label: "world_state.lua", cat: "ai", x: 200, y: 250, desc: "Sensed facts + target selection for AI decisions" },
+  { id: "goap_actions", label: "goap_actions.lua", cat: "ai", x: 200, y: 350, desc: "Actions: move_to, attack, gather, idle with preconditions/effects" },
+  { id: "planner", label: "planner.lua", cat: "ai", x: 100, y: 300, desc: "Greedy best-valid-action selector, supports multi-step planning" },
+  { id: "behaviors", label: "behaviors.lua", cat: "ai", x: 300, y: 300, desc: "Goals: combat, gather, explore, return + priority scoring" },
+  { id: "coordinator", label: "coordinator.lua", cat: "ai", x: 200, y: 450, desc: "Party role/target assignment, leader selection, avoid overkill" },
+  { id: "formation", label: "formation.lua", cat: "ai", x: 100, y: 450, desc: "Follow offsets, cohesion helpers, party movement" },
+
+  // World
+  { id: "tiles", label: "tiles.lua", cat: "world", x: 600, y: 250, desc: "Walkable grid, tile properties" },
+  { id: "dungeon_gen", label: "dungeon_gen.lua", cat: "world", x: 700, y: 300, desc: "BSP seeded multi-room generation, 5-12 connected rooms" },
+  { id: "fog", label: "fog.lua", cat: "world", x: 600, y: 350, desc: "HIDDEN/SEEN/VISIBLE states, incremental reveal" },
+  { id: "pathfinding", label: "pathfinding.lua", cat: "world", x: 700, y: 200, desc: "A* wrapper, path caching, unreachable detection" },
+  { id: "spawn", label: "spawn.lua", cat: "world", x: 750, y: 400, desc: "Enemy/resource/recruit placement rules, density caps" },
+
+  // Systems
+  { id: "combat", label: "combat_system", cat: "core", x: 400, y: 350, desc: "Damage, HP, death handling, HitFX integration" },
+  { id: "gathering", label: "gathering_system", cat: "core", x: 500, y: 350, desc: "Harvest animation, resource depletion, inventory update" },
+  { id: "inventory", label: "inventory_system", cat: "core", x: 450, y: 450, desc: "Party inventory, capacity from party size + upgrades" },
+  { id: "recruitment", label: "recruitment_system", cat: "core", x: 550, y: 450, desc: "Auto-recruit on proximity, joins coordinator" },
+
+  // Entities
+  { id: "unit_factory", label: "unit_factory", cat: "entity", x: 150, y: 550, desc: "Knight/Mage/Rogue/Miner creation with stats/sprites" },
+  { id: "enemy_factory", label: "enemy_factory", cat: "entity", x: 300, y: 550, desc: "Rat/Skeleton/Goblin/etc spawn with behaviors" },
+
+  // UI/Colony
+  { id: "expedition_hud", label: "expedition_hud", cat: "ui", x: 600, y: 500, desc: "Seed, time scale, goal/action, inventory fullness" },
+  { id: "results_screen", label: "results_screen", cat: "ui", x: 700, y: 550, desc: "Duration, enemies, resources, recruits, casualties" },
+  { id: "colony_state", label: "colony_state", cat: "ui", x: 500, y: 550, desc: "Resources, unlocks, upgrades, expedition count" },
+  { id: "upgrades", label: "upgrades.lua", cat: "ui", x: 400, y: 600, desc: "Unit unlocks, capacity upgrade, combat upgrades" }
+];
+
+const edges = [
+  { from: "main", to: "expedition_mgr", label: "orchestrates" },
+  { from: "main", to: "config", label: "reads" },
+  { from: "expedition_mgr", to: "combat", label: "ticks" },
+  { from: "expedition_mgr", to: "gathering", label: "ticks" },
+  { from: "expedition_mgr", to: "fog", label: "updates" },
+  { from: "expedition_mgr", to: "coordinator", label: "ticks" },
+  { from: "behaviors", to: "goap_actions", label: "selects" },
+  { from: "planner", to: "goap_actions", label: "evaluates" },
+  { from: "planner", to: "world_state", label: "reads" },
+  { from: "world_state", to: "tiles", label: "queries" },
+  { from: "goap_actions", to: "pathfinding", label: "uses" },
+  { from: "coordinator", to: "behaviors", label: "hints" },
+  { from: "coordinator", to: "formation", label: "manages" },
+  { from: "dungeon_gen", to: "tiles", label: "generates" },
+  { from: "dungeon_gen", to: "spawn", label: "places" },
+  { from: "fog", to: "tiles", label: "reads" },
+  { from: "combat", to: "unit_factory", label: "damages" },
+  { from: "combat", to: "enemy_factory", label: "damages" },
+  { from: "gathering", to: "inventory", label: "adds to" },
+  { from: "recruitment", to: "coordinator", label: "joins" },
+  { from: "expedition_mgr", to: "results_screen", label: "triggers" },
+  { from: "results_screen", to: "colony_state", label: "transfers" },
+  { from: "colony_state", to: "upgrades", label: "applies" }
+];
+
+const catColors = {
+  core: "#e94560",
+  ai: "#3498db",
+  world: "#2ecc71",
+  ui: "#f39c12",
+  entity: "#9b59b6"
+};
+
+// ============ STATE ============
+let state = {
+  expandedPhase: null,
+  hoveredNode: null,
+  selectedNodes: new Set(),
+  preset: "overview"
+};
+
+// ============ CANVAS ============
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const tooltip = document.getElementById("tooltip");
+
+function resize() {
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width;
+  canvas.height = rect.height;
+  draw();
+}
+window.addEventListener("resize", resize);
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Draw edges
+  ctx.lineWidth = 1.5;
+  edges.forEach(e => {
+    const from = nodes.find(n => n.id === e.from);
+    const to = nodes.find(n => n.id === e.to);
+    if (!from || !to) return;
+    if (!isNodeVisible(from) || !isNodeVisible(to)) return;
+
+    ctx.strokeStyle = "#0f3460";
+    ctx.beginPath();
+    ctx.moveTo(from.x, from.y);
+    ctx.lineTo(to.x, to.y);
+    ctx.stroke();
+
+    // Arrow
+    const angle = Math.atan2(to.y - from.y, to.x - from.x);
+    const dist = Math.sqrt((to.x - from.x) ** 2 + (to.y - from.y) ** 2);
+    const arrowX = from.x + Math.cos(angle) * (dist - 30);
+    const arrowY = from.y + Math.sin(angle) * (dist - 30);
+    ctx.beginPath();
+    ctx.moveTo(arrowX, arrowY);
+    ctx.lineTo(arrowX - 8 * Math.cos(angle - 0.4), arrowY - 8 * Math.sin(angle - 0.4));
+    ctx.moveTo(arrowX, arrowY);
+    ctx.lineTo(arrowX - 8 * Math.cos(angle + 0.4), arrowY - 8 * Math.sin(angle + 0.4));
+    ctx.stroke();
+  });
+
+  // Draw nodes
+  nodes.forEach(n => {
+    if (!isNodeVisible(n)) return;
+
+    const isHovered = state.hoveredNode === n.id;
+    const isSelected = state.selectedNodes.has(n.id);
+    const radius = isHovered ? 28 : 24;
+
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = catColors[n.cat] || "#666";
+    if (isSelected) {
+      ctx.shadowColor = catColors[n.cat];
+      ctx.shadowBlur = 15;
+    }
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    if (isSelected) {
+      ctx.strokeStyle = "#fff";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    // Label
+    ctx.fillStyle = "#fff";
+    ctx.font = "11px system-ui";
+    ctx.textAlign = "center";
+    ctx.fillText(n.label, n.x, n.y + radius + 14);
+  });
+}
+
+function isNodeVisible(node) {
+  const preset = state.preset;
+  if (preset === "full") return true;
+  if (preset === "overview") return ["main", "expedition_mgr", "behaviors", "dungeon_gen", "colony_state"].includes(node.id);
+  if (preset === "phase1") return ["main", "config", "tiles", "pathfinding", "combat", "gathering", "inventory", "goap_actions", "planner", "behaviors", "world_state", "expedition_hud"].includes(node.id);
+  if (preset === "ai") return node.cat === "ai" || node.id === "expedition_mgr";
+  if (preset === "world") return node.cat === "world" || node.id === "expedition_mgr";
+  return true;
+}
+
+function getNodeAt(x, y) {
+  for (let i = nodes.length - 1; i >= 0; i--) {
+    const n = nodes[i];
+    if (!isNodeVisible(n)) continue;
+    const dx = x - n.x, dy = y - n.y;
+    if (dx * dx + dy * dy < 28 * 28) return n;
+  }
+  return null;
+}
+
+canvas.addEventListener("mousemove", e => {
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  const node = getNodeAt(x, y);
+
+  if (node) {
+    state.hoveredNode = node.id;
+    tooltip.style.display = "block";
+    tooltip.style.left = (e.clientX - rect.left + 15) + "px";
+    tooltip.style.top = (e.clientY - rect.top + 15) + "px";
+    tooltip.innerHTML = `<h4>${node.label}</h4><p>${node.desc}</p>`;
+    canvas.style.cursor = "pointer";
+  } else {
+    state.hoveredNode = null;
+    tooltip.style.display = "none";
+    canvas.style.cursor = "default";
+  }
+  draw();
+});
+
+canvas.addEventListener("click", e => {
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  const node = getNodeAt(x, y);
+
+  if (node) {
+    if (state.selectedNodes.has(node.id)) {
+      state.selectedNodes.delete(node.id);
+    } else {
+      state.selectedNodes.add(node.id);
+    }
+    draw();
+    updatePrompt();
+  }
+});
+
+// ============ SIDEBAR ============
+function renderPhases() {
+  const container = document.getElementById("phase-list");
+  container.innerHTML = phases.map(p => `
+    <div class="phase-card">
+      <div class="phase-header" onclick="togglePhase(${p.id})">
+        <span class="phase-title">${p.name}</span>
+        <span class="phase-status status-${p.status}" onclick="cycleStatus(event, ${p.id})">${p.status}</span>
+      </div>
+      <div class="phase-tasks ${state.expandedPhase === p.id ? 'expanded' : ''}" id="tasks-${p.id}">
+        ${p.tasks.map(t => `
+          <div class="task-item">
+            <input type="checkbox" class="task-checkbox" ${t.done ? 'checked' : ''} onchange="toggleTask('${t.id}')">
+            <span class="task-label">${t.id}: ${t.name}</span>
+            <span class="task-owner">${t.owner}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function togglePhase(id) {
+  state.expandedPhase = state.expandedPhase === id ? null : id;
+  renderPhases();
+}
+
+function cycleStatus(e, id) {
+  e.stopPropagation();
+  const phase = phases.find(p => p.id === id);
+  const order = ["pending", "active", "complete"];
+  const idx = order.indexOf(phase.status);
+  phase.status = order[(idx + 1) % order.length];
+  renderPhases();
+  updatePrompt();
+}
+
+function toggleTask(taskId) {
+  phases.forEach(p => {
+    const task = p.tasks.find(t => t.id === taskId);
+    if (task) task.done = !task.done;
+  });
+  updatePrompt();
+}
+
+// ============ PRESETS ============
+function setPreset(name) {
+  state.preset = name;
+  state.selectedNodes.clear();
+  document.querySelectorAll(".preset-btn").forEach(b => b.classList.remove("active"));
+  document.querySelector(`[onclick="setPreset('${name}')"]`).classList.add("active");
+  draw();
+  updatePrompt();
+}
+
+// ============ PROMPT ============
+function updatePrompt() {
+  const parts = [];
+
+  // Active phases
+  const activePhases = phases.filter(p => p.status === "active");
+  if (activePhases.length > 0) {
+    parts.push(`Currently working on: ${activePhases.map(p => p.name).join(", ")}.`);
+  }
+
+  // Completed tasks
+  const completedTasks = phases.flatMap(p => p.tasks.filter(t => t.done));
+  const pendingTasks = phases.flatMap(p => p.tasks.filter(t => !t.done));
+  if (completedTasks.length > 0) {
+    parts.push(`Completed ${completedTasks.length}/${completedTasks.length + pendingTasks.length} tasks.`);
+  }
+
+  // Selected nodes
+  if (state.selectedNodes.size > 0) {
+    const selected = [...state.selectedNodes].map(id => nodes.find(n => n.id === id)?.label).filter(Boolean);
+    parts.push(`Focus areas: ${selected.join(", ")}.`);
+  }
+
+  // Preset context
+  if (state.preset !== "overview") {
+    const presetNames = { phase1: "Phase 1 (AI Foundation)", ai: "AI Systems", world: "World Generation", full: "Full Architecture" };
+    parts.push(`Viewing: ${presetNames[state.preset] || state.preset}.`);
+  }
+
+  // Generate actionable prompt
+  let prompt = "I'm implementing Auto-Achra, an idle dungeon crawler with autonomous expeditions.\n\n";
+
+  if (parts.length > 0) {
+    prompt += parts.join(" ") + "\n\n";
+  }
+
+  if (state.selectedNodes.size > 0) {
+    const selected = [...state.selectedNodes].map(id => nodes.find(n => n.id === id)).filter(Boolean);
+    prompt += "Help me implement these modules:\n";
+    selected.forEach(n => {
+      prompt += `• ${n.label}: ${n.desc}\n`;
+    });
+    prompt += "\nProvide Lua code for the game jam template codebase. Use existing systems (HitFX, particles, timers, signals).";
+  } else {
+    const nextPhase = phases.find(p => p.status === "pending" || p.status === "active");
+    if (nextPhase) {
+      const nextTask = nextPhase.tasks.find(t => !t.done);
+      if (nextTask) {
+        prompt += `Next task: ${nextTask.id} ${nextTask.name} (Owner: ${nextTask.owner})\n`;
+        prompt += "Provide implementation guidance and Lua code for this task.";
+      }
+    }
+  }
+
+  document.getElementById("prompt-output").textContent = prompt;
+}
+
+function copyPrompt() {
+  const text = document.getElementById("prompt-output").textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector(".copy-btn");
+    btn.textContent = "Copied!";
+    btn.classList.add("copied");
+    setTimeout(() => {
+      btn.textContent = "Copy to Clipboard";
+      btn.classList.remove("copied");
+    }, 2000);
+  });
+}
+
+// ============ INIT ============
+renderPhases();
+resize();
+updatePrompt();
+</script>
+</body>
+</html>

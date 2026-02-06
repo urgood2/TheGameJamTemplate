@@ -1,8 +1,36 @@
 # Tiled Support Implementation Plan
 
 **Date:** 2026-02-06  
-**Status:** Proposed  
+**Status:** In Progress  
 **Primary Goal:** Add first-class Tiled map support (alongside LDtk), including physics, entity spawning/rendering, optional vertical sprite sorting, and programmatic autotiling for procedural maps.
+
+## Implementation Progress (2026-02-06)
+
+Completed in code:
+
+- Tiled parser scaffold (`.tmj/.tsj`) with GID decode, chunk/layer/object/property parsing.
+- Runtime autotile evaluator (`tiled.apply_rules`) with deterministic bitmask-rule selection.
+- Runtime ruleset loading from `rules.txt` via `runtime_json` references.
+- Lua object APIs:
+  - `tiled.object_count`
+  - `tiled.get_objects`
+  - `tiled.each_object`
+  - `tiled.set_spawner` / `tiled.spawn_objects`
+- Procedural physics bridge:
+  - `tiled.build_colliders_from_grid`
+  - `tiled.clear_generated_colliders`
+  - `tiled.cleanup_procedural` now also clears generated colliders.
+- Required asset-wall coverage artifacts:
+  - Runtime wall rulesets for `dungeon_mode` and `dungeon_437`.
+  - Coverage validator script + tests + generated report (`wall_rule_coverage_report.json`).
+
+Validation run for this slice:
+
+- Focused C++ compile checks for updated Tiled sources (`tiled_loader.cpp`, `tiled_lua_bindings.cpp`, `test_tiled_loader.cpp`).
+- Standalone C++ smoke tests for runtime rules and object traversal passed.
+- Python tests passed:
+  - `scripts/tests/test_tiled_asset_inventory.py`
+  - `scripts/tests/test_tiled_wall_rule_coverage.py`
 
 ---
 

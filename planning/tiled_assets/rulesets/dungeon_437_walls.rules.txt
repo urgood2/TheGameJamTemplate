@@ -1,0 +1,2 @@
+# Runtime wall autotile rules for dungeon_437 tiles.
+runtime_json = dungeon_437_walls.runtime.json

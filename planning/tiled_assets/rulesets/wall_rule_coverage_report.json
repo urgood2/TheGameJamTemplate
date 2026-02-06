@@ -1,0 +1,515 @@
+{
+  "schema_version": "1.0",
+  "project_root": "/Users/joshuashin/Projects/TheGameJamTemplate",
+  "manifest": "planning/tiled_assets/required_asset_manifest.json",
+  "rulesets_dir": "planning/tiled_assets/rulesets",
+  "total_wall_assets": 71,
+  "mapped_count": 18,
+  "excluded_count": 53,
+  "unknown_mapped_count": 0,
+  "unknown_mapped_assets": [],
+  "uncovered_count": 0,
+  "uncovered_assets": [],
+  "rulesets": [
+    {
+      "ruleset_id": "dungeon_437_walls",
+      "runtime_path": "planning/tiled_assets/rulesets/dungeon_437_walls.runtime.json",
+      "mapped_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_169_corner_tl.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_170_corner_tr.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_179_box_vert.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_196_box_horiz.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_197_box_cross.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_219_block_full.png"
+      ],
+      "mapped_count": 6,
+      "unknown_assets": [],
+      "unknown_count": 0
+    },
+    {
+      "ruleset_id": "dungeon_mode_walls",
+      "runtime_path": "planning/tiled_assets/rulesets/dungeon_mode_walls.runtime.json",
+      "mapped_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_240_box_corner_tl.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_241_box_corner_tr.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_242_box_corner_bl.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_243_box_corner_br.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_244_box_horizontal.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_245_box_vertical.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_246_box_t_down.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_247_box_t_up.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_248_box_t_right.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_249_box_t_left.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_250_box_cross.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_254_block_full.png"
+      ],
+      "mapped_count": 12,
+      "unknown_assets": [],
+      "unknown_count": 0
+    }
+  ],
+  "entries": [
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_169_corner_tl.png",
+      "status": "mapped",
+      "rulesets": [
+        "dungeon_437_walls"
+      ],
+      "reason": "Referenced by runtime wall autotile ruleset source assets."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_170_corner_tr.png",
+      "status": "mapped",
+      "rulesets": [
+        "dungeon_437_walls"
+      ],
+      "reason": "Referenced by runtime wall autotile ruleset source assets."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_176_shade_light.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Lighting/shade variant excluded from structural cardinal autotiling in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_177_shade_med.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Lighting/shade variant excluded from structural cardinal autotiling in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_178_shade_dark.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Lighting/shade variant excluded from structural cardinal autotiling in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_179_box_vert.png",
+      "status": "mapped",
+      "rulesets": [
+        "dungeon_437_walls"
+      ],
+      "reason": "Referenced by runtime wall autotile ruleset source assets."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_180_box_vert_l.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_181_box_vert_ll.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_182_box_vert_ld.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_183_box_down_ld.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_184_box_down_ll.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_185_box_vert_lld.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_186_box_vert_d.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_187_box_down_ldd.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_188_box_up_ldd.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_189_box_up_ld.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_190_box_up_ll.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_191_box_down_l.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_192_box_up_r.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_193_box_up_h.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_194_box_down_h.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_195_box_vert_r.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_196_box_horiz.png",
+      "status": "mapped",
+      "rulesets": [
+        "dungeon_437_walls"
+      ],
+      "reason": "Referenced by runtime wall autotile ruleset source assets."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_197_box_cross.png",
+      "status": "mapped",
+      "rulesets": [
+        "dungeon_437_walls"
+      ],
+      "reason": "Referenced by runtime wall autotile ruleset source assets."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_198_box_vert_rd.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_199_box_vert_rr.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_200_box_up_rdd.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_201_box_down_rdd.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_202_box_up_hdd.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_203_box_down_hdd.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_204_box_vert_rdd.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_205_box_horiz_d.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_206_box_cross_d.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_207_box_up_hd.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_208_box_down_hd.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_209_box_up_hdd2.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_210_box_down_hdd2.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_211_box_up_rr.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_212_box_down_ll2.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_213_box_down_rr.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_214_box_up_ll.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_215_box_cross_v.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_216_box_cross_h.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_217_box_up_l.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_218_box_down_r.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Wall glyph variant excluded from the canonical cardinal mapping in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_219_block_full.png",
+      "status": "mapped",
+      "rulesets": [
+        "dungeon_437_walls"
+      ],
+      "reason": "Referenced by runtime wall autotile ruleset source assets."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_220_block_lower.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Partial block wall variant reserved for bespoke placement, not auto-selected in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_221_block_left.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Partial block wall variant reserved for bespoke placement, not auto-selected in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_222_block_right.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Partial block wall variant reserved for bespoke placement, not auto-selected in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_223_block_upper.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Partial block wall variant reserved for bespoke placement, not auto-selected in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_129_wall_brick.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Standalone wall motif tile excluded from cardinal bitmask base in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_136_bridge.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Bridge tile treated as a distinct gameplay feature layer, not wall autotile core."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_196_wall_stone.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Standalone wall motif tile excluded from cardinal bitmask base in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_197_wall_cave.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Standalone wall motif tile excluded from cardinal bitmask base in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_198_wall_mossy.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Standalone wall motif tile excluded from cardinal bitmask base in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_199_wall_cracked.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Standalone wall motif tile excluded from cardinal bitmask base in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_240_box_corner_tl.png",
+      "status": "mapped",
+      "rulesets": [
+        "dungeon_mode_walls"
+      ],
+      "reason": "Referenced by runtime wall autotile ruleset source assets."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_241_box_corner_tr.png",
+      "status": "mapped",
+      "rulesets": [
+        "dungeon_mode_walls"
+      ],
+      "reason": "Referenced by runtime wall autotile ruleset source assets."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_242_box_corner_bl.png",
+      "status": "mapped",
+      "rulesets": [
+        "dungeon_mode_walls"
+      ],
+      "reason": "Referenced by runtime wall autotile ruleset source assets."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_243_box_corner_br.png",
+      "status": "mapped",
+      "rulesets": [
+        "dungeon_mode_walls"
+      ],
+      "reason": "Referenced by runtime wall autotile ruleset source assets."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_244_box_horizontal.png",
+      "status": "mapped",
+      "rulesets": [
+        "dungeon_mode_walls"
+      ],
+      "reason": "Referenced by runtime wall autotile ruleset source assets."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_245_box_vertical.png",
+      "status": "mapped",
+      "rulesets": [
+        "dungeon_mode_walls"
+      ],
+      "reason": "Referenced by runtime wall autotile ruleset source assets."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_246_box_t_down.png",
+      "status": "mapped",
+      "rulesets": [
+        "dungeon_mode_walls"
+      ],
+      "reason": "Referenced by runtime wall autotile ruleset source assets."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_247_box_t_up.png",
+      "status": "mapped",
+      "rulesets": [
+        "dungeon_mode_walls"
+      ],
+      "reason": "Referenced by runtime wall autotile ruleset source assets."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_248_box_t_right.png",
+      "status": "mapped",
+      "rulesets": [
+        "dungeon_mode_walls"
+      ],
+      "reason": "Referenced by runtime wall autotile ruleset source assets."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_249_box_t_left.png",
+      "status": "mapped",
+      "rulesets": [
+        "dungeon_mode_walls"
+      ],
+      "reason": "Referenced by runtime wall autotile ruleset source assets."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_250_box_cross.png",
+      "status": "mapped",
+      "rulesets": [
+        "dungeon_mode_walls"
+      ],
+      "reason": "Referenced by runtime wall autotile ruleset source assets."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_251_shade_light.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Lighting/shade variant excluded from structural cardinal autotiling in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_252_shade_medium.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Lighting/shade variant excluded from structural cardinal autotiling in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_253_shade_heavy.png",
+      "status": "excluded",
+      "rulesets": [],
+      "reason": "Lighting/shade variant excluded from structural cardinal autotiling in v1."
+    },
+    {
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_254_block_full.png",
+      "status": "mapped",
+      "rulesets": [
+        "dungeon_mode_walls"
+      ],
+      "reason": "Referenced by runtime wall autotile ruleset source assets."
+    }
+  ]
+}

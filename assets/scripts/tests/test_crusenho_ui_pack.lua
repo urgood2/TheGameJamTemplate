@@ -113,6 +113,23 @@ t.describe("Crusenho icon coverage", function()
     end)
 end)
 
+t.describe("Crusenho demo module", function()
+    t.it("builds showcase tree without errors", function()
+        local pack = ensure_pack()
+        t.expect(pack).to_be_truthy()
+
+        local demo = require("ui.crusenho_pack_demo")
+        t.expect(demo).to_be_truthy()
+        t.expect(type(demo.createShowcase)).to_be("function")
+
+        local tree = demo.createShowcase()
+        t.expect(tree).to_be_truthy()
+        local treeType = type(tree)
+        local isSupported = (treeType == "table") or (treeType == "userdata")
+        t.expect(isSupported).to_be(true)
+    end)
+end)
+
 function M.run()
     print("\n================================================================================")
     print("CRUSENHO UI PACK TESTS")
@@ -132,4 +149,3 @@ function M.run()
 end
 
 return M
-

@@ -1,0 +1,2 @@
+# Runtime wall autotile rules for dungeon_mode tiles.
+runtime_json = dungeon_mode_walls.runtime.json

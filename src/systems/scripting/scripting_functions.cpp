@@ -45,6 +45,7 @@
 #if ENABLE_LDTK
 #include "systems/ldtk_loader/ldtk_combined.hpp"
 #endif
+#include "systems/tiled_loader/tiled_loader.hpp"
 #include "systems/main_loop_enhancement/main_loop.hpp"
 #include "systems/physics/physics_lua_bindings.hpp"
 #include "systems/spring/spring_lua_bindings.hpp"
@@ -287,6 +288,7 @@ auto initLuaMasterState(sol::state &stateToInit,
 #if ENABLE_LDTK
   ldtk_loader::exposeToLua(stateToInit);
 #endif
+  tiled_loader::exposeToLua(stateToInit);
 
 
   //---------------------------------------------------------

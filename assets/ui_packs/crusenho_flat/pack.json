@@ -1,0 +1,1322 @@
+{
+  "atlas": "atlas.png",
+  "buttons": {
+    "icon_arrow": {
+      "normal": {
+        "region": [
+          738,
+          68,
+          17,
+          16
+        ],
+        "scale_mode": "fixed"
+      }
+    },
+    "icon_check": {
+      "normal": {
+        "region": [
+          757,
+          68,
+          17,
+          16
+        ],
+        "scale_mode": "fixed"
+      }
+    },
+    "icon_cross": {
+      "normal": {
+        "region": [
+          776,
+          68,
+          17,
+          16
+        ],
+        "scale_mode": "fixed"
+      }
+    },
+    "icon_play": {
+      "normal": {
+        "region": [
+          795,
+          68,
+          17,
+          16
+        ],
+        "scale_mode": "fixed"
+      }
+    },
+    "primary": {
+      "disabled": {
+        "9patch": [
+          6,
+          6,
+          6,
+          6
+        ],
+        "region": [
+          398,
+          2,
+          32,
+          32
+        ]
+      },
+      "hover": {
+        "9patch": [
+          6,
+          6,
+          6,
+          6
+        ],
+        "region": [
+          330,
+          2,
+          32,
+          32
+        ]
+      },
+      "normal": {
+        "9patch": [
+          6,
+          6,
+          6,
+          6
+        ],
+        "region": [
+          296,
+          2,
+          32,
+          32
+        ]
+      },
+      "pressed": {
+        "9patch": [
+          6,
+          6,
+          6,
+          6
+        ],
+        "region": [
+          364,
+          2,
+          32,
+          32
+        ]
+      }
+    },
+    "secondary": {
+      "disabled": {
+        "9patch": [
+          6,
+          6,
+          6,
+          6
+        ],
+        "region": [
+          534,
+          2,
+          32,
+          32
+        ]
+      },
+      "hover": {
+        "9patch": [
+          6,
+          6,
+          6,
+          6
+        ],
+        "region": [
+          466,
+          2,
+          32,
+          32
+        ]
+      },
+      "normal": {
+        "9patch": [
+          6,
+          6,
+          6,
+          6
+        ],
+        "region": [
+          432,
+          2,
+          32,
+          32
+        ]
+      },
+      "pressed": {
+        "9patch": [
+          6,
+          6,
+          6,
+          6
+        ],
+        "region": [
+          500,
+          2,
+          32,
+          32
+        ]
+      }
+    },
+    "select_primary": {
+      "disabled": {
+        "9patch": [
+          6,
+          6,
+          6,
+          6
+        ],
+        "region": [
+          304,
+          68,
+          32,
+          32
+        ]
+      },
+      "hover": {
+        "9patch": [
+          6,
+          6,
+          6,
+          6
+        ],
+        "region": [
+          236,
+          68,
+          32,
+          32
+        ]
+      },
+      "normal": {
+        "9patch": [
+          6,
+          6,
+          6,
+          6
+        ],
+        "region": [
+          202,
+          68,
+          32,
+          32
+        ]
+      },
+      "pressed": {
+        "9patch": [
+          6,
+          6,
+          6,
+          6
+        ],
+        "region": [
+          270,
+          68,
+          32,
+          32
+        ]
+      }
+    },
+    "select_secondary": {
+      "disabled": {
+        "9patch": [
+          6,
+          6,
+          6,
+          6
+        ],
+        "region": [
+          440,
+          68,
+          32,
+          32
+        ]
+      },
+      "hover": {
+        "9patch": [
+          6,
+          6,
+          6,
+          6
+        ],
+        "region": [
+          372,
+          68,
+          32,
+          32
+        ]
+      },
+      "normal": {
+        "9patch": [
+          6,
+          6,
+          6,
+          6
+        ],
+        "region": [
+          338,
+          68,
+          32,
+          32
+        ]
+      },
+      "pressed": {
+        "9patch": [
+          6,
+          6,
+          6,
+          6
+        ],
+        "region": [
+          406,
+          68,
+          32,
+          32
+        ]
+      }
+    },
+    "stepper_minus": {
+      "normal": {
+        "region": [
+          109,
+          102,
+          10,
+          10
+        ],
+        "scale_mode": "fixed"
+      }
+    },
+    "stepper_plus": {
+      "normal": {
+        "region": [
+          121,
+          102,
+          10,
+          10
+        ],
+        "scale_mode": "fixed"
+      }
+    },
+    "toggle_lr": {
+      "disabled": {
+        "region": [
+          164,
+          102,
+          10,
+          10
+        ],
+        "scale_mode": "fixed"
+      },
+      "hover": {
+        "region": [
+          224,
+          102,
+          10,
+          10
+        ],
+        "scale_mode": "fixed"
+      },
+      "normal": {
+        "region": [
+          152,
+          102,
+          10,
+          10
+        ],
+        "scale_mode": "fixed"
+      },
+      "pressed": {
+        "region": [
+          236,
+          102,
+          10,
+          10
+        ],
+        "scale_mode": "fixed"
+      }
+    },
+    "toggle_round": {
+      "disabled": {
+        "region": [
+          212,
+          102,
+          10,
+          10
+        ],
+        "scale_mode": "fixed"
+      },
+      "hover": {
+        "region": [
+          188,
+          102,
+          10,
+          10
+        ],
+        "scale_mode": "fixed"
+      },
+      "normal": {
+        "region": [
+          176,
+          102,
+          10,
+          10
+        ],
+        "scale_mode": "fixed"
+      },
+      "pressed": {
+        "region": [
+          200,
+          102,
+          10,
+          10
+        ],
+        "scale_mode": "fixed"
+      }
+    }
+  },
+  "icons": {
+    "arrow_lg": {
+      "region": [
+        997,
+        68,
+        16,
+        12
+      ],
+      "scale_mode": "fixed"
+    },
+    "arrow_md": {
+      "region": [
+        282,
+        102,
+        13,
+        9
+      ],
+      "scale_mode": "fixed"
+    },
+    "arrow_sm": {
+      "region": [
+        551,
+        102,
+        10,
+        8
+      ],
+      "scale_mode": "fixed"
+    },
+    "check_lg": {
+      "region": [
+        831,
+        68,
+        17,
+        14
+      ],
+      "scale_mode": "fixed"
+    },
+    "check_md": {
+      "region": [
+        297,
+        102,
+        11,
+        9
+      ],
+      "scale_mode": "fixed"
+    },
+    "check_sm": {
+      "region": [
+        577,
+        102,
+        9,
+        7
+      ],
+      "scale_mode": "fixed"
+    },
+    "cross_lg": {
+      "region": [
+        814,
+        68,
+        15,
+        15
+      ],
+      "scale_mode": "fixed"
+    },
+    "cross_md": {
+      "region": [
+        310,
+        102,
+        9,
+        9
+      ],
+      "scale_mode": "fixed"
+    },
+    "cross_sm": {
+      "region": [
+        588,
+        102,
+        7,
+        7
+      ],
+      "scale_mode": "fixed"
+    },
+    "dropdown": {
+      "region": [
+        613,
+        102,
+        7,
+        5
+      ],
+      "scale_mode": "fixed"
+    },
+    "line": {
+      "region": [
+        884,
+        102,
+        7,
+        3
+      ],
+      "scale_mode": "fixed"
+    },
+    "play_lg": {
+      "region": [
+        850,
+        68,
+        10,
+        14
+      ],
+      "scale_mode": "fixed"
+    },
+    "play_md": {
+      "region": [
+        2,
+        102,
+        8,
+        12
+      ],
+      "scale_mode": "fixed"
+    },
+    "play_sm": {
+      "region": [
+        143,
+        102,
+        7,
+        10
+      ],
+      "scale_mode": "fixed"
+    },
+    "play_xs": {
+      "region": [
+        563,
+        102,
+        6,
+        8
+      ],
+      "scale_mode": "fixed"
+    },
+    "point_lg": {
+      "region": [
+        622,
+        102,
+        7,
+        5
+      ],
+      "scale_mode": "fixed"
+    },
+    "point_md": {
+      "region": [
+        631,
+        102,
+        6,
+        4
+      ],
+      "scale_mode": "fixed"
+    },
+    "point_sm": {
+      "region": [
+        639,
+        102,
+        5,
+        4
+      ],
+      "scale_mode": "fixed"
+    },
+    "stripe": {
+      "region": [
+        597,
+        102,
+        7,
+        7
+      ],
+      "scale_mode": "fixed"
+    }
+  },
+  "inputs": {
+    "default": {
+      "focus": {
+        "9patch": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "region": [
+          136,
+          68,
+          64,
+          32
+        ]
+      },
+      "normal": {
+        "9patch": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "region": [
+          70,
+          68,
+          64,
+          32
+        ]
+      }
+    }
+  },
+  "name": "crusenho_flat",
+  "panels": {
+    "banner01": {
+      "9patch": [
+        8,
+        6,
+        8,
+        6
+      ],
+      "region": [
+        474,
+        68,
+        64,
+        20
+      ]
+    },
+    "banner02": {
+      "9patch": [
+        8,
+        6,
+        8,
+        6
+      ],
+      "region": [
+        540,
+        68,
+        64,
+        20
+      ]
+    },
+    "banner03": {
+      "9patch": [
+        8,
+        6,
+        8,
+        6
+      ],
+      "region": [
+        606,
+        68,
+        64,
+        20
+      ]
+    },
+    "banner04": {
+      "9patch": [
+        8,
+        6,
+        8,
+        6
+      ],
+      "region": [
+        672,
+        68,
+        64,
+        20
+      ]
+    },
+    "frame01": {
+      "9patch": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "region": [
+        2,
+        2,
+        96,
+        64
+      ]
+    },
+    "frame02": {
+      "9patch": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "region": [
+        100,
+        2,
+        96,
+        64
+      ]
+    },
+    "frame03": {
+      "9patch": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "region": [
+        198,
+        2,
+        96,
+        64
+      ]
+    },
+    "framemarker01": {
+      "9patch": [
+        8,
+        8,
+        8,
+        8
+      ],
+      "region": [
+        568,
+        2,
+        64,
+        32
+      ]
+    },
+    "framemarker02": {
+      "9patch": [
+        8,
+        8,
+        8,
+        8
+      ],
+      "region": [
+        634,
+        2,
+        64,
+        32
+      ]
+    },
+    "framemarker03": {
+      "9patch": [
+        8,
+        8,
+        8,
+        8
+      ],
+      "region": [
+        700,
+        2,
+        64,
+        32
+      ]
+    },
+    "frameslot01": {
+      "9patch": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "region": [
+        766,
+        2,
+        32,
+        32
+      ]
+    },
+    "frameslot01_hover": {
+      "9patch": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "region": [
+        800,
+        2,
+        32,
+        32
+      ]
+    },
+    "frameslot01_pressed": {
+      "9patch": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "region": [
+        834,
+        2,
+        32,
+        32
+      ]
+    },
+    "frameslot02": {
+      "9patch": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "region": [
+        868,
+        2,
+        32,
+        32
+      ]
+    },
+    "frameslot02_hover": {
+      "9patch": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "region": [
+        902,
+        2,
+        32,
+        32
+      ]
+    },
+    "frameslot02_pressed": {
+      "9patch": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "region": [
+        936,
+        2,
+        32,
+        32
+      ]
+    },
+    "frameslot03": {
+      "9patch": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "region": [
+        970,
+        2,
+        32,
+        32
+      ]
+    },
+    "frameslot03_hover": {
+      "9patch": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "region": [
+        2,
+        68,
+        32,
+        32
+      ]
+    },
+    "frameslot03_pressed": {
+      "9patch": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "region": [
+        36,
+        68,
+        32,
+        32
+      ]
+    }
+  },
+  "progress_bars": {
+    "style_01": {
+      "background": {
+        "9patch": [
+          4,
+          2,
+          4,
+          2
+        ],
+        "region": [
+          357,
+          102,
+          32,
+          8
+        ]
+      },
+      "fill": {
+        "region": [
+          646,
+          102,
+          32,
+          3
+        ]
+      }
+    },
+    "style_02": {
+      "background": {
+        "9patch": [
+          4,
+          2,
+          4,
+          2
+        ],
+        "region": [
+          391,
+          102,
+          29,
+          8
+        ]
+      },
+      "fill": {
+        "region": [
+          680,
+          102,
+          32,
+          3
+        ]
+      }
+    },
+    "style_03": {
+      "background": {
+        "9patch": [
+          4,
+          2,
+          4,
+          2
+        ],
+        "region": [
+          422,
+          102,
+          29,
+          8
+        ]
+      },
+      "fill": {
+        "region": [
+          714,
+          102,
+          32,
+          3
+        ]
+      }
+    },
+    "style_04": {
+      "background": {
+        "9patch": [
+          4,
+          2,
+          4,
+          2
+        ],
+        "region": [
+          453,
+          102,
+          29,
+          8
+        ]
+      },
+      "fill": {
+        "region": [
+          748,
+          102,
+          32,
+          3
+        ]
+      }
+    },
+    "style_05": {
+      "background": {
+        "9patch": [
+          4,
+          2,
+          4,
+          2
+        ],
+        "region": [
+          12,
+          102,
+          32,
+          10
+        ]
+      },
+      "fill": {
+        "region": [
+          782,
+          102,
+          32,
+          3
+        ]
+      }
+    },
+    "style_06": {
+      "background": {
+        "9patch": [
+          4,
+          2,
+          4,
+          2
+        ],
+        "region": [
+          484,
+          102,
+          32,
+          8
+        ]
+      },
+      "fill": {
+        "region": [
+          816,
+          102,
+          32,
+          3
+        ]
+      }
+    },
+    "style_07": {
+      "background": {
+        "9patch": [
+          4,
+          2,
+          4,
+          2
+        ],
+        "region": [
+          862,
+          68,
+          32,
+          12
+        ]
+      },
+      "fill": {
+        "region": [
+          850,
+          102,
+          32,
+          3
+        ]
+      }
+    },
+    "style_08": {
+      "background": {
+        "9patch": [
+          4,
+          2,
+          4,
+          2
+        ],
+        "region": [
+          896,
+          68,
+          32,
+          12
+        ]
+      },
+      "fill": {
+        "region": [
+          646,
+          102,
+          32,
+          3
+        ]
+      }
+    },
+    "style_09": {
+      "background": {
+        "9patch": [
+          4,
+          2,
+          4,
+          2
+        ],
+        "region": [
+          930,
+          68,
+          31,
+          12
+        ]
+      },
+      "fill": {
+        "region": [
+          680,
+          102,
+          32,
+          3
+        ]
+      }
+    },
+    "style_10": {
+      "background": {
+        "9patch": [
+          4,
+          2,
+          4,
+          2
+        ],
+        "region": [
+          963,
+          68,
+          32,
+          12
+        ]
+      },
+      "fill": {
+        "region": [
+          714,
+          102,
+          32,
+          3
+        ]
+      }
+    },
+    "style_11": {
+      "background": {
+        "9patch": [
+          4,
+          2,
+          4,
+          2
+        ],
+        "region": [
+          46,
+          102,
+          30,
+          10
+        ]
+      },
+      "fill": {
+        "region": [
+          748,
+          102,
+          32,
+          3
+        ]
+      }
+    },
+    "style_12": {
+      "background": {
+        "9patch": [
+          4,
+          2,
+          4,
+          2
+        ],
+        "region": [
+          78,
+          102,
+          29,
+          10
+        ]
+      },
+      "fill": {
+        "region": [
+          782,
+          102,
+          32,
+          3
+        ]
+      }
+    },
+    "style_13": {
+      "background": {
+        "9patch": [
+          4,
+          2,
+          4,
+          2
+        ],
+        "region": [
+          248,
+          102,
+          32,
+          9
+        ]
+      },
+      "fill": {
+        "region": [
+          816,
+          102,
+          32,
+          3
+        ]
+      }
+    }
+  },
+  "scrollbars": {
+    "compact": {
+      "thumb": {
+        "region": [
+          571,
+          102,
+          4,
+          7
+        ],
+        "scale_mode": "fixed"
+      },
+      "track": {
+        "9patch": [
+          4,
+          2,
+          4,
+          2
+        ],
+        "region": [
+          248,
+          102,
+          32,
+          9
+        ]
+      }
+    },
+    "default": {
+      "thumb": {
+        "region": [
+          528,
+          102,
+          9,
+          8
+        ],
+        "scale_mode": "fixed"
+      },
+      "track": {
+        "9patch": [
+          4,
+          2,
+          4,
+          2
+        ],
+        "region": [
+          78,
+          102,
+          29,
+          10
+        ]
+      }
+    },
+    "wide": {
+      "thumb": {
+        "region": [
+          539,
+          102,
+          10,
+          8
+        ],
+        "scale_mode": "fixed"
+      },
+      "track": {
+        "9patch": [
+          4,
+          2,
+          4,
+          2
+        ],
+        "region": [
+          930,
+          68,
+          31,
+          12
+        ]
+      }
+    }
+  },
+  "sliders": {
+    "compact": {
+      "thumb": {
+        "region": [
+          606,
+          102,
+          5,
+          5
+        ],
+        "scale_mode": "fixed"
+      },
+      "track": {
+        "9patch": [
+          4,
+          2,
+          4,
+          2
+        ],
+        "region": [
+          484,
+          102,
+          32,
+          8
+        ]
+      }
+    },
+    "default": {
+      "thumb": {
+        "region": [
+          518,
+          102,
+          8,
+          8
+        ],
+        "scale_mode": "fixed"
+      },
+      "track": {
+        "9patch": [
+          4,
+          2,
+          4,
+          2
+        ],
+        "region": [
+          12,
+          102,
+          32,
+          10
+        ]
+      }
+    },
+    "tall": {
+      "thumb": {
+        "region": [
+          133,
+          102,
+          8,
+          10
+        ],
+        "scale_mode": "fixed"
+      },
+      "track": {
+        "9patch": [
+          4,
+          2,
+          4,
+          2
+        ],
+        "region": [
+          862,
+          68,
+          32,
+          12
+        ]
+      }
+    }
+  },
+  "version": "1.0"
+}

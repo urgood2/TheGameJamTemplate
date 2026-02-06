@@ -20,6 +20,18 @@ Completed in code:
   - `tiled.build_colliders_from_grid`
   - `tiled.clear_generated_colliders`
   - `tiled.cleanup_procedural` now also clears generated colliders.
+- Lua procgen integration + demo scaffolding:
+  - `assets/scripts/core/procgen/tiled_bridge.lua`
+  - `assets/scripts/examples/tiled_quickstart.lua`
+  - `assets/scripts/tests/test_procgen_tiled_bridge.lua`
+- Full-capability demo orchestration:
+  - `assets/scripts/examples/tiled_capability_demo.lua`
+  - exercises map draw, layer draw, y-sort, object read/spawn, procedural rules, and collider build in one run.
+- Demo regression checklist:
+  - `docs/plans/2026-02-06-tiled-capability-demo-checklist.md`
+- Tiled render binding compile fix:
+  - `src/systems/tiled_loader/tiled_lua_bindings.cpp` now includes `layer_command_buffer.hpp`
+  - added internal forward declaration for `ResolveMapIdOrThrow(...)`
 - Required asset-wall coverage artifacts:
   - Runtime wall rulesets for `dungeon_mode` and `dungeon_437`.
   - Coverage validator script + tests + generated report (`wall_rule_coverage_report.json`).
@@ -31,6 +43,10 @@ Validation run for this slice:
 - Python tests passed:
   - `scripts/tests/test_tiled_asset_inventory.py`
   - `scripts/tests/test_tiled_wall_rule_coverage.py`
+- Lua wrapper test passed:
+  - `assets/scripts/tests/test_procgen_tiled_bridge.lua`
+- Lua capability demo flow test passed:
+  - `assets/scripts/tests/test_tiled_capability_demo.lua`
 
 ---
 

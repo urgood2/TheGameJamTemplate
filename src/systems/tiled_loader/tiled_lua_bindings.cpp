@@ -17,7 +17,7 @@
 #include "core/game.hpp"
 #include "core/globals.hpp"
 #include "sol/sol.hpp"
-#include "systems/layer/layer.hpp"
+#include "systems/layer/layer_command_buffer.hpp"
 #include "systems/physics/physics_components.hpp"
 #include "systems/physics/physics_manager.hpp"
 #include "systems/scripting/binding_recorder.hpp"
@@ -31,6 +31,7 @@ std::vector<entt::entity> g_generatedGridColliderEntities;
 std::unordered_map<std::string, Texture2D> g_tilesetTextureCache;
 
 std::filesystem::path ResolveAssetPath(const std::string& pathLike);
+std::string ResolveMapIdOrThrow(const std::string& mapId);
 
 struct TileDrawOptions {
     std::string mapId;

@@ -16,6 +16,7 @@
 local vendor = require("core.procgen.vendor")
 local coords = require("core.procgen.coords")
 local ldtk_bridge = require("core.procgen.ldtk_bridge")
+local tiled_bridge = require("core.procgen.tiled_bridge")
 local ldtk_rules = require("core.procgen.ldtk_rules")
 local GridBuilder = require("core.procgen.grid_builder")
 local GraphBuilder = require("core.procgen.graph_builder")
@@ -37,6 +38,7 @@ procgen.forma = vendor.forma
 -- Re-export utility modules
 procgen.coords = coords
 procgen.ldtk_bridge = ldtk_bridge
+procgen.tiled_bridge = tiled_bridge
 procgen.ldtk_rules = ldtk_rules
 
 -- Re-export Phase 3 modules

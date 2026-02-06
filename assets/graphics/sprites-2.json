@@ -1,29 +1,64 @@
-{"frames": [
-
 {
-	"filename": "background flat.png",
-	"frame": {"x":4,"y":4,"w":2000,"h":2000},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":2000,"h":2000},
-	"sourceSize": {"w":2000,"h":2000}
-},
-{
-	"filename": "card base.png",
-	"frame": {"x":4,"y":2015,"w":1431,"h":1300},
-	"rotated": false,
-	"trimmed": true,
-	"spriteSourceSize": {"x":532,"y":387,"w":1431,"h":1300},
-	"sourceSize": {"w":2000,"h":2000}
-}],
-"meta": {
-	"app": "https://www.codeandweb.com/texturepacker",
-	"version": "1.0",
-	"image": "sprites_atlas-2.png",
-	"format": "RGBA8888",
-	"size": {"w":2048,"h":4096},
-	"scale": "1",
-	"related_multi_packs": [ "sprites-0.json", "sprites-1.json" ],
-	"smartupdate": "$TexturePacker:SmartUpdate:b6a19c9f03302d1742feeb320da6dea7:1af9be6ace02039bb28fbec70cc680f4:2bbe3b05147ba790fd87830b7012f958$"
-}
+    "frames": [
+        {
+            "auto_generated_uuid": "background_flat",
+            "filename": "background flat.png",
+            "frame": {
+                "h": 2000,
+                "w": 2000,
+                "x": 4,
+                "y": 4
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 2000,
+                "w": 2000
+            },
+            "spriteSourceSize": {
+                "h": 2000,
+                "w": 2000,
+                "x": 0,
+                "y": 0
+            },
+            "trimmed": false
+        },
+        {
+            "auto_generated_uuid": "base_card",
+            "filename": "card base.png",
+            "frame": {
+                "h": 1300,
+                "w": 1431,
+                "x": 4,
+                "y": 2015
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 2000,
+                "w": 2000
+            },
+            "spriteSourceSize": {
+                "h": 1300,
+                "w": 1431,
+                "x": 532,
+                "y": 387
+            },
+            "trimmed": true
+        }
+    ],
+    "meta": {
+        "app": "https://www.codeandweb.com/texturepacker",
+        "format": "RGBA8888",
+        "image": "sprites_atlas-2.png",
+        "related_multi_packs": [
+            "sprites-0.json",
+            "sprites-1.json"
+        ],
+        "scale": "1",
+        "size": {
+            "h": 4096,
+            "w": 2048
+        },
+        "smartupdate": "$TexturePacker:SmartUpdate:b6a19c9f03302d1742feeb320da6dea7:1af9be6ace02039bb28fbec70cc680f4:2bbe3b05147ba790fd87830b7012f958$",
+        "version": "1.0"
+    }
 }

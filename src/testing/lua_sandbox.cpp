@@ -126,7 +126,7 @@ void LuaSandbox::apply_sandbox(lua_State* L) {
         sol::state_view lua_view(ts);
         if (!this->is_path_allowed(path)) {
             sol::variadic_results results;
-            results.push_back(sol::make_object(lua_view, sol::nil));
+            results.push_back(sol::make_object(lua_view, sol::lua_nil));
             results.push_back(sol::make_object(lua_view, "path blocked by lua sandbox"));
             return results;
         }
@@ -137,7 +137,7 @@ void LuaSandbox::apply_sandbox(lua_State* L) {
             return sol::variadic_results{original_open(path)};
         }
         sol::variadic_results results;
-        results.push_back(sol::make_object(lua_view, sol::nil));
+        results.push_back(sol::make_object(lua_view, sol::lua_nil));
         results.push_back(sol::make_object(lua_view, "io.open unavailable"));
         return results;
     });
@@ -183,7 +183,7 @@ void LuaSandbox::apply_sandbox(lua_State* L) {
                 throw err;
             }
             sol::object resolved = search_result.get<sol::object>();
-            if (resolved == sol::nil) {
+            if (resolved == sol::lua_nil) {
                 throw sol::error("require blocked by lua sandbox: " + name);
             }
             if (resolved.is<std::string>()) {

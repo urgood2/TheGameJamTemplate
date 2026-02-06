@@ -171,7 +171,7 @@ sol::object resolve_save_manager(sol::state_view& lua) {
         }
     }
 
-    return sol::nil;
+    return sol::lua_nil;
 }
 
 } // namespace

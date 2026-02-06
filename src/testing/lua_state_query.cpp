@@ -159,7 +159,7 @@ LuaValue make_error(lua_State* L, std::string& last_error, const std::string& me
     LuaValue out;
     if (L != nullptr) {
         sol::state_view lua(L);
-        out.value = sol::make_object(lua, sol::nil);
+        out.value = sol::make_object(lua, sol::lua_nil);
     }
     out.error = message;
     return out;
@@ -184,7 +184,7 @@ bool resolve_path(sol::state_view lua,
             const int lua_index = segment.index + 1;
             next = table[lua_index];
         }
-        if (next == sol::nil && i + 1 < segments.size()) {
+        if (next == sol::lua_nil && i + 1 < segments.size()) {
             error = "type_error:missing_segment:" + segment_label(segment);
             return false;
         }
@@ -223,7 +223,7 @@ bool resolve_parent(sol::state_view lua,
             const int lua_index = segment.index + 1;
             next = table[lua_index];
         }
-        if (next == sol::nil) {
+        if (next == sol::lua_nil) {
             error = "type_error:missing_segment:" + segment_label(segment);
             return false;
         }
@@ -316,7 +316,7 @@ bool LuaStateQuery::set_state(const std::string& path, const LuaValue& value) {
     }
     sol::object payload = value.value;
     if (!payload.valid()) {
-        payload = sol::make_object(lua, sol::nil);
+        payload = sol::make_object(lua, sol::lua_nil);
     }
     if (last.kind == PathSegment::Kind::Key) {
         parent[last.key] = payload;
@@ -406,7 +406,7 @@ bool LuaStateQuery::execute_command(const std::string& name, const std::vector<L
         last_error_.clear();
         return out.as<bool>();
     }
-    if (out == sol::nil) {
+    if (out == sol::lua_nil) {
         last_error_.clear();
         return true;
     }

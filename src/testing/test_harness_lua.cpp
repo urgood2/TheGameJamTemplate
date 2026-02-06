@@ -449,7 +449,7 @@ void expose_to_lua(sol::state& lua, TestRuntime& runtime) {
                                  sol::variadic_results results;
                                  auto* mode = testing::get_active_test_mode();
                                  if (!mode) {
-                                     results.push_back(sol::make_object(lua_view, sol::nil));
+                                     results.push_back(sol::make_object(lua_view, sol::lua_nil));
                                      results.push_back(sol::make_object(lua_view, "harness_error:test_mode_missing"));
                                      return results;
                                  }
@@ -458,7 +458,7 @@ void expose_to_lua(sol::state& lua, TestRuntime& runtime) {
                                      results.push_back(sol::make_object(lua_view, true));
                                      return results;
                                  }
-                                 results.push_back(sol::make_object(lua_view, sol::nil));
+                                 results.push_back(sol::make_object(lua_view, sol::lua_nil));
                                  results.push_back(sol::make_object(lua_view, "snapshot_error:create_failed"));
                                  return results;
                              });
@@ -470,7 +470,7 @@ void expose_to_lua(sol::state& lua, TestRuntime& runtime) {
                                  sol::variadic_results results;
                                  auto* mode = testing::get_active_test_mode();
                                  if (!mode) {
-                                     results.push_back(sol::make_object(lua_view, sol::nil));
+                                     results.push_back(sol::make_object(lua_view, sol::lua_nil));
                                      results.push_back(sol::make_object(lua_view, "harness_error:test_mode_missing"));
                                      return results;
                                  }
@@ -479,7 +479,7 @@ void expose_to_lua(sol::state& lua, TestRuntime& runtime) {
                                      results.push_back(sol::make_object(lua_view, true));
                                      return results;
                                  }
-                                 results.push_back(sol::make_object(lua_view, sol::nil));
+                                 results.push_back(sol::make_object(lua_view, sol::lua_nil));
                                  results.push_back(sol::make_object(lua_view, "snapshot_error:restore_failed"));
                                  return results;
                              });
@@ -594,7 +594,7 @@ void expose_to_lua(sol::state& lua, TestRuntime& runtime) {
                                      }
                                      const std::string level_str = index < entries.size() ? entries[index].level : level;
                                      sol::variadic_results results;
-                                     results.push_back(sol::make_object(lua_view, sol::nil));
+                                     results.push_back(sol::make_object(lua_view, sol::lua_nil));
                                      results.push_back(sol::make_object(
                                          lua_view,
                                          "log_gating: level " + level_str + " at index " + std::to_string(index)));

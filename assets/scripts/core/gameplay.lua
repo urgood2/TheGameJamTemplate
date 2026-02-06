@@ -7653,9 +7653,12 @@ local function maybeAutoLoopPhase(currentPhase)
     scheduleNext()
 end
 
-if gameplay_cfg.auto_action_env and timer and timer.after then
+if gameplay_cfg.auto_action_env and not gameplay_cfg.auto_phase_loop_env and timer and timer.after then
     timer.after(5.0, function()
         gameplay_cfg.auto_action_state = gameplay_cfg.auto_action_state or {}
+        if is_state_active and is_state_active(ACTION_STATE) then
+            return
+        end
         if gameplay_cfg.auto_action_state.scheduled then
             return
         end

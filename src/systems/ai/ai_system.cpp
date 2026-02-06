@@ -385,7 +385,7 @@ namespace ai_system
         else
         {
             SPDLOG_DEBUG("Function '{}' not found in table.", func_name);
-            return sol::lua_nil; // sol::nil works fine in windows?
+            return sol::lua_nil; // sol::lua_nil works fine in windows?
         }
     }
 
@@ -1118,7 +1118,7 @@ namespace ai_system
         
         // 3. Expose a getter for a single world-state flag:
         ai.set_function("get_worldstate",
-            // we need to capture lua state in order to return sol::nil on error
+            // we need to capture lua state in order to return sol::lua_nil on error
             [&](sol::this_state L, entt::entity e, const std::string & key) -> sol::object {
             auto &goap = globals::getRegistry().get<GOAPComponent>(e);
             bool value = false;

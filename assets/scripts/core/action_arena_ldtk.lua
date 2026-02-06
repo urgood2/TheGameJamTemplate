@@ -39,6 +39,22 @@ local defaults = {
     seed = nil,
 }
 
+local function is_absolute_path(path)
+    if type(path) ~= "string" or path == "" then
+        return false
+    end
+    if path:sub(1, 1) == "/" then
+        return true
+    end
+    if path:match("^%a:[/\\]") then
+        return true
+    end
+    if path:sub(1, 2) == "\\\\" then
+        return true
+    end
+    return false
+end
+
 local function clone_table(src)
     local out = {}
     for k, v in pairs(src or {}) do
@@ -68,6 +84,9 @@ local function merge_opts(opts)
 end
 
 local function resolve_def_path(def_path)
+    if is_absolute_path(def_path) then
+        return def_path
+    end
     if util and util.getRawAssetPathNoUUID then
         local resolved = util.getRawAssetPathNoUUID(def_path)
         if resolved and resolved ~= "" then
@@ -79,6 +98,9 @@ end
 
 local function resolve_asset_dir(def_path, asset_dir)
     if asset_dir and asset_dir ~= "" then
+        if is_absolute_path(asset_dir) then
+            return asset_dir
+        end
         if util and util.getRawAssetPathNoUUID then
             local resolved = util.getRawAssetPathNoUUID(asset_dir)
             if resolved and resolved ~= "" then

@@ -101,7 +101,8 @@ local gameplay_cfg = {
     -- When true: Uses PlayerInventory (screen-space grid) + WandLoadoutUI for card management
     -- When false: Uses legacy board_sets with inventory_board for card management
     USE_GRID_INVENTORY = true,  -- Set to false to use legacy board-based inventory
-    ACTION_ARENA_LDTK_PATH = "Typical_TopDown_example.ldtk",
+    ACTION_ARENA_LDTK_PATH = (os.getenv and os.getenv("ACTION_ARENA_LDTK_PATH")) or "Typical_TopDown_example.ldtk",
+    ACTION_ARENA_LDTK_ASSET_DIR = (os.getenv and os.getenv("ACTION_ARENA_LDTK_ASSET_DIR")) or nil,
     ACTION_ARENA_RULE_LAYER = "Collisions",
     ACTION_ARENA_RENDER_LAYERS = { "Default_floor", "Wall_tops" },
     ACTION_ARENA_FILL_DENSITY = 0.42,
@@ -10103,6 +10104,7 @@ function initActionPhase()
         local actionArena = gameplay_cfg.getActionArena()
         local arena_ok, arena_bounds = pcall(actionArena.init, {
             def_path = gameplay_cfg.ACTION_ARENA_LDTK_PATH,
+            asset_dir = gameplay_cfg.ACTION_ARENA_LDTK_ASSET_DIR,
             rule_layer = gameplay_cfg.ACTION_ARENA_RULE_LAYER,
             render_layers = gameplay_cfg.ACTION_ARENA_RENDER_LAYERS,
             fill_density = gameplay_cfg.ACTION_ARENA_FILL_DENSITY,

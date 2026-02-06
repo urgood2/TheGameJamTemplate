@@ -47,6 +47,19 @@ The action-phase flow is:
 5. Draw `Default_floor` + `Wall_tops`.
 6. Build colliders from the same grid.
 
+### Runtime overrides (no code edit)
+
+You can point action phase at a different LDtk project/tileset set via env vars:
+
+```bash
+ACTION_ARENA_LDTK_PATH="/absolute/or/asset-relative/project.ldtk" \
+ACTION_ARENA_LDTK_ASSET_DIR="/optional/tileset/base/dir" \
+AUTO_START_MAIN_GAME=1 \
+./build-debug/raylib-cpp-cmake-template
+```
+
+- `ACTION_ARENA_LDTK_ASSET_DIR` is optional. If omitted, the loader derives it from the `.ldtk` file directory.
+
 ## Reusing your packed sprite atlas directly (what would be needed)
 
 If you want LDtk to render from packed atlas JSON pages directly (instead of a grid tileset PNG), you need an engine extension:

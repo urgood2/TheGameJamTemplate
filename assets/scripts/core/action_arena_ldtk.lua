@@ -16,7 +16,7 @@ local state = {
 
 local defaults = {
     def_path = "Typical_TopDown_example.ldtk",
-    asset_dir = "assets",
+    asset_dir = nil, -- nil => derive from LDtk def file location
     level_name = nil, -- nil => first level in file
     rule_layer = "Collisions",
     render_layers = { "Default_floor", "Wall_tops" },

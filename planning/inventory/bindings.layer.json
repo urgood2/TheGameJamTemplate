@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-02-06T13:59:03.011434+00:00",
+  "generated_at": "2026-02-06T23:51:58.116234+00:00",
   "system": "layer",
   "source_files": [
     "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/layer/layer_lua_bindings.cpp"

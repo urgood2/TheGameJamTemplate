@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-02-06T13:59:03.020174+00:00",
+  "generated_at": "2026-02-06T23:51:58.125289+00:00",
   "system": "physics",
   "source_files": [
     "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/physics/physics_lua_bindings.cpp"

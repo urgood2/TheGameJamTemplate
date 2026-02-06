@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-02-06T13:59:03.007417+00:00",
+  "generated_at": "2026-02-06T23:51:58.111625+00:00",
   "system": "scripting",
   "source_files": [
     "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/scripting/scripting_system.cpp",

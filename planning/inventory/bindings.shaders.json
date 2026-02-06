@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-02-06T13:59:03.019039+00:00",
+  "generated_at": "2026-02-06T23:51:58.123503+00:00",
   "system": "shaders",
   "source_files": [
     "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp",

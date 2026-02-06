@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-02-06T13:59:03.008684+00:00",
+  "generated_at": "2026-02-06T23:51:58.112849+00:00",
   "system": "input",
   "source_files": [
     "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/input/input_lua_bindings.cpp"

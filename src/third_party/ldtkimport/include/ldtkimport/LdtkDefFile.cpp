@@ -20,6 +20,15 @@
 namespace ldtkimport
 {
 
+const char *yyjson_get_str_safe(yyjson_val *value)
+{
+   if (value == nullptr || !yyjson_is_str(value))
+   {
+      return "";
+   }
+   return yyjson_get_str(value);
+}
+
 bool yyjson_obj_get_bool(yyjson_val *obj, const char *key)
 {
    auto got_obj = yyjson_obj_get(obj, key);
@@ -45,7 +54,7 @@ float yyjson_obj_get_float(yyjson_val *obj, const char *key)
 const char *yyjson_obj_get_str(yyjson_val *obj, const char *key)
 {
    auto got_obj = yyjson_obj_get(obj, key);
-   return yyjson_get_str(got_obj);
+   return yyjson_get_str_safe(got_obj);
 }
 
 
@@ -247,7 +256,7 @@ void LdtkDefFile::loadFromText(
    }
 
    m_filename = filename;
-   m_projectUniqueId = yyjson_get_str(uniqueProjectId);
+   m_projectUniqueId = yyjson_get_str_safe(uniqueProjectId);
 
    // ---------------------------------------------------------------------------------
 
@@ -259,7 +268,7 @@ void LdtkDefFile::loadFromText(
       return;
    }
 
-   m_fileVersion = yyjson_get_str(fileVersion);
+   m_fileVersion = yyjson_get_str_safe(fileVersion);
 
    int major, minor, patch;
 #if defined(__STDC_LIB_EXT1__) || defined(_MSC_VER)
@@ -592,7 +601,7 @@ void LdtkDefFile::loadFromText(
 
    if (gotBgColor != nullptr)
    {
-      m_bgColor = yyjson_get_str(gotBgColor);
+      m_bgColor = yyjson_get_str_safe(gotBgColor);
    }
    else
    {

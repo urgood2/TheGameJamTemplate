@@ -25,6 +25,7 @@ local ldtk_bridge = require("core.procgen.ldtk_bridge")
 --   - worldName: string (default "world")
 --   - physicsTag: string (default "WORLD")
 --   - solidValues: table (default {1})
+--   - cellSize: number (defaults to engine default)
 function physics_bridge.buildColliders(grid, opts)
     opts = opts or {}
     local ldtk = _G.ldtk
@@ -35,7 +36,8 @@ function physics_bridge.buildColliders(grid, opts)
         gridTable,
         opts.worldName or "world",
         opts.physicsTag or "WORLD",
-        opts.solidValues or { 1 }
+        opts.solidValues or { 1 },
+        opts.cellSize
     )
 end
 

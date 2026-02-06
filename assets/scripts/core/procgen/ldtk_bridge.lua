@@ -4,7 +4,7 @@
 --
 -- LDtk C++ bindings (when available):
 --   ldtk.apply_rules(gridTable, layerName) -> tile results
---   ldtk.build_colliders_from_grid(gridTable, worldName, physicsTag, solidValues)
+--   ldtk.build_colliders_from_grid(gridTable, worldName, physicsTag, solidValues, cellSize)
 --   ldtk.cleanup_procedural()
 
 local ldtk_bridge = {}
@@ -35,7 +35,7 @@ end
 -- Uses LDtk's optimized collider merging algorithm
 -- Requires engine C++ ldtk binding to be available
 -- @param grid table Grid instance
--- @param opts table Options {worldName, physicsTag, solidValues}
+-- @param opts table Options {worldName, physicsTag, solidValues, cellSize}
 function ldtk_bridge.buildColliders(grid, opts)
     opts = opts or {}
     local ldtk = _G.ldtk
@@ -44,7 +44,8 @@ function ldtk_bridge.buildColliders(grid, opts)
         ldtk_bridge.gridToIntGrid(grid),
         opts.worldName or "world",
         opts.physicsTag or "WORLD",
-        opts.solidValues or { 1 }
+        opts.solidValues or { 1 },
+        opts.cellSize
     )
 end
 

@@ -101,6 +101,11 @@ local gameplay_cfg = {
     -- When true: Uses PlayerInventory (screen-space grid) + WandLoadoutUI for card management
     -- When false: Uses legacy board_sets with inventory_board for card management
     USE_GRID_INVENTORY = true,  -- Set to false to use legacy board-based inventory
+    ACTION_ARENA_LDTK_PATH = "Typical_TopDown_example.ldtk",
+    ACTION_ARENA_RULE_LAYER = "Collisions",
+    ACTION_ARENA_RENDER_LAYERS = { "Default_floor", "Wall_tops" },
+    ACTION_ARENA_FILL_DENSITY = 0.42,
+    ACTION_ARENA_CA_ITERATIONS = 12,
 
     enable_subcast_debug_ui = true,
     enable_wave_test_init = false,
@@ -163,11 +168,18 @@ local gameplay_cfg = {
     enable_card_modifier_tooltips_debug_ui_data_tables_headers = true,
     enable_card_modifier_tooltips_debug_ui_data_tables_cells = true,
     auto_action_env = (os.getenv and os.getenv("AUTO_ACTION_PHASE") == "1") or false,
+    auto_phase_loop_env = (os.getenv and os.getenv("AUTO_PHASE_LOOP") == "1") or false,
+    auto_phase_loop_interval = (os.getenv and tonumber(os.getenv("AUTO_PHASE_LOOP_INTERVAL"))) or 2.0,
+    auto_phase_loop_max_transitions = (os.getenv and tonumber(os.getenv("AUTO_PHASE_LOOP_MAX_TRANSITIONS"))) or 0,
 }
 
 gameplay_cfg.auto_action_state = gameplay_cfg.auto_action_state or {}
 if os.getenv then
     gameplay_cfg.auto_action_state.env_raw = os.getenv("AUTO_ACTION_PHASE")
+end
+gameplay_cfg.auto_phase_loop_state = gameplay_cfg.auto_phase_loop_state or {}
+if os.getenv then
+    gameplay_cfg.auto_phase_loop_state.env_raw = os.getenv("AUTO_PHASE_LOOP")
 end
 
 gameplay_cfg.debugQuickAccessState = gameplay_cfg.debugQuickAccessState or {}
@@ -191,6 +203,26 @@ else
     if not gameplay_cfg.auto_action_state.reported_env_absent then
         print("[DEBUG ACTION] AUTO_ACTION_PHASE env not set; export AUTO_ACTION_PHASE=1 to enable auto action testing")
         gameplay_cfg.auto_action_state.reported_env_absent = true
+    end
+end
+
+if gameplay_cfg.auto_phase_loop_state.env_raw then
+    local normalized = string.lower(tostring(gameplay_cfg.auto_phase_loop_state.env_raw))
+    gameplay_cfg.auto_phase_loop_env = (
+        normalized == "1" or normalized == "true" or normalized == "yes"
+    )
+    if not gameplay_cfg.auto_phase_loop_state.reported_env_raw then
+        print(string.format("[DEBUG ACTION] AUTO_PHASE_LOOP env detected raw=%s enabled=%s interval=%.2fs max_transitions=%s",
+            tostring(gameplay_cfg.auto_phase_loop_state.env_raw),
+            tostring(gameplay_cfg.auto_phase_loop_env),
+            tonumber(gameplay_cfg.auto_phase_loop_interval) or 2.0,
+            tostring(gameplay_cfg.auto_phase_loop_max_transitions)))
+        gameplay_cfg.auto_phase_loop_state.reported_env_raw = true
+    end
+else
+    if not gameplay_cfg.auto_phase_loop_state.reported_env_absent then
+        print("[DEBUG ACTION] AUTO_PHASE_LOOP env not set; export AUTO_PHASE_LOOP=1 to enable planning/action loop")
+        gameplay_cfg.auto_phase_loop_state.reported_env_absent = true
     end
 end
 
@@ -228,6 +260,13 @@ function gameplay_cfg.getShopPackUI()
         gameplay_cfg.ShopPackUI = require("ui.shop_pack_ui")
     end
     return gameplay_cfg.ShopPackUI
+end
+
+function gameplay_cfg.getActionArena()
+    if not gameplay_cfg.ActionArena then
+        gameplay_cfg.ActionArena = require("core.action_arena_ldtk")
+    end
+    return gameplay_cfg.ActionArena
 end
 
 --- Check if new grid inventory system is enabled
@@ -7529,6 +7568,10 @@ end
 function maybeAutoEnterActionPhase()
     gameplay_cfg.auto_action_state = gameplay_cfg.auto_action_state or {}
 
+    if gameplay_cfg.auto_phase_loop_env then
+        return
+    end
+
     if not gameplay_cfg.auto_action_env then
         if not gameplay_cfg.auto_action_state.reported_disabled then
             print("[DEBUG ACTION] maybeAutoEnterActionPhase: AUTO_ACTION_PHASE not enabled")
@@ -7557,6 +7600,56 @@ function maybeAutoEnterActionPhase()
     else
         fireAction()
     end
+end
+
+local function maybeAutoLoopPhase(currentPhase)
+    gameplay_cfg.auto_phase_loop_state = gameplay_cfg.auto_phase_loop_state or {}
+
+    if not gameplay_cfg.auto_phase_loop_env then
+        return
+    end
+    if gameplay_cfg.auto_phase_loop_state.scheduled then
+        return
+    end
+
+    local interval = tonumber(gameplay_cfg.auto_phase_loop_interval) or 2.0
+    if interval < 0.05 then interval = 0.05 end
+    gameplay_cfg.auto_phase_loop_state.scheduled = true
+
+    local function scheduleNext()
+        if not timer or not timer.after then
+            gameplay_cfg.auto_phase_loop_state.scheduled = false
+            return
+        end
+
+        timer.after(interval, function()
+            gameplay_cfg.auto_phase_loop_state.scheduled = false
+
+            local transitions = tonumber(gameplay_cfg.auto_phase_loop_state.transitions) or 0
+            transitions = transitions + 1
+            gameplay_cfg.auto_phase_loop_state.transitions = transitions
+
+            local maxTransitions = tonumber(gameplay_cfg.auto_phase_loop_max_transitions) or 0
+            if maxTransitions > 0 and transitions > maxTransitions then
+                print(string.format("[DEBUG ACTION] AUTO_PHASE_LOOP reached max transitions (%d), stopping", maxTransitions))
+                return
+            end
+
+            if currentPhase == "planning" then
+                if is_state_active and is_state_active(PLANNING_STATE) then
+                    print("[DEBUG ACTION] AUTO_PHASE_LOOP planning -> action")
+                    startActionPhase()
+                end
+            elseif currentPhase == "action" then
+                if is_state_active and is_state_active(ACTION_STATE) then
+                    print("[DEBUG ACTION] AUTO_PHASE_LOOP action -> planning")
+                    startPlanningPhase()
+                end
+            end
+        end, "auto_phase_loop", "debug_timers")
+    end
+
+    scheduleNext()
 end
 
 if gameplay_cfg.auto_action_env and timer and timer.after then
@@ -8258,11 +8351,17 @@ function startActionPhase()
             stream:update(0.016)
         end
     end)
+
+    maybeAutoLoopPhase("action")
 end
 
 function startPlanningPhase()
     local previousState = is_state_active(ACTION_STATE) and "SURVIVORS" or (is_state_active(SHOP_STATE) and "SHOP" or "default")
 	    clear_states()
+	    local actionArena = gameplay_cfg.getActionArena()
+	    if actionArena and actionArena.cleanup then
+	        actionArena.cleanup()
+	    end
 	    if setPlanningPeekMode then
 	        setPlanningPeekMode(false)
 	    end
@@ -8347,6 +8446,7 @@ function startPlanningPhase()
     print("States active:", is_state_active(PLANNING_STATE), is_state_active(ACTION_STATE), is_state_active(SHOP_STATE))
 
     maybeAutoEnterActionPhase()
+    maybeAutoLoopPhase("planning")
 end
 
 function startShopPhase()
@@ -8960,8 +9060,8 @@ function initSurvivorEntity()
 
     -- relocate to the center of the screen
     local survivorTransform = component_cache.get(survivorEntity, Transform)
-    survivorTransform.actualX = globals.screenWidth() / 2
-    survivorTransform.actualY = globals.screenHeight() / 2
+    survivorTransform.actualX = SCREEN_BOUND_LEFT + (SCREEN_BOUND_RIGHT - SCREEN_BOUND_LEFT) * 0.5
+    survivorTransform.actualY = SCREEN_BOUND_TOP + (SCREEN_BOUND_BOTTOM - SCREEN_BOUND_TOP) * 0.5
     survivorTransform.visualX = survivorTransform.actualX
     survivorTransform.visualY = survivorTransform.actualY
 
@@ -9011,15 +9111,20 @@ function initSurvivorEntity()
             -- bail if not in action state
             if not is_state_active(ACTION_STATE) then return end
 
-            -- draw walls
+            local actionArena = gameplay_cfg.getActionArena()
+            if actionArena and actionArena.is_ready and actionArena.is_ready() then
+                actionArena.draw()
+                return
+            end
+
+            -- fallback when LDtk arena is unavailable
             command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
-                c.x     = SCREEN_BOUND_LEFT + (SCREEN_BOUND_RIGHT - SCREEN_BOUND_LEFT) / 2
-                c.y     = SCREEN_BOUND_TOP + (SCREEN_BOUND_BOTTOM - SCREEN_BOUND_TOP) / 2
-                c.w     = SCREEN_BOUND_RIGHT - SCREEN_BOUND_LEFT
-                c.h     = SCREEN_BOUND_BOTTOM - SCREEN_BOUND_TOP
-                c.rx    = 30
-                c.ry    = 30
-                -- c.lineWidth = 10
+                c.x = SCREEN_BOUND_LEFT + (SCREEN_BOUND_RIGHT - SCREEN_BOUND_LEFT) / 2
+                c.y = SCREEN_BOUND_TOP + (SCREEN_BOUND_BOTTOM - SCREEN_BOUND_TOP) / 2
+                c.w = SCREEN_BOUND_RIGHT - SCREEN_BOUND_LEFT
+                c.h = SCREEN_BOUND_BOTTOM - SCREEN_BOUND_TOP
+                c.rx = 30
+                c.ry = 30
                 c.color = util.getColor("pink"):setAlpha(230)
             end, z_orders.background, layer.DrawCommandSpace.World)
         end
@@ -9993,6 +10098,51 @@ function initActionPhase()
     world:AddCollisionTag(C.CollisionTags.PICKUP) -- for items on ground
     world:AddCollisionTag(C.CollisionTags.PROJECTILE)
     world:AddCollisionTag("mask")  -- TODO: add to Constants if used
+
+    do
+        local actionArena = gameplay_cfg.getActionArena()
+        local arena_ok, arena_bounds = pcall(actionArena.init, {
+            def_path = gameplay_cfg.ACTION_ARENA_LDTK_PATH,
+            rule_layer = gameplay_cfg.ACTION_ARENA_RULE_LAYER,
+            render_layers = gameplay_cfg.ACTION_ARENA_RENDER_LAYERS,
+            fill_density = gameplay_cfg.ACTION_ARENA_FILL_DENSITY,
+            ca_iterations = gameplay_cfg.ACTION_ARENA_CA_ITERATIONS,
+            target_layer = "sprites",
+            base_z = z_orders.background,
+            z_step = 1,
+            world_name = "world",
+            physics_tag = C.CollisionTags.WORLD,
+        })
+
+        if arena_ok and arena_bounds then
+            SCREEN_BOUND_LEFT = arena_bounds.left
+            SCREEN_BOUND_TOP = arena_bounds.top
+            SCREEN_BOUND_RIGHT = arena_bounds.right
+            SCREEN_BOUND_BOTTOM = arena_bounds.bottom
+            print(string.format(
+                "[ActionArena] LDtk arena ready: %dx%d tiles (cell=%d, seed=%d)",
+                arena_bounds.tiles_w or 0,
+                arena_bounds.tiles_h or 0,
+                arena_bounds.cell_size or 0,
+                arena_bounds.seed or 0
+            ))
+        else
+            print("[ActionArena] Falling back to rounded arena: " .. tostring(arena_bounds))
+        end
+    end
+
+    do
+        local cam = camera.Get("world_camera")
+        if cam then
+            cam:SetBounds {
+                x = SCREEN_BOUND_LEFT,
+                y = SCREEN_BOUND_TOP,
+                width = SCREEN_BOUND_RIGHT - SCREEN_BOUND_LEFT,
+                height = SCREEN_BOUND_BOTTOM - SCREEN_BOUND_TOP
+            }
+            cam:SetBoundsPadding(10)
+        end
+    end
 
     initSurvivorEntity()
 

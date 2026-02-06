@@ -9,8 +9,28 @@
 #include "core/game.hpp"
 #include "core/globals.hpp"
 #include "spdlog/spdlog.h"
+#include <unordered_set>
+#include <vector>
 
 namespace ldtk_loader {
+namespace {
+std::vector<entt::entity> g_gridColliderEntities;
+
+void clearGridColliderEntities() {
+  auto* R = ldtk_loader::internal_loader::registry;
+  if (!R) {
+    g_gridColliderEntities.clear();
+    return;
+  }
+
+  for (auto e : g_gridColliderEntities) {
+    if (R->valid(e)) {
+      R->destroy(e);
+    }
+  }
+  g_gridColliderEntities.clear();
+}
+} // namespace
 
 void exposeToLua(sol::state& lua) {
   auto& rec = BindingRecorder::instance();
@@ -21,6 +41,16 @@ void exposeToLua(sol::state& lua) {
     // cfgPath is relative to assets/ (same convention as other loaders)
     ldtk_loader::ReloadProject(cfgPath);
     ldtk_loader::SetRegistry((globals::g_ctx) ? globals::g_ctx->registry : globals::getRegistry());
+  });
+
+  // Load LDtk rule definitions (for procedural auto-tiling)
+  // defPath can be absolute or asset-relative; assetDir is optional.
+  ldtk.set_function("load_rule_defs", [](const std::string &defPath,
+                                        sol::optional<std::string> assetDir) {
+    ldtk_rule_import::LoadDefinitions(defPath);
+    if (assetDir && !assetDir->empty()) {
+      ldtk_rule_import::SetAssetDirectory(*assetDir);
+    }
   });
 
   ldtk.set_function(
@@ -334,12 +364,17 @@ void exposeToLua(sol::state& lua) {
 
   // Build colliders from a Lua-provided IntGrid (without using LDtk level)
   ldtk.set_function("build_colliders_from_grid",
-      [](sol::table gridTable, const std::string& worldName, sol::optional<std::string> tag) {
+      [](sol::table gridTable,
+         const std::string& worldName,
+         sol::optional<std::string> tag,
+         sol::optional<sol::table> solidValues,
+         sol::optional<int> cellSizeOpt) {
     int width = gridTable.get_or("width", 0);
     int height = gridTable.get_or("height", 0);
     sol::table cells = gridTable.get_or("cells", sol::table());
     std::string physicsTag = tag.value_or("WORLD");
 
+    clearGridColliderEntities();
     if (width <= 0 || height <= 0) return;
 
     auto* world = ldtk_loader::GetPhysicsWorld(worldName);
@@ -354,7 +389,19 @@ void exposeToLua(sol::state& lua) {
       return;
     }
 
-    const int cellSize = 16; // Default cell size, could be made configurable
+    const int cellSize = cellSizeOpt.value_or(16);
+    std::unordered_set<int> solidLookup;
+    if (solidValues) {
+      for (auto& pair : *solidValues) {
+        if (pair.second.is<int>()) {
+          solidLookup.insert(pair.second.as<int>());
+        }
+      }
+    }
+    const bool useSolidLookup = !solidLookup.empty();
+    auto isSolid = [&](int value) {
+      return useSolidLookup ? (solidLookup.count(value) > 0) : (value != 0);
+    };
 
     // Scan rows for horizontal runs of solid cells
     for (int y = 0; y < height; ++y) {
@@ -362,13 +409,13 @@ void exposeToLua(sol::state& lua) {
       while (x < width) {
         int idx = y * width + x + 1; // Lua 1-indexed
         int val = cells.get_or(idx, 0);
-        if (val == 0) { ++x; continue; }
+        if (!isSolid(val)) { ++x; continue; }
 
         int runStart = x;
         int runEnd = x;
         while (runEnd + 1 < width) {
           int nextIdx = y * width + (runEnd + 1) + 1;
-          if (cells.get_or(nextIdx, 0) == 0) break;
+          if (!isSolid(cells.get_or(nextIdx, 0))) break;
           ++runEnd;
         }
         int runLen = (runEnd - runStart) + 1;
@@ -384,6 +431,7 @@ void exposeToLua(sol::state& lua) {
 
         world->AddCollider(e, physicsTag, "rectangle", w, h, -1, -1, false);
         world->SetBodyPosition(e, cx, cy);
+        g_gridColliderEntities.push_back(e);
 
         x = runEnd + 1;
       }
@@ -409,6 +457,7 @@ void exposeToLua(sol::state& lua) {
 
   // Clean up managed level (optional, called automatically when apply_rules is called again)
   ldtk.set_function("cleanup_procedural", []() {
+    clearGridColliderEntities();
     ldtk_rule_import::CleanupManagedLevel();
   });
 
@@ -720,6 +769,9 @@ void exposeToLua(sol::state& lua) {
       "ldtk", {"prefab_for", "",
                "Look up a prefab id for an LDtk entity name from config."});
   rec.record_property(
+      "ldtk", {"load_rule_defs", "",
+               "Load LDtk rule definitions for procedural auto-tiling (defPath, assetDir?)."});
+  rec.record_property(
       "ldtk", {"collider_layers", "",
                "List collider layers declared in the active LDtk config."});
   rec.record_property("ldtk", {"build_colliders", "",
@@ -757,7 +809,7 @@ void exposeToLua(sol::state& lua) {
   rec.record_property("ldtk", {"apply_rules", "",
                                "Apply LDtk auto-rules to a Lua IntGrid table, returning tile results."});
   rec.record_property("ldtk", {"build_colliders_from_grid", "",
-                               "Build physics colliders from a Lua IntGrid table."});
+                               "Build physics colliders from a Lua IntGrid table (solidValues?, cellSize?)."});
   rec.record_property("ldtk", {"get_layer_count", "",
                                "Get number of layers in the LDtk project."});
   rec.record_property("ldtk", {"get_layer_name", "",

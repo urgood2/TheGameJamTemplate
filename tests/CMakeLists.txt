@@ -75,6 +75,7 @@ add_executable(unit_tests
     unit/test_replace_children.cpp
     unit/test_mode_config.cpp
     unit/test_forensics.cpp
+    unit/test_tiled_loader.cpp
     unit/test_stubs_compile.cpp
     helpers/test_stubs.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_system.cpp
@@ -108,6 +109,8 @@ add_executable(unit_tests
     ${CMAKE_SOURCE_DIR}/src/systems/entity_gamestate_management/entity_gamestate_management.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/ai/ai_system.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/scripting/scripting_functions.cpp
+    ${CMAKE_SOURCE_DIR}/src/systems/tiled_loader/tiled_loader.cpp
+    ${CMAKE_SOURCE_DIR}/src/systems/tiled_loader/tiled_lua_bindings.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/event/event_system.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/physics/physics_world.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/input/controller_nav.cpp

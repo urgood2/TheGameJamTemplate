@@ -1,0 +1,592 @@
+{
+  "regions": {
+    "UI_Flat_Banner01a": [
+      474,
+      68,
+      64,
+      20
+    ],
+    "UI_Flat_Banner02a": [
+      540,
+      68,
+      64,
+      20
+    ],
+    "UI_Flat_Banner03a": [
+      606,
+      68,
+      64,
+      20
+    ],
+    "UI_Flat_Banner04a": [
+      672,
+      68,
+      64,
+      20
+    ],
+    "UI_Flat_Bar01a": [
+      357,
+      102,
+      32,
+      8
+    ],
+    "UI_Flat_Bar02a": [
+      391,
+      102,
+      29,
+      8
+    ],
+    "UI_Flat_Bar03a": [
+      422,
+      102,
+      29,
+      8
+    ],
+    "UI_Flat_Bar04a": [
+      453,
+      102,
+      29,
+      8
+    ],
+    "UI_Flat_Bar05a": [
+      12,
+      102,
+      32,
+      10
+    ],
+    "UI_Flat_Bar06a": [
+      484,
+      102,
+      32,
+      8
+    ],
+    "UI_Flat_Bar07a": [
+      862,
+      68,
+      32,
+      12
+    ],
+    "UI_Flat_Bar08a": [
+      896,
+      68,
+      32,
+      12
+    ],
+    "UI_Flat_Bar09a": [
+      930,
+      68,
+      31,
+      12
+    ],
+    "UI_Flat_Bar10a": [
+      963,
+      68,
+      32,
+      12
+    ],
+    "UI_Flat_Bar11a": [
+      46,
+      102,
+      30,
+      10
+    ],
+    "UI_Flat_Bar12a": [
+      78,
+      102,
+      29,
+      10
+    ],
+    "UI_Flat_Bar13a": [
+      248,
+      102,
+      32,
+      9
+    ],
+    "UI_Flat_BarFill01a": [
+      646,
+      102,
+      32,
+      3
+    ],
+    "UI_Flat_BarFill01b": [
+      680,
+      102,
+      32,
+      3
+    ],
+    "UI_Flat_BarFill01c": [
+      714,
+      102,
+      32,
+      3
+    ],
+    "UI_Flat_BarFill01d": [
+      748,
+      102,
+      32,
+      3
+    ],
+    "UI_Flat_BarFill01e": [
+      782,
+      102,
+      32,
+      3
+    ],
+    "UI_Flat_BarFill01f": [
+      816,
+      102,
+      32,
+      3
+    ],
+    "UI_Flat_BarFill01g": [
+      850,
+      102,
+      32,
+      3
+    ],
+    "UI_Flat_Button01a_1": [
+      296,
+      2,
+      32,
+      32
+    ],
+    "UI_Flat_Button01a_2": [
+      330,
+      2,
+      32,
+      32
+    ],
+    "UI_Flat_Button01a_3": [
+      364,
+      2,
+      32,
+      32
+    ],
+    "UI_Flat_Button01a_4": [
+      398,
+      2,
+      32,
+      32
+    ],
+    "UI_Flat_Button02a_1": [
+      432,
+      2,
+      32,
+      32
+    ],
+    "UI_Flat_Button02a_2": [
+      466,
+      2,
+      32,
+      32
+    ],
+    "UI_Flat_Button02a_3": [
+      500,
+      2,
+      32,
+      32
+    ],
+    "UI_Flat_Button02a_4": [
+      534,
+      2,
+      32,
+      32
+    ],
+    "UI_Flat_ButtonArrow01a": [
+      738,
+      68,
+      17,
+      16
+    ],
+    "UI_Flat_ButtonCheck01a": [
+      757,
+      68,
+      17,
+      16
+    ],
+    "UI_Flat_ButtonCross01a": [
+      776,
+      68,
+      17,
+      16
+    ],
+    "UI_Flat_ButtonMinus01a": [
+      109,
+      102,
+      10,
+      10
+    ],
+    "UI_Flat_ButtonPlay01a": [
+      795,
+      68,
+      17,
+      16
+    ],
+    "UI_Flat_ButtonPlus01a": [
+      121,
+      102,
+      10,
+      10
+    ],
+    "UI_Flat_Frame01a": [
+      2,
+      2,
+      96,
+      64
+    ],
+    "UI_Flat_Frame02a": [
+      100,
+      2,
+      96,
+      64
+    ],
+    "UI_Flat_Frame03a": [
+      198,
+      2,
+      96,
+      64
+    ],
+    "UI_Flat_FrameMarker01a": [
+      568,
+      2,
+      64,
+      32
+    ],
+    "UI_Flat_FrameMarker02a": [
+      634,
+      2,
+      64,
+      32
+    ],
+    "UI_Flat_FrameMarker03a": [
+      700,
+      2,
+      64,
+      32
+    ],
+    "UI_Flat_FrameSlot01a": [
+      766,
+      2,
+      32,
+      32
+    ],
+    "UI_Flat_FrameSlot01b": [
+      800,
+      2,
+      32,
+      32
+    ],
+    "UI_Flat_FrameSlot01c": [
+      834,
+      2,
+      32,
+      32
+    ],
+    "UI_Flat_FrameSlot02a": [
+      868,
+      2,
+      32,
+      32
+    ],
+    "UI_Flat_FrameSlot02b": [
+      902,
+      2,
+      32,
+      32
+    ],
+    "UI_Flat_FrameSlot02c": [
+      936,
+      2,
+      32,
+      32
+    ],
+    "UI_Flat_FrameSlot03a": [
+      970,
+      2,
+      32,
+      32
+    ],
+    "UI_Flat_FrameSlot03b": [
+      2,
+      68,
+      32,
+      32
+    ],
+    "UI_Flat_FrameSlot03c": [
+      36,
+      68,
+      32,
+      32
+    ],
+    "UI_Flat_Handle01a": [
+      606,
+      102,
+      5,
+      5
+    ],
+    "UI_Flat_Handle02a": [
+      518,
+      102,
+      8,
+      8
+    ],
+    "UI_Flat_Handle03a": [
+      133,
+      102,
+      8,
+      10
+    ],
+    "UI_Flat_Handle04a": [
+      528,
+      102,
+      9,
+      8
+    ],
+    "UI_Flat_Handle05a": [
+      539,
+      102,
+      10,
+      8
+    ],
+    "UI_Flat_Handle06a": [
+      571,
+      102,
+      4,
+      7
+    ],
+    "UI_Flat_IconArrow01a": [
+      997,
+      68,
+      16,
+      12
+    ],
+    "UI_Flat_IconArrow01b": [
+      282,
+      102,
+      13,
+      9
+    ],
+    "UI_Flat_IconArrow01c": [
+      551,
+      102,
+      10,
+      8
+    ],
+    "UI_Flat_IconCheck01a": [
+      831,
+      68,
+      17,
+      14
+    ],
+    "UI_Flat_IconCheck01b": [
+      297,
+      102,
+      11,
+      9
+    ],
+    "UI_Flat_IconCheck01c": [
+      577,
+      102,
+      9,
+      7
+    ],
+    "UI_Flat_IconCross01a": [
+      814,
+      68,
+      15,
+      15
+    ],
+    "UI_Flat_IconCross01b": [
+      310,
+      102,
+      9,
+      9
+    ],
+    "UI_Flat_IconCross01c": [
+      588,
+      102,
+      7,
+      7
+    ],
+    "UI_Flat_IconDropdown01a": [
+      613,
+      102,
+      7,
+      5
+    ],
+    "UI_Flat_IconLine01a": [
+      884,
+      102,
+      7,
+      3
+    ],
+    "UI_Flat_IconPlay01a": [
+      850,
+      68,
+      10,
+      14
+    ],
+    "UI_Flat_IconPlay01b": [
+      2,
+      102,
+      8,
+      12
+    ],
+    "UI_Flat_IconPlay01c": [
+      143,
+      102,
+      7,
+      10
+    ],
+    "UI_Flat_IconPlay01d": [
+      563,
+      102,
+      6,
+      8
+    ],
+    "UI_Flat_IconPoint01a": [
+      622,
+      102,
+      7,
+      5
+    ],
+    "UI_Flat_IconPoint01b": [
+      631,
+      102,
+      6,
+      4
+    ],
+    "UI_Flat_IconPoint01c": [
+      639,
+      102,
+      5,
+      4
+    ],
+    "UI_Flat_IconStripe01a": [
+      597,
+      102,
+      7,
+      7
+    ],
+    "UI_Flat_InputField01a": [
+      70,
+      68,
+      64,
+      32
+    ],
+    "UI_Flat_InputField02a": [
+      136,
+      68,
+      64,
+      32
+    ],
+    "UI_Flat_Select01a_1": [
+      202,
+      68,
+      32,
+      32
+    ],
+    "UI_Flat_Select01a_2": [
+      236,
+      68,
+      32,
+      32
+    ],
+    "UI_Flat_Select01a_3": [
+      270,
+      68,
+      32,
+      32
+    ],
+    "UI_Flat_Select01a_4": [
+      304,
+      68,
+      32,
+      32
+    ],
+    "UI_Flat_Select02a_1": [
+      338,
+      68,
+      32,
+      32
+    ],
+    "UI_Flat_Select02a_2": [
+      372,
+      68,
+      32,
+      32
+    ],
+    "UI_Flat_Select02a_3": [
+      406,
+      68,
+      32,
+      32
+    ],
+    "UI_Flat_Select02a_4": [
+      440,
+      68,
+      32,
+      32
+    ],
+    "UI_Flat_ToggleLeftOff01a": [
+      152,
+      102,
+      10,
+      10
+    ],
+    "UI_Flat_ToggleLeftOn01a": [
+      164,
+      102,
+      10,
+      10
+    ],
+    "UI_Flat_ToggleOff01a": [
+      176,
+      102,
+      10,
+      10
+    ],
+    "UI_Flat_ToggleOff02a": [
+      188,
+      102,
+      10,
+      10
+    ],
+    "UI_Flat_ToggleOff03a": [
+      321,
+      102,
+      16,
+      9
+    ],
+    "UI_Flat_ToggleOn01a": [
+      200,
+      102,
+      10,
+      10
+    ],
+    "UI_Flat_ToggleOn02a": [
+      212,
+      102,
+      10,
+      10
+    ],
+    "UI_Flat_ToggleOn03a": [
+      339,
+      102,
+      16,
+      9
+    ],
+    "UI_Flat_ToggleRightOff01a": [
+      224,
+      102,
+      10,
+      10
+    ],
+    "UI_Flat_ToggleRightOn01a": [
+      236,
+      102,
+      10,
+      10
+    ]
+  }
+}

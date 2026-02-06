@@ -481,7 +481,7 @@ end
 function createTabDemo()
     print("[TRACE] createTabDemo called")
     local dsl = require("ui.ui_syntax_sugar")
-    local panelWidth = 480  -- Increased to fit 7 tabs (Game, Graphics, Audio, Sprites, Inventory, Gallery, Showcase)
+    local panelWidth = 560  -- Increased to fit 8 tabs (Game, Graphics, Audio, Sprites, UI Pack, Inventory, Gallery, Showcase)
     local gallerySafeMargins = {
         left = 24,
         right = panelWidth + 40,
@@ -554,6 +554,14 @@ function createTabDemo()
                         content = function()
                             local SpriteShowcase = require("ui.sprite_ui_showcase")
                             return SpriteShowcase.createShowcase()
+                        end
+                    },
+                    {
+                        id = "uipack",
+                        label = "UI Pack",
+                        content = function()
+                            local CrusenhoPackDemo = require("ui.crusenho_pack_demo")
+                            return CrusenhoPackDemo.createShowcase()
                         end
                     },
                     {
@@ -1238,6 +1246,25 @@ function main.init()
             end
         else
             log_warn("[UIValidator] Could not load test module: " .. tostring(test_module))
+        end
+    end
+
+    local runCrusenhoUIPackTests = os.getenv("RUN_CRUSENHO_UI_PACK_TESTS") == "1"
+    if runCrusenhoUIPackTests then
+        local ok, test_module = pcall(require, "tests.test_crusenho_ui_pack")
+        if ok and test_module and test_module.run then
+            log_debug("[CrusenhoUIPack] Running compatibility tests...")
+            local success = test_module.run()
+            if success then
+                log_debug("[CrusenhoUIPack] All tests passed!")
+                os.exit(0)
+            else
+                log_warn("[CrusenhoUIPack] Some tests FAILED - check console output")
+                os.exit(1)
+            end
+        else
+            log_warn("[CrusenhoUIPack] Could not load test module: " .. tostring(test_module))
+            os.exit(1)
         end
     end
 

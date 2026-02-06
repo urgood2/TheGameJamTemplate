@@ -1,0 +1,71 @@
+{
+  "categories": [
+    "walls",
+    "floors",
+    "liquids",
+    "doors_gates",
+    "stairs_ladders",
+    "hazards_traps",
+    "props_decoration",
+    "entities_items",
+    "effects_status",
+    "ui_symbols"
+  ],
+  "extensions": [
+    ".png"
+  ],
+  "sources": [
+    {
+      "name": "dungeon_mode",
+      "path": "assets/graphics/pre-packing-files_globbed/dungeon_mode",
+      "expected_count": 256
+    },
+    {
+      "name": "dungeon_437",
+      "path": "assets/graphics/pre-packing-files_globbed/dungeon_437",
+      "expected_count": 256
+    }
+  ],
+  "rules": [
+    {
+      "category": "walls",
+      "pattern": "^(wall_.+|box_.+|block_(full|upper|lower|left|right)|shade_(light|medium|heavy|med|dark)|corner_(tl|tr)|bridge)$"
+    },
+    {
+      "category": "floors",
+      "pattern": "^floor_.+"
+    },
+    {
+      "category": "liquids",
+      "pattern": "^(water(_deep)?|lava)$"
+    },
+    {
+      "category": "doors_gates",
+      "pattern": "^(door_.+|gate_.+)$"
+    },
+    {
+      "category": "stairs_ladders",
+      "pattern": "^(stairs_.+|ladder)$"
+    },
+    {
+      "category": "hazards_traps",
+      "pattern": "^(trap_.+|pit|web)$"
+    },
+    {
+      "category": "props_decoration",
+      "pattern": "^(house|castle_tower|window|pillar|arch|altar|throne|chest_.+|tree_.+|bush|rock|torch_.+|brazier|campfire|barrel|crate|table|chair|bed|bookshelf|fountain|well|grave|coffin|bones|skull)$"
+    },
+    {
+      "category": "entities_items",
+      "pattern": "^(hero_.+|skeleton|zombie|ghost|slime|rat|bat|spider|snake|goblin|orc|troll|dragon|sword(_long)?|dagger|axe|mace|staff|bow|crossbow|shield_(round|kite)|helmet|armor|boots|gloves|ring|amulet|potion_.+|scroll|book|tome|wand|orb|gem_.+|key_.+|coin_.+)$"
+    },
+    {
+      "category": "effects_status",
+      "pattern": "^(explosion|smoke|magic_sparkle|blood_splat|status_.+|hp_(full|half|empty)|mana_full)$"
+    },
+    {
+      "category": "ui_symbols",
+      "pattern": "^(blank(_end)?|null|smiley(_inverse)?|face_happy(_filled)?|heart|diamond|club|spade|bullet(_small|_inverse)?|circle(_hollow|_inverse)?|male(_symbol)?|female(_symbol)?|music_note(s)?|note(s)?|sun|triangle_(right|left|up|down)|tri_(right|left|up|down)|arrow_.+|updown_arrow|leftright_arrow|up_arrow|down_arrow|left_arrow|right_arrow|double_(exclaim|bang)|paragraph|section|cursor_block|bar_bottom|updown_bar|corner_angle|right_angle|space|exclaim|quote_double|quote_single|hash|dollar|percent|ampersand|paren_(left|right)|asterisk|plus|comma|minus|period|slash|digit_[0-9]|num_[0-9]|colon|semicolon|less_than|equals|greater_than|question|question_inv|at_symbol|symbol_[0-9]+|ascii_[0-9]+|letter_[A-Za-z]|upper_[A-Z]|lower_[a-z]|bracket_(left|right)|backslash|caret|underscore|backtick|brace_(left|right)|pipe|tilde|tile_127|nbsp|cedilla_[Cc]|umlaut_[AOUYaeiouy]|accent_[AEIOUaeiou]|circ_[aeiou]|grave_[aeiou]|ring_[Aa]|ae_lower|AE_upper|tilde_[Nn]|ordinal_[ao]|exclaim_inv|guillemet_[lr]|half|quarter|yen|peseta|florin|cent|pound|alpha|beta|gamma|pi|sigma_(upper|lower)|mu|tau|phi_(upper|lower)|theta|omega|delta|epsilon|infinity|intersection|identical|plusminus|greaterequal|lessequal|integral_(top|bot)|divide|approx|degree|middle_dot|sqrt|superscript_(n|2)|square)$"
+    }
+  ]
+}

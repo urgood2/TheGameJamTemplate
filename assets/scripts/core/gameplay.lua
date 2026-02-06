@@ -7647,7 +7647,7 @@ local function maybeAutoLoopPhase(currentPhase)
                     startPlanningPhase()
                 end
             end
-        end, "auto_phase_loop", "debug_timers")
+        end, nil, "debug_timers")
     end
 
     scheduleNext()

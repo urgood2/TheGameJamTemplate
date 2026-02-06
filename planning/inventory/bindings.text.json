@@ -1,9 +1,9 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-02-03T02:59:38.431637+00:00",
+  "generated_at": "2026-02-06T13:59:03.019554+00:00",
   "system": "text",
   "source_files": [
-    "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+    "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp"
   ],
   "summary": {
     "usertypes": 14,
@@ -23,7 +23,7 @@
         "cpp_type": "TextSystem::ParsedEffectArguments",
         "signature": "",
         "doc_id": "sol2_usertype_ts_parsedeffectarguments",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:64",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:64",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -34,7 +34,7 @@
         "cpp_type": "TextSystem::ParsedEffectArguments",
         "signature": "",
         "doc_id": "sol2_usertype_ts_parsedeffectarguments",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:72",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:72",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -45,7 +45,7 @@
         "cpp_type": "TextSystem::Character",
         "signature": "",
         "doc_id": "sol2_usertype_ts_character",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:95",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:95",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -56,7 +56,7 @@
         "cpp_type": "TextSystem::Text",
         "signature": "",
         "doc_id": "sol2_usertype_ts_text",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:193",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:193",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -67,7 +67,7 @@
         "cpp_type": "TextSystem::Builders::TextBuilder",
         "signature": "",
         "doc_id": "sol2_usertype_builders_textbuilder",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:297",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:297",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -78,7 +78,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_usertype_textsystem",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:59",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:59",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -89,7 +89,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_usertype_textsystem_parsedeffectarguments",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:78",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:78",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -100,7 +100,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_usertype_textsystem_character",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:130",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:130",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -111,7 +111,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_usertype_textsystem_text",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:216",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:216",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -122,7 +122,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_usertype_textsystem_textalignment",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:257",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:257",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -133,7 +133,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_usertype_textsystem_textwrapmode",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:277",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:277",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -144,7 +144,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_usertype_textsystem_builders",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:310",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:310",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -155,7 +155,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_usertype_textsystem_builders_textbuilder",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:311",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:311",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -166,7 +166,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_usertype_textsystem_functions",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:350",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:350",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -179,7 +179,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_adjustalignment",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:353",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:353",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -190,7 +190,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_spliteffects",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:359",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:359",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -201,7 +201,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_createtextentity",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:367",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:367",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -212,7 +212,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_calculateboundingbox",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:388",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:388",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -223,7 +223,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_codepointtostring",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:397",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:397",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -234,7 +234,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_parsetext",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:403",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:403",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -245,7 +245,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_handleeffectsegment",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:415",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:415",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -256,7 +256,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_updatetext",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:428",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:428",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -267,7 +267,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_rendertext",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:437",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:437",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -278,7 +278,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_clearalleffects",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:447",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:447",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -289,7 +289,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_applyglobaleffects",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:455",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:455",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -300,7 +300,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_debugprinttext",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:465",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:465",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -311,7 +311,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_resizetexttofit",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:473",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:473",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -322,7 +322,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_settextscaleandrecenter",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:485",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:485",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -333,7 +333,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_resettextscaleandlayout",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:498",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:498",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -344,7 +344,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_settext",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:507",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:507",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -358,7 +358,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_enum_ts_textalignment",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:250",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:250",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -369,7 +369,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_enum_ts_textwrapmode",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:271",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:271",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -382,7 +382,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_method_textsystem_parsedeffectarguments_arguments",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:81",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:81",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -393,7 +393,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_method_textsystem_builders_textbuilder_build",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:336",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:336",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -406,7 +406,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_property_textsystem_effectfunctions",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:186",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:186",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -417,7 +417,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_property_textsystem_textalignment_left",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:261",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:261",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -428,7 +428,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_property_textsystem_textalignment_center",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:263",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:263",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -439,7 +439,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_property_textsystem_textalignment_right",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:265",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:265",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -450,7 +450,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_property_textsystem_textalignment_justified",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:267",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:267",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -461,7 +461,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_property_textsystem_textwrapmode_word",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:281",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:281",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -472,7 +472,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_property_textsystem_textwrapmode_character",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp:286",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:286",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -483,107 +483,107 @@
     {
       "line": 65,
       "snippet": "//     sol::constructors<>(),",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp"
     },
     {
       "line": 73,
       "snippet": "\"ParsedEffectArguments\", sol::constructors<>(), \"arguments\",",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp"
     },
     {
       "line": 96,
       "snippet": "\"Character\", sol::constructors<>(), \"value\",",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp"
     },
     {
       "line": 194,
       "snippet": "\"Text\", sol::constructors<>(), \"get_value_callback\",",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp"
     },
     {
       "line": 298,
       "snippet": "\"TextBuilder\", sol::constructors<>(), \"setRawText\",",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp"
     },
     {
       "line": 369,
       "snippet": "[](const TextSystem::Text &text, float x, float y, sol::optional<sol::table> waitersOpt) {",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp"
     },
     {
       "line": 525,
       "snippet": "sol::optional<sol::table> waitersOpt) -> entt::entity {",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp"
     },
     {
       "line": 555,
       "snippet": "sol::function raw_fn = kv.second;",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp"
     },
     {
       "line": 559,
       "snippet": "sol::thread thr = sol::thread::create(raw_fn.lua_state());",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp"
     },
     {
       "line": 559,
       "snippet": "sol::thread thr = sol::thread::create(raw_fn.lua_state());",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp"
     },
     {
       "line": 564,
       "snippet": "sol::function thread_fn = thread_view[\"__waiter_fn\"];",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp"
     },
     {
       "line": 566,
       "snippet": "sol::coroutine co{thread_fn};",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp"
     },
     {
       "line": 586,
       "snippet": "sol::function raw_fn = ai_system::masterStateLua[alias];",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp"
     },
     {
       "line": 595,
       "snippet": "sol::thread thr = sol::thread::create(raw_fn.lua_state());",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp"
     },
     {
       "line": 595,
       "snippet": "sol::thread thr = sol::thread::create(raw_fn.lua_state());",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp"
     },
     {
       "line": 600,
       "snippet": "sol::function thread_fn = thread_view[\"__waiter_fn\"];",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp"
     },
     {
       "line": 602,
       "snippet": "sol::coroutine co{thread_fn};",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp"
     },
     {
       "line": 617,
       "snippet": "sol::optional<sol::table> waitersOpt) -> entt::entity {",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp"
     },
     {
       "line": 1768,
       "snippet": "if (!co.valid() || co.status() != sol::call_status::yielded) {",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp"
     },
     {
       "line": 1780,
       "snippet": "sol::error err = result;",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp"
     },
     {
       "line": 1783,
       "snippet": "} else if (co.status() == sol::call_status::yielded) {",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/text/textVer2.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp"
     }
   ]
 }

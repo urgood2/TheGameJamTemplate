@@ -1,9 +1,9 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-02-03T02:59:38.422692+00:00",
+  "generated_at": "2026-02-06T13:59:03.007219+00:00",
   "system": "tutorial",
   "source_files": [
-    "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/tutorial/tutorial_system_v2.cpp"
+    "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tutorial/tutorial_system_v2.cpp"
   ],
   "summary": {
     "usertypes": 0,
@@ -27,22 +27,22 @@
     {
       "line": 37,
       "snippet": "sol::coroutine currentTutorialCoroutine;",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/tutorial/tutorial_system_v2.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tutorial/tutorial_system_v2.cpp"
     },
     {
       "line": 208,
       "snippet": "if (result.status() == sol::call_status::ok) {",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/tutorial/tutorial_system_v2.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tutorial/tutorial_system_v2.cpp"
     },
     {
       "line": 213,
       "snippet": "} else if (result.status() == sol::call_status::yielded) {",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/tutorial/tutorial_system_v2.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tutorial/tutorial_system_v2.cpp"
     },
     {
       "line": 218,
       "snippet": "sol::error err = result;  // Extract the error from the result",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/tutorial/tutorial_system_v2.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tutorial/tutorial_system_v2.cpp"
     }
   ]
 }

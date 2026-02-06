@@ -245,67 +245,6 @@
       "fields": []
     },
     {
-      "name": "ParticleComponent",
-      "category": "core",
-      "file_path": "src/components/particle.hpp",
-      "line_number": 6,
-      "is_tag": false,
-      "extraction_confidence": 0.9,
-      "notes": [
-        "1 complex types need manual review"
-      ],
-      "fields": [
-        {
-          "name": "sprites",
-          "type": "std::vector<SpriteComponentASCII>",
-          "default": null,
-          "is_complex": true
-        },
-        {
-          "name": "animation_speed",
-          "type": "float",
-          "default": null,
-          "is_complex": false
-        },
-        {
-          "name": "lifetime",
-          "type": "float",
-          "default": null,
-          "is_complex": false
-        },
-        {
-          "name": "speed",
-          "type": "float",
-          "default": null,
-          "is_complex": false
-        },
-        {
-          "name": "direction",
-          "type": "Vector2",
-          "default": null,
-          "is_complex": false
-        },
-        {
-          "name": "start_color",
-          "type": "std::string",
-          "default": null,
-          "is_complex": false
-        },
-        {
-          "name": "end_color",
-          "type": "std::string",
-          "default": null,
-          "is_complex": false
-        },
-        {
-          "name": "gravity",
-          "type": "float",
-          "default": null,
-          "is_complex": false
-        }
-      ]
-    },
-    {
       "name": "TransformCustom",
       "category": "core",
       "file_path": "src/components/components.hpp",
@@ -811,6 +750,67 @@
       "extraction_confidence": 1.0,
       "notes": [],
       "fields": []
+    },
+    {
+      "name": "ParticleComponent",
+      "category": "core",
+      "file_path": "src/components/particle.hpp",
+      "line_number": 6,
+      "is_tag": false,
+      "extraction_confidence": 0.9,
+      "notes": [
+        "1 complex types need manual review"
+      ],
+      "fields": [
+        {
+          "name": "sprites",
+          "type": "std::vector<SpriteComponentASCII>",
+          "default": null,
+          "is_complex": true
+        },
+        {
+          "name": "animation_speed",
+          "type": "float",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "lifetime",
+          "type": "float",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "speed",
+          "type": "float",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "direction",
+          "type": "Vector2",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "start_color",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "end_color",
+          "type": "std::string",
+          "default": null,
+          "is_complex": false
+        },
+        {
+          "name": "gravity",
+          "type": "float",
+          "default": null,
+          "is_complex": false
+        }
+      ]
     }
   ]
 }

@@ -1,0 +1,8 @@
+
+<!-- AUTOGEN:BEGIN binding_list -->
+- `save_io_table.delete_file` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/save/save_file_io.cpp:208`
+- `save_io_table.file_exists` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/save/save_file_io.cpp:207`
+- `save_io_table.init_filesystem` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/save/save_file_io.cpp:210`
+- `save_io_table.load_file` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/save/save_file_io.cpp:206`
+- `save_io_table.save_file_async` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/save/save_file_io.cpp:209`
+<!-- AUTOGEN:END binding_list -->

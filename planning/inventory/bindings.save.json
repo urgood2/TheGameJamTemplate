@@ -1,9 +1,9 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-02-03T02:59:38.422486+00:00",
+  "generated_at": "2026-02-06T13:59:03.022079+00:00",
   "system": "save",
   "source_files": [
-    "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/save/save_file_io.cpp"
+    "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/save/save_file_io.cpp"
   ],
   "summary": {
     "usertypes": 0,
@@ -24,7 +24,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_save_io_table_load_file",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/save/save_file_io.cpp:206",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/save/save_file_io.cpp:206",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -35,7 +35,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_save_io_table_file_exists",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/save/save_file_io.cpp:207",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/save/save_file_io.cpp:207",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -46,7 +46,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_save_io_table_delete_file",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/save/save_file_io.cpp:208",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/save/save_file_io.cpp:208",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -57,7 +57,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_save_io_table_save_file_async",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/save/save_file_io.cpp:209",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/save/save_file_io.cpp:209",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -68,7 +68,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_save_io_table_init_filesystem",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/save/save_file_io.cpp:210",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/save/save_file_io.cpp:210",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -83,27 +83,27 @@
     {
       "line": 23,
       "snippet": "sol::function callback;",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/save/save_file_io.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/save/save_file_io.cpp"
     },
     {
       "line": 30,
       "snippet": "void queue_callback(sol::function callback, bool success) {",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/save/save_file_io.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/save/save_file_io.cpp"
     },
     {
       "line": 119,
       "snippet": "sol::function on_complete) {",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/save/save_file_io.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/save/save_file_io.cpp"
     },
     {
       "line": 143,
       "snippet": "auto callback_ptr = std::make_shared<sol::function>(std::move(on_complete));",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/save/save_file_io.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/save/save_file_io.cpp"
     },
     {
       "line": 164,
       "snippet": "sol::error err = result;",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/save/save_file_io.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/save/save_file_io.cpp"
     }
   ]
 }

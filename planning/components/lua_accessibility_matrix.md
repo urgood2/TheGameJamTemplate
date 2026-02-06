@@ -59,21 +59,21 @@ Component accessibility from Lua. Status: skeleton - needs manual verification.
 | Stats | combat | ❓ Unknown | TBD | Needs verification |
 | StatusFlags | combat | ❓ Unknown | TBD | Needs verification |
 | Team | combat | ❓ Unknown | TBD | Needs verification |
-| Action | core | ❓ Unknown | component_cache.get | Stub exposed; access unverified |
-| AnimationObject | core | ❓ Unknown | component_cache.get | Stub exposed; access unverified |
-| AnimationQueueComponent | core | ❓ Unknown | component_cache.get | Stub exposed; access unverified |
-| ContainerComponent | core | ❓ Unknown | component_cache.get | Stub exposed; access unverified |
-| FrameData | core | ❓ Unknown | component_cache.get | Stub exposed; access unverified |
-| GOAPComponent | core | ❓ Unknown | component_cache.get | Stub exposed; access unverified |
-| InfoComponent | core | ❓ Unknown | component_cache.get | Tag component; stub exposed |
-| LocationComponent | core | ❓ Unknown | component_cache.get | Stub exposed; access unverified |
-| NinePatchComponent | core | ❓ Unknown | component_cache.get | Stub exposed; access unverified |
-| ParticleComponent | core | ❓ Unknown | component_cache.get | Stub exposed; access unverified |
-| SpriteComponentASCII | core | ❓ Unknown | component_cache.get | Stub exposed; access unverified |
-| TileComponent | core | ❓ Unknown | component_cache.get | Stub exposed; access unverified |
-| TransformCustom | core | ❓ Unknown | component_cache.get | Stub exposed; access unverified |
-| TweenedLocationComponent | core | ❓ Unknown | component_cache.get | Tag component; stub exposed |
-| VFXTag | core | ❓ Unknown | component_cache.get | Tag component; stub exposed |
+| Action | core | ❓ Unknown | TBD | Needs verification |
+| AnimationObject | core | ❓ Unknown | TBD | Needs verification |
+| AnimationQueueComponent | core | ❓ Unknown | TBD | Needs verification |
+| ContainerComponent | core | ❓ Unknown | TBD | Needs verification |
+| FrameData | core | ❓ Unknown | TBD | Needs verification |
+| GOAPComponent | core | ❓ Unknown | TBD | Needs verification |
+| InfoComponent | core | ❓ Unknown | TBD | Needs verification |
+| LocationComponent | core | ❓ Unknown | TBD | Needs verification |
+| NinePatchComponent | core | ❓ Unknown | TBD | Needs verification |
+| ParticleComponent | core | ❓ Unknown | TBD | Needs verification |
+| SpriteComponentASCII | core | ❓ Unknown | TBD | Needs verification |
+| TileComponent | core | ❓ Unknown | TBD | Needs verification |
+| TransformCustom | core | ❓ Unknown | TBD | Needs verification |
+| TweenedLocationComponent | core | ❓ Unknown | TBD | Needs verification |
+| VFXTag | core | ❓ Unknown | TBD | Needs verification |
 | IInputProvider | input | ❓ Unknown | TBD | Needs verification |
 | NavCallbacks | input | ❓ Unknown | TBD | Needs verification |
 | NavGroup | input | ❓ Unknown | TBD | Needs verification |
@@ -84,8 +84,9 @@ Component accessibility from Lua. Status: skeleton - needs manual verification.
 | AchievementCategory | other | ❓ Unknown | TBD | Needs verification |
 | AchievementItem | other | ❓ Unknown | TBD | Needs verification |
 | ActiveStates | other | ❓ Unknown | TBD | Needs verification |
-| InactiveTag | other | ❓ Unknown | TBD | Needs verification |
 | Annotation | other | ❓ Unknown | TBD | Needs verification |
+| ArgumentDef | other | ❓ Unknown | TBD | Needs verification |
+| ArtifactInfo | other | ❓ Unknown | TBD | Needs verification |
 | AsmDesc | other | ❓ Unknown | TBD | Needs verification |
 | AsmDesc | other | ❓ Unknown | TBD | Needs verification |
 | AsmOp | other | ❓ Unknown | TBD | Needs verification |
@@ -97,12 +98,16 @@ Component accessibility from Lua. Status: skeleton - needs manual verification.
 | BacktraceState | other | ❓ Unknown | TBD | Needs verification |
 | BadVersionState | other | ❓ Unknown | TBD | Needs verification |
 | BakedNinePatch | other | ❓ Unknown | TBD | Needs verification |
+| BaselineMask | other | ❓ Unknown | TBD | Needs verification |
+| BaselineMetadata | other | ❓ Unknown | TBD | Needs verification |
 | BatchedLocalCommands | other | ❓ Unknown | TBD | Needs verification |
 | BlocksLightComponent | other | ❓ Unknown | TBD | Needs verification |
 | BroadcastMessage | other | ❓ Unknown | TBD | Needs verification |
 | BroadcastMessage_v0 | other | ❓ Unknown | TBD | Needs verification |
 | BroadcastMessage_v1 | other | ❓ Unknown | TBD | Needs verification |
 | BroadcastMessage_v2 | other | ❓ Unknown | TBD | Needs verification |
+| BudgetDef | other | ❓ Unknown | TBD | Needs verification |
+| BudgetViolation | other | ❓ Unknown | TBD | Needs verification |
 | CachedTile | other | ❓ Unknown | TBD | Needs verification |
 | CallstackEntry | other | ❓ Unknown | TBD | Needs verification |
 | CallstackEntryData | other | ❓ Unknown | TBD | Needs verification |
@@ -113,10 +118,12 @@ Component accessibility from Lua. Status: skeleton - needs manual verification.
 | Camera | other | ❓ Unknown | TBD | Needs verification |
 | ChildSample | other | ❓ Unknown | TBD | Needs verification |
 | ChipmunkDemo | other | ❓ Unknown | TBD | Needs verification |
+| ChunkData | other | ❓ Unknown | TBD | Needs verification |
 | CollisionNote | other | ❓ Unknown | TBD | Needs verification |
 | Color | other | ❓ Unknown | TBD | Needs verification |
 | Color8 | other | ❓ Unknown | TBD | Needs verification |
 | Colorf | other | ❓ Unknown | TBD | Needs verification |
+| CommandDef | other | ❓ Unknown | TBD | Needs verification |
 | Comparator | other | ❓ Unknown | TBD | Needs verification |
 | ConcurrentHashMap | other | ❓ Unknown | TBD | Needs verification |
 | ConcurrentQueueDefaultTraits | other | ❓ Unknown | TBD | Needs verification |
@@ -137,6 +144,7 @@ Component accessibility from Lua. Status: skeleton - needs manual verification.
 | CrashEvent | other | ❓ Unknown | TBD | Needs verification |
 | DebugMatchCell | other | ❓ Unknown | TBD | Needs verification |
 | DebugUIState | other | ❓ Unknown | TBD | Needs verification |
+| DecodedGid | other | ❓ Unknown | TBD | Needs verification |
 | DeformPoint | other | ❓ Unknown | TBD | Needs verification |
 | DrawCommand | other | ❓ Unknown | TBD | Needs verification |
 | EngineConfig | other | ❓ Unknown | TBD | Needs verification |
@@ -146,6 +154,7 @@ Component accessibility from Lua. Status: skeleton - needs manual verification.
 | EntityPosition | other | ❓ Unknown | TBD | Needs verification |
 | EntitySpawnInfo | other | ❓ Unknown | TBD | Needs verification |
 | Event | other | ❓ Unknown | TBD | Needs verification |
+| FindOptions | other | ❓ Unknown | TBD | Needs verification |
 | FlameGraphItem | other | ❓ Unknown | TBD | Needs verification |
 | FontData | other | ❓ Unknown | TBD | Needs verification |
 | FrameData | other | ❓ Unknown | TBD | Needs verification |
@@ -154,13 +163,16 @@ Component accessibility from Lua. Status: skeleton - needs manual verification.
 | FrameImage | other | ❓ Unknown | TBD | Needs verification |
 | FrameMetrics | other | ❓ Unknown | TBD | Needs verification |
 | FrameMetrics | other | ❓ Unknown | TBD | Needs verification |
+| FrameTiming | other | ❓ Unknown | TBD | Needs verification |
 | Gen | other | ❓ Unknown | TBD | Needs verification |
 | Gen | other | ❓ Unknown | TBD | Needs verification |
 | GhostZone | other | ❓ Unknown | TBD | Needs verification |
+| GidFlags | other | ❓ Unknown | TBD | Needs verification |
 | GpuCtxData | other | ❓ Unknown | TBD | Needs verification |
 | GpuCtxThreadData | other | ❓ Unknown | TBD | Needs verification |
 | GpuCtxWrapper | other | ❓ Unknown | TBD | Needs verification |
 | GpuEvent | other | ❓ Unknown | TBD | Needs verification |
+| GridInput | other | ❓ Unknown | TBD | Needs verification |
 | HasVisionComponent | other | ❓ Unknown | TBD | Needs verification |
 | Hasher | other | ❓ Unknown | TBD | Needs verification |
 | Hit | other | ❓ Unknown | TBD | Needs verification |
@@ -174,6 +186,7 @@ Component accessibility from Lua. Status: skeleton - needs manual verification.
 | LZ4HC_CCtx_internal | other | ❓ Unknown | TBD | Needs verification |
 | LZ4_stream_t_internal | other | ❓ Unknown | TBD | Needs verification |
 | Layer | other | ❓ Unknown | TBD | Needs verification |
+| LayerData | other | ❓ Unknown | TBD | Needs verification |
 | LayerTileResults | other | ❓ Unknown | TBD | Needs verification |
 | LessComparator | other | ❓ Unknown | TBD | Needs verification |
 | LevelBounds | other | ❓ Unknown | TBD | Needs verification |
@@ -189,7 +202,10 @@ Component accessibility from Lua. Status: skeleton - needs manual verification.
 | LockState | other | ❓ Unknown | TBD | Needs verification |
 | LockstepConfig | other | ❓ Unknown | TBD | Needs verification |
 | LogEntry | other | ❓ Unknown | TBD | Needs verification |
+| LogEntry | other | ❓ Unknown | TBD | Needs verification |
+| LuaValue | other | ❓ Unknown | TBD | Needs verification |
 | LuaZoneState | other | ❓ Unknown | TBD | Needs verification |
+| MapData | other | ❓ Unknown | TBD | Needs verification |
 | MemCallstackFrameTree | other | ❓ Unknown | TBD | Needs verification |
 | MemData | other | ❓ Unknown | TBD | Needs verification |
 | MemEvent | other | ❓ Unknown | TBD | Needs verification |
@@ -205,17 +221,25 @@ Component accessibility from Lua. Status: skeleton - needs manual verification.
 | NeighborData | other | ❓ Unknown | TBD | Needs verification |
 | NinePatchData | other | ❓ Unknown | TBD | Needs verification |
 | NineSliceNames | other | ❓ Unknown | TBD | Needs verification |
+| ObjectData | other | ❓ Unknown | TBD | Needs verification |
+| ObjectPoint | other | ❓ Unknown | TBD | Needs verification |
 | ObjectPoolStats | other | ❓ Unknown | TBD | Needs verification |
 | OnDemandPayloadMessage | other | ❓ Unknown | TBD | Needs verification |
 | OwnedDrawCommand | other | ❓ Unknown | TBD | Needs verification |
 | Parameter | other | ❓ Unknown | TBD | Needs verification |
+| PerfMetrics | other | ❓ Unknown | TBD | Needs verification |
+| PerfToken | other | ❓ Unknown | TBD | Needs verification |
 | PhaseRecord | other | ❓ Unknown | TBD | Needs verification |
 | PlotData | other | ❓ Unknown | TBD | Needs verification |
 | PlotItem | other | ❓ Unknown | TBD | Needs verification |
 | Poly | other | ❓ Unknown | TBD | Needs verification |
+| ProceduralResults | other | ❓ Unknown | TBD | Needs verification |
+| ProceduralTile | other | ❓ Unknown | TBD | Needs verification |
 | ProducerToken | other | ❓ Unknown | TBD | Needs verification |
 | ProfilerStats | other | ❓ Unknown | TBD | Needs verification |
+| Property | other | ❓ Unknown | TBD | Needs verification |
 | ProtocolHistory_t | other | ❓ Unknown | TBD | Needs verification |
+| QueryDef | other | ❓ Unknown | TBD | Needs verification |
 | QueueCallstackAllocFat | other | ❓ Unknown | TBD | Needs verification |
 | QueueCallstackFat | other | ❓ Unknown | TBD | Needs verification |
 | QueueCallstackFrame | other | ❓ Unknown | TBD | Needs verification |
@@ -277,9 +301,13 @@ Component accessibility from Lua. Status: skeleton - needs manual verification.
 | Range | other | ❓ Unknown | TBD | Needs verification |
 | RangeSlim | other | ❓ Unknown | TBD | Needs verification |
 | Ray | other | ❓ Unknown | TBD | Needs verification |
+| Region | other | ❓ Unknown | TBD | Needs verification |
 | RenderGroup | other | ❓ Unknown | TBD | Needs verification |
 | Report | other | ❓ Unknown | TBD | Needs verification |
+| ResolvedTileSource | other | ❓ Unknown | TBD | Needs verification |
 | Rule | other | ❓ Unknown | TBD | Needs verification |
+| RuleDefs | other | ❓ Unknown | TBD | Needs verification |
+| RuleEntry | other | ❓ Unknown | TBD | Needs verification |
 | RuleGroup | other | ❓ Unknown | TBD | Needs verification |
 | RuleLog | other | ❓ Unknown | TBD | Needs verification |
 | RulesLog | other | ❓ Unknown | TBD | Needs verification |
@@ -287,12 +315,16 @@ Component accessibility from Lua. Status: skeleton - needs manual verification.
 | SampleDataRange | other | ❓ Unknown | TBD | Needs verification |
 | SampleDataSort | other | ❓ Unknown | TBD | Needs verification |
 | SamplesDraw | other | ❓ Unknown | TBD | Needs verification |
+| SchemaValidationResult | other | ❓ Unknown | TBD | Needs verification |
+| Screenshot | other | ❓ Unknown | TBD | Needs verification |
+| ScreenshotDiff | other | ❓ Unknown | TBD | Needs verification |
 | ServerQueryPacket | other | ❓ Unknown | TBD | Needs verification |
 | Settings | other | ❓ Unknown | TBD | Needs verification |
 | ShaderApiHooks | other | ❓ Unknown | TBD | Needs verification |
 | ShaderPreset | other | ❓ Unknown | TBD | Needs verification |
 | ShaderPresetPass | other | ❓ Unknown | TBD | Needs verification |
 | ShakeStruct | other | ❓ Unknown | TBD | Needs verification |
+| SnapshotData | other | ❓ Unknown | TBD | Needs verification |
 | SourceLocationBase | other | ❓ Unknown | TBD | Needs verification |
 | SourceLocationComparator | other | ❓ Unknown | TBD | Needs verification |
 | SourceLocationData | other | ❓ Unknown | TBD | Needs verification |
@@ -304,8 +336,8 @@ Component accessibility from Lua. Status: skeleton - needs manual verification.
 | SpheresSoA | other | ❓ Unknown | TBD | Needs verification |
 | SpringPool | other | ❓ Unknown | TBD | Needs verification |
 | SpriteFrameData | other | ❓ Unknown | TBD | Needs verification |
+| StatePathDef | other | ❓ Unknown | TBD | Needs verification |
 | StateTag | other | ❓ Unknown | TBD | Needs verification |
-| ScriptComponent | other | ❓ Unknown | TBD | Needs verification |
 | StringIdxComparator | other | ❓ Unknown | TBD | Needs verification |
 | StringIdxHasher | other | ❓ Unknown | TBD | Needs verification |
 | StringKey | other | ❓ Unknown | TBD | Needs verification |
@@ -319,18 +351,27 @@ Component accessibility from Lua. Status: skeleton - needs manual verification.
 | SymbolLocation | other | ❓ Unknown | TBD | Needs verification |
 | SymbolStats | other | ❓ Unknown | TBD | Needs verification |
 | TamperState | other | ❓ Unknown | TBD | Needs verification |
+| TestInputEvent | other | ❓ Unknown | TBD | Needs verification |
+| TestModeConfig | other | ❓ Unknown | TBD | Needs verification |
 | ThreadData | other | ❓ Unknown | TBD | Needs verification |
 | ThreadNameData | other | ❓ Unknown | TBD | Needs verification |
 | TileInCell | other | ❓ Unknown | TBD | Needs verification |
+| TileLayerData | other | ❓ Unknown | TBD | Needs verification |
 | TileResult | other | ❓ Unknown | TBD | Needs verification |
 | TileSet | other | ❓ Unknown | TBD | Needs verification |
+| TileTransform | other | ❓ Unknown | TBD | Needs verification |
+| TilesetData | other | ❓ Unknown | TBD | Needs verification |
 | TilesetInfo | other | ❓ Unknown | TBD | Needs verification |
+| TilesetRef | other | ❓ Unknown | TBD | Needs verification |
 | TimelineContext | other | ❓ Unknown | TBD | Needs verification |
 | TimelineDraw | other | ❓ Unknown | TBD | Needs verification |
+| TimelineEvent | other | ❓ Unknown | TBD | Needs verification |
 | TimingStats | other | ❓ Unknown | TBD | Needs verification |
+| TraceEvent | other | ❓ Unknown | TBD | Needs verification |
 | VarArrayComparator | other | ❓ Unknown | TBD | Needs verification |
 | VarArrayHasher | other | ❓ Unknown | TBD | Needs verification |
 | ViewData | other | ❓ Unknown | TBD | Needs verification |
+| ViolationRecord | other | ❓ Unknown | TBD | Needs verification |
 | VkSymbolTable | other | ❓ Unknown | TBD | Needs verification |
 | WelcomeFlag | other | ❓ Unknown | TBD | Needs verification |
 | WelcomeMessage | other | ❓ Unknown | TBD | Needs verification |
@@ -660,4 +701,4 @@ Component accessibility from Lua. Status: skeleton - needs manual verification.
 - ❌ No access - not exposed to Lua
 - ❓ Unknown - needs verification
 
-_Generated: needs manual completion. 646 components listed._
+_Generated: needs manual completion. 689 components listed._

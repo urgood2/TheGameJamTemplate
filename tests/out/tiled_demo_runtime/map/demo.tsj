@@ -1,0 +1,10 @@
+{
+  "name": "demo_tileset",
+  "tilewidth": 16,
+  "tileheight": 16,
+  "tilecount": 1,
+  "columns": 1,
+  "image": "/Users/joshuashin/Projects/TheGameJamTemplate/assets/images/dungeon_tiles/dungeon_mode/dm_244_box_horizontal.png",
+  "imagewidth": 16,
+  "imageheight": 16
+}

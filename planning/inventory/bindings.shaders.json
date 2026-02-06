@@ -1,10 +1,10 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-02-03T02:59:38.429413+00:00",
+  "generated_at": "2026-02-06T13:59:03.019039+00:00",
   "system": "shaders",
   "source_files": [
-    "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_presets.cpp",
-    "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp"
+    "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp",
+    "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_presets.cpp"
   ],
   "summary": {
     "usertypes": 5,
@@ -24,7 +24,7 @@
         "cpp_type": "shaders::ShaderUniformSet",
         "signature": "",
         "doc_id": "sol2_usertype_sh_shaderuniformset",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp:85",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp:85",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -35,7 +35,7 @@
         "cpp_type": "shaders::ShaderUniformComponent",
         "signature": "",
         "doc_id": "sol2_usertype_sh_shaderuniformcomponent",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp:179",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp:179",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -46,7 +46,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_usertype_shaders",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp:80",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp:80",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -57,7 +57,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_usertype_shaders_shaderuniformset",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp:156",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp:156",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -68,7 +68,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_usertype_shaders_shaderuniformcomponent",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp:232",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp:232",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -76,100 +76,12 @@
     ],
     "functions": [
       {
-        "lua_name": "sp.loadFromFile",
-        "type": "function",
-        "cpp_type": "",
-        "signature": "",
-        "doc_id": "sol2_function_sp_loadfromfile",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_presets.cpp:263",
-        "extraction_confidence": "medium",
-        "tier": 0,
-        "verified": false
-      },
-      {
-        "lua_name": "sp.hasPreset",
-        "type": "function",
-        "cpp_type": "",
-        "signature": "",
-        "doc_id": "sol2_function_sp_haspreset",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_presets.cpp:267",
-        "extraction_confidence": "medium",
-        "tier": 0,
-        "verified": false
-      },
-      {
-        "lua_name": "sp.getPresetNames",
-        "type": "function",
-        "cpp_type": "",
-        "signature": "",
-        "doc_id": "sol2_function_sp_getpresetnames",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_presets.cpp:269",
-        "extraction_confidence": "medium",
-        "tier": 0,
-        "verified": false
-      },
-      {
-        "lua_name": "applyShaderPreset",
-        "type": "function",
-        "cpp_type": "",
-        "signature": "",
-        "doc_id": "sol2_function_applyshaderpreset",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_presets.cpp:278",
-        "extraction_confidence": "high",
-        "tier": 0,
-        "verified": false
-      },
-      {
-        "lua_name": "addShaderPreset",
-        "type": "function",
-        "cpp_type": "",
-        "signature": "",
-        "doc_id": "sol2_function_addshaderpreset",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_presets.cpp:285",
-        "extraction_confidence": "high",
-        "tier": 0,
-        "verified": false
-      },
-      {
-        "lua_name": "clearShaderPasses",
-        "type": "function",
-        "cpp_type": "",
-        "signature": "",
-        "doc_id": "sol2_function_clearshaderpasses",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_presets.cpp:292",
-        "extraction_confidence": "high",
-        "tier": 0,
-        "verified": false
-      },
-      {
-        "lua_name": "addShaderPass",
-        "type": "function",
-        "cpp_type": "",
-        "signature": "",
-        "doc_id": "sol2_function_addshaderpass",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_presets.cpp:298",
-        "extraction_confidence": "high",
-        "tier": 0,
-        "verified": false
-      },
-      {
-        "lua_name": "setSkipBaseSprite",
-        "type": "function",
-        "cpp_type": "",
-        "signature": "",
-        "doc_id": "sol2_function_setskipbasesprite",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_presets.cpp:307",
-        "extraction_confidence": "high",
-        "tier": 0,
-        "verified": false
-      },
-      {
         "lua_name": "sh.ApplyUniformsToShader",
         "type": "function",
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_sh_applyuniformstoshader",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp:283",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp:283",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -180,7 +92,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_sh_loadshadersfromjson",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp:284",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp:284",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -191,7 +103,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_sh_unloadshaders",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp:285",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp:285",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -202,7 +114,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_sh_disableallshadersviaoverride",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp:286",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp:286",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -213,7 +125,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_sh_hotreloadshaders",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp:287",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp:287",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -224,7 +136,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_sh_setshadermode",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp:288",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp:288",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -235,7 +147,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_sh_unsetshadermode",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp:289",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp:289",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -246,7 +158,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_sh_getshader",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp:290",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp:290",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -257,7 +169,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_sh_registeruniformupdate",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp:291",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp:291",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -268,7 +180,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_sh_updateallshaderuniforms",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp:292",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp:292",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -279,7 +191,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_sh_updateshaders",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp:293",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp:293",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -290,7 +202,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_sh_showshadereditorui",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp:294",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp:294",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -301,7 +213,95 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_tryapplyuniforms",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp:384",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp:384",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "sp.loadFromFile",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_sp_loadfromfile",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_presets.cpp:263",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "sp.hasPreset",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_sp_haspreset",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_presets.cpp:267",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "sp.getPresetNames",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_sp_getpresetnames",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_presets.cpp:269",
+        "extraction_confidence": "medium",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "applyShaderPreset",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_applyshaderpreset",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_presets.cpp:278",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "addShaderPreset",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_addshaderpreset",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_presets.cpp:285",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "clearShaderPasses",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_clearshaderpasses",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_presets.cpp:292",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "addShaderPass",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_addshaderpass",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_presets.cpp:298",
+        "extraction_confidence": "high",
+        "tier": 0,
+        "verified": false
+      },
+      {
+        "lua_name": "setSkipBaseSprite",
+        "type": "function",
+        "cpp_type": "",
+        "signature": "",
+        "doc_id": "sol2_function_setskipbasesprite",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_presets.cpp:307",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -314,134 +314,134 @@
   },
   "unrecognized_patterns": [
     {
-      "line": 84,
-      "snippet": "sol::optional<sol::table> passOverridesOpt = overrides[passName];",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_presets.cpp"
-    },
-    {
-      "line": 95,
-      "snippet": "sol::optional<sol::table> presetsTableOpt = lua[\"ShaderPresets\"];",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_presets.cpp"
-    },
-    {
-      "line": 115,
-      "snippet": "sol::optional<sol::table> passesOpt = presetTable[\"passes\"];",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_presets.cpp"
-    },
-    {
-      "line": 127,
-      "snippet": "sol::optional<sol::table> uniformsOpt = presetTable[\"uniforms\"];",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_presets.cpp"
-    },
-    {
-      "line": 133,
-      "snippet": "sol::optional<sol::table> passUniformsOpt = presetTable[\"pass_uniforms\"];",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_presets.cpp"
-    },
-    {
-      "line": 136,
-      "snippet": "sol::optional<sol::table> passSpecificOpt = (*passUniformsOpt)[pass.shaderName];",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_presets.cpp"
-    },
-    {
-      "line": 144,
-      "snippet": "sol::optional<bool> needsAtlasOpt = presetTable[\"needs_atlas_uniforms\"];",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_presets.cpp"
-    },
-    {
-      "line": 165,
-      "snippet": "auto result = lua.safe_script_file(path, sol::script_pass_on_error);",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_presets.cpp"
-    },
-    {
-      "line": 167,
-      "snippet": "sol::error err = result;",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_presets.cpp"
-    },
-    {
-      "line": 279,
-      "snippet": "[&lua](entt::registry& reg, entt::entity e, const std::string& name, sol::optional<sol::table> overrides) {",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_presets.cpp"
-    },
-    {
-      "line": 286,
-      "snippet": "[&lua](entt::registry& reg, entt::entity e, const std::string& name, sol::optional<sol::table> overrides) {",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_presets.cpp"
-    },
-    {
-      "line": 299,
-      "snippet": "[&lua](entt::registry& reg, entt::entity e, const std::string& shaderName, sol::optional<sol::table> uniforms) {",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_presets.cpp"
-    },
-    {
       "line": 86,
       "snippet": "sol::constructors<>(),",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp"
     },
     {
       "line": 128,
       "snippet": "return sol::make_object(L, val);",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp"
     },
     {
       "line": 133,
       "snippet": "return sol::make_object(L, t);",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp"
     },
     {
       "line": 137,
       "snippet": "return sol::make_object(L, t);",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp"
     },
     {
       "line": 141,
       "snippet": "return sol::make_object(L, t);",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp"
     },
     {
       "line": 145,
       "snippet": "return sol::make_object(L, val);",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp"
     },
     {
       "line": 150,
       "snippet": "return sol::make_object(L, sol::lua_nil);",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp"
     },
     {
       "line": 180,
       "snippet": "sol::constructors<>(),",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp"
     },
     {
       "line": 201,
       "snippet": "return sol::make_object(L, val);",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp"
     },
     {
       "line": 205,
       "snippet": "return sol::make_object(L,",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp"
     },
     {
       "line": 209,
       "snippet": "return sol::make_object(L,",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp"
     },
     {
       "line": 214,
       "snippet": "return sol::make_object(L,",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp"
     },
     {
       "line": 220,
       "snippet": "return sol::make_object(L, val);",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp"
     },
     {
       "line": 225,
       "snippet": "return sol::make_object(L, sol::lua_nil);",
-      "file": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/shaders/shader_system.cpp"
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_system.cpp"
+    },
+    {
+      "line": 84,
+      "snippet": "sol::optional<sol::table> passOverridesOpt = overrides[passName];",
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_presets.cpp"
+    },
+    {
+      "line": 95,
+      "snippet": "sol::optional<sol::table> presetsTableOpt = lua[\"ShaderPresets\"];",
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_presets.cpp"
+    },
+    {
+      "line": 115,
+      "snippet": "sol::optional<sol::table> passesOpt = presetTable[\"passes\"];",
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_presets.cpp"
+    },
+    {
+      "line": 127,
+      "snippet": "sol::optional<sol::table> uniformsOpt = presetTable[\"uniforms\"];",
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_presets.cpp"
+    },
+    {
+      "line": 133,
+      "snippet": "sol::optional<sol::table> passUniformsOpt = presetTable[\"pass_uniforms\"];",
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_presets.cpp"
+    },
+    {
+      "line": 136,
+      "snippet": "sol::optional<sol::table> passSpecificOpt = (*passUniformsOpt)[pass.shaderName];",
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_presets.cpp"
+    },
+    {
+      "line": 144,
+      "snippet": "sol::optional<bool> needsAtlasOpt = presetTable[\"needs_atlas_uniforms\"];",
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_presets.cpp"
+    },
+    {
+      "line": 165,
+      "snippet": "auto result = lua.safe_script_file(path, sol::script_pass_on_error);",
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_presets.cpp"
+    },
+    {
+      "line": 167,
+      "snippet": "sol::error err = result;",
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_presets.cpp"
+    },
+    {
+      "line": 279,
+      "snippet": "[&lua](entt::registry& reg, entt::entity e, const std::string& name, sol::optional<sol::table> overrides) {",
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_presets.cpp"
+    },
+    {
+      "line": 286,
+      "snippet": "[&lua](entt::registry& reg, entt::entity e, const std::string& name, sol::optional<sol::table> overrides) {",
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_presets.cpp"
+    },
+    {
+      "line": 299,
+      "snippet": "[&lua](entt::registry& reg, entt::entity e, const std::string& shaderName, sol::optional<sol::table> uniforms) {",
+      "file": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/shaders/shader_presets.cpp"
     }
   ]
 }

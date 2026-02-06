@@ -3,26 +3,6 @@
   "count": 7,
   "components": [
     {
-      "name": "IInputProvider",
-      "category": "input",
-      "file_path": "src/systems/input/input_polling.hpp",
-      "line_number": 20,
-      "is_tag": true,
-      "extraction_confidence": 1.0,
-      "notes": [],
-      "fields": []
-    },
-    {
-      "name": "RaylibInputProvider",
-      "category": "input",
-      "file_path": "src/systems/input/input_polling.hpp",
-      "line_number": 50,
-      "is_tag": true,
-      "extraction_confidence": 1.0,
-      "notes": [],
-      "fields": []
-    },
-    {
       "name": "NavSelectable",
       "category": "input",
       "file_path": "src/systems/input/controller_nav.hpp",
@@ -268,6 +248,26 @@
           "is_complex": false
         }
       ]
+    },
+    {
+      "name": "IInputProvider",
+      "category": "input",
+      "file_path": "src/systems/input/input_polling.hpp",
+      "line_number": 20,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": []
+    },
+    {
+      "name": "RaylibInputProvider",
+      "category": "input",
+      "file_path": "src/systems/input/input_polling.hpp",
+      "line_number": 50,
+      "is_tag": true,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": []
     }
   ]
 }

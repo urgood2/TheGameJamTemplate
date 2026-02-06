@@ -1,0 +1,17 @@
+{
+  "run": {
+    "engine_version": "dev",
+    "platform": "mac",
+    "resolution": "1280x720",
+    "run_id": "20260206_134117_379_0",
+    "seed": 12345
+  },
+  "schema_version": "1.0.0",
+  "summary": {
+    "failed": 0,
+    "flaky": 0,
+    "passed": 0,
+    "skipped": 0
+  },
+  "tests": []
+}

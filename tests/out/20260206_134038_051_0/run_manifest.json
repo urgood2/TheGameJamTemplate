@@ -1,0 +1,20 @@
+{
+  "args": [],
+  "determinism_pins": {
+    "ftz_daz": false,
+    "locale": "C",
+    "network_mode": "deny",
+    "rounding": "nearest",
+    "thread_mode": "single",
+    "timezone": "UTC"
+  },
+  "platform": "mac",
+  "resolution": "1280x720",
+  "schema_version": "1.0.0",
+  "seed": 12345,
+  "shard": 1,
+  "test_api_fingerprint": "fnv64:afaa3fc944f8004b",
+  "timeout_seconds": 60,
+  "timestamp": "2026-02-06T13:40:42Z",
+  "total_shards": 1
+}

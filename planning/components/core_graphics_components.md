@@ -418,3 +418,27 @@ patch.isVisible = true
 - `core.components.framedata.read` (doc_id: `component:FrameData`)
 - `core.components.spritecomponentascii.read_write` (doc_id: `component:SpriteComponentASCII`)
 - `core.components.animationqueuecomponent.read_write` (doc_id: `component:AnimationQueueComponent`)
+
+<!-- AUTOGEN:BEGIN component_list -->
+- `Action` — `src/components/components.hpp:52` — fields: 8
+- `AnimationObject` — `src/components/graphics.hpp:51` — fields: 13
+- `AnimationQueueComponent` — `src/components/graphics.hpp:76` — fields: 8
+- `ContainerComponent` — `src/components/components.hpp:187` — fields: 1
+- `FrameData` — `src/components/graphics.hpp:15` — fields: 2
+- `GOAPComponent` — `src/components/components.hpp:75` — fields: 19
+- `InfoComponent` — `src/components/components.hpp:193` — fields: 0
+- `LocationComponent` — `src/components/components.hpp:161` — fields: 1
+- `NinePatchComponent` — `src/components/components.hpp:168` — fields: 12
+- `ParticleAnimationConfig` — `src/systems/particles/particle.hpp:116` — fields: 5
+- `ParticleComponent` — `src/components/particle.hpp:6` — fields: 8
+- `ParticleEmitter` — `src/systems/particles/particle.hpp:89` — fields: 22
+- `ParticleTag` — `src/systems/particles/particle.hpp:58` — fields: 1
+- `Particle` — `src/systems/particles/particle.hpp:62` — fields: 16
+- `SpriteComponentASCII` — `src/components/graphics.hpp:31` — fields: 8
+- `StencilMaskSource` — `src/systems/particles/particle.hpp:1024` — fields: 1
+- `StencilMaskedParticle` — `src/systems/particles/particle.hpp:1029` — fields: 2
+- `TileComponent` — `src/components/components.hpp:132` — fields: 20
+- `TransformCustom` — `src/components/components.hpp:36` — fields: 6
+- `TweenedLocationComponent` — `src/components/graphics.hpp:90` — fields: 0
+- `VFXTag` — `src/components/components.hpp:200` — fields: 0
+<!-- AUTOGEN:END component_list -->

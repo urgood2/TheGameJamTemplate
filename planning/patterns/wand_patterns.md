@@ -505,3 +505,23 @@ end
 - `BehaviorRegistry` registered for behavior_id-driven hooks
 
 **Unverified:** No dedicated pattern test (upgrade behaviors validated in runtime/tests).
+
+<!-- AUTOGEN:BEGIN pattern_list -->
+- `Apply tag thresholds and discoveries`
+- `Behavior registry register/execute with pcall`
+- `Card registry lazy-load caching`
+- `Curated combo detection by card id`
+- `Execution context builder`
+- `Joker effect aggregation by schema`
+- `Joker effects mutate modifier table in place`
+- `Normalized tag counting`
+- `Run card upgrade behaviors`
+- `Spell tag analysis metrics`
+- `Spell type classification`
+- `Sub-cast queue for delayed execution`
+- `Sub-cast tracing with stable ids`
+- `Tag set bonuses with tier thresholds`
+- `Tag threshold discovery tracking`
+- `Trigger registration with timer/signal cleanup`
+- `Upgrade paths and custom behaviors`
+<!-- AUTOGEN:END pattern_list -->

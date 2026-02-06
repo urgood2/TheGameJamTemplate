@@ -1,0 +1,44 @@
+
+<!-- AUTOGEN:BEGIN binding_list -->
+- `CodepointToString` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:397`
+- `TextSystem.Builders.TextBuilder:build` — (method) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:336`
+- `TextSystem.Builders.TextBuilder` — (usertype) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:311`
+- `TextSystem.Builders` — (usertype) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:310`
+- `TextSystem.Character` — (usertype) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:130`
+- `TextSystem.Functions` — (usertype) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:350`
+- `TextSystem.ParsedEffectArguments:arguments` — (method) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:81`
+- `TextSystem.ParsedEffectArguments` — (usertype) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:78`
+- `TextSystem.TextAlignment.CENTER` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:263`
+- `TextSystem.TextAlignment.JUSTIFIED` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:267`
+- `TextSystem.TextAlignment.LEFT` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:261`
+- `TextSystem.TextAlignment.RIGHT` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:265`
+- `TextSystem.TextAlignment` — (usertype) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:257`
+- `TextSystem.TextWrapMode.CHARACTER` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:286`
+- `TextSystem.TextWrapMode.WORD` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:281`
+- `TextSystem.TextWrapMode` — (usertype) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:277`
+- `TextSystem.Text` — (usertype) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:216`
+- `TextSystem.effectFunctions` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:186`
+- `TextSystem` — (usertype) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:59`
+- `adjustAlignment` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:353`
+- `applyGlobalEffects` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:455`
+- `builders.TextBuilder` — (usertype) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:297`
+- `calculateBoundingBox` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:388`
+- `clearAllEffects` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:447`
+- `createTextEntity` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:367`
+- `debugPrintText` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:465`
+- `handleEffectSegment` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:415`
+- `parseText` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:403`
+- `renderText` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:437`
+- `resetTextScaleAndLayout` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:498`
+- `resizeTextToFit` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:473`
+- `setTextScaleAndRecenter` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:485`
+- `setText` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:507`
+- `splitEffects` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:359`
+- `ts.Character` — (usertype) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:95`
+- `ts.ParsedEffectArguments` — (usertype) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:64`
+- `ts.ParsedEffectArguments` — (usertype) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:72`
+- `ts.TextAlignment` — (enum) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:250`
+- `ts.TextWrapMode` — (enum) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:271`
+- `ts.Text` — (usertype) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:193`
+- `updateText` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/text/textVer2.cpp:428`
+<!-- AUTOGEN:END binding_list -->

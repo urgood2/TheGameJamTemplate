@@ -1,0 +1,43 @@
+{
+  "name": "demo_map",
+  "orientation": "orthogonal",
+  "renderorder": "right-down",
+  "width": 4,
+  "height": 4,
+  "tilewidth": 16,
+  "tileheight": 16,
+  "infinite": false,
+  "layers": [
+    {
+      "id": 1,
+      "name": "Ground",
+      "type": "tilelayer",
+      "visible": true,
+      "opacity": 1,
+      "width": 4,
+      "height": 4,
+      "x": 0,
+      "y": 0,
+      "data": [
+        1,1,1,1,
+        1,0,0,1,
+        1,0,0,1,
+        1,1,1,1
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Objects",
+      "type": "objectgroup",
+      "visible": true,
+      "opacity": 1,
+      "objects": [
+        { "id": 11, "name": "spawn_enemy", "type": "Enemy", "x": 24, "y": 24, "width": 8, "height": 8 },
+        { "id": 12, "name": "spawn_loot", "type": "Loot", "x": 48, "y": 32, "width": 8, "height": 8 }
+      ]
+    }
+  ],
+  "tilesets": [
+    { "firstgid": 1, "source": "demo.tsj" }
+  ]
+}

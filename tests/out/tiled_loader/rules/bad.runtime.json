@@ -1,0 +1,13 @@
+
+{
+  "default_terrain": 1,
+  "rules": [
+    {
+      "name": "invalid_overlap",
+      "terrain": 1,
+      "required": ["north"],
+      "forbidden": ["n"],
+      "tile_id": 10
+    }
+  ]
+}

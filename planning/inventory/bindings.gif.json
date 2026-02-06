@@ -1,9 +1,9 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-02-03T02:59:38.421036+00:00",
+  "generated_at": "2026-02-06T13:59:03.022466+00:00",
   "system": "gif",
   "source_files": [
-    "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/gif/gif_lua_bindings.cpp"
+    "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/gif/gif_lua_bindings.cpp"
   ],
   "summary": {
     "usertypes": 1,
@@ -23,7 +23,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_usertype_gif",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/gif/gif_lua_bindings.cpp:100",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/gif/gif_lua_bindings.cpp:100",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -36,7 +36,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_gif_table_load",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/gif/gif_lua_bindings.cpp:18",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/gif/gif_lua_bindings.cpp:18",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -47,7 +47,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_gif_table_update",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/gif/gif_lua_bindings.cpp:24",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/gif/gif_lua_bindings.cpp:24",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -58,7 +58,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_gif_table_gettexture",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/gif/gif_lua_bindings.cpp:30",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/gif/gif_lua_bindings.cpp:30",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -69,7 +69,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_gif_table_unloadall",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/gif/gif_lua_bindings.cpp:36",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/gif/gif_lua_bindings.cpp:36",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -80,7 +80,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_gif_table_setframedelay",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/gif/gif_lua_bindings.cpp:46",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/gif/gif_lua_bindings.cpp:46",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -91,7 +91,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_gif_table_getframedelay",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/gif/gif_lua_bindings.cpp:54",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/gif/gif_lua_bindings.cpp:54",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -102,7 +102,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_gif_table_getframecount",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/gif/gif_lua_bindings.cpp:63",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/gif/gif_lua_bindings.cpp:63",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -113,7 +113,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_gif_table_getcurrentframeindex",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/gif/gif_lua_bindings.cpp:72",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/gif/gif_lua_bindings.cpp:72",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -124,7 +124,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_gif_table_isloaded",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/gif/gif_lua_bindings.cpp:81",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/gif/gif_lua_bindings.cpp:81",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -135,7 +135,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_function_gif_table_unload",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/gif/gif_lua_bindings.cpp:87",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/gif/gif_lua_bindings.cpp:87",
         "extraction_confidence": "medium",
         "tier": 0,
         "verified": false
@@ -151,7 +151,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_property_gif_load",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/gif/gif_lua_bindings.cpp:102",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/gif/gif_lua_bindings.cpp:102",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -162,7 +162,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_property_gif_update",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/gif/gif_lua_bindings.cpp:108",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/gif/gif_lua_bindings.cpp:108",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -173,7 +173,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_property_gif_gettexture",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/gif/gif_lua_bindings.cpp:114",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/gif/gif_lua_bindings.cpp:114",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -184,7 +184,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_property_gif_unloadall",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/gif/gif_lua_bindings.cpp:120",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/gif/gif_lua_bindings.cpp:120",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -195,7 +195,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_property_gif_setframedelay",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/gif/gif_lua_bindings.cpp:126",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/gif/gif_lua_bindings.cpp:126",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -206,7 +206,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_property_gif_getframedelay",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/gif/gif_lua_bindings.cpp:132",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/gif/gif_lua_bindings.cpp:132",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -217,7 +217,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_property_gif_getframecount",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/gif/gif_lua_bindings.cpp:138",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/gif/gif_lua_bindings.cpp:138",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -228,7 +228,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_property_gif_getcurrentframeindex",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/gif/gif_lua_bindings.cpp:144",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/gif/gif_lua_bindings.cpp:144",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -239,7 +239,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_property_gif_isloaded",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/gif/gif_lua_bindings.cpp:150",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/gif/gif_lua_bindings.cpp:150",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false
@@ -250,7 +250,7 @@
         "cpp_type": "",
         "signature": "",
         "doc_id": "sol2_property_gif_unload",
-        "source_ref": "/data/projects/TheGameJamTemplate@cass-memory-update/src/systems/gif/gif_lua_bindings.cpp:156",
+        "source_ref": "/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/gif/gif_lua_bindings.cpp:156",
         "extraction_confidence": "high",
         "tier": 0,
         "verified": false

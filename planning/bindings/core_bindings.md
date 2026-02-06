@@ -26,68 +26,165 @@ Repro commands (exact):
 
 ## Binding List (Tier 0)
 <!-- AUTOGEN:BEGIN binding_list -->
-- `Entity` — (usertype) — `src/systems/scripting/scripting_functions.cpp:161`
-- `Camera2D` — (usertype) — `src/systems/scripting/scripting_functions.cpp:551`
-- `Camera2D.offset` — (property) — `src/systems/scripting/scripting_functions.cpp:559`
-- `Camera2D.target` — (property) — `src/systems/scripting/scripting_functions.cpp:560`
-- `Camera2D.rotation` — (property) — `src/systems/scripting/scripting_functions.cpp:561`
-- `Camera2D.zoom` — (property) — `src/systems/scripting/scripting_functions.cpp:562`
-- `OpenURL` — (function) — `src/systems/scripting/scripting_functions.cpp:456`
-- `Vector2` — (function) — `src/systems/scripting/scripting_functions.cpp:489`
-- `Vector3` — (function) — `src/systems/scripting/scripting_functions.cpp:503`
-- `Vector4` — (function) — `src/systems/scripting/scripting_functions.cpp:518`
-- `GetFrameTime` — (function) — `GetFrameTime() -> number` — `src/systems/scripting/scripting_functions.cpp:591`
-- `GetTime` — (function) — `GetTime() -> number` — `src/systems/scripting/scripting_functions.cpp:596`
-- `GetScreenWidth` — (function) — `GetScreenWidth() -> integer` — `src/systems/scripting/scripting_functions.cpp:601`
-- `GetScreenHeight` — (function) — `GetScreenHeight() -> integer` — `src/systems/scripting/scripting_functions.cpp:602`
-- `GetWorldToScreen2D` — (function) — `GetWorldToScreen2D(position: Vector2, camera: Camera2D) -> Vector2` — `src/systems/scripting/scripting_functions.cpp:603`
-- `GetScreenToWorld2D` — (function) — `GetScreenToWorld2D(position: Vector2, camera: Camera2D) -> Vector2` — `src/systems/scripting/scripting_functions.cpp:607`
-- `set_shader_texture_batching` — (function) — `src/systems/scripting/scripting_functions.cpp:613`
-- `get_shader_texture_batching` — (function) — `src/systems/scripting/scripting_functions.cpp:618`
-- `getSpriteFrameTextureInfo` — (function) — `src/systems/scripting/scripting_functions.cpp:670`
-- `setPaletteTexture` — (function) — `src/systems/scripting/scripting_functions.cpp:702`
-- `getEntityByAlias` — (function) — `src/systems/scripting/scripting_bindings.cpp:18`
-- `setEntityAlias` — (function) — `src/systems/scripting/scripting_bindings.cpp:19`
-- `log_debug` — (function) — `src/systems/scripting/scripting_bindings.cpp:31`
-- `log_error` — (function) — `src/systems/scripting/scripting_bindings.cpp:94`
-- `log_info` — (function) — `src/systems/scripting/scripting_bindings.cpp:158`
-- `log_warn` — (function) — `src/systems/scripting/scripting_bindings.cpp:210`
-- `pauseGame` — (function) — `src/systems/scripting/scripting_bindings.cpp:261`
-- `unpauseGame` — (function) — `src/systems/scripting/scripting_bindings.cpp:262`
-- `isKeyPressed` — (function) — `src/systems/scripting/scripting_bindings.cpp:271`
-- `globals.isGamePaused` — (property) — `boolean` — `src/systems/scripting/scripting_functions.cpp:466`
-- `globals.screenWipe` — (property) — `boolean` — `src/systems/scripting/scripting_functions.cpp:467`
-- `globals.screenWidth` — (property) — `integer` — `src/systems/scripting/scripting_functions.cpp:468`
-- `globals.screenHeight` — (property) — `integer` — `src/systems/scripting/scripting_functions.cpp:469`
-- `globals.currentGameState` — (property) — `GameState` — `src/systems/scripting/scripting_functions.cpp:470`
-- `globals.inputState` — (property) — `InputState` — `src/systems/scripting/scripting_functions.cpp:473`
-- `globals.camera` — (property) — `src/systems/scripting/scripting_functions.cpp:652`
-- `globals.gameWorldContainerEntity` — (property) — `Entity` — `src/systems/scripting/scripting_functions.cpp:657`
-- `globals.cursor` — (property) — `Entity` — `src/systems/scripting/scripting_functions.cpp:660`
-- `globalShaderUniforms` — (property) — `ShaderUniformComponent` — `src/systems/scripting/scripting_functions.cpp:663`
-- `entt.registry` — (usertype) — `src/systems/scripting/scripting_system.cpp:263`
-- `entt.registry.new` — (property) — `src/systems/scripting/registry_bond.cpp:170`
-- `entt.registry.size` — (property) — `src/systems/scripting/registry_bond.cpp:171`
-- `entt.registry.alive` — (property) — `src/systems/scripting/registry_bond.cpp:172`
-- `entt.registry.valid` — (property) — `src/systems/scripting/registry_bond.cpp:173`
-- `entt.registry.current` — (property) — `src/systems/scripting/registry_bond.cpp:174`
-- `entt.registry.create` — (property) — `src/systems/scripting/registry_bond.cpp:175`
-- `entt.registry.destroy` — (property) — `src/systems/scripting/registry_bond.cpp:176`
-- `entt.registry.emplace` — (property) — `src/systems/scripting/registry_bond.cpp:177`
-- `entt.registry.add_script` — (property) — `src/systems/scripting/registry_bond.cpp:178`
-- `entt.registry.remove` — (property) — `src/systems/scripting/registry_bond.cpp:179`
-- `entt.registry.has` — (property) — `src/systems/scripting/registry_bond.cpp:180`
-- `entt.registry.any_of` — (property) — `src/systems/scripting/registry_bond.cpp:181`
-- `entt.registry.get` — (property) — `src/systems/scripting/registry_bond.cpp:182`
-- `entt.registry.clear` — (property) — `src/systems/scripting/registry_bond.cpp:183`
-- `entt.registry.orphan` — (property) — `src/systems/scripting/registry_bond.cpp:184`
-- `entt.registry.runtime_view` — (property) — `src/systems/scripting/registry_bond.cpp:185`
-- `entt.runtime_view` — (usertype) — `src/systems/scripting/scripting_system.cpp:239`
-- `entt.runtime_view.size_hint` — (property) — `src/systems/scripting/registry_bond.cpp:64`
-- `entt.runtime_view.contains` — (property) — `src/systems/scripting/registry_bond.cpp:65`
-- `entt.runtime_view.each` — (property) — `src/systems/scripting/registry_bond.cpp:66`
-- `component_cache.get` — (function) — `component_cache.get(entity, component_type) -> table|nil` — `assets/scripts/core/component_cache.lua:198`
-- `component_cache.invalidate` — (function) — `component_cache.invalidate(entity, component_type?) -> nil` — `assets/scripts/core/component_cache.lua:331`<!-- AUTOGEN:END binding_list -->
+- `AnimationQueueComponent` — (usertype) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/anim_system.cpp:93`
+- `Blackboard` — (usertype) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1573`
+- `Box.height` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/core/game.cpp:343`
+- `Box.left` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/core/game.cpp:340`
+- `Box.top` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/core/game.cpp:341`
+- `Box.width` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/core/game.cpp:342`
+- `Box` — (usertype) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/core/game.cpp:337`
+- `GetLayer` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/core/game.cpp:834`
+- `L.WorldQuadtree` — (usertype) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/core/game.cpp:280`
+- `WorldQuadtree` — (usertype) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/core/game.cpp:336`
+- `add_layer_shader` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/core/game.cpp:849`
+- `ai.clear_trace` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1886`
+- `ai.dump_blackboard` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:2086`
+- `ai.dump_plan` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:2030`
+- `ai.dump_worldstate` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:2014`
+- `ai.force_interrupt` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1644`
+- `ai.get_all_atoms` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:2049`
+- `ai.get_blackboard` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1590`
+- `ai.get_entity_ai_def` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1080`
+- `ai.get_goap_state` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1921`
+- `ai.get_trace_events` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1845`
+- `ai.get_worldstate` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1120`
+- `ai.has_plan` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:2070`
+- `ai.list_goap_entities` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1902`
+- `ai.list_lua_files` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1647`
+- `ai.patch_goal` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1154`
+- `ai.patch_worldstate` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1147`
+- `ai.pause_ai_system` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1088`
+- `ai.report_goal_selection` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1798`
+- `ai.resume_ai_system` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1101`
+- `ai.set_goal` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1138`
+- `ai.set_worldstate` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1114`
+- `ai` — (usertype) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1072`
+- `animation_system` — (usertype) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/anim_system.cpp:91`
+- `bb.clear` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1299`
+- `bb.decay` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1381`
+- `bb.get_vec2` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1326`
+- `bb.get` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1212`
+- `bb.has` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1286`
+- `bb.inc` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1352`
+- `bb.set_vec2` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1312`
+- `bb.set` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1165`
+- `clearCallbacks` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/anim_system.cpp:399`
+- `clear_layer_shaders` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/core/game.cpp:851`
+- `createAnimatedObjectWithTransform` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/anim_system.cpp:137`
+- `createStillAnimationFromSpriteUUID` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/anim_system.cpp:233`
+- `create_ai_entity_with_overrides` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1630`
+- `create_ai_entity` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1607`
+- `getCurrentFrame` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/anim_system.cpp:284`
+- `getFrameCount` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/anim_system.cpp:291`
+- `getNinepatchUIBorderInfo` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/anim_system.cpp:116`
+- `getProgress` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/anim_system.cpp:305`
+- `harness.assert_no_log_level` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/testing/test_harness_lua.cpp:573`
+- `harness.clear_logs` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/testing/test_harness_lua.cpp:530`
+- `harness.exit` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/testing/test_harness_lua.cpp:414`
+- `harness.find_log` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/testing/test_harness_lua.cpp:535`
+- `harness.get_attempt` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/testing/test_harness_lua.cpp:419`
+- `harness.get_determinism_violations` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/testing/test_harness_lua.cpp:421`
+- `harness.has_snapshot` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/testing/test_harness_lua.cpp:498`
+- `harness.log_mark` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/testing/test_harness_lua.cpp:524`
+- `harness.now_frame` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/testing/test_harness_lua.cpp:412`
+- `harness.snapshot_create` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/testing/test_harness_lua.cpp:445`
+- `harness.snapshot_delete` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/testing/test_harness_lua.cpp:487`
+- `harness.snapshot_restore` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/testing/test_harness_lua.cpp:466`
+- `io.open` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/testing/lua_sandbox.cpp:123`
+- `io.popen` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/testing/lua_sandbox.cpp:144`
+- `isPlaying` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/anim_system.cpp:298`
+- `layers` — (usertype) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/core/game.cpp:824`
+- `math.random` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/testing/lua_sandbox.cpp:247`
+- `math.randomseed` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/testing/lua_sandbox.cpp:271`
+- `onAnimationEnd` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/anim_system.cpp:391`
+- `onFrameChange` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/anim_system.cpp:375`
+- `onLoopComplete` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/anim_system.cpp:383`
+- `os.clock` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/testing/lua_sandbox.cpp:227`
+- `os.difftime` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/testing/lua_sandbox.cpp:230`
+- `os.execute` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/testing/lua_sandbox.cpp:116`
+- `os.time` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/testing/lua_sandbox.cpp:223`
+- `ownership_table.getBuildId` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/core/ownership.cpp:61`
+- `ownership_table.getBuildSignature` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/core/ownership.cpp:65`
+- `ownership_table.getDiscordLink` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/core/ownership.cpp:53`
+- `ownership_table.getItchLink` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/core/ownership.cpp:57`
+- `ownership_table.validate` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/core/ownership.cpp:70`
+- `pause` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/anim_system.cpp:319`
+- `play` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/anim_system.cpp:312`
+- `qmod.box` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/core/game.cpp:324`
+- `quadtree` — (usertype) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/core/game.cpp:352`
+- `remove_layer_shader` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/core/game.cpp:850`
+- `replaceAnimatedObjectOnEntity` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/anim_system.cpp:165`
+- `require` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/testing/lua_sandbox.cpp:172`
+- `resetAnimationUIRenderScale` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/anim_system.cpp:267`
+- `resizeAnimationObjectToFit` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/anim_system.cpp:275`
+- `resizeAnimationObjectsInEntityToFitAndCenterUI` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/anim_system.cpp:254`
+- `resizeAnimationObjectsInEntityToFit` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/anim_system.cpp:242`
+- `seekFrame` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/anim_system.cpp:341`
+- `sense.all_in_range` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1509`
+- `sense.distance` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1424`
+- `sense.nearest` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1436`
+- `sense.position` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/ai/ai_system.cpp:1411`
+- `setDirection` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/anim_system.cpp:359`
+- `setFGColorForAllAnimationObjects` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/anim_system.cpp:124`
+- `setLoopCount` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/anim_system.cpp:367`
+- `setSpeed` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/anim_system.cpp:333`
+- `set_flip` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/anim_system.cpp:215`
+- `set_horizontal_flip` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/anim_system.cpp:102`
+- `setupAnimatedObjectOnEntity` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/anim_system.cpp:201`
+- `stop` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/anim_system.cpp:326`
+- `tiled.active_map` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:502`
+- `tiled.active_map` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:734`
+- `tiled.apply_rules` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:623`
+- `tiled.apply_rules` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:752`
+- `tiled.build_colliders_from_grid` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:633`
+- `tiled.build_colliders_from_grid` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:753`
+- `tiled.cleanup_procedural` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:723`
+- `tiled.cleanup_procedural` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:758`
+- `tiled.clear_draw_cache` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:539`
+- `tiled.clear_draw_cache` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:742`
+- `tiled.clear_generated_colliders` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:715`
+- `tiled.clear_generated_colliders` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:755`
+- `tiled.clear_maps` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:506`
+- `tiled.clear_maps` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:735`
+- `tiled.clear_rule_defs` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:619`
+- `tiled.clear_rule_defs` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:751`
+- `tiled.clear_spawner` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:602`
+- `tiled.clear_spawner` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:748`
+- `tiled.draw_all_layers_ysorted` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:517`
+- `tiled.draw_all_layers_ysorted` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:737`
+- `tiled.draw_all_layers` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:511`
+- `tiled.draw_all_layers` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:736`
+- `tiled.draw_layer_ysorted` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:531`
+- `tiled.draw_layer_ysorted` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:740`
+- `tiled.draw_layer` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:523`
+- `tiled.draw_layer` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:739`
+- `tiled.each_object` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:568`
+- `tiled.each_object` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:745`
+- `tiled.get_objects` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:550`
+- `tiled.get_objects` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:744`
+- `tiled.get_tile_grid` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:719`
+- `tiled.get_tile_grid` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:757`
+- `tiled.has_active_map` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:498`
+- `tiled.has_active_map` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:733`
+- `tiled.load_map` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:479`
+- `tiled.load_map` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:730`
+- `tiled.load_rule_defs` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:606`
+- `tiled.load_rule_defs` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:749`
+- `tiled.loaded_maps` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:488`
+- `tiled.loaded_maps` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:731`
+- `tiled.loaded_rulesets` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:615`
+- `tiled.loaded_rulesets` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:750`
+- `tiled.object_count` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:543`
+- `tiled.object_count` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:743`
+- `tiled.set_active_map` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:492`
+- `tiled.set_active_map` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:732`
+- `tiled.set_spawner` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:580`
+- `tiled.set_spawner` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:746`
+- `tiled.spawn_objects` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:584`
+- `tiled.spawn_objects` — (property) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/tiled_loader/tiled_lua_bindings.cpp:747`
+- `toggle_flip` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/anim_system.cpp:224`
+- `update` — (function) — `/Users/joshuashin/Projects/TheGameJamTemplate/src/systems/anim_system.cpp:109`
+<!-- AUTOGEN:END binding_list -->
 
 ## Registry API (entt.registry)
 **doc_id:** `sol2_usertype_entt_registry`

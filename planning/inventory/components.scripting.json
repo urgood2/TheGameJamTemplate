@@ -3,29 +3,6 @@
   "count": 5,
   "components": [
     {
-      "name": "CallStats",
-      "category": "scripting",
-      "file_path": "src/systems/scripting/lua_profiler.hpp",
-      "line_number": 33,
-      "is_tag": false,
-      "extraction_confidence": 1.0,
-      "notes": [],
-      "fields": [
-        {
-          "name": "call_count",
-          "type": "uint64_t",
-          "default": "0",
-          "is_complex": false
-        },
-        {
-          "name": "total_ns",
-          "type": "uint64_t",
-          "default": "0",
-          "is_complex": false
-        }
-      ]
-    },
-    {
       "name": "MethodDef",
       "category": "scripting",
       "file_path": "src/systems/scripting/binding_recorder.hpp",
@@ -172,6 +149,29 @@
           "type": "std::vector<MethodDef>",
           "default": null,
           "is_complex": true
+        }
+      ]
+    },
+    {
+      "name": "CallStats",
+      "category": "scripting",
+      "file_path": "src/systems/scripting/lua_profiler.hpp",
+      "line_number": 33,
+      "is_tag": false,
+      "extraction_confidence": 1.0,
+      "notes": [],
+      "fields": [
+        {
+          "name": "call_count",
+          "type": "uint64_t",
+          "default": "0",
+          "is_complex": false
+        },
+        {
+          "name": "total_ns",
+          "type": "uint64_t",
+          "default": "0",
+          "is_complex": false
         }
       ]
     }

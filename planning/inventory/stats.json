@@ -1,16 +1,10 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-02-03T03:12:14.782366+00:00",
+  "generated_at": "2026-02-06T13:59:03.679266+00:00",
   "sol2_bindings": {
     "total_types": 87,
-    "total_functions": 582,
+    "total_functions": 638,
     "by_file": [
-      {
-        "file": "src/systems/anim_system.cpp",
-        "types": 2,
-        "functions": 0,
-        "constants": 0
-      },
       {
         "file": "src/core/ownership.cpp",
         "types": 0,
@@ -36,27 +30,27 @@
         "constants": 0
       },
       {
-        "file": "src/systems/ldtk_loader/ldtk_lua_bindings.cpp",
+        "file": "src/testing/test_harness_lua.cpp",
         "types": 0,
-        "functions": 34,
+        "functions": 15,
         "constants": 0
       },
       {
-        "file": "src/systems/ai/ai_system.cpp",
-        "types": 1,
-        "functions": 36,
-        "constants": 0
-      },
-      {
-        "file": "src/systems/physics/physics_lua_bindings.cpp",
-        "types": 5,
-        "functions": 99,
-        "constants": 0
-      },
-      {
-        "file": "src/systems/entity_gamestate_management/entity_gamestate_management.cpp",
-        "types": 1,
+        "file": "src/testing/lua_sandbox.cpp",
+        "types": 0,
         "functions": 14,
+        "constants": 0
+      },
+      {
+        "file": "src/systems/anim_system.cpp",
+        "types": 2,
+        "functions": 0,
+        "constants": 0
+      },
+      {
+        "file": "src/systems/ui/ui.cpp",
+        "types": 25,
+        "functions": 57,
         "constants": 0
       },
       {
@@ -66,9 +60,123 @@
         "constants": 0
       },
       {
-        "file": "src/systems/ui/ui.cpp",
-        "types": 25,
-        "functions": 57,
+        "file": "src/systems/tiled_loader/tiled_lua_bindings.cpp",
+        "types": 0,
+        "functions": 26,
+        "constants": 0
+      },
+      {
+        "file": "src/systems/scripting/scripting_system.cpp",
+        "types": 1,
+        "functions": 3,
+        "constants": 0
+      },
+      {
+        "file": "src/systems/scripting/scripting_bindings.cpp",
+        "types": 0,
+        "functions": 9,
+        "constants": 0
+      },
+      {
+        "file": "src/systems/scripting/scripting_functions.cpp",
+        "types": 2,
+        "functions": 17,
+        "constants": 0
+      },
+      {
+        "file": "src/systems/input/input_lua_bindings.cpp",
+        "types": 7,
+        "functions": 32,
+        "constants": 0
+      },
+      {
+        "file": "src/systems/input/controller_nav.cpp",
+        "types": 1,
+        "functions": 0,
+        "constants": 0
+      },
+      {
+        "file": "src/systems/timer/timer.cpp",
+        "types": 0,
+        "functions": 36,
+        "constants": 0
+      },
+      {
+        "file": "src/systems/layer/layer_lua_bindings.cpp",
+        "types": 2,
+        "functions": 23,
+        "constants": 0
+      },
+      {
+        "file": "src/systems/entity_gamestate_management/entity_gamestate_management.cpp",
+        "types": 1,
+        "functions": 14,
+        "constants": 0
+      },
+      {
+        "file": "src/systems/ai/ai_system.cpp",
+        "types": 1,
+        "functions": 36,
+        "constants": 0
+      },
+      {
+        "file": "src/systems/ldtk_loader/ldtk_lua_bindings.cpp",
+        "types": 0,
+        "functions": 35,
+        "constants": 0
+      },
+      {
+        "file": "src/systems/shaders/shader_draw_commands.cpp",
+        "types": 0,
+        "functions": 2,
+        "constants": 0
+      },
+      {
+        "file": "src/systems/shaders/shader_system.cpp",
+        "types": 0,
+        "functions": 12,
+        "constants": 0
+      },
+      {
+        "file": "src/systems/shaders/shader_presets.cpp",
+        "types": 0,
+        "functions": 9,
+        "constants": 0
+      },
+      {
+        "file": "src/systems/telemetry/telemetry.cpp",
+        "types": 0,
+        "functions": 2,
+        "constants": 0
+      },
+      {
+        "file": "src/systems/text/textVer2.cpp",
+        "types": 0,
+        "functions": 1,
+        "constants": 0
+      },
+      {
+        "file": "src/systems/physics/physics_lua_bindings.cpp",
+        "types": 5,
+        "functions": 99,
+        "constants": 0
+      },
+      {
+        "file": "src/systems/save/save_file_io.cpp",
+        "types": 0,
+        "functions": 5,
+        "constants": 0
+      },
+      {
+        "file": "src/systems/sound/sound_system.cpp",
+        "types": 0,
+        "functions": 32,
+        "constants": 0
+      },
+      {
+        "file": "src/systems/transform/transform_functions.cpp",
+        "types": 23,
+        "functions": 67,
         "constants": 0
       },
       {
@@ -84,96 +192,6 @@
         "constants": 0
       },
       {
-        "file": "src/systems/scripting/scripting_functions.cpp",
-        "types": 2,
-        "functions": 17,
-        "constants": 0
-      },
-      {
-        "file": "src/systems/scripting/scripting_bindings.cpp",
-        "types": 0,
-        "functions": 9,
-        "constants": 0
-      },
-      {
-        "file": "src/systems/scripting/scripting_system.cpp",
-        "types": 1,
-        "functions": 3,
-        "constants": 0
-      },
-      {
-        "file": "src/systems/save/save_file_io.cpp",
-        "types": 0,
-        "functions": 5,
-        "constants": 0
-      },
-      {
-        "file": "src/systems/layer/layer_lua_bindings.cpp",
-        "types": 2,
-        "functions": 23,
-        "constants": 0
-      },
-      {
-        "file": "src/systems/input/controller_nav.cpp",
-        "types": 1,
-        "functions": 0,
-        "constants": 0
-      },
-      {
-        "file": "src/systems/input/input_lua_bindings.cpp",
-        "types": 7,
-        "functions": 32,
-        "constants": 0
-      },
-      {
-        "file": "src/systems/transform/transform_functions.cpp",
-        "types": 23,
-        "functions": 67,
-        "constants": 0
-      },
-      {
-        "file": "src/systems/shaders/shader_draw_commands.cpp",
-        "types": 0,
-        "functions": 2,
-        "constants": 0
-      },
-      {
-        "file": "src/systems/shaders/shader_presets.cpp",
-        "types": 0,
-        "functions": 9,
-        "constants": 0
-      },
-      {
-        "file": "src/systems/shaders/shader_system.cpp",
-        "types": 0,
-        "functions": 12,
-        "constants": 0
-      },
-      {
-        "file": "src/systems/timer/timer.cpp",
-        "types": 0,
-        "functions": 36,
-        "constants": 0
-      },
-      {
-        "file": "src/systems/text/textVer2.cpp",
-        "types": 0,
-        "functions": 1,
-        "constants": 0
-      },
-      {
-        "file": "src/systems/telemetry/telemetry.cpp",
-        "types": 0,
-        "functions": 2,
-        "constants": 0
-      },
-      {
-        "file": "src/systems/sound/sound_system.cpp",
-        "types": 0,
-        "functions": 32,
-        "constants": 0
-      },
-      {
         "file": "src/core/ui_definitions.hpp",
         "types": 0,
         "functions": 5,
@@ -186,45 +204,15 @@
         "constants": 0
       },
       {
-        "file": "src/third_party/navmesh/source/navmesh_lua_binding.hpp",
-        "types": 4,
-        "functions": 2,
-        "constants": 0
-      },
-      {
         "file": "src/third_party/sol2/include/sol/state_view.hpp",
         "types": 0,
         "functions": 2,
         "constants": 0
       },
       {
-        "file": "src/systems/spring/spring_lua_bindings.hpp",
-        "types": 1,
-        "functions": 1,
-        "constants": 0
-      },
-      {
-        "file": "src/systems/main_loop_enhancement/main_loop.hpp",
-        "types": 1,
-        "functions": 1,
-        "constants": 0
-      },
-      {
-        "file": "src/systems/particles/particle.hpp",
-        "types": 3,
-        "functions": 3,
-        "constants": 0
-      },
-      {
-        "file": "src/systems/physics/bind_world_navmesh.hpp",
-        "types": 0,
-        "functions": 5,
-        "constants": 0
-      },
-      {
-        "file": "src/systems/random/random.hpp",
-        "types": 0,
-        "functions": 1,
+        "file": "src/third_party/navmesh/source/navmesh_lua_binding.hpp",
+        "types": 4,
+        "functions": 2,
         "constants": 0
       },
       {
@@ -240,7 +228,7 @@
         "constants": 0
       },
       {
-        "file": "src/systems/collision/broad_phase.hpp",
+        "file": "src/systems/main_loop_enhancement/main_loop.hpp",
         "types": 1,
         "functions": 1,
         "constants": 0
@@ -249,6 +237,12 @@
         "file": "src/systems/camera/camera_bindings.hpp",
         "types": 1,
         "functions": 2,
+        "constants": 0
+      },
+      {
+        "file": "src/systems/particles/particle.hpp",
+        "types": 3,
+        "functions": 3,
         "constants": 0
       },
       {
@@ -268,6 +262,30 @@
         "types": 1,
         "functions": 6,
         "constants": 0
+      },
+      {
+        "file": "src/systems/physics/bind_world_navmesh.hpp",
+        "types": 0,
+        "functions": 5,
+        "constants": 0
+      },
+      {
+        "file": "src/systems/random/random.hpp",
+        "types": 0,
+        "functions": 1,
+        "constants": 0
+      },
+      {
+        "file": "src/systems/collision/broad_phase.hpp",
+        "types": 1,
+        "functions": 1,
+        "constants": 0
+      },
+      {
+        "file": "src/systems/spring/spring_lua_bindings.hpp",
+        "types": 1,
+        "functions": 1,
+        "constants": 0
       }
     ]
   },
@@ -277,62 +295,65 @@
       "Animation": 3,
       "Graphics": 3,
       "Core": 3,
-      "Particles": 1,
       "Transform": 1,
       "Other": 1,
       "AI": 1,
       "Inventory": 1,
       "Metadata": 1,
+      "Particles": 1,
+      "UI": 6,
       "State": 2,
-      "Physics": 2,
-      "UI": 6
+      "Physics": 2
     }
   },
   "lua_scripts": {
-    "total": 445,
+    "total": 504,
     "by_directory": {
-      "tests/": 114,
-      "core/": 70,
-      "ui/": 58,
+      "tests/": 125,
+      "core/": 71,
+      "ui/": 59,
+      "test/": 31,
       "combat/": 23,
       "data/": 21,
       "wand/": 18,
-      "core/procgen/": 13,
+      "core/procgen/": 15,
       "ai/": 12,
       "ai/actions/": 9,
+      "examples/": 9,
       "ui/text_effects/": 8,
+      "tests/framework/": 8,
       "external/forma/": 8,
       "external/": 7,
-      "examples/": 7,
-      "tools/": 6,
       "tutorial/dialogue/": 6,
-      "types/": 5,
-      "tutorial/": 5,
+      "tools/": 6,
       "ui/showcase/": 5,
+      "tutorial/": 5,
+      "types/": 5,
       "root": 4,
-      "demos/": 4,
-      "external/forma/utils/": 4,
       "ai/entity_types/": 4,
-      "test/": 3,
-      "external/hump/": 3,
+      "external/forma/utils/": 4,
+      "demos/": 4,
+      "tests/framework/reporters/": 3,
+      "tests/e2e/": 3,
       "ai/blackboard_init/": 3,
       "ai/goal_selectors/": 3,
-      "systems/": 2,
-      "task_manager/": 2,
+      "external/hump/": 3,
       "init/": 2,
       "util/": 2,
-      "monobehavior/": 2,
+      "task_manager/": 2,
       "tests/mocks/": 2,
+      "monobehavior/": 2,
+      "systems/": 2,
+      "core/procgen/presets/": 1,
+      "core/test/": 1,
+      "nodemap/": 1,
+      "color/": 1,
+      "tests/_framework/": 1,
+      "ai/enemies/": 1,
       "conditions/": 1,
       "task/": 1,
-      "color/": 1,
       "shaders/": 1,
-      "nodemap/": 1,
-      "external/knife/": 1,
-      "core/test/": 1,
-      "core/procgen/presets/": 1,
-      "ai/enemies/": 1,
-      "tests/_framework/": 1
+      "external/knife/": 1
     }
   }
 }

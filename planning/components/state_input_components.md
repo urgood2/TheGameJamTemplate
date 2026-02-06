@@ -158,3 +158,17 @@ Key considerations:
 | self | sol::table | None | complex |
 | hooks | struct { update, on_collision } | None | complex |
 | tasks | std::vector<sol::coroutine> | None | complex |
+
+<!-- AUTOGEN:BEGIN component_list -->
+- `ActiveStates` — `src/systems/entity_gamestate_management/entity_gamestate_management.hpp:39` — fields: 1
+- `IInputProvider` — `src/systems/input/input_polling.hpp:20` — fields: 0
+- `InactiveTag` — `src/systems/entity_gamestate_management/entity_gamestate_management.hpp:15` — fields: 0
+- `NavCallbacks` — `src/systems/input/controller_nav.hpp:31` — fields: 3
+- `NavGroup` — `src/systems/input/controller_nav.hpp:40` — fields: 15
+- `NavLayer` — `src/systems/input/controller_nav.hpp:60` — fields: 4
+- `NavManager` — `src/systems/input/controller_nav.hpp:70` — fields: 9
+- `NavSelectable` — `src/systems/input/controller_nav.hpp:21` — fields: 4
+- `RaylibInputProvider` — `src/systems/input/input_polling.hpp:50` — fields: 0
+- `ScriptComponent` — `src/systems/scripting/scripting_system.hpp:31` — fields: 3
+- `StateTag` — `src/systems/entity_gamestate_management/entity_gamestate_management.hpp:26` — fields: 2
+<!-- AUTOGEN:END component_list -->

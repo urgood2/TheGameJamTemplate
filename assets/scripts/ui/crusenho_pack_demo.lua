@@ -9,14 +9,22 @@ Additive demo module that reuses the existing UI system:
 
 local dsl = require("ui.ui_syntax_sugar")
 local component_cache = require("core.component_cache")
+local entity_cache = require("core.entity_cache")
+local timer = require("core.timer")
 
 local Demo = {}
 
 local PACK_NAME = "crusenho_flat"
 local PACK_MANIFEST = "assets/ui_packs/crusenho_flat/pack.json"
+local ANIM_TAG = "crusenho_pack_demo_anim"
+local ANIM_GROUP = "crusenho_pack_demo"
 
 local cachedPack = nil
 local attemptedRegistration = false
+local animationState = {
+    running = false,
+    entries = {},
+}
 
 local function ensurePack()
     if cachedPack then
@@ -63,6 +71,78 @@ local function applyPackConfig(entity, src)
     return true
 end
 
+local function stopAnimationTicker()
+    if animationState.running then
+        timer.kill(ANIM_TAG)
+        animationState.running = false
+    end
+end
+
+local function resetAnimationState()
+    stopAnimationTicker()
+    animationState.entries = {}
+end
+
+local function tickAnimations()
+    local pack = ensurePack()
+    if not pack then return end
+    if #animationState.entries == 0 then
+        stopAnimationTicker()
+        return
+    end
+
+    local alive = 0
+    for i = #animationState.entries, 1, -1 do
+        local entry = animationState.entries[i]
+        if not entry.entity or not entity_cache.valid(entry.entity) then
+            table.remove(animationState.entries, i)
+        else
+            alive = alive + 1
+            entry.elapsed = entry.elapsed + 0.2
+            if entry.elapsed >= entry.interval then
+                entry.elapsed = 0
+                entry.index = (entry.index % #entry.fetches) + 1
+                local ok, src = pcall(entry.fetches[entry.index], pack)
+                if ok and src then
+                    applyPackConfig(entry.entity, src)
+                end
+            end
+        end
+    end
+
+    if alive == 0 then
+        stopAnimationTicker()
+    end
+end
+
+local function ensureAnimationTicker()
+    if animationState.running then
+        return
+    end
+
+    animationState.running = true
+    timer.every_opts({
+        delay = 0.2,
+        tag = ANIM_TAG,
+        group = ANIM_GROUP,
+        action = tickAnimations,
+    })
+end
+
+local function registerAnimatedSwatch(entity, fetches, interval)
+    if not entity or not fetches or #fetches == 0 then
+        return
+    end
+    table.insert(animationState.entries, {
+        entity = entity,
+        fetches = fetches,
+        index = 1,
+        interval = interval or 0.45,
+        elapsed = 0,
+    })
+    ensureAnimationTicker()
+end
+
 local function styledSwatch(opts)
     local id = opts.id
     local w = opts.w or 52
@@ -89,6 +169,60 @@ local function styledSwatch(opts)
                 if ok and src then
                     applyPackConfig(entity, src)
                 end
+            end,
+        },
+        children = {},
+    })
+
+    return dsl.vbox({
+        config = {
+            padding = 2,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+        },
+        children = {
+            swatch,
+            dsl.text(label, {
+                fontSize = 9,
+                color = "gray_light",
+                shadow = false,
+            }),
+        },
+    })
+end
+
+local function animatedSwatch(opts)
+    local id = opts.id
+    local w = opts.w or 52
+    local h = opts.h or 38
+    local label = opts.label or id
+    local fetches = opts.fetches or {}
+    local interval = opts.interval or 0.45
+
+    local swatch = ui.definitions.def({
+        type = "VERTICAL_CONTAINER",
+        config = {
+            id = id,
+            minWidth = w,
+            maxWidth = w,
+            minHeight = h,
+            maxHeight = h,
+            color = util.getColor("blank"),
+            padding = 0,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+            canCollide = false,
+            initFunc = function(_, entity)
+                local pack = ensurePack()
+                if not pack then return end
+
+                local first = fetches[1]
+                if first then
+                    local ok, src = pcall(first, pack)
+                    if ok and src then
+                        applyPackConfig(entity, src)
+                    end
+                end
+
+                registerAnimatedSwatch(entity, fetches, interval)
             end,
         },
         children = {},
@@ -166,6 +300,8 @@ local function iconRows(iconNames)
 end
 
 function Demo.createShowcase()
+    resetAnimationState()
+
     local pack = ensurePack()
     local statusText = pack and "Pack loaded: crusenho_flat" or "Pack failed to load"
     local statusColor = pack and "lime" or "red"
@@ -221,6 +357,58 @@ function Demo.createShowcase()
             styledSwatch({
                 id = "crusenho_btn_primary_disabled", w = 48, h = 40, label = "disabled",
                 fetch = function(p) return p:button("primary", "disabled") end,
+            }),
+        }),
+        dsl.spacer(2, 6),
+
+        section("Animated State Cycles", {
+            animatedSwatch({
+                id = "crusenho_anim_primary_cycle", w = 72, h = 42, label = "primary",
+                interval = 0.45,
+                fetches = {
+                    function(p) return p:button("primary", "normal") end,
+                    function(p) return p:button("primary", "hover") end,
+                    function(p) return p:button("primary", "pressed") end,
+                    function(p) return p:button("primary", "hover") end,
+                },
+            }),
+            dsl.spacer(6, 2),
+            animatedSwatch({
+                id = "crusenho_anim_select_cycle", w = 42, h = 42, label = "select",
+                interval = 0.5,
+                fetches = {
+                    function(p) return p:button("select_primary", "normal") end,
+                    function(p) return p:button("select_primary", "hover") end,
+                    function(p) return p:button("select_primary", "pressed") end,
+                    function(p) return p:button("select_primary", "hover") end,
+                },
+            }),
+            dsl.spacer(6, 2),
+            animatedSwatch({
+                id = "crusenho_anim_toggle_round_cycle", w = 24, h = 24, label = "toggle_r",
+                interval = 0.55,
+                fetches = {
+                    function(p) return p:button("toggle_round", "normal") end,
+                    function(p) return p:button("toggle_round", "pressed") end,
+                },
+            }),
+            dsl.spacer(6, 2),
+            animatedSwatch({
+                id = "crusenho_anim_toggle_lr_cycle", w = 24, h = 24, label = "toggle_lr",
+                interval = 0.55,
+                fetches = {
+                    function(p) return p:button("toggle_lr", "normal") end,
+                    function(p) return p:button("toggle_lr", "pressed") end,
+                },
+            }),
+            dsl.spacer(6, 2),
+            animatedSwatch({
+                id = "crusenho_anim_input_cycle", w = 76, h = 40, label = "input",
+                interval = 0.65,
+                fetches = {
+                    function(p) return p:input("default", "normal") end,
+                    function(p) return p:input("default", "focus") end,
+                },
             }),
         }),
         dsl.spacer(2, 6),

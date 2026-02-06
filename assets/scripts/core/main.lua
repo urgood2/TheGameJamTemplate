@@ -36,6 +36,39 @@ if not ok then
     print("[ERROR] Failed to load InventoryGridDemo: " .. tostring(InventoryGridDemo))
     InventoryGridDemo = nil
 end
+
+-- UI box API compatibility:
+-- Current bindings use (uiBox, tag) / (uiBox), but some modules still call
+-- legacy signatures with registry as the first argument.
+local function installUIBoxCompat()
+    if not ui or not ui.box or ui.box._legacyCompatInstalled then
+        return
+    end
+
+    local rawAddStateTag = ui.box.AddStateTagToUIBox
+    if type(rawAddStateTag) == "function" then
+        ui.box.AddStateTagToUIBox = function(a, b, c)
+            if c ~= nil then
+                return rawAddStateTag(b, c)
+            end
+            return rawAddStateTag(a, b)
+        end
+    end
+
+    local rawClearStateTags = ui.box.ClearStateTagsFromUIBox
+    if type(rawClearStateTags) == "function" then
+        ui.box.ClearStateTagsFromUIBox = function(a, b)
+            if b ~= nil then
+                return rawClearStateTags(b)
+            end
+            return rawClearStateTags(a)
+        end
+    end
+
+    ui.box._legacyCompatInstalled = true
+end
+
+installUIBoxCompat()
 -- Represents game loop main module
 main = main or {}
 
@@ -481,6 +514,7 @@ end
 function createTabDemo()
     print("[TRACE] createTabDemo called")
     local dsl = require("ui.ui_syntax_sugar")
+    local autoUIPackDemo = os.getenv and os.getenv("AUTO_TEST_UI_PACK") == "1"
     local panelWidth = 560  -- Increased to fit 8 tabs (Game, Graphics, Audio, Sprites, UI Pack, Inventory, Gallery, Showcase)
     local gallerySafeMargins = {
         left = 24,
@@ -498,7 +532,7 @@ function createTabDemo()
         children = {
             dsl.strict.tabs {
                 id = "demo_tabs",
-                activeTab = "game",
+                activeTab = autoUIPackDemo and "uipack" or "game",
                 contentMinWidth = 460,  -- Increased to fit 7 tabs
                 contentMinHeight = 120,
                 tabs = {
@@ -703,6 +737,50 @@ function createTabDemo()
     
     mainMenuEntities.tab_demo_uibox = dsl.spawn({ x = globals.screenWidth() - panelWidth - 20, y = 20 }, tabDef)
     ui.box.set_draw_layer(mainMenuEntities.tab_demo_uibox, "ui")
+
+    -- Auto-capture the Crusenho UI Pack tab for compatibility evidence (opt-in only).
+    if autoUIPackDemo and not _G._uiPackDemoCaptureScheduled then
+        _G._uiPackDemoCaptureScheduled = true
+        local timer = require("core.timer")
+        timer.after(1.0, function()
+            local screenshotPath = (os.getenv and os.getenv("UI_PACK_DEMO_SCREENSHOT")) or
+                "test_output/screenshots/crusenho_ui_pack_demo.png"
+            local dir = screenshotPath:match("^(.*)/[^/]+$")
+            if dir and dir ~= "" and os.execute then
+                local escaped = dir:gsub("'", "'\\''")
+                os.execute("mkdir -p '" .. escaped .. "'")
+            end
+
+            local captured = false
+            if type(_G.TakeScreenshot) == "function" then
+                _G.TakeScreenshot(screenshotPath)
+                captured = true
+            elseif type(_G.capture_screenshot) == "function" then
+                _G.capture_screenshot(screenshotPath)
+                captured = true
+            elseif type(_G.LoadImageFromScreen) == "function" and type(_G.ExportImage) == "function" then
+                local image = _G.LoadImageFromScreen()
+                if image then
+                    _G.ExportImage(image, screenshotPath)
+                    if type(_G.UnloadImage) == "function" then
+                        _G.UnloadImage(image)
+                    end
+                    captured = true
+                end
+            end
+
+            if captured then
+                print("[UI_PACK_DEMO] Screenshot saved: " .. screenshotPath)
+            else
+                print("[UI_PACK_DEMO] Screenshot API unavailable (TakeScreenshot/capture_screenshot missing)")
+            end
+
+            local autoExit = (os.getenv and os.getenv("AUTO_EXIT_AFTER_UI_PACK_DEMO")) ~= "0"
+            if autoExit then
+                os.exit(0)
+            end
+        end)
+    end
 
     -- Auto-open gallery for testing (one-shot, guarded by module-level flag)
     if os.getenv and os.getenv("AUTO_TEST_GALLERY") == "1" and not _G._galleryTestScheduled then

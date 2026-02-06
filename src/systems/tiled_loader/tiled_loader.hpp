@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <cstdint>
 #include <filesystem>
 #include <optional>
@@ -26,6 +27,14 @@ struct DecodedGid {
 };
 
 DecodedGid DecodeGid(uint32_t gid);
+
+struct TileTransform {
+    bool flipX = false;
+    bool flipY = false;
+    int rotationDegrees = 0; // Orthogonal mode: 0, 90, 180, 270.
+};
+
+TileTransform OrthogonalTransformFromFlags(const GidFlags& flags);
 
 using PropertyValue = std::variant<std::monostate, bool, int64_t, double, std::string>;
 
@@ -135,6 +144,16 @@ struct MapData {
     std::vector<TilesetData> tilesets;
 };
 
+struct ResolvedTileSource {
+    size_t tilesetIndex = 0;
+    int firstGid = 0;
+    int localTileId = 0;
+    int sourceX = 0;
+    int sourceY = 0;
+    int sourceWidth = 0;
+    int sourceHeight = 0;
+};
+
 struct RuleEntry {
     int lineNumber = 0;
     std::string raw;
@@ -176,6 +195,7 @@ std::string RulesetIdFromPath(const std::filesystem::path& path);
 
 bool LoadMapFile(const std::filesystem::path& mapPath, MapData* outMap, std::string* error = nullptr);
 bool LoadRuleFile(const std::filesystem::path& rulesPath, RuleDefs* outRules, std::string* error = nullptr);
+bool ResolveTileSource(const MapData& map, uint32_t tileId, ResolvedTileSource* outTile, std::string* error = nullptr);
 
 bool RegisterMap(const std::filesystem::path& mapPath, std::string* error = nullptr);
 bool HasMap(const std::string& mapId);
@@ -186,6 +206,10 @@ void ClearAllMaps();
 bool SetActiveMap(const std::string& mapId);
 bool HasActiveMap();
 std::string GetActiveMap();
+size_t CountObjects(const std::string& mapId);
+size_t CountObjectsInActiveMap();
+bool ForEachObject(const std::string& mapId, const std::function<void(const LayerData&, const ObjectData&)>& visitor);
+bool ForEachObjectInActiveMap(const std::function<void(const LayerData&, const ObjectData&)>& visitor);
 
 bool LoadRuleDefs(const std::filesystem::path& rulesPath, std::string* error = nullptr);
 bool HasRuleDefs(const std::string& rulesetId);
@@ -199,4 +223,3 @@ void CleanupProcedural();
 void exposeToLua(sol::state& lua);
 
 } // namespace tiled_loader
-

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstdlib>
 #include <fstream>
 #include <limits>
 #include <sstream>
@@ -22,10 +23,32 @@ constexpr uint32_t kRotatedHex120Mask = 0x10000000u;
 constexpr uint32_t kAllTiledFlagBitsMask =
     kFlipHorizontalMask | kFlipVerticalMask | kFlipDiagonalMask | kRotatedHex120Mask;
 
+constexpr int kMaskNorth = 1;
+constexpr int kMaskEast = 2;
+constexpr int kMaskSouth = 4;
+constexpr int kMaskWest = 8;
+constexpr int kMaskAllCardinal = kMaskNorth | kMaskEast | kMaskSouth | kMaskWest;
+
+struct BitmaskRule {
+    int terrain = 0;
+    int requiredMask = 0;
+    int forbiddenMask = 0;
+    int priority = 0;
+    int order = 0;
+    std::string name;
+    ProceduralTile tile;
+};
+
+struct CompiledRuleset {
+    RuleDefs defs;
+    std::vector<BitmaskRule> bitmaskRules;
+    std::filesystem::path runtimeRulesPath;
+};
+
 std::unordered_map<std::string, MapData> g_loadedMaps;
 std::string g_activeMap;
 
-std::unordered_map<std::string, RuleDefs> g_loadedRules;
+std::unordered_map<std::string, CompiledRuleset> g_loadedRules;
 ProceduralResults g_lastProceduralResults;
 
 std::string Trim(std::string_view text) {
@@ -67,6 +90,10 @@ bool EndsWithCaseInsensitive(const std::string& value, const std::string& suffix
 bool IsLikelyMapPath(const std::string& value) {
     return EndsWithCaseInsensitive(value, ".tmj") || EndsWithCaseInsensitive(value, ".tmx") ||
            EndsWithCaseInsensitive(value, ".json");
+}
+
+bool IsLikelyRuntimeRulePath(const std::string& value) {
+    return EndsWithCaseInsensitive(value, ".json");
 }
 
 std::filesystem::path ResolveRelativePath(const std::filesystem::path& baseDir, const std::string& maybeRelative) {
@@ -507,6 +534,425 @@ bool ParseMapJson(const json& mapJson, const std::filesystem::path& mapPath, Map
     return true;
 }
 
+int CountBits(int value) {
+    value &= kMaskAllCardinal;
+    int count = 0;
+    while (value != 0) {
+        count += (value & 1);
+        value >>= 1;
+    }
+    return count;
+}
+
+int DirectionTokenToMask(const std::string& token) {
+    const std::string lowered = ToLowerCopy(token);
+    if (lowered == "n" || lowered == "north" || lowered == "up") {
+        return kMaskNorth;
+    }
+    if (lowered == "e" || lowered == "east" || lowered == "right") {
+        return kMaskEast;
+    }
+    if (lowered == "s" || lowered == "south" || lowered == "down") {
+        return kMaskSouth;
+    }
+    if (lowered == "w" || lowered == "west" || lowered == "left") {
+        return kMaskWest;
+    }
+    return 0;
+}
+
+std::optional<int> ParseMaskFromString(const std::string& text, std::string* error) {
+    const std::string trimmed = Trim(text);
+    if (trimmed.empty()) {
+        return 0;
+    }
+
+    char* endPtr = nullptr;
+    const long parsedInt = std::strtol(trimmed.c_str(), &endPtr, 0);
+    if (endPtr != nullptr && *endPtr == '\0') {
+        if (parsedInt < 0 || parsedInt > kMaskAllCardinal) {
+            if (error) {
+                *error = "Mask integer out of [0, 15] range: " + trimmed;
+            }
+            return std::nullopt;
+        }
+        return static_cast<int>(parsedInt);
+    }
+
+    int mask = 0;
+    bool parsedAny = false;
+    std::string token;
+    auto flushToken = [&]() -> bool {
+        if (token.empty()) {
+            return true;
+        }
+
+        const int singleDirectionMask = DirectionTokenToMask(token);
+        if (singleDirectionMask != 0) {
+            mask |= singleDirectionMask;
+            parsedAny = true;
+            token.clear();
+            return true;
+        }
+
+        bool consumedAsDirectionSequence = true;
+        int seqMask = 0;
+        for (char c : token) {
+            const std::string oneChar(1, static_cast<char>(std::tolower(static_cast<unsigned char>(c))));
+            const int m = DirectionTokenToMask(oneChar);
+            if (m == 0) {
+                consumedAsDirectionSequence = false;
+                break;
+            }
+            seqMask |= m;
+        }
+        if (consumedAsDirectionSequence) {
+            mask |= seqMask;
+            parsedAny = true;
+            token.clear();
+            return true;
+        }
+
+        if (error) {
+            *error = "Unknown direction token in mask string: '" + token + "'";
+        }
+        return false;
+    };
+
+    for (char c : trimmed) {
+        const unsigned char uc = static_cast<unsigned char>(c);
+        if (std::isalnum(uc) != 0 || c == '_') {
+            token.push_back(c);
+            continue;
+        }
+        if (!flushToken()) {
+            return std::nullopt;
+        }
+    }
+    if (!flushToken()) {
+        return std::nullopt;
+    }
+
+    if (!parsedAny) {
+        if (error) {
+            *error = "Failed to parse mask string: '" + trimmed + "'";
+        }
+        return std::nullopt;
+    }
+
+    return mask & kMaskAllCardinal;
+}
+
+std::optional<int> ParseMaskNode(const json& node, const std::string& fieldName, std::string* error) {
+    if (node.is_null()) {
+        return 0;
+    }
+    if (node.is_number_unsigned()) {
+        const uint64_t uv = node.get<uint64_t>();
+        if (uv > static_cast<uint64_t>(kMaskAllCardinal)) {
+            if (error) {
+                *error = "Mask '" + fieldName + "' out of [0, 15] range";
+            }
+            return std::nullopt;
+        }
+        return static_cast<int>(uv);
+    }
+    if (node.is_number_integer()) {
+        const int64_t iv = node.get<int64_t>();
+        if (iv < 0 || iv > kMaskAllCardinal) {
+            if (error) {
+                *error = "Mask '" + fieldName + "' out of [0, 15] range";
+            }
+            return std::nullopt;
+        }
+        return static_cast<int>(iv);
+    }
+    if (node.is_string()) {
+        return ParseMaskFromString(node.get<std::string>(), error);
+    }
+    if (node.is_array()) {
+        int mask = 0;
+        for (const auto& item : node) {
+            auto parsed = ParseMaskNode(item, fieldName, error);
+            if (!parsed.has_value()) {
+                return std::nullopt;
+            }
+            mask |= parsed.value();
+        }
+        return mask & kMaskAllCardinal;
+    }
+
+    if (error) {
+        *error = "Mask field '" + fieldName + "' must be int|string|array";
+    }
+    return std::nullopt;
+}
+
+bool ParseTileSpec(const json& ruleJson, ProceduralTile* outTile, std::string* error) {
+    if (outTile == nullptr) {
+        if (error) {
+            *error = "ParseTileSpec called with null output pointer";
+        }
+        return false;
+    }
+
+    outTile->tileId = 0;
+    outTile->flipX = false;
+    outTile->flipY = false;
+    outTile->rotation = 0;
+    outTile->offsetX = 0.0f;
+    outTile->offsetY = 0.0f;
+    outTile->opacity = 1.0f;
+
+    const json* tileNode = &ruleJson;
+    const auto tileIt = ruleJson.find("tile");
+    if (tileIt != ruleJson.end()) {
+        if (!tileIt->is_object()) {
+            if (error) {
+                *error = "Rule 'tile' field must be an object";
+            }
+            return false;
+        }
+        tileNode = &(*tileIt);
+    }
+
+    auto parseIntField = [&](const json& node, const std::string& key, int* outValue) -> bool {
+        const auto it = node.find(key);
+        if (it == node.end()) {
+            return false;
+        }
+        if (it->is_number_integer()) {
+            *outValue = static_cast<int>(it->get<int64_t>());
+            return true;
+        }
+        if (it->is_number_unsigned()) {
+            *outValue = static_cast<int>(it->get<uint64_t>());
+            return true;
+        }
+        if (error) {
+            *error = "Tile field '" + key + "' must be an integer";
+        }
+        return false;
+    };
+
+    if (!(parseIntField(*tileNode, "id", &outTile->tileId) || parseIntField(*tileNode, "tile_id", &outTile->tileId) ||
+          parseIntField(ruleJson, "tile_id", &outTile->tileId))) {
+        if (error) {
+            *error = "Rule tile spec is missing required tile id";
+        }
+        return false;
+    }
+
+    outTile->flipX = tileNode->value("flip_x", ruleJson.value("flip_x", false));
+    outTile->flipY = tileNode->value("flip_y", ruleJson.value("flip_y", false));
+    outTile->rotation = tileNode->value("rotation", ruleJson.value("rotation", 0));
+    outTile->offsetX = tileNode->value("offset_x", ruleJson.value("offset_x", 0.0f));
+    outTile->offsetY = tileNode->value("offset_y", ruleJson.value("offset_y", 0.0f));
+    outTile->opacity = tileNode->value("opacity", ruleJson.value("opacity", ruleJson.value("alpha", 1.0f)));
+
+    return true;
+}
+
+bool ParseBitmaskRule(const json& ruleJson, int defaultTerrain, int order, BitmaskRule* outRule, std::string* error) {
+    if (outRule == nullptr) {
+        if (error) {
+            *error = "ParseBitmaskRule called with null output pointer";
+        }
+        return false;
+    }
+    if (!ruleJson.is_object()) {
+        if (error) {
+            *error = "Rule entry must be an object";
+        }
+        return false;
+    }
+
+    outRule->terrain = defaultTerrain;
+    if (ruleJson.contains("terrain")) {
+        const auto& terrainNode = ruleJson.at("terrain");
+        if (terrainNode.is_number_integer()) {
+            outRule->terrain = static_cast<int>(terrainNode.get<int64_t>());
+        } else if (terrainNode.is_number_unsigned()) {
+            outRule->terrain = static_cast<int>(terrainNode.get<uint64_t>());
+        } else {
+            if (error) {
+                *error = "Rule 'terrain' must be an integer";
+            }
+            return false;
+        }
+    }
+
+    outRule->requiredMask = 0;
+    outRule->forbiddenMask = 0;
+
+    if (ruleJson.contains("required_mask")) {
+        const auto parsed = ParseMaskNode(ruleJson.at("required_mask"), "required_mask", error);
+        if (!parsed.has_value()) {
+            return false;
+        }
+        outRule->requiredMask = parsed.value();
+    }
+    if (ruleJson.contains("required")) {
+        const auto parsed = ParseMaskNode(ruleJson.at("required"), "required", error);
+        if (!parsed.has_value()) {
+            return false;
+        }
+        outRule->requiredMask |= parsed.value();
+    }
+    if (ruleJson.contains("forbidden_mask")) {
+        const auto parsed = ParseMaskNode(ruleJson.at("forbidden_mask"), "forbidden_mask", error);
+        if (!parsed.has_value()) {
+            return false;
+        }
+        outRule->forbiddenMask = parsed.value();
+    }
+    if (ruleJson.contains("forbidden")) {
+        const auto parsed = ParseMaskNode(ruleJson.at("forbidden"), "forbidden", error);
+        if (!parsed.has_value()) {
+            return false;
+        }
+        outRule->forbiddenMask |= parsed.value();
+    }
+    if (ruleJson.contains("exact_mask")) {
+        const auto parsed = ParseMaskNode(ruleJson.at("exact_mask"), "exact_mask", error);
+        if (!parsed.has_value()) {
+            return false;
+        }
+        outRule->requiredMask = parsed.value();
+        outRule->forbiddenMask = (~parsed.value()) & kMaskAllCardinal;
+    }
+
+    outRule->requiredMask &= kMaskAllCardinal;
+    outRule->forbiddenMask &= kMaskAllCardinal;
+
+    if ((outRule->requiredMask & outRule->forbiddenMask) != 0) {
+        if (error) {
+            *error = "Rule required/forbidden masks overlap";
+        }
+        return false;
+    }
+
+    outRule->priority = ruleJson.value("priority", 0);
+    outRule->name = ruleJson.value("name", "rule_" + std::to_string(order));
+    outRule->order = order;
+
+    if (!ParseTileSpec(ruleJson, &outRule->tile, error)) {
+        return false;
+    }
+
+    return true;
+}
+
+bool ParseRuntimeBitmaskRulesFile(const std::filesystem::path& runtimePath, CompiledRuleset* outRuleset, std::string* error) {
+    if (outRuleset == nullptr) {
+        if (error) {
+            *error = "ParseRuntimeBitmaskRulesFile called with null output pointer";
+        }
+        return false;
+    }
+
+    json root{};
+    if (!ReadJsonFile(runtimePath, &root, error)) {
+        return false;
+    }
+    if (!root.is_object()) {
+        if (error) {
+            *error = "Runtime rules JSON root must be an object";
+        }
+        return false;
+    }
+
+    const auto rulesIt = root.find("rules");
+    if (rulesIt == root.end() || !rulesIt->is_array()) {
+        if (error) {
+            *error = "Runtime rules JSON requires a 'rules' array";
+        }
+        return false;
+    }
+
+    const int defaultTerrain = root.value("default_terrain", 1);
+    outRuleset->runtimeRulesPath = runtimePath;
+    outRuleset->bitmaskRules.clear();
+    outRuleset->bitmaskRules.reserve(rulesIt->size());
+
+    int order = 0;
+    for (const auto& ruleJson : *rulesIt) {
+        BitmaskRule parsed{};
+        if (!ParseBitmaskRule(ruleJson, defaultTerrain, order, &parsed, error)) {
+            if (error && !error->empty()) {
+                std::ostringstream oss;
+                oss << "Runtime rule parse failed at index " << order << ": " << *error;
+                *error = oss.str();
+            }
+            return false;
+        }
+        outRuleset->bitmaskRules.push_back(std::move(parsed));
+        ++order;
+    }
+
+    return true;
+}
+
+std::optional<std::string> FindRuleEntryValue(const RuleDefs& defs, std::initializer_list<const char*> keys) {
+    std::unordered_set<std::string> expectedKeys;
+    expectedKeys.reserve(keys.size());
+    for (const char* key : keys) {
+        expectedKeys.insert(ToLowerCopy(std::string(key)));
+    }
+
+    for (const auto& entry : defs.entries) {
+        if (!entry.key.has_value() || !entry.value.has_value()) {
+            continue;
+        }
+        const std::string lowered = ToLowerCopy(*entry.key);
+        if (expectedKeys.find(lowered) != expectedKeys.end()) {
+            return entry.value.value();
+        }
+    }
+
+    return std::nullopt;
+}
+
+int ComputeCardinalMaskForCell(const GridInput& grid, int x, int y, int terrain) {
+    auto cellAt = [&](int tx, int ty) -> int {
+        const size_t idx = static_cast<size_t>(ty) * static_cast<size_t>(grid.width) + static_cast<size_t>(tx);
+        return grid.cells[idx];
+    };
+
+    int mask = 0;
+    if (y > 0 && cellAt(x, y - 1) == terrain) {
+        mask |= kMaskNorth;
+    }
+    if (x + 1 < grid.width && cellAt(x + 1, y) == terrain) {
+        mask |= kMaskEast;
+    }
+    if (y + 1 < grid.height && cellAt(x, y + 1) == terrain) {
+        mask |= kMaskSouth;
+    }
+    if (x > 0 && cellAt(x - 1, y) == terrain) {
+        mask |= kMaskWest;
+    }
+    return mask;
+}
+
+void VisitObjectsInLayerTree(const LayerData& layer, const std::function<void(const LayerData&, const ObjectData&)>& visitor,
+                             size_t* count) {
+    if (layer.type == LayerType::ObjectGroup) {
+        for (const auto& object : layer.objects) {
+            if (visitor) {
+                visitor(layer, object);
+            }
+            if (count != nullptr) {
+                ++(*count);
+            }
+        }
+    }
+
+    for (const auto& child : layer.children) {
+        VisitObjectsInLayerTree(child, visitor, count);
+    }
+}
+
 } // namespace
 
 DecodedGid DecodeGid(uint32_t gid) {
@@ -517,6 +963,35 @@ DecodedGid DecodeGid(uint32_t gid) {
     decoded.flags.rotatedHex120 = (gid & kRotatedHex120Mask) != 0;
     decoded.tileId = gid & ~kAllTiledFlagBitsMask;
     return decoded;
+}
+
+TileTransform OrthogonalTransformFromFlags(const GidFlags& flags) {
+    TileTransform transform{};
+
+    if (!flags.flipDiagonally) {
+        transform.flipX = flags.flipHorizontally;
+        transform.flipY = flags.flipVertically;
+        return transform;
+    }
+
+    // Tiled orthogonal diagonal flip maps to a rotated quad plus optional mirror.
+    if (flags.flipHorizontally && flags.flipVertically) {
+        transform.rotationDegrees = 90;
+        transform.flipX = true;
+        return transform;
+    }
+    if (flags.flipHorizontally) {
+        transform.rotationDegrees = 90;
+        return transform;
+    }
+    if (flags.flipVertically) {
+        transform.rotationDegrees = 270;
+        return transform;
+    }
+
+    transform.rotationDegrees = 270;
+    transform.flipX = true;
+    return transform;
 }
 
 std::string MapIdFromPath(const std::filesystem::path& path) {
@@ -610,6 +1085,91 @@ bool RegisterMap(const std::filesystem::path& mapPath, std::string* error) {
     return true;
 }
 
+bool ResolveTileSource(const MapData& map, uint32_t tileId, ResolvedTileSource* outTile, std::string* error) {
+    if (outTile == nullptr) {
+        if (error) {
+            *error = "ResolveTileSource called with null output pointer";
+        }
+        return false;
+    }
+    if (tileId == 0u) {
+        if (error) {
+            *error = "ResolveTileSource requires tileId > 0";
+        }
+        return false;
+    }
+    if (map.tilesetRefs.empty() || map.tilesets.empty() || map.tilesetRefs.size() != map.tilesets.size()) {
+        if (error) {
+            *error = "Map tileset metadata is missing or inconsistent";
+        }
+        return false;
+    }
+
+    size_t matchedIndex = map.tilesetRefs.size();
+    for (size_t i = 0; i < map.tilesetRefs.size(); ++i) {
+        const int firstGid = map.tilesetRefs[i].firstGid;
+        if (firstGid <= 0) {
+            continue;
+        }
+        if (static_cast<uint32_t>(firstGid) <= tileId) {
+            matchedIndex = i;
+        } else {
+            break;
+        }
+    }
+    if (matchedIndex >= map.tilesetRefs.size()) {
+        if (error) {
+            *error = "No tileset found for tileId " + std::to_string(tileId);
+        }
+        return false;
+    }
+
+    const TilesetRef& ref = map.tilesetRefs[matchedIndex];
+    const TilesetData& tileset = map.tilesets[matchedIndex];
+    const int localTileId = static_cast<int>(tileId) - ref.firstGid;
+    if (localTileId < 0) {
+        if (error) {
+            *error = "Computed negative local tile id for tileId " + std::to_string(tileId);
+        }
+        return false;
+    }
+    if (tileset.tileCount > 0 && localTileId >= tileset.tileCount) {
+        if (error) {
+            *error = "tileId " + std::to_string(tileId) + " exceeds tileset tilecount";
+        }
+        return false;
+    }
+
+    const int tileW = (tileset.tileWidth > 0) ? tileset.tileWidth : map.tileWidth;
+    const int tileH = (tileset.tileHeight > 0) ? tileset.tileHeight : map.tileHeight;
+    if (tileW <= 0 || tileH <= 0) {
+        if (error) {
+            *error = "Invalid tile dimensions for tileset '" + tileset.name + "'";
+        }
+        return false;
+    }
+
+    int columns = tileset.columns;
+    if (columns <= 0 && tileset.imageWidth > 0) {
+        columns = tileset.imageWidth / tileW;
+    }
+    if (columns <= 0) {
+        if (error) {
+            *error = "Unable to determine tileset columns for '" + tileset.name + "'";
+        }
+        return false;
+    }
+
+    outTile->tilesetIndex = matchedIndex;
+    outTile->firstGid = ref.firstGid;
+    outTile->localTileId = localTileId;
+    outTile->sourceWidth = tileW;
+    outTile->sourceHeight = tileH;
+    outTile->sourceX = (localTileId % columns) * tileW;
+    outTile->sourceY = (localTileId / columns) * tileH;
+    return true;
+}
+
 bool HasMap(const std::string& mapId) {
     return g_loadedMaps.find(mapId) != g_loadedMaps.end();
 }
@@ -653,12 +1213,87 @@ std::string GetActiveMap() {
     return HasActiveMap() ? g_activeMap : std::string{};
 }
 
+size_t CountObjects(const std::string& mapId) {
+    const MapData* map = GetMap(mapId);
+    if (map == nullptr) {
+        return 0;
+    }
+
+    size_t count = 0;
+    for (const auto& layer : map->layers) {
+        VisitObjectsInLayerTree(layer, {}, &count);
+    }
+    return count;
+}
+
+size_t CountObjectsInActiveMap() {
+    if (!HasActiveMap()) {
+        return 0;
+    }
+    return CountObjects(g_activeMap);
+}
+
+bool ForEachObject(const std::string& mapId, const std::function<void(const LayerData&, const ObjectData&)>& visitor) {
+    const MapData* map = GetMap(mapId);
+    if (map == nullptr) {
+        return false;
+    }
+
+    for (const auto& layer : map->layers) {
+        VisitObjectsInLayerTree(layer, visitor, nullptr);
+    }
+    return true;
+}
+
+bool ForEachObjectInActiveMap(const std::function<void(const LayerData&, const ObjectData&)>& visitor) {
+    if (!HasActiveMap()) {
+        return false;
+    }
+    return ForEachObject(g_activeMap, visitor);
+}
+
 bool LoadRuleDefs(const std::filesystem::path& rulesPath, std::string* error) {
     RuleDefs rules{};
     if (!LoadRuleFile(rulesPath, &rules, error)) {
         return false;
     }
-    g_loadedRules[rules.id] = std::move(rules);
+
+    CompiledRuleset compiled{};
+    compiled.defs = rules;
+
+    const auto runtimeJsonRef =
+        FindRuleEntryValue(rules, {"runtime_json", "runtime_rules", "rules_json", "bitmask_rules"});
+
+    if (runtimeJsonRef.has_value()) {
+        if (!IsLikelyRuntimeRulePath(*runtimeJsonRef)) {
+            if (error) {
+                *error = "runtime_json must point to a .json file: " + *runtimeJsonRef;
+            }
+            return false;
+        }
+
+        const auto runtimePath = ResolveRelativePath(
+            rulesPath.has_parent_path() ? rulesPath.parent_path() : std::filesystem::path{}, *runtimeJsonRef);
+        if (!std::filesystem::exists(runtimePath)) {
+            if (error) {
+                *error = "Runtime rules JSON not found: " + runtimePath.string();
+            }
+            return false;
+        }
+        if (!ParseRuntimeBitmaskRulesFile(runtimePath, &compiled, error)) {
+            return false;
+        }
+    } else {
+        std::filesystem::path fallback = rulesPath;
+        fallback.replace_extension(".runtime.json");
+        if (std::filesystem::exists(fallback)) {
+            if (!ParseRuntimeBitmaskRulesFile(fallback, &compiled, error)) {
+                return false;
+            }
+        }
+    }
+
+    g_loadedRules[rules.id] = std::move(compiled);
     return true;
 }
 
@@ -704,16 +1339,59 @@ bool ApplyRules(const GridInput& grid, const std::string& rulesetId, ProceduralR
         return false;
     }
 
-    if (!rulesetId.empty() && !HasRuleDefs(rulesetId)) {
-        if (error) {
-            *error = "Unknown ruleset id: " + rulesetId;
+    const CompiledRuleset* compiled = nullptr;
+    if (!rulesetId.empty()) {
+        const auto it = g_loadedRules.find(rulesetId);
+        if (it == g_loadedRules.end()) {
+            if (error) {
+                *error = "Unknown ruleset id: " + rulesetId;
+            }
+            return false;
         }
-        return false;
+        compiled = &it->second;
     }
 
     out->width = grid.width;
     out->height = grid.height;
     out->cells.assign(expectedCells, {});
+
+    if (compiled != nullptr && !compiled->bitmaskRules.empty()) {
+        for (int y = 0; y < grid.height; ++y) {
+            for (int x = 0; x < grid.width; ++x) {
+                const size_t idx = static_cast<size_t>(y) * static_cast<size_t>(grid.width) +
+                                   static_cast<size_t>(x);
+                const int terrain = grid.cells[idx];
+                const int neighborMask = ComputeCardinalMaskForCell(grid, x, y, terrain);
+
+                const BitmaskRule* bestRule = nullptr;
+                int bestSpecificity = -1;
+                for (const auto& rule : compiled->bitmaskRules) {
+                    if (rule.terrain != terrain) {
+                        continue;
+                    }
+                    if ((neighborMask & rule.requiredMask) != rule.requiredMask) {
+                        continue;
+                    }
+                    if ((neighborMask & rule.forbiddenMask) != 0) {
+                        continue;
+                    }
+
+                    const int specificity = CountBits(rule.requiredMask) + CountBits(rule.forbiddenMask);
+                    if (bestRule == nullptr || rule.priority > bestRule->priority ||
+                        (rule.priority == bestRule->priority && specificity > bestSpecificity) ||
+                        (rule.priority == bestRule->priority && specificity == bestSpecificity &&
+                         rule.order < bestRule->order)) {
+                        bestRule = &rule;
+                        bestSpecificity = specificity;
+                    }
+                }
+
+                if (bestRule != nullptr) {
+                    out->cells[idx].push_back(bestRule->tile);
+                }
+            }
+        }
+    }
 
     g_lastProceduralResults = *out;
     return true;
@@ -728,4 +1406,3 @@ void CleanupProcedural() {
 }
 
 } // namespace tiled_loader
-

@@ -54,6 +54,10 @@ run-debug:
 	@nohup ./build-debug/raylib-cpp-cmake-template >/tmp/raylib-cpp-cmake-template.log 2>&1 &
 	@echo "Launched (log: /tmp/raylib-cpp-cmake-template.log)"
 
+# Run UI Pack demo and capture screenshot after focusing window via osascript (macOS)
+ui-pack-demo-capture screenshot="test_output/screenshots/crusenho_ui_pack_demo.png":
+	./scripts/run_ui_pack_demo_capture.sh "{{screenshot}}"
+
 build-release-fast:
 	cmake -B build-release -DCMAKE_BUILD_TYPE=Release -DENABLE_UNIT_TESTS=OFF
 	cmake --build build-release --target raylib-cpp-cmake-template -j4 --

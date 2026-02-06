@@ -515,7 +515,9 @@ function createTabDemo()
     print("[TRACE] createTabDemo called")
     local dsl = require("ui.ui_syntax_sugar")
     local autoUIPackDemo = os.getenv and os.getenv("AUTO_TEST_UI_PACK") == "1"
-    local panelWidth = 560  -- Increased to fit 8 tabs (Game, Graphics, Audio, Sprites, UI Pack, Inventory, Gallery, Showcase)
+    local screenW = globals.screenWidth()
+    local panelWidth = math.min(700, math.max(560, screenW - 540))
+    local tabContentMinWidth = panelWidth - 76
     local gallerySafeMargins = {
         left = 24,
         right = panelWidth + 40,
@@ -533,7 +535,7 @@ function createTabDemo()
             dsl.strict.tabs {
                 id = "demo_tabs",
                 activeTab = autoUIPackDemo and "uipack" or "game",
-                contentMinWidth = 460,  -- Increased to fit 7 tabs
+                contentMinWidth = tabContentMinWidth,
                 contentMinHeight = 120,
                 tabs = {
                     {
@@ -742,7 +744,13 @@ function createTabDemo()
     if autoUIPackDemo and not _G._uiPackDemoCaptureScheduled then
         _G._uiPackDemoCaptureScheduled = true
         local timer = require("core.timer")
-        timer.after(1.0, function()
+        local readyDelay = tonumber((os.getenv and os.getenv("UI_PACK_DEMO_READY_DELAY_SEC")) or "1.0") or 1.0
+        timer.after(readyDelay, function()
+            print("[UI_PACK_DEMO] READY_FOR_CAPTURE")
+        end, "ui_pack_demo_ready_signal", "ui_pack_demo_auto")
+
+        local captureDelay = tonumber((os.getenv and os.getenv("UI_PACK_DEMO_CAPTURE_DELAY_SEC")) or "2.0") or 2.0
+        timer.after(captureDelay, function()
             local screenshotPath = (os.getenv and os.getenv("UI_PACK_DEMO_SCREENSHOT")) or
                 "test_output/screenshots/crusenho_ui_pack_demo.png"
             local dir = screenshotPath:match("^(.*)/[^/]+$")

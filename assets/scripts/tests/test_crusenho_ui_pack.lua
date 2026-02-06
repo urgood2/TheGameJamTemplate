@@ -93,23 +93,70 @@ t.describe("Crusenho bar/slider/input coverage", function()
 end)
 
 t.describe("Crusenho icon coverage", function()
-    t.it("loads representative icon set as fixed sprites", function()
+    t.it("loads all manifest icons as fixed sprites", function()
         local pack = ensure_pack()
-        local names = {
-            "arrow_lg",
-            "check_lg",
-            "cross_lg",
-            "play_lg",
-            "dropdown",
-            "stripe",
-            "line",
-        }
+        local json = require("external.json")
+        local file = io.open(PACK_MANIFEST, "r")
+        t.expect(file).to_be_truthy()
+        local content = file and file:read("*a") or nil
+        if file then
+            file:close()
+        end
+        t.expect(content).to_be_truthy()
+
+        local ok, manifest = pcall(json.decode, content)
+        t.expect(ok).to_be(true)
+        t.expect(type(manifest)).to_be("table")
+        t.expect(type(manifest.icons)).to_be("table")
+
+        local names = {}
+        for name, _ in pairs(manifest.icons) do
+            table.insert(names, name)
+        end
+        table.sort(names)
+        t.expect(#names > 0).to_be(true)
+
         for _, name in ipairs(names) do
             local cfg = pack:icon(name)
             t.expect(cfg).to_be_truthy()
             t.expect(cfg.stylingType).to_be(UIStylingType.Sprite)
             t.expect(cfg.spriteScaleMode).to_be(SpriteScaleMode.Fixed)
         end
+    end)
+end)
+
+t.describe("Crusenho manifest animation metadata", function()
+    t.it("declares animation sequences derived from pack assets", function()
+        local json = require("external.json")
+        local file = io.open(PACK_MANIFEST, "r")
+        t.expect(file).to_be_truthy()
+        local content = file and file:read("*a") or nil
+        if file then
+            file:close()
+        end
+        t.expect(content).to_be_truthy()
+
+        local ok, manifest = pcall(json.decode, content)
+        t.expect(ok).to_be(true)
+        t.expect(type(manifest)).to_be("table")
+        t.expect(type(manifest.animations)).to_be("table")
+
+        local count = 0
+        for _, spec in pairs(manifest.animations) do
+            count = count + 1
+            t.expect(type(spec.kind)).to_be("string")
+            local frames = spec.states or spec.frames or spec.styles
+            t.expect(type(frames)).to_be("table")
+            local frameCount = 0
+            for _ in ipairs(frames) do
+                frameCount = frameCount + 1
+            end
+            t.expect(frameCount >= 2).to_be(true)
+        end
+
+        t.expect(manifest.animations.progress_fill_cycle).to_be_truthy()
+        t.expect(manifest.animations.progress_bg_cycle).to_be_truthy()
+        t.expect(count >= 6).to_be(true)
     end)
 end)
 

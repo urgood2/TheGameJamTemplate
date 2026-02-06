@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Generate an internal UI pack (atlas + manifest) from the Crusenho free pack sprites.
+Also consumes the optional animated spritesheet if present.
 
 This script is intentionally deterministic:
 - sorted input filenames
@@ -30,11 +31,37 @@ MAX_ATLAS_WIDTH = 1024
 PADDING = 2
 
 
+def _read_animated_sheet_frames(source_dir: Path) -> List[Tuple[str, Path, Image.Image]]:
+    sheet_path = source_dir.parent / "Spritesheets" / "Spritesheet_UI_Flat_Animated.png"
+    if not sheet_path.exists():
+        return []
+
+    sheet = Image.open(sheet_path).convert("RGBA")
+    w, h = sheet.size
+    cols = 4
+    rows = 4
+    if w % cols != 0 or h % rows != 0:
+        return []
+
+    cell_w = w // cols
+    cell_h = h // rows
+    items: List[Tuple[str, Path, Image.Image]] = []
+    for row in range(rows):
+        for col in range(cols):
+            crop = sheet.crop((col * cell_w, row * cell_h, (col + 1) * cell_w, (row + 1) * cell_h))
+            if crop.getchannel("A").getbbox() is None:
+                continue
+            stem = f"UI_Flat_Animated_r{row + 1}_c{col + 1}"
+            items.append((stem, sheet_path, crop))
+    return items
+
+
 def _read_images(source_dir: Path) -> List[Tuple[str, Path, Image.Image]]:
     items: List[Tuple[str, Path, Image.Image]] = []
     for path in sorted(source_dir.glob("*.png")):
         img = Image.open(path).convert("RGBA")
         items.append((path.stem, path, img))
+    items.extend(_read_animated_sheet_frames(source_dir))
     if not items:
         raise RuntimeError(f"No PNG files found in {source_dir}")
     return items
@@ -125,6 +152,7 @@ def _build_manifest(placements: Dict[str, List[int]]) -> Dict[str, object]:
         "name": "crusenho_flat",
         "version": "1.0",
         "atlas": "atlas.png",
+        "animations": {},
         "panels": {},
         "buttons": {},
         "progress_bars": {},
@@ -278,6 +306,196 @@ def _build_manifest(placements: Dict[str, List[int]]) -> Dict[str, object]:
         if stem in placements:
             icons[key] = _region_fixed(placements, stem)
 
+    animated_sheet_rows: Dict[int, List[str]] = {}
+    for row in range(1, 5):
+        frame_keys: List[str] = []
+        for col in range(1, 5):
+            stem = f"UI_Flat_Animated_r{row}_c{col}"
+            if stem in placements:
+                icon_key = f"anim_sheet_r{row}_c{col}"
+                icons[icon_key] = _region_fixed(placements, stem)
+                frame_keys.append(icon_key)
+        if len(frame_keys) >= 2:
+            animated_sheet_rows[row] = frame_keys
+
+    animations = manifest["animations"]  # type: ignore[assignment]
+    assert isinstance(animations, dict)
+
+    def add_button_animation(
+        key: str,
+        button_name: str,
+        cycle_states: List[str],
+        interval: float,
+        label: str,
+    ) -> None:
+        btn = buttons.get(button_name)
+        if not isinstance(btn, dict):
+            return
+        states = [s for s in cycle_states if s in btn]
+        if len(states) < 2:
+            return
+        animations[key] = {
+            "kind": "button",
+            "name": button_name,
+            "states": states,
+            "interval": interval,
+            "label": label,
+        }
+
+    def add_input_animation(
+        key: str,
+        input_name: str,
+        cycle_states: List[str],
+        interval: float,
+        label: str,
+    ) -> None:
+        input_def = inputs.get(input_name)
+        if not isinstance(input_def, dict):
+            return
+        states = [s for s in cycle_states if s in input_def]
+        if len(states) < 2:
+            return
+        animations[key] = {
+            "kind": "input",
+            "name": input_name,
+            "states": states,
+            "interval": interval,
+            "label": label,
+        }
+
+    def add_panel_animation(
+        key: str,
+        frames: List[str],
+        interval: float,
+        label: str,
+    ) -> None:
+        if any(frame_name not in panels for frame_name in frames):
+            return
+        if len(frames) < 2:
+            return
+        animations[key] = {
+            "kind": "panel",
+            "frames": frames,
+            "interval": interval,
+            "label": label,
+        }
+
+    def add_progress_animation(
+        key: str,
+        styles: List[str],
+        part: str,
+        interval: float,
+        label: str,
+    ) -> None:
+        valid_styles: List[str] = []
+        for style in styles:
+            bar_def = progress_bars.get(style)
+            if isinstance(bar_def, dict) and part in bar_def:
+                valid_styles.append(style)
+        if len(valid_styles) < 2:
+            return
+        animations[key] = {
+            "kind": "progress_bar",
+            "styles": valid_styles,
+            "part": part,
+            "interval": interval,
+            "label": label,
+        }
+
+    add_button_animation(
+        key="button_primary_cycle",
+        button_name="primary",
+        cycle_states=["normal", "hover", "pressed", "hover"],
+        interval=0.45,
+        label="primary",
+    )
+    add_button_animation(
+        key="button_secondary_cycle",
+        button_name="secondary",
+        cycle_states=["normal", "hover", "pressed", "hover"],
+        interval=0.45,
+        label="secondary",
+    )
+    add_button_animation(
+        key="button_select_primary_cycle",
+        button_name="select_primary",
+        cycle_states=["normal", "hover", "pressed", "hover"],
+        interval=0.50,
+        label="select_primary",
+    )
+    add_button_animation(
+        key="button_select_secondary_cycle",
+        button_name="select_secondary",
+        cycle_states=["normal", "hover", "pressed", "hover"],
+        interval=0.50,
+        label="select_secondary",
+    )
+    add_button_animation(
+        key="button_toggle_round_cycle",
+        button_name="toggle_round",
+        cycle_states=["normal", "pressed"],
+        interval=0.55,
+        label="toggle_round",
+    )
+    add_button_animation(
+        key="button_toggle_lr_cycle",
+        button_name="toggle_lr",
+        cycle_states=["normal", "pressed"],
+        interval=0.55,
+        label="toggle_lr",
+    )
+    add_input_animation(
+        key="input_default_cycle",
+        input_name="default",
+        cycle_states=["normal", "focus"],
+        interval=0.65,
+        label="input_default",
+    )
+
+    for base in ("frameslot01", "frameslot02", "frameslot03"):
+        hover = f"{base}_hover"
+        pressed = f"{base}_pressed"
+        frames: List[str] = [base]
+        if hover in panels:
+            frames.append(hover)
+        if pressed in panels:
+            frames.append(pressed)
+            if hover in panels:
+                frames.append(hover)
+        if len(frames) >= 2:
+            add_panel_animation(
+                key=f"panel_{base}_cycle",
+                frames=frames,
+                interval=0.40,
+                label=base,
+            )
+
+    for row, frame_keys in sorted(animated_sheet_rows.items()):
+        animations[f"icon_sheet_row_{row}_cycle"] = {
+            "kind": "icon",
+            "frames": frame_keys,
+            "interval": 0.18,
+            "label": f"anim_row_{row}",
+        }
+
+    style_keys = sorted(progress_bars.keys())
+    if len(style_keys) >= 2:
+        sampled_styles = style_keys[: min(6, len(style_keys))]
+        add_progress_animation(
+            key="progress_fill_cycle",
+            styles=sampled_styles,
+            part="fill",
+            interval=0.22,
+            label="bar_fill",
+        )
+        add_progress_animation(
+            key="progress_bg_cycle",
+            styles=sampled_styles,
+            part="background",
+            interval=0.30,
+            label="bar_bg",
+        )
+
     return manifest
 
 
@@ -333,4 +551,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

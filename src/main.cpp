@@ -224,6 +224,13 @@ auto gameOverScreenGameLoopRender(float dt) -> void {
 }
 
 auto MainLoopRenderAbstraction(float dt) -> void {
+  // Test mode runs harness-driven scripts and bypasses normal game-state update
+  // transitions, so always render the main game pass when rendering is enabled.
+  if (testing::is_test_mode_enabled()) {
+    mainGameStateGameLoopRender(dt);
+    ownership::renderTamperWarningIfNeeded(GetScreenWidth(), GetScreenHeight());
+    return;
+  }
 
   switch (globals::getCurrentGameState()) {
   case GameState::MAIN_MENU:

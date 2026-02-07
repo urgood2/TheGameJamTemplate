@@ -1,0 +1,4 @@
+=== E2E Test Logs (last 500 lines) ===
+Run: 20260207_120100_008_0
+Captured at frame: 1609
+

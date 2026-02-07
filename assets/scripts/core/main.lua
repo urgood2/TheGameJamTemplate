@@ -84,6 +84,8 @@ shapeAnimationPhase = 0
 
 local currentGameState = GAMESTATE.MAIN_MENU -- Set the initial game state to IN_GAME
 local autoStartMainGameEnv = (os.getenv and ((os.getenv("AUTO_START_MAIN_GAME") == "1") or (os.getenv("AUTO_ACTION_PHASE") == "1"))) or false
+local tiledStartMenuDemo = nil
+local tiledStartMenuDemoActive = false
 
 local telemetry_once_flags = {}
 local function record_telemetry(event, props)
@@ -125,6 +127,30 @@ mainMenuEntities = {
 
 local MAIN_MENU_TIMER_GROUP = "main_menu"
 local MAIN_MENU_PHASE_TIMER_TAG = "main_menu_shape_phase"
+
+local function stopTiledStartMenuDemo()
+    if tiledStartMenuDemo and tiledStartMenuDemo.stop then
+        pcall(tiledStartMenuDemo.stop)
+    end
+    tiledStartMenuDemoActive = false
+end
+
+local function ensureTiledStartMenuDemoModule()
+    if tiledStartMenuDemo then
+        return tiledStartMenuDemo
+    end
+    local ok, mod = pcall(require, "examples.tiled_start_menu_demo")
+    if not ok then
+        if log_warn then
+            log_warn("[tiled_demo] Failed to load start-menu demo module: " .. tostring(mod))
+        else
+            print("[tiled_demo] Failed to load start-menu demo module: " .. tostring(mod))
+        end
+        return nil
+    end
+    tiledStartMenuDemo = mod
+    return tiledStartMenuDemo
+end
 
 local function setMainMenuEntityPosition(entity, x, y)
     if not entity or not registry or not registry.valid or not registry:valid(entity) then return end
@@ -307,6 +333,13 @@ function initMainMenu()
                 -- Open character select instead of starting directly
                 CharacterSelect.open()
                 CharacterSelect.spawnPanel()
+            end
+        },
+        {
+            label = "Tiled Demo",
+            onClick = function()
+                record_telemetry("tiled_demo_clicked", { scene = "main_menu" })
+                startTiledDemoButtonCallback()
             end
         },
         {
@@ -990,6 +1023,40 @@ function drawPatchNotesBadge()
     end, 150, space)
 end
 
+function startTiledDemoButtonCallback()
+    clearMainMenu()
+
+    local demo = ensureTiledStartMenuDemoModule()
+    if not demo then
+        changeGameState(GAMESTATE.MAIN_MENU)
+        return
+    end
+
+    local ok, result_or_err = demo.start({
+        mapPath = "tests/out/tiled_demo_runtime/map/demo.tmj",
+    })
+    if not ok then
+        if log_warn then
+            log_warn("[tiled_demo] Failed to start: " .. tostring(result_or_err))
+        else
+            print("[tiled_demo] Failed to start: " .. tostring(result_or_err))
+        end
+        stopTiledStartMenuDemo()
+        changeGameState(GAMESTATE.MAIN_MENU)
+        return
+    end
+
+    tiledStartMenuDemoActive = true
+    currentGameState = GAMESTATE.IN_GAME
+    globals.currentGameState = GAMESTATE.IN_GAME
+
+    local map_id = (type(result_or_err) == "table" and result_or_err.map_id) or "unknown"
+    record_telemetry("tiled_demo_started", { scene = "main_menu", map_id = tostring(map_id) })
+    if log_debug then
+        log_debug("[tiled_demo] Started from main menu. Press ESC to return.")
+    end
+end
+
 function startGameButtonCallback()
     clearMainMenu() -- clear the main menu
                     
@@ -1040,6 +1107,7 @@ function clearMainMenu()
 
     -- RenderGroupsTest.cleanup()
     InventoryGridDemo.cleanup()
+    stopTiledStartMenuDemo()
 
     -- Clean up the new MainMenuButtons module
     if mainMenuEntities.mainMenuButtons then
@@ -1463,6 +1531,33 @@ function main.update(dt)
     entity_cache.update_frame() -- Update the entity cache for the current frame
 
     component_cache.update_frame() -- Update the component cache for the current frame
+
+    if tiledStartMenuDemoActive then
+        if IsKeyPressed and IsKeyPressed(KEY_ESCAPE) then
+            stopTiledStartMenuDemo()
+            changeGameState(GAMESTATE.MAIN_MENU)
+            component_cache.end_frame()
+            return
+        end
+
+        local ok, err = pcall(function()
+            tiledStartMenuDemo.update(dt)
+        end)
+        if not ok then
+            if log_warn then
+                log_warn("[tiled_demo] Update failed: " .. tostring(err))
+            else
+                print("[tiled_demo] Update failed: " .. tostring(err))
+            end
+            stopTiledStartMenuDemo()
+            changeGameState(GAMESTATE.MAIN_MENU)
+            component_cache.end_frame()
+            return
+        end
+
+        component_cache.end_frame()
+        return
+    end
     
     local isPaused = (globals.gamePaused or currentGameState == GAMESTATE.MAIN_MENU)
 

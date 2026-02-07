@@ -1,0 +1,145 @@
+{
+  "schema_version": "1.0",
+  "ruleset": "dungeon_437_d437_169_corner_tl_fill",
+  "description": "Single-tile fill autotile ruleset generated for assets/graphics/pre-packing-files_globbed/dungeon_437/d437_169_corner_tl.png.",
+  "default_terrain": 1,
+  "mask_bits": {
+    "north": 1,
+    "east": 2,
+    "south": 4,
+    "west": 8
+  },
+  "rules": [
+    {
+      "name": "fill_mask_00",
+      "terrain": 1,
+      "exact_mask": 0,
+      "tile": {
+        "id": 169
+      }
+    },
+    {
+      "name": "fill_mask_01",
+      "terrain": 1,
+      "exact_mask": 1,
+      "tile": {
+        "id": 169
+      }
+    },
+    {
+      "name": "fill_mask_02",
+      "terrain": 1,
+      "exact_mask": 2,
+      "tile": {
+        "id": 169
+      }
+    },
+    {
+      "name": "fill_mask_03",
+      "terrain": 1,
+      "exact_mask": 3,
+      "tile": {
+        "id": 169
+      }
+    },
+    {
+      "name": "fill_mask_04",
+      "terrain": 1,
+      "exact_mask": 4,
+      "tile": {
+        "id": 169
+      }
+    },
+    {
+      "name": "fill_mask_05",
+      "terrain": 1,
+      "exact_mask": 5,
+      "tile": {
+        "id": 169
+      }
+    },
+    {
+      "name": "fill_mask_06",
+      "terrain": 1,
+      "exact_mask": 6,
+      "tile": {
+        "id": 169
+      }
+    },
+    {
+      "name": "fill_mask_07",
+      "terrain": 1,
+      "exact_mask": 7,
+      "tile": {
+        "id": 169
+      }
+    },
+    {
+      "name": "fill_mask_08",
+      "terrain": 1,
+      "exact_mask": 8,
+      "tile": {
+        "id": 169
+      }
+    },
+    {
+      "name": "fill_mask_09",
+      "terrain": 1,
+      "exact_mask": 9,
+      "tile": {
+        "id": 169
+      }
+    },
+    {
+      "name": "fill_mask_10",
+      "terrain": 1,
+      "exact_mask": 10,
+      "tile": {
+        "id": 169
+      }
+    },
+    {
+      "name": "fill_mask_11",
+      "terrain": 1,
+      "exact_mask": 11,
+      "tile": {
+        "id": 169
+      }
+    },
+    {
+      "name": "fill_mask_12",
+      "terrain": 1,
+      "exact_mask": 12,
+      "tile": {
+        "id": 169
+      }
+    },
+    {
+      "name": "fill_mask_13",
+      "terrain": 1,
+      "exact_mask": 13,
+      "tile": {
+        "id": 169
+      }
+    },
+    {
+      "name": "fill_mask_14",
+      "terrain": 1,
+      "exact_mask": 14,
+      "tile": {
+        "id": 169
+      }
+    },
+    {
+      "name": "fill_mask_15",
+      "terrain": 1,
+      "exact_mask": 15,
+      "tile": {
+        "id": 169
+      }
+    }
+  ],
+  "source_assets": [
+    "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_169_corner_tl.png"
+  ]
+}

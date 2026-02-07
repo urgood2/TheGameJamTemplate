@@ -19,6 +19,7 @@ from typing import Any
 
 DEFAULT_MANIFEST = Path("planning/tiled_assets/required_asset_manifest.json")
 DEFAULT_RULESETS_DIR = Path("planning/tiled_assets/rulesets")
+DEFAULT_CATALOG = DEFAULT_RULESETS_DIR / "wall_rules_catalog.json"
 DEFAULT_OUTPUT = Path("planning/tiled_assets/rulesets/wall_rule_coverage_report.json")
 
 
@@ -44,6 +45,15 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=DEFAULT_RULESETS_DIR,
         help=f"Directory containing *_walls.runtime.json rulesets (default: {DEFAULT_RULESETS_DIR})",
+    )
+    parser.add_argument(
+        "--catalog",
+        type=Path,
+        default=DEFAULT_CATALOG,
+        help=(
+            "Optional ruleset catalog path. When present, runtime coverage "
+            "is discovered from catalog rulesets[*].runtime_path."
+        ),
     )
     parser.add_argument(
         "--output",
@@ -150,12 +160,44 @@ def load_runtime_ruleset(runtime_path: Path, project_root: Path) -> RulesetCover
     )
 
 
-def discover_runtime_rulesets(rulesets_dir: Path, project_root: Path) -> list[RulesetCoverage]:
-    runtime_paths = sorted(rulesets_dir.glob("*_walls.runtime.json"))
+def discover_runtime_rulesets(
+    rulesets_dir: Path, project_root: Path, catalog_path: Path | None
+) -> list[RulesetCoverage]:
+    runtime_paths: list[Path] = []
+
+    if catalog_path is not None and catalog_path.exists():
+        catalog = _load_json_object(catalog_path)
+        entries = catalog.get("rulesets")
+        if not isinstance(entries, list):
+            raise ValueError(f"Catalog 'rulesets' must be a list: {catalog_path}")
+
+        seen: set[Path] = set()
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            runtime_path_raw = entry.get("runtime_path")
+            if not isinstance(runtime_path_raw, str) or not runtime_path_raw.strip():
+                continue
+            runtime_path = _resolve_path(project_root, Path(runtime_path_raw.strip()))
+            if runtime_path in seen:
+                continue
+            if not runtime_path.exists():
+                raise ValueError(
+                    f"Catalog references missing runtime ruleset: {runtime_path_raw} -> {runtime_path}"
+                )
+            seen.add(runtime_path)
+            runtime_paths.append(runtime_path)
+
+    if not runtime_paths:
+        runtime_paths = sorted(rulesets_dir.glob("*_walls.runtime.json"))
+
     if not runtime_paths:
         raise ValueError(
-            f"No runtime wall rulesets found in {rulesets_dir} (expected *_walls.runtime.json)."
+            "No runtime wall rulesets found from catalog or "
+            f"{rulesets_dir} (expected *_walls.runtime.json)."
         )
+
+    runtime_paths = sorted(runtime_paths)
     return [load_runtime_ruleset(path, project_root) for path in runtime_paths]
 
 
@@ -182,6 +224,7 @@ def build_coverage_report(
     project_root: Path,
     manifest_path: Path,
     rulesets_dir: Path,
+    catalog_path: Path | None,
 ) -> dict[str, Any]:
     mapped_rulesets_by_asset: dict[str, set[str]] = defaultdict(set)
     unknown_mapped_assets: set[str] = set()
@@ -242,6 +285,7 @@ def build_coverage_report(
         "project_root": project_root.resolve().as_posix(),
         "manifest": _to_rel(project_root, manifest_path),
         "rulesets_dir": _to_rel(project_root, rulesets_dir),
+        "catalog_path": _to_rel(project_root, catalog_path) if catalog_path and catalog_path.exists() else None,
         "total_wall_assets": len(manifest_walls),
         "mapped_count": mapped_count,
         "excluded_count": excluded_count,
@@ -322,17 +366,23 @@ def main() -> int:
     project_root = args.project_root.resolve()
     manifest_path = _resolve_path(project_root, args.manifest)
     rulesets_dir = _resolve_path(project_root, args.rulesets_dir)
+    catalog_path = _resolve_path(project_root, args.catalog)
     output_path = _resolve_path(project_root, args.output)
 
     try:
         manifest_walls = load_manifest_walls(manifest_path, project_root)
-        rulesets = discover_runtime_rulesets(rulesets_dir, project_root)
+        rulesets = discover_runtime_rulesets(
+            rulesets_dir=rulesets_dir,
+            project_root=project_root,
+            catalog_path=catalog_path,
+        )
         report = build_coverage_report(
             manifest_walls=manifest_walls,
             rulesets=rulesets,
             project_root=project_root,
             manifest_path=manifest_path,
             rulesets_dir=rulesets_dir,
+            catalog_path=catalog_path,
         )
         errors = validate_coverage_report(report)
     except Exception as exc:  # pragma: no cover - defensive CLI layer

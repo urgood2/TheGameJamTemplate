@@ -21,6 +21,7 @@ print(summary.map_id, summary.ruleset_count, summary.procedural_collider_count)
 
 local tiled_bridge = require("core.procgen.tiled_bridge")
 local vendor = require("core.procgen.vendor")
+local json = require("external.json")
 
 local M = {}
 
@@ -43,6 +44,11 @@ local DEFAULTS = {
         "planning/tiled_assets/rulesets/dungeon_mode_walls.rules.txt",
         "planning/tiled_assets/rulesets/dungeon_437_walls.rules.txt",
     },
+    useRulesCatalog = false,
+    rulesCatalogPath = "planning/tiled_assets/rulesets/wall_rules_catalog.json",
+    rulesCatalogLimit = 0,
+    rulesCatalogIncludeModes = nil,
+    rulesCatalogIncludeSources = nil,
     proceduralWidth = 24,
     proceduralHeight = 16,
     buildProceduralColliders = true,
@@ -65,15 +71,11 @@ local function normalize_boolean(value, fallback)
 end
 
 local function normalize_rules_paths(value)
-    if value == nil then
-        return DEFAULTS.rulesPaths
-    end
-
     if type(value) == "string" then
         return { value }
     end
 
-    if type(value) ~= "table" then
+    if value == nil or type(value) ~= "table" then
         return {}
     end
 
@@ -85,6 +87,134 @@ local function normalize_rules_paths(value)
         end
     end
     return out
+end
+
+local function normalize_string_set(value)
+    if type(value) == "string" and value ~= "" then
+        return { [value] = true }
+    end
+
+    if type(value) ~= "table" then
+        return nil
+    end
+
+    local out = {}
+    for i = 1, #value do
+        local v = value[i]
+        if type(v) == "string" and v ~= "" then
+            out[v] = true
+        end
+    end
+
+    local has_any = false
+    for _ in pairs(out) do
+        has_any = true
+        break
+    end
+
+    if has_any then
+        return out
+    end
+    return nil
+end
+
+local function read_text(path)
+    if not path or path == "" then
+        return nil
+    end
+
+    local function try_read(candidate)
+        local f = io.open(candidate, "r")
+        if not f then
+            return nil
+        end
+        local content = f:read("*a")
+        f:close()
+        return content
+    end
+
+    if util and util.getRawAssetPathNoUUID then
+        local resolved = util.getRawAssetPathNoUUID(path)
+        if resolved and resolved ~= "" then
+            local content = try_read(resolved)
+            if content then
+                return content
+            end
+        end
+    end
+
+    return try_read(path)
+end
+
+local function load_rules_paths_from_catalog(catalog_path, include_modes, include_sources, limit)
+    local content = read_text(catalog_path)
+    if not content then
+        return {}, "unable to read catalog file"
+    end
+
+    local ok_decode, catalog = pcall(json.decode, content)
+    if not ok_decode or type(catalog) ~= "table" then
+        return {}, "unable to parse catalog json"
+    end
+
+    local entries = catalog.rulesets
+    if type(entries) ~= "table" then
+        return {}, "catalog missing rulesets array"
+    end
+
+    local dedupe = {}
+    local out = {}
+    for i = 1, #entries do
+        local entry = entries[i]
+        if type(entry) == "table" then
+            local mode = entry.mode
+            local source = entry.source
+            local rules_path = entry.rules_path
+            local mode_ok = (not include_modes) or (type(mode) == "string" and include_modes[mode] == true)
+            local source_ok = (not include_sources) or (type(source) == "string" and include_sources[source] == true)
+            if mode_ok and source_ok and type(rules_path) == "string" and rules_path ~= "" and not dedupe[rules_path] then
+                dedupe[rules_path] = true
+                out[#out + 1] = rules_path
+                if limit and limit > 0 and #out >= limit then
+                    break
+                end
+            end
+        end
+    end
+
+    return out, nil
+end
+
+local function resolve_rules_paths(opts)
+    local explicit_paths = normalize_rules_paths(opts.rulesPaths)
+    if #explicit_paths > 0 then
+        return explicit_paths, nil
+    end
+
+    local use_rules_catalog = normalize_boolean(opts.useRulesCatalog, DEFAULTS.useRulesCatalog)
+    if use_rules_catalog then
+        local include_modes = normalize_string_set(opts.rulesCatalogIncludeModes or DEFAULTS.rulesCatalogIncludeModes)
+        local include_sources = normalize_string_set(opts.rulesCatalogIncludeSources or DEFAULTS.rulesCatalogIncludeSources)
+        local rules_catalog_path = opts.rulesCatalogPath or DEFAULTS.rulesCatalogPath
+        local rules_catalog_limit = opts.rulesCatalogLimit
+        if rules_catalog_limit == nil then
+            rules_catalog_limit = DEFAULTS.rulesCatalogLimit
+        end
+
+        local catalog_paths, catalog_err = load_rules_paths_from_catalog(
+            rules_catalog_path,
+            include_modes,
+            include_sources,
+            rules_catalog_limit
+        )
+
+        if #catalog_paths > 0 then
+            return catalog_paths, nil
+        end
+        return DEFAULTS.rulesPaths, catalog_err
+    end
+
+    return DEFAULTS.rulesPaths, nil
 end
 
 local function count_tiles(result)
@@ -168,7 +298,7 @@ function M.run(opts)
     local printSummary = normalize_boolean(opts.printSummary, DEFAULTS.printSummary)
 
     local targetLayer = opts.targetLayer or DEFAULTS.targetLayer
-    local rulesPaths = normalize_rules_paths(opts.rulesPaths)
+    local rulesPaths, rulesCatalogError = resolve_rules_paths(opts)
     local proceduralWidth = opts.proceduralWidth or DEFAULTS.proceduralWidth
     local proceduralHeight = opts.proceduralHeight or DEFAULTS.proceduralHeight
     local world = opts.world or DEFAULTS.world
@@ -260,6 +390,7 @@ function M.run(opts)
         ruleset_count = #rulesetSummaries,
         rulesets = rulesetSummaries,
         procedural_collider_count = colliderCount,
+        rules_catalog_error = rulesCatalogError,
     }
 
     if printSummary then
@@ -286,6 +417,9 @@ function M.run(opts)
                 rule.height,
                 rule.tile_count
             ))
+        end
+        if rulesCatalogError then
+            log("catalog fallback: " .. tostring(rulesCatalogError))
         end
     end
 

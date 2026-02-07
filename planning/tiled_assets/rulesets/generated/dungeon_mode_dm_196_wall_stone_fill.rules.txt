@@ -1,0 +1,2 @@
+# Generated single-tile fill wall autotile rules.
+runtime_json = dungeon_mode_dm_196_wall_stone_fill.runtime.json

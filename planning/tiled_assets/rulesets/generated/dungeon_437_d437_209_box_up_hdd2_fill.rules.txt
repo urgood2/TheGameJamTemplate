@@ -1,0 +1,2 @@
+# Generated single-tile fill wall autotile rules.
+runtime_json = dungeon_437_d437_209_box_up_hdd2_fill.runtime.json

@@ -1,0 +1,2 @@
+# Generated single-tile fill wall autotile rules.
+runtime_json = dungeon_437_d437_177_shade_med_fill.runtime.json

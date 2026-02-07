@@ -1,0 +1,824 @@
+{
+  "schema_version": "1.0",
+  "description": "Generated Tiled wall ruleset catalog (canonical + per-asset fill variants).",
+  "total_rulesets": 73,
+  "rulesets": [
+    {
+      "id": "dungeon_mode_walls",
+      "source": "dungeon_mode",
+      "mode": "canonical",
+      "rules_path": "planning/tiled_assets/rulesets/dungeon_mode_walls.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/dungeon_mode_walls.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_240_box_corner_tl.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_241_box_corner_tr.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_242_box_corner_bl.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_243_box_corner_br.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_244_box_horizontal.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_245_box_vertical.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_246_box_t_down.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_247_box_t_up.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_248_box_t_right.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_249_box_t_left.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_250_box_cross.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_254_block_full.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_walls",
+      "source": "dungeon_437",
+      "mode": "canonical",
+      "rules_path": "planning/tiled_assets/rulesets/dungeon_437_walls.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/dungeon_437_walls.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_169_corner_tl.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_170_corner_tr.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_179_box_vert.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_196_box_horiz.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_197_box_cross.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_219_block_full.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_169_corner_tl_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_169_corner_tl.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_169_corner_tl_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_169_corner_tl_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_169_corner_tl.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_170_corner_tr_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_170_corner_tr.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_170_corner_tr_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_170_corner_tr_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_170_corner_tr.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_176_shade_light_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_176_shade_light.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_176_shade_light_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_176_shade_light_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_176_shade_light.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_177_shade_med_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_177_shade_med.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_177_shade_med_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_177_shade_med_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_177_shade_med.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_178_shade_dark_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_178_shade_dark.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_178_shade_dark_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_178_shade_dark_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_178_shade_dark.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_179_box_vert_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_179_box_vert.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_179_box_vert_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_179_box_vert_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_179_box_vert.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_180_box_vert_l_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_180_box_vert_l.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_180_box_vert_l_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_180_box_vert_l_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_180_box_vert_l.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_181_box_vert_ll_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_181_box_vert_ll.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_181_box_vert_ll_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_181_box_vert_ll_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_181_box_vert_ll.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_182_box_vert_ld_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_182_box_vert_ld.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_182_box_vert_ld_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_182_box_vert_ld_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_182_box_vert_ld.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_183_box_down_ld_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_183_box_down_ld.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_183_box_down_ld_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_183_box_down_ld_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_183_box_down_ld.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_184_box_down_ll_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_184_box_down_ll.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_184_box_down_ll_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_184_box_down_ll_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_184_box_down_ll.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_185_box_vert_lld_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_185_box_vert_lld.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_185_box_vert_lld_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_185_box_vert_lld_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_185_box_vert_lld.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_186_box_vert_d_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_186_box_vert_d.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_186_box_vert_d_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_186_box_vert_d_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_186_box_vert_d.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_187_box_down_ldd_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_187_box_down_ldd.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_187_box_down_ldd_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_187_box_down_ldd_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_187_box_down_ldd.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_188_box_up_ldd_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_188_box_up_ldd.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_188_box_up_ldd_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_188_box_up_ldd_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_188_box_up_ldd.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_189_box_up_ld_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_189_box_up_ld.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_189_box_up_ld_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_189_box_up_ld_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_189_box_up_ld.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_190_box_up_ll_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_190_box_up_ll.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_190_box_up_ll_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_190_box_up_ll_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_190_box_up_ll.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_191_box_down_l_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_191_box_down_l.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_191_box_down_l_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_191_box_down_l_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_191_box_down_l.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_192_box_up_r_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_192_box_up_r.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_192_box_up_r_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_192_box_up_r_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_192_box_up_r.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_193_box_up_h_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_193_box_up_h.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_193_box_up_h_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_193_box_up_h_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_193_box_up_h.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_194_box_down_h_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_194_box_down_h.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_194_box_down_h_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_194_box_down_h_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_194_box_down_h.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_195_box_vert_r_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_195_box_vert_r.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_195_box_vert_r_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_195_box_vert_r_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_195_box_vert_r.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_196_box_horiz_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_196_box_horiz.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_196_box_horiz_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_196_box_horiz_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_196_box_horiz.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_197_box_cross_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_197_box_cross.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_197_box_cross_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_197_box_cross_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_197_box_cross.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_198_box_vert_rd_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_198_box_vert_rd.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_198_box_vert_rd_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_198_box_vert_rd_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_198_box_vert_rd.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_199_box_vert_rr_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_199_box_vert_rr.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_199_box_vert_rr_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_199_box_vert_rr_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_199_box_vert_rr.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_200_box_up_rdd_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_200_box_up_rdd.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_200_box_up_rdd_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_200_box_up_rdd_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_200_box_up_rdd.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_201_box_down_rdd_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_201_box_down_rdd.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_201_box_down_rdd_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_201_box_down_rdd_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_201_box_down_rdd.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_202_box_up_hdd_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_202_box_up_hdd.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_202_box_up_hdd_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_202_box_up_hdd_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_202_box_up_hdd.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_203_box_down_hdd_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_203_box_down_hdd.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_203_box_down_hdd_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_203_box_down_hdd_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_203_box_down_hdd.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_204_box_vert_rdd_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_204_box_vert_rdd.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_204_box_vert_rdd_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_204_box_vert_rdd_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_204_box_vert_rdd.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_205_box_horiz_d_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_205_box_horiz_d.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_205_box_horiz_d_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_205_box_horiz_d_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_205_box_horiz_d.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_206_box_cross_d_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_206_box_cross_d.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_206_box_cross_d_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_206_box_cross_d_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_206_box_cross_d.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_207_box_up_hd_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_207_box_up_hd.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_207_box_up_hd_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_207_box_up_hd_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_207_box_up_hd.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_208_box_down_hd_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_208_box_down_hd.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_208_box_down_hd_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_208_box_down_hd_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_208_box_down_hd.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_209_box_up_hdd2_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_209_box_up_hdd2.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_209_box_up_hdd2_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_209_box_up_hdd2_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_209_box_up_hdd2.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_210_box_down_hdd2_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_210_box_down_hdd2.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_210_box_down_hdd2_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_210_box_down_hdd2_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_210_box_down_hdd2.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_211_box_up_rr_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_211_box_up_rr.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_211_box_up_rr_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_211_box_up_rr_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_211_box_up_rr.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_212_box_down_ll2_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_212_box_down_ll2.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_212_box_down_ll2_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_212_box_down_ll2_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_212_box_down_ll2.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_213_box_down_rr_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_213_box_down_rr.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_213_box_down_rr_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_213_box_down_rr_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_213_box_down_rr.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_214_box_up_ll_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_214_box_up_ll.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_214_box_up_ll_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_214_box_up_ll_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_214_box_up_ll.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_215_box_cross_v_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_215_box_cross_v.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_215_box_cross_v_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_215_box_cross_v_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_215_box_cross_v.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_216_box_cross_h_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_216_box_cross_h.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_216_box_cross_h_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_216_box_cross_h_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_216_box_cross_h.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_217_box_up_l_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_217_box_up_l.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_217_box_up_l_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_217_box_up_l_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_217_box_up_l.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_218_box_down_r_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_218_box_down_r.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_218_box_down_r_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_218_box_down_r_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_218_box_down_r.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_219_block_full_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_219_block_full.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_219_block_full_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_219_block_full_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_219_block_full.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_220_block_lower_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_220_block_lower.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_220_block_lower_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_220_block_lower_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_220_block_lower.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_221_block_left_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_221_block_left.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_221_block_left_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_221_block_left_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_221_block_left.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_222_block_right_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_222_block_right.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_222_block_right_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_222_block_right_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_222_block_right.png"
+      ]
+    },
+    {
+      "id": "dungeon_437_d437_223_block_upper_fill",
+      "source": "dungeon_437",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_223_block_upper.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_223_block_upper_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_223_block_upper_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_223_block_upper.png"
+      ]
+    },
+    {
+      "id": "dungeon_mode_dm_129_wall_brick_fill",
+      "source": "dungeon_mode",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_129_wall_brick.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_129_wall_brick_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_129_wall_brick_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_129_wall_brick.png"
+      ]
+    },
+    {
+      "id": "dungeon_mode_dm_136_bridge_fill",
+      "source": "dungeon_mode",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_136_bridge.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_136_bridge_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_136_bridge_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_136_bridge.png"
+      ]
+    },
+    {
+      "id": "dungeon_mode_dm_196_wall_stone_fill",
+      "source": "dungeon_mode",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_196_wall_stone.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_196_wall_stone_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_196_wall_stone_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_196_wall_stone.png"
+      ]
+    },
+    {
+      "id": "dungeon_mode_dm_197_wall_cave_fill",
+      "source": "dungeon_mode",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_197_wall_cave.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_197_wall_cave_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_197_wall_cave_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_197_wall_cave.png"
+      ]
+    },
+    {
+      "id": "dungeon_mode_dm_198_wall_mossy_fill",
+      "source": "dungeon_mode",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_198_wall_mossy.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_198_wall_mossy_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_198_wall_mossy_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_198_wall_mossy.png"
+      ]
+    },
+    {
+      "id": "dungeon_mode_dm_199_wall_cracked_fill",
+      "source": "dungeon_mode",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_199_wall_cracked.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_199_wall_cracked_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_199_wall_cracked_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_199_wall_cracked.png"
+      ]
+    },
+    {
+      "id": "dungeon_mode_dm_240_box_corner_tl_fill",
+      "source": "dungeon_mode",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_240_box_corner_tl.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_240_box_corner_tl_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_240_box_corner_tl_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_240_box_corner_tl.png"
+      ]
+    },
+    {
+      "id": "dungeon_mode_dm_241_box_corner_tr_fill",
+      "source": "dungeon_mode",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_241_box_corner_tr.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_241_box_corner_tr_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_241_box_corner_tr_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_241_box_corner_tr.png"
+      ]
+    },
+    {
+      "id": "dungeon_mode_dm_242_box_corner_bl_fill",
+      "source": "dungeon_mode",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_242_box_corner_bl.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_242_box_corner_bl_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_242_box_corner_bl_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_242_box_corner_bl.png"
+      ]
+    },
+    {
+      "id": "dungeon_mode_dm_243_box_corner_br_fill",
+      "source": "dungeon_mode",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_243_box_corner_br.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_243_box_corner_br_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_243_box_corner_br_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_243_box_corner_br.png"
+      ]
+    },
+    {
+      "id": "dungeon_mode_dm_244_box_horizontal_fill",
+      "source": "dungeon_mode",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_244_box_horizontal.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_244_box_horizontal_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_244_box_horizontal_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_244_box_horizontal.png"
+      ]
+    },
+    {
+      "id": "dungeon_mode_dm_245_box_vertical_fill",
+      "source": "dungeon_mode",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_245_box_vertical.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_245_box_vertical_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_245_box_vertical_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_245_box_vertical.png"
+      ]
+    },
+    {
+      "id": "dungeon_mode_dm_246_box_t_down_fill",
+      "source": "dungeon_mode",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_246_box_t_down.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_246_box_t_down_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_246_box_t_down_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_246_box_t_down.png"
+      ]
+    },
+    {
+      "id": "dungeon_mode_dm_247_box_t_up_fill",
+      "source": "dungeon_mode",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_247_box_t_up.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_247_box_t_up_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_247_box_t_up_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_247_box_t_up.png"
+      ]
+    },
+    {
+      "id": "dungeon_mode_dm_248_box_t_right_fill",
+      "source": "dungeon_mode",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_248_box_t_right.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_248_box_t_right_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_248_box_t_right_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_248_box_t_right.png"
+      ]
+    },
+    {
+      "id": "dungeon_mode_dm_249_box_t_left_fill",
+      "source": "dungeon_mode",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_249_box_t_left.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_249_box_t_left_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_249_box_t_left_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_249_box_t_left.png"
+      ]
+    },
+    {
+      "id": "dungeon_mode_dm_250_box_cross_fill",
+      "source": "dungeon_mode",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_250_box_cross.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_250_box_cross_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_250_box_cross_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_250_box_cross.png"
+      ]
+    },
+    {
+      "id": "dungeon_mode_dm_251_shade_light_fill",
+      "source": "dungeon_mode",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_251_shade_light.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_251_shade_light_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_251_shade_light_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_251_shade_light.png"
+      ]
+    },
+    {
+      "id": "dungeon_mode_dm_252_shade_medium_fill",
+      "source": "dungeon_mode",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_252_shade_medium.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_252_shade_medium_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_252_shade_medium_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_252_shade_medium.png"
+      ]
+    },
+    {
+      "id": "dungeon_mode_dm_253_shade_heavy_fill",
+      "source": "dungeon_mode",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_253_shade_heavy.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_253_shade_heavy_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_253_shade_heavy_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_253_shade_heavy.png"
+      ]
+    },
+    {
+      "id": "dungeon_mode_dm_254_block_full_fill",
+      "source": "dungeon_mode",
+      "mode": "single_tile_fill",
+      "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_254_block_full.png",
+      "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_254_block_full_fill.rules.txt",
+      "runtime_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_254_block_full_fill.runtime.json",
+      "source_assets": [
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_254_block_full.png"
+      ]
+    }
+  ]
+}

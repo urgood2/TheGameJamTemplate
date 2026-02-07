@@ -186,6 +186,52 @@ t.describe("examples.tiled_capability_demo", function()
         t.expect(err).to_contain("tiled")
     end)
 
+    t.it("loads rules from catalog for procedural autotiling when enabled", function()
+        local originalTiled = _G.tiled
+        local fakeTiled, calls = install_fake_tiled()
+        _G.tiled = fakeTiled
+        package.loaded["examples.tiled_capability_demo"] = nil
+
+        local catalogPath = "tests/out/tiled_demo_rules_catalog_test.json"
+        local handle = io.open(catalogPath, "w")
+        t.expect(handle ~= nil).to_be(true)
+        handle:write([[
+{
+  "schema_version": "1.0",
+  "rulesets": [
+    { "id": "dm_canonical", "mode": "canonical", "source": "dungeon_mode", "rules_path": "planning/tiled_assets/rulesets/dungeon_mode_walls.rules.txt" },
+    { "id": "dm_fill", "mode": "single_tile_fill", "source": "dungeon_mode", "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_mode_dm_196_wall_stone_fill.rules.txt" },
+    { "id": "d437_fill", "mode": "single_tile_fill", "source": "dungeon_437", "rules_path": "planning/tiled_assets/rulesets/generated/dungeon_437_d437_197_box_cross_fill.rules.txt" }
+  ]
+}
+]])
+        handle:close()
+
+        local ok, summary = pcall(function()
+            local demo = require("examples.tiled_capability_demo")
+            return demo.run({
+                drawMap = false,
+                spawnObjects = false,
+                buildProceduralColliders = false,
+                printSummary = false,
+                useRulesCatalog = true,
+                rulesCatalogPath = catalogPath,
+                rulesCatalogIncludeModes = { "single_tile_fill" },
+                rulesCatalogLimit = 2,
+            })
+        end)
+
+        os.remove(catalogPath)
+        _G.tiled = originalTiled
+
+        t.expect(ok).to_be(true)
+        t.expect(summary.ruleset_count).to_be(2)
+        t.expect(summary.rules_catalog_error).to_be(nil)
+        t.expect(#calls.loaded_rules).to_be(2)
+        t.expect(calls.loaded_rules[1]).to_contain("generated/")
+        t.expect(calls.loaded_rules[2]).to_contain("generated/")
+    end)
+
 end)
 
 return t.run()

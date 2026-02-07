@@ -1,0 +1,17 @@
+{
+  "name": "d437_194_box_down_h",
+  "tilewidth": 8,
+  "tileheight": 8,
+  "tilecount": 1,
+  "columns": 1,
+  "image": "../../../graphics/pre-packing-files_globbed/dungeon_437/d437_194_box_down_h.png",
+  "imagewidth": 8,
+  "imageheight": 8,
+  "properties": [
+    {
+      "name": "source_asset",
+      "type": "string",
+      "value": "assets/graphics/pre-packing-files_globbed/dungeon_437/d437_194_box_down_h.png"
+    }
+  ]
+}

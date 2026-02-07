@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "map_path": "assets/maps/tiled_demo/wall_showcase.tmj",
+  "tile_size": 8,
+  "map_width": 144,
+  "map_height": 96,
+  "wall_asset_count": 71,
+  "tileset_count": 84,
+  "layers": [
+    "Ground",
+    "Walls_Mode",
+    "Walls_437",
+    "Props",
+    "Wall_Gallery",
+    "Objects"
+  ]
+}

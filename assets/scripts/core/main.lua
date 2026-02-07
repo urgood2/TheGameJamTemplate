@@ -1033,7 +1033,7 @@ function startTiledDemoButtonCallback()
     end
 
     local ok, result_or_err = demo.start({
-        mapPath = "tests/out/tiled_demo_runtime/map/demo.tmj",
+        mapPath = "assets/maps/tiled_demo/wall_showcase.tmj",
     })
     if not ok then
         if log_warn then

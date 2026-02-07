@@ -10,22 +10,134 @@
     "west": 8
   },
   "rules": [
-    { "name": "cross", "terrain": 1, "exact_mask": 15, "tile": { "id": 250 } },
-    { "name": "t_down", "terrain": 1, "exact_mask": 14, "tile": { "id": 246 } },
-    { "name": "t_up", "terrain": 1, "exact_mask": 11, "tile": { "id": 247 } },
-    { "name": "t_right", "terrain": 1, "exact_mask": 7, "tile": { "id": 248 } },
-    { "name": "t_left", "terrain": 1, "exact_mask": 13, "tile": { "id": 249 } },
-    { "name": "vertical", "terrain": 1, "exact_mask": 5, "tile": { "id": 245 } },
-    { "name": "horizontal", "terrain": 1, "exact_mask": 10, "tile": { "id": 244 } },
-    { "name": "corner_tl", "terrain": 1, "exact_mask": 6, "tile": { "id": 240 } },
-    { "name": "corner_tr", "terrain": 1, "exact_mask": 12, "tile": { "id": 241 } },
-    { "name": "corner_bl", "terrain": 1, "exact_mask": 3, "tile": { "id": 242 } },
-    { "name": "corner_br", "terrain": 1, "exact_mask": 9, "tile": { "id": 243 } },
-    { "name": "end_north", "terrain": 1, "exact_mask": 1, "tile": { "id": 245 } },
-    { "name": "end_east", "terrain": 1, "exact_mask": 2, "tile": { "id": 244 } },
-    { "name": "end_south", "terrain": 1, "exact_mask": 4, "tile": { "id": 245 } },
-    { "name": "end_west", "terrain": 1, "exact_mask": 8, "tile": { "id": 244 } },
-    { "name": "isolated", "terrain": 1, "exact_mask": 0, "tile": { "id": 254 } }
+    {
+      "name": "cross",
+      "terrain": 1,
+      "exact_mask": 15,
+      "tile": {
+        "id": 250
+      }
+    },
+    {
+      "name": "t_down",
+      "terrain": 1,
+      "exact_mask": 14,
+      "tile": {
+        "id": 246
+      }
+    },
+    {
+      "name": "t_up",
+      "terrain": 1,
+      "exact_mask": 11,
+      "tile": {
+        "id": 247
+      }
+    },
+    {
+      "name": "t_right",
+      "terrain": 1,
+      "exact_mask": 7,
+      "tile": {
+        "id": 248
+      }
+    },
+    {
+      "name": "t_left",
+      "terrain": 1,
+      "exact_mask": 13,
+      "tile": {
+        "id": 249
+      }
+    },
+    {
+      "name": "vertical",
+      "terrain": 1,
+      "exact_mask": 5,
+      "tile": {
+        "id": 245
+      }
+    },
+    {
+      "name": "horizontal",
+      "terrain": 1,
+      "exact_mask": 10,
+      "tile": {
+        "id": 244
+      }
+    },
+    {
+      "name": "corner_tl",
+      "terrain": 1,
+      "exact_mask": 6,
+      "tile": {
+        "id": 240
+      }
+    },
+    {
+      "name": "corner_tr",
+      "terrain": 1,
+      "exact_mask": 12,
+      "tile": {
+        "id": 241
+      }
+    },
+    {
+      "name": "corner_bl",
+      "terrain": 1,
+      "exact_mask": 3,
+      "tile": {
+        "id": 242
+      }
+    },
+    {
+      "name": "corner_br",
+      "terrain": 1,
+      "exact_mask": 9,
+      "tile": {
+        "id": 243
+      }
+    },
+    {
+      "name": "end_north",
+      "terrain": 1,
+      "exact_mask": 1,
+      "tile": {
+        "id": 245
+      }
+    },
+    {
+      "name": "end_east",
+      "terrain": 1,
+      "exact_mask": 2,
+      "tile": {
+        "id": 244
+      }
+    },
+    {
+      "name": "end_south",
+      "terrain": 1,
+      "exact_mask": 4,
+      "tile": {
+        "id": 245
+      }
+    },
+    {
+      "name": "end_west",
+      "terrain": 1,
+      "exact_mask": 8,
+      "tile": {
+        "id": 244
+      }
+    },
+    {
+      "name": "isolated",
+      "terrain": 1,
+      "exact_mask": 0,
+      "tile": {
+        "id": 254
+      }
+    }
   ],
   "source_assets": [
     "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_240_box_corner_tl.png",

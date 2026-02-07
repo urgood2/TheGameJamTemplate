@@ -1,0 +1,104 @@
+{
+  "wall_group_round_fillings": [
+    183,
+    168,
+    167,
+    182,
+    184,
+    200,
+    199,
+    198
+  ],
+  "single_line_wall_group": [
+    181,
+    180,
+    164,
+    163,
+    179,
+    195,
+    196,
+    197
+  ],
+  "3d_like_wall_group": [
+    230,
+    231,
+    232,
+    216,
+    215,
+    247,
+    248,
+    246
+  ],
+  "vertical_double_wall_group": [
+    212,
+    211,
+    227,
+    228,
+    229,
+    245,
+    244,
+    243
+  ],
+  "stripe_streaks_wall_group": [
+    193,
+    192,
+    208,
+    225,
+    224,
+    226,
+    210
+  ],
+  "not_sure_maybe_attachments?": [
+    251,
+    250,
+    249,
+    217,
+    218,
+    234,
+    233,
+    235,
+    219,
+    147,
+    146,
+    130,
+    131
+  ],
+  "big_cone": [
+    135,
+    134,
+    150
+  ],
+  "triangle_slope": [
+    152,
+    154,
+    155
+  ],
+  "minimap_wall_group_possibly_can_flip": [
+    185,
+    201,
+    202,
+    186,
+    170,
+    171,
+    187,
+    203
+  ],
+  "lower_body_parts_pair_with_head": [
+    254,
+    255,
+    253,
+    252
+  ],
+  "diagonal_lines": [
+    148,
+    132,
+    133,
+    149
+  ],
+  "not_sure_what_these_do_but_they_are_a_group": [
+    146,
+    130,
+    131,
+    147
+  ]
+}

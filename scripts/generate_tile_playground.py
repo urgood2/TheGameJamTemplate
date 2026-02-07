@@ -732,6 +732,199 @@ def generate_playground_html():
     dm_sheet_b64 = sheet_to_base64(dm_img)
     d437_sheet_b64 = sheet_to_base64(d437_img)
 
+    # Generate clean Goblin Tunnels minimap composite (5x5 tiles = 40x40 px)
+    import numpy as np
+    dm_arr = np.array(dm_img)
+    pal_path = "/Users/joshuashin/Downloads/dungeonmode 2/playscii/palettes/dungeon-pal.png"
+    pal_arr = np.array(Image.open(pal_path).convert("RGBA"))
+    dm_palette = [tuple(pal_arr[0, i]) for i in range(pal_arr.shape[1])]
+    scene_path = "/Users/joshuashin/Downloads/dungeonmode 2/playscii/art/goblin-tunnels.psci"
+    with open(scene_path) as sf:
+        scene_data = json.load(sf)
+    scene_w = scene_data["width"]
+    scene_tiles = scene_data["frames"][0]["layers"][0]["tiles"]
+
+    def _get_tile_px(char_idx):
+        r, c = char_idx // 16, char_idx % 16
+        return dm_arr[r*8:(r+1)*8, c*8:(c+1)*8].copy()
+
+    # Name-to-index lookup for minimap composites
+    _name_to_idx = {v: int(k) for k, v in DM_NAMES.items()}
+
+    def _render_minimap_composite(grid, fg_color=(255,255,255,255), bg_color=(0,0,0,255), add_door_tips=True):
+        """Render a minimap tile grid as a clean composite PNG with edge clipping and door tips."""
+        rows = len(grid)
+        cols = len(grid[0])
+        h, w = rows * 8, cols * 8
+        comp = np.zeros((h, w, 4), dtype=np.uint8)
+        # Fill background
+        for y in range(h):
+            for x in range(w):
+                comp[y, x] = np.array(bg_color[:4], dtype=np.uint8)
+
+        # Track which pixels are wall
+        wall_mask = np.zeros((h, w), dtype=bool)
+
+        for mr in range(rows):
+            for mc in range(cols):
+                name = grid[mr][mc]
+                if not name:
+                    continue
+                char_idx = _name_to_idx.get(name, -1)
+                if char_idx < 0:
+                    continue
+                tpx = _get_tile_px(char_idx)
+                for ty in range(8):
+                    for tx in range(8):
+                        rv, gv, bv, av = tpx[ty, tx]
+                        is_wall = av > 128 and (int(rv)+int(gv)+int(bv)) > 100
+                        # Clean edges: rightmost col only left-column, bottom row only top-row
+                        if is_wall and mc == cols - 1 and tx > 0:
+                            is_wall = False
+                        if is_wall and mr == rows - 1 and ty > 0:
+                            is_wall = False
+                        if is_wall:
+                            py, px_ = mr*8+ty, mc*8+tx
+                            comp[py, px_] = np.array(fg_color[:4], dtype=np.uint8)
+                            wall_mask[py, px_] = True
+
+        # Add perpendicular door tips on outer walls
+        if add_door_tips:
+            right_x = (cols - 1) * 8  # right wall x coordinate
+            bottom_y = (rows - 1) * 8  # bottom wall y coordinate
+            # Right wall: scan for gap→wall and wall→gap transitions
+            for y in range(1, bottom_y):
+                if wall_mask[y, right_x] and not wall_mask[y-1, right_x]:
+                    # wall resumes after gap — add tip 1px into room
+                    if right_x > 0 and not wall_mask[y, right_x-1]:
+                        comp[y, right_x-1] = np.array(fg_color[:4], dtype=np.uint8)
+                        wall_mask[y, right_x-1] = True
+                if not wall_mask[y, right_x] and wall_mask[y-1, right_x]:
+                    # gap starts after wall — add tip on the wall pixel above
+                    if right_x > 0 and not wall_mask[y-1, right_x-1]:
+                        comp[y-1, right_x-1] = np.array(fg_color[:4], dtype=np.uint8)
+                        wall_mask[y-1, right_x-1] = True
+            # Left wall: scan for gap→wall and wall→gap transitions
+            for y in range(1, bottom_y):
+                if wall_mask[y, 0] and not wall_mask[y-1, 0]:
+                    if 0 < w-1 and not wall_mask[y, 1]:
+                        comp[y, 1] = np.array(fg_color[:4], dtype=np.uint8)
+                        wall_mask[y, 1] = True
+                if not wall_mask[y, 0] and wall_mask[y-1, 0]:
+                    if not wall_mask[y-1, 1]:
+                        comp[y-1, 1] = np.array(fg_color[:4], dtype=np.uint8)
+                        wall_mask[y-1, 1] = True
+            # Bottom wall: scan for gap→wall and wall→gap transitions
+            for x in range(1, right_x):
+                if wall_mask[bottom_y, x] and not wall_mask[bottom_y, x-1]:
+                    if bottom_y > 0 and not wall_mask[bottom_y-1, x]:
+                        comp[bottom_y-1, x] = np.array(fg_color[:4], dtype=np.uint8)
+                        wall_mask[bottom_y-1, x] = True
+                if not wall_mask[bottom_y, x] and wall_mask[bottom_y, x-1]:
+                    if not wall_mask[bottom_y-1, x-1]:
+                        comp[bottom_y-1, x-1] = np.array(fg_color[:4], dtype=np.uint8)
+                        wall_mask[bottom_y-1, x-1] = True
+            # Top wall: scan for gap→wall and wall→gap transitions
+            for x in range(1, right_x):
+                if wall_mask[0, x] and not wall_mask[0, x-1]:
+                    if not wall_mask[1, x]:
+                        comp[1, x] = np.array(fg_color[:4], dtype=np.uint8)
+                        wall_mask[1, x] = True
+                if not wall_mask[0, x] and wall_mask[0, x-1]:
+                    if not wall_mask[1, x-1]:
+                        comp[1, x-1] = np.array(fg_color[:4], dtype=np.uint8)
+                        wall_mask[1, x-1] = True
+
+        buf = io.BytesIO()
+        Image.fromarray(comp).save(buf, format='PNG')
+        return base64.b64encode(buf.getvalue()).decode('ascii'), w, h
+
+    # Generate minimap composites
+    minimap_solid_b64, minimap_solid_w, minimap_solid_h = _render_minimap_composite([
+        ['edge_wedge_nw', 'edge_top_thin', 'edge_top_thin', 'edge_left_thin'],
+        ['edge_left_thin', None, None, 'edge_left_thin'],
+        ['edge_left_thin', None, None, 'edge_left_thin'],
+        ['edge_top_thin', 'edge_top_thin', 'edge_top_thin', 'edge_wedge_se']
+    ])
+    minimap_door_b64, minimap_door_w, minimap_door_h = _render_minimap_composite([
+        ['edge_wedge_nw', 'edge_top_thin', 'edge_top_thin', 'edge_left_thin'],
+        ['edge_left_thin', None, None, 'edge_right_thin'],
+        ['edge_left_thin', None, None, 'edge_left_thin'],
+        ['edge_top_thin', 'edge_top_thin', 'edge_top_thin', 'edge_wedge_se']
+    ])
+    minimap_two_b64, minimap_two_w, minimap_two_h = _render_minimap_composite([
+        ['edge_wedge_nw', 'edge_top_thin', 'edge_wedge_nw', 'edge_top_thin', 'edge_left_thin'],
+        ['edge_left_thin', None, 'edge_right_thin', None, 'edge_left_thin'],
+        ['edge_top_thin', 'edge_top_thin', 'edge_top_thin', 'edge_top_thin', 'edge_wedge_se']
+    ])
+
+    # Goblin Tunnels composite with dungeon palette colors
+    gt_grid = []
+    for mr in range(5):
+        row = []
+        for mc in range(5):
+            st = scene_tiles[(mr + 1) * scene_w + (mc + 1)]
+            row.append(DM_NAMES.get(st.get("char", 0), None))
+        gt_grid.append(row)
+    # Use per-cell colors from scene
+    gt_h, gt_w = 40, 40
+    gt_comp = np.zeros((gt_h, gt_w, 4), dtype=np.uint8)
+    gt_wall_mask = np.zeros((gt_h, gt_w), dtype=bool)
+    for mr in range(5):
+        for mc in range(5):
+            st = scene_tiles[(mr + 1) * scene_w + (mc + 1)]
+            fg = dm_palette[st.get("fg", 0)] if st.get("fg", 0) < len(dm_palette) else (255,255,255,255)
+            bg = dm_palette[st.get("bg", 0)] if st.get("bg", 0) < len(dm_palette) else (0,0,0,255)
+            tpx = _get_tile_px(st.get("char", 0))
+            for ty in range(8):
+                for tx in range(8):
+                    rv, gv, bv, av = tpx[ty, tx]
+                    is_wall = av > 128 and (int(rv)+int(gv)+int(bv)) > 100
+                    if is_wall and mc == 4 and tx > 0:
+                        is_wall = False
+                    if is_wall and mr == 4 and ty > 0:
+                        is_wall = False
+                    py, px_ = mr*8+ty, mc*8+tx
+                    if is_wall:
+                        gt_comp[py, px_] = np.array(fg[:4], dtype=np.uint8)
+                        gt_wall_mask[py, px_] = True
+                    else:
+                        gt_comp[py, px_] = np.array(bg[:4], dtype=np.uint8)
+    # Door tips for goblin tunnels (use fg color 14 = olive)
+    gt_fg = np.array(dm_palette[14][:4], dtype=np.uint8)
+    right_x, bottom_y = 4*8, 4*8
+    for y in range(1, bottom_y):
+        if gt_wall_mask[y, right_x] and not gt_wall_mask[y-1, right_x]:
+            if right_x > 0 and not gt_wall_mask[y, right_x-1]:
+                gt_comp[y, right_x-1] = gt_fg; gt_wall_mask[y, right_x-1] = True
+        if not gt_wall_mask[y, right_x] and gt_wall_mask[y-1, right_x]:
+            if right_x > 0 and not gt_wall_mask[y-1, right_x-1]:
+                gt_comp[y-1, right_x-1] = gt_fg; gt_wall_mask[y-1, right_x-1] = True
+    for y in range(1, bottom_y):
+        if gt_wall_mask[y, 0] and not gt_wall_mask[y-1, 0]:
+            if not gt_wall_mask[y, 1]:
+                gt_comp[y, 1] = gt_fg; gt_wall_mask[y, 1] = True
+        if not gt_wall_mask[y, 0] and gt_wall_mask[y-1, 0]:
+            if not gt_wall_mask[y-1, 1]:
+                gt_comp[y-1, 1] = gt_fg; gt_wall_mask[y-1, 1] = True
+    for x in range(1, right_x):
+        if gt_wall_mask[bottom_y, x] and not gt_wall_mask[bottom_y, x-1]:
+            if bottom_y > 0 and not gt_wall_mask[bottom_y-1, x]:
+                gt_comp[bottom_y-1, x] = gt_fg; gt_wall_mask[bottom_y-1, x] = True
+        if not gt_wall_mask[bottom_y, x] and gt_wall_mask[bottom_y, x-1]:
+            if not gt_wall_mask[bottom_y-1, x-1]:
+                gt_comp[bottom_y-1, x-1] = gt_fg; gt_wall_mask[bottom_y-1, x-1] = True
+    for x in range(1, right_x):
+        if gt_wall_mask[0, x] and not gt_wall_mask[0, x-1]:
+            if not gt_wall_mask[1, x]:
+                gt_comp[1, x] = gt_fg; gt_wall_mask[1, x] = True
+        if not gt_wall_mask[0, x] and gt_wall_mask[0, x-1]:
+            if not gt_wall_mask[1, x-1]:
+                gt_comp[1, x-1] = gt_fg; gt_wall_mask[1, x-1] = True
+    gt_buf = io.BytesIO()
+    Image.fromarray(gt_comp).save(gt_buf, format='PNG')
+    minimap_composite_b64 = base64.b64encode(gt_buf.getvalue()).decode('ascii')
+
     # Also load old filenames for comparison
     import os
     old_dm_files = sorted(os.listdir("/Users/joshuashin/Downloads/dungeonmode 2/cut_files/dungeon_mode/"))
@@ -1138,6 +1331,16 @@ body {{
 <script>
 const DATA = {tiles_json};
 const CAT_COLORS = {cat_colors_json};
+const MINIMAP_SOLID_B64 = "{minimap_solid_b64}";
+const MINIMAP_SOLID_W = {minimap_solid_w};
+const MINIMAP_SOLID_H = {minimap_solid_h};
+const MINIMAP_DOOR_B64 = "{minimap_door_b64}";
+const MINIMAP_DOOR_W = {minimap_door_w};
+const MINIMAP_DOOR_H = {minimap_door_h};
+const MINIMAP_TWO_B64 = "{minimap_two_b64}";
+const MINIMAP_TWO_W = {minimap_two_w};
+const MINIMAP_TWO_H = {minimap_two_h};
+const MINIMAP_GT_B64 = "{minimap_composite_b64}";
 const SHEETS = {{
     dm: "data:image/png;base64,{dm_sheet_b64}",
     d437: "data:image/png;base64,{d437_sheet_b64}"
@@ -1516,42 +1719,30 @@ function renderWallComparison(area, zoom) {{
         {{
             title: 'Minimap: Solid Room',
             desc: 'Top-left border convention: 169=NW 170=top 185=left 203=SE pixel',
-            grid: [
-                ['edge_wedge_nw', 'edge_top_thin', 'edge_top_thin', 'edge_left_thin'],
-                ['edge_left_thin', null, null, 'edge_left_thin'],
-                ['edge_left_thin', null, null, 'edge_left_thin'],
-                ['edge_top_thin', 'edge_top_thin', 'edge_top_thin', 'edge_wedge_se']
-            ]
+            compositeB64: MINIMAP_SOLID_B64,
+            compositeW: MINIMAP_SOLID_W,
+            compositeH: MINIMAP_SOLID_H
         }},
         {{
             title: 'Minimap: Room with Door',
-            desc: '171=top+gap, 187=left+gap, 202=top+gap (door openings)',
-            grid: [
-                ['edge_wedge_nw', 'edge_top_thin', 'edge_top_thin', 'edge_wedge_ne'],
-                ['edge_left_thin', null, null, 'edge_right_thin'],
-                ['edge_left_thin', null, null, 'edge_left_thin'],
-                ['edge_top_thin', 'edge_top_thin', 'edge_top_thin', 'edge_wedge_se']
-            ]
+            desc: '187=left-col+gap (door in right wall). Perpendicular tips cap door edges.',
+            compositeB64: MINIMAP_DOOR_B64,
+            compositeW: MINIMAP_DOOR_W,
+            compositeH: MINIMAP_DOOR_H
         }},
         {{
             title: 'Minimap: Two Connected Rooms',
             desc: '187=door in dividing wall connects rooms',
-            grid: [
-                ['edge_wedge_nw', 'edge_top_thin', 'edge_wedge_nw', 'edge_top_thin', 'edge_left_thin'],
-                ['edge_left_thin', null, 'edge_right_thin', null, 'edge_left_thin'],
-                ['edge_top_thin', 'edge_top_thin', 'edge_top_thin', 'edge_top_thin', 'edge_wedge_se']
-            ]
+            compositeB64: MINIMAP_TWO_B64,
+            compositeW: MINIMAP_TWO_W,
+            compositeH: MINIMAP_TWO_H
         }},
         {{
             title: 'Minimap: Goblin Tunnels (excerpt)',
-            desc: 'Actual layout from goblin-tunnels.psci rows 1-5, cols 1-5',
-            grid: [
-                ['edge_left_thin', 'edge_wedge_nw', 'edge_top_thin', 'edge_top_thin', 'edge_wedge_ne'],
-                ['edge_bottom_thin', 'edge_wedge_sw', 'edge_left_thin', 'edge_left_thin', 'edge_wedge_ne'],
-                ['edge_left_thin', 'icon_target_square', 'edge_bottom_thin', 'edge_wedge_ne', 'edge_wedge_ne'],
-                ['edge_left_thin', 'edge_wedge_ne', 'edge_left_thin', 'edge_wedge_ne', 'edge_wedge_ne'],
-                ['edge_top_thin', 'edge_top_thin', 'icon_target_square', 'edge_top_thin', 'edge_wedge_se']
-            ]
+            desc: 'Actual layout from goblin-tunnels.psci rows 1-5, cols 1-5. Colored with dungeon palette.',
+            compositeB64: MINIMAP_GT_B64,
+            compositeW: 40,
+            compositeH: 40
         }},
         // ── Stripe/Streaks Wall Group ────────────────────────────
         // Diagonal-stripe wall system:
@@ -1583,7 +1774,7 @@ function renderWallComparison(area, zoom) {{
             grid: [
                 ['block_three_quarter_ne_nw_sw', 'diagonal_halftone_se', 'block_three_quarter_ne_nw_se', null, null],
                 ['fill_diagonal_forward', null, 'fill_diagonal_backward', null, null],
-                ['fill_diagonal_forward', null, 'diagonal_halftone_ne', 'diagonal_halftone_se', 'block_three_quarter_ne_nw_se'],
+                ['fill_diagonal_forward', null, 'block_three_quarter_nw_sw_se', 'diagonal_halftone_se', 'block_three_quarter_ne_nw_se'],
                 ['fill_diagonal_forward', null, null, null, 'fill_diagonal_backward'],
                 ['block_three_quarter_nw_sw_se', 'diagonal_halftone_ne', 'diagonal_halftone_ne', 'diagonal_halftone_ne', 'block_three_quarter_ne_sw_se']
             ]
@@ -1603,37 +1794,48 @@ function renderWallComparison(area, zoom) {{
         desc.textContent = shape.desc;
         example.appendChild(desc);
 
-        const gridEl = document.createElement('div');
-        gridEl.className = 'shape-tiles';
-        gridEl.style.gridTemplateColumns = `repeat(${{shape.grid[0].length}}, ${{zoom}}px)`;
+        if (shape.compositeB64) {{
+            // Render as a single composite image (pixel-accurate minimap)
+            const img = document.createElement('img');
+            img.src = `data:image/png;base64,${{shape.compositeB64}}`;
+            img.style.width = (shape.compositeW * (zoom / 8)) + 'px';
+            img.style.height = (shape.compositeH * (zoom / 8)) + 'px';
+            img.style.imageRendering = 'pixelated';
+            img.style.border = '1px solid #333';
+            example.appendChild(img);
+        }} else {{
+            const gridEl = document.createElement('div');
+            gridEl.className = 'shape-tiles';
+            gridEl.style.gridTemplateColumns = `repeat(${{shape.grid[0].length}}, ${{zoom}}px)`;
 
-        for (const row of shape.grid) {{
-            for (const tileName of row) {{
-                const cell = document.createElement('div');
-                cell.style.width = zoom + 'px';
-                cell.style.height = zoom + 'px';
-                cell.style.background = '#000';
-                cell.style.display = 'flex';
-                cell.style.alignItems = 'center';
-                cell.style.justifyContent = 'center';
+            for (const row of shape.grid) {{
+                for (const tileName of row) {{
+                    const cell = document.createElement('div');
+                    cell.style.width = zoom + 'px';
+                    cell.style.height = zoom + 'px';
+                    cell.style.background = '#000';
+                    cell.style.display = 'flex';
+                    cell.style.alignItems = 'center';
+                    cell.style.justifyContent = 'center';
 
-                if (tileName) {{
-                    const tile = DATA.dm.find(t => t.name === tileName);
-                    if (tile) {{
-                        const img = document.createElement('img');
-                        img.src = `data:image/png;base64,${{tile.b64}}`;
-                        img.style.width = '100%';
-                        img.style.height = '100%';
-                        img.style.imageRendering = 'pixelated';
-                        cell.appendChild(img);
+                    if (tileName) {{
+                        const tile = DATA.dm.find(t => t.name === tileName);
+                        if (tile) {{
+                            const img = document.createElement('img');
+                            img.src = `data:image/png;base64,${{tile.b64}}`;
+                            img.style.width = '100%';
+                            img.style.height = '100%';
+                            img.style.imageRendering = 'pixelated';
+                            cell.appendChild(img);
+                        }}
                     }}
+
+                    gridEl.appendChild(cell);
                 }}
-
-                gridEl.appendChild(cell);
             }}
-        }}
 
-        example.appendChild(gridEl);
+            example.appendChild(gridEl);
+        }}
         shapeGrid.appendChild(example);
     }}
 

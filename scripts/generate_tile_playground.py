@@ -1404,64 +1404,214 @@ function renderWallComparison(area, zoom) {{
     shapeGrid.className = 'shape-grid';
 
     const shapes = [
+        // ── Single Line Wall Group ──────────────────────────────
         {{
-            title: 'Simple Box (single-line)',
-            desc: 'Basic room with single-line walls',
+            title: 'Box: Single Line (wall1)',
+            desc: 'single_line_wall_group — basic box-drawing room',
             grid: [
-                ['wall1_se', 'wall1_ew', 'wall1_sw'],
-                ['wall1_ns', null, 'wall1_ns'],
-                ['wall1_ne', 'wall1_ew', 'wall1_nw']
+                ['wall1_se', 'wall1_ew', 'wall1_ew', 'wall1_sw'],
+                ['wall1_ns', null, null, 'wall1_ns'],
+                ['wall1_ns', null, null, 'wall1_ns'],
+                ['wall1_ne', 'wall1_ew', 'wall1_ew', 'wall1_nw']
             ]
         }},
         {{
-            title: 'Simple Box (double-line)',
-            desc: 'Basic room with double-line walls',
-            grid: [
-                ['wall2_se', 'wall2_ew', 'wall2_sw'],
-                ['wall2_ns', null, 'wall2_ns'],
-                ['wall2_ne', 'wall2_ew', 'wall2_nw']
-            ]
-        }},
-        {{
-            title: 'Room with partition',
-            desc: 'Single room divided by internal wall',
-            grid: [
-                ['wall1_se', 'wall1_ew', 'wall1_sew', 'wall1_ew', 'wall1_sw'],
-                ['wall1_ns', null, 'wall1_ns', null, 'wall1_ns'],
-                ['wall1_ne', 'wall1_ew', 'wall1_new', 'wall1_ew', 'wall1_nw']
-            ]
-        }},
-        {{
-            title: 'Cross corridor',
-            desc: 'Four-way intersection',
-            grid: [
-                [null, null, 'wall1_ns', null, null],
-                [null, null, 'wall1_ns', null, null],
-                ['wall1_ew', 'wall1_ew', 'wall1_nsew', 'wall1_ew', 'wall1_ew'],
-                [null, null, 'wall1_ns', null, null],
-                [null, null, 'wall1_ns', null, null]
-            ]
-        }},
-        {{
-            title: 'L-shaped room',
-            desc: 'Non-rectangular room layout',
+            title: 'L-Room: Single Line',
+            desc: 'Non-rectangular room with tees and cross',
             grid: [
                 ['wall1_se', 'wall1_ew', 'wall1_sw', null, null],
                 ['wall1_ns', null, 'wall1_nse', 'wall1_ew', 'wall1_sw'],
-                ['wall1_ns', null, null, null, 'wall1_ns'],
                 ['wall1_ns', null, null, null, 'wall1_ns'],
                 ['wall1_ne', 'wall1_ew', 'wall1_ew', 'wall1_ew', 'wall1_nw']
             ]
         }},
         {{
-            title: 'Mixed border',
-            desc: 'Double outer walls, single inner division',
+            title: 'Cross: Single Line',
+            desc: 'Four-way intersection using nsew cross',
             grid: [
-                ['wall2_se', 'wall2_ew', 'wall2_sw'],
-                ['wall2_ns', null, 'wall2_ns'],
-                ['wall_2v1h_nse', 'wall1_ew', 'wall_2v1h_nsw'],
-                ['wall2_ns', null, 'wall2_ns'],
-                ['wall2_ne', 'wall2_ew', 'wall2_nw']
+                [null, 'wall1_se', 'wall1_sw', null],
+                ['wall1_se', 'wall1_nw', 'wall1_ne', 'wall1_sw'],
+                ['wall1_ne', 'wall1_sw', 'wall1_se', 'wall1_nw'],
+                [null, 'wall1_ne', 'wall1_nw', null]
+            ]
+        }},
+        // ── Double Line Wall Group (Round Fillings) ─────────────
+        {{
+            title: 'Box: Double Line (wall2)',
+            desc: 'wall_group_round_fillings — double-line room',
+            grid: [
+                ['wall2_se', 'wall2_ew', 'wall2_ew', 'wall2_sw'],
+                ['wall2_ns', null, null, 'wall2_ns'],
+                ['wall2_ns', null, null, 'wall2_ns'],
+                ['wall2_ne', 'wall2_ew', 'wall2_ew', 'wall2_nw']
+            ]
+        }},
+        {{
+            title: 'Partition: Double Line',
+            desc: 'Room divided by double-line internal wall',
+            grid: [
+                ['wall2_se', 'wall2_ew', 'wall2_sew', 'wall2_ew', 'wall2_sw'],
+                ['wall2_ns', null, 'wall2_ns', null, 'wall2_ns'],
+                ['wall2_ne', 'wall2_ew', 'wall2_new', 'wall2_ew', 'wall2_nw']
+            ]
+        }},
+        // ── Double Vert / Single Horiz (wall_2v1h) ─────────────
+        {{
+            title: 'Box: 2v1h Mixed',
+            desc: 'vertical_double_wall_group — double vert, single horiz',
+            grid: [
+                ['wall_2v1h_se', 'wall1_ew', 'wall1_ew', 'wall_2v1h_sw'],
+                ['wall2_ns', null, null, 'wall2_ns'],
+                ['wall2_ns', null, null, 'wall2_ns'],
+                ['wall_2v1h_ne', 'wall1_ew', 'wall1_ew', 'wall_2v1h_nw']
+            ]
+        }},
+        {{
+            title: 'Partition: 2v1h Mixed',
+            desc: 'Double vert walls with single horiz divider',
+            grid: [
+                ['wall_2v1h_se', 'wall1_ew', 'wall_2v1h_sew', 'wall1_ew', 'wall_2v1h_sw'],
+                ['wall2_ns', null, 'wall2_ns', null, 'wall2_ns'],
+                ['wall_2v1h_ne', 'wall1_ew', 'wall_2v1h_new', 'wall1_ew', 'wall_2v1h_nw']
+            ]
+        }},
+        // ── Single Vert / Double Horiz (wall_1v2h) ─────────────
+        {{
+            title: 'Box: 1v2h Mixed',
+            desc: '3d_like_wall_group — single vert, double horiz',
+            grid: [
+                ['wall_1v2h_se', 'wall2_ew', 'wall2_ew', 'wall_1v2h_sw'],
+                ['wall1_ns', null, null, 'wall1_ns'],
+                ['wall1_ns', null, null, 'wall1_ns'],
+                ['wall_1v2h_ne', 'wall2_ew', 'wall2_ew', 'wall_1v2h_nw']
+            ]
+        }},
+        {{
+            title: 'Partition: 1v2h Mixed',
+            desc: 'Single vert walls with double horiz divider',
+            grid: [
+                ['wall_1v2h_se', 'wall2_ew', 'wall_1v2h_sew', 'wall2_ew', 'wall_1v2h_sw'],
+                ['wall1_ns', null, 'wall1_ns', null, 'wall1_ns'],
+                ['wall_1v2h_ne', 'wall2_ew', 'wall_1v2h_new', 'wall2_ew', 'wall_1v2h_nw']
+            ]
+        }},
+        // ── Mixed Border (double outer, single inner) ───────────
+        {{
+            title: 'Mixed Border Room',
+            desc: 'Double outer walls, single inner division via 2v1h junctions',
+            grid: [
+                ['wall2_se', 'wall2_ew', 'wall2_ew', 'wall2_sw'],
+                ['wall2_ns', null, null, 'wall2_ns'],
+                ['wall_2v1h_nse', 'wall1_ew', 'wall1_ew', 'wall_2v1h_nsw'],
+                ['wall2_ns', null, null, 'wall2_ns'],
+                ['wall2_ne', 'wall2_ew', 'wall2_ew', 'wall2_nw']
+            ]
+        }},
+        // ── Minimap Edge Tiles ──────────────────────────────────
+        // These use top-left border convention: each tile draws
+        // borders only on its TOP edge (row 0) and LEFT edge (col 0).
+        // Right/bottom borders come from adjacent cells.
+        // 169=NW, 170=top, 185=left, 203=SE corner pixel.
+        // 171/186/187/201/202=door-gap variants.
+        {{
+            title: 'Minimap: Solid Room',
+            desc: 'Top-left border convention: 169=NW 170=top 185=left 203=SE pixel',
+            grid: [
+                ['edge_wedge_nw', 'edge_top_thin', 'edge_top_thin', 'edge_left_thin'],
+                ['edge_left_thin', null, null, 'edge_left_thin'],
+                ['edge_left_thin', null, null, 'edge_left_thin'],
+                ['edge_top_thin', 'edge_top_thin', 'edge_top_thin', 'edge_wedge_se']
+            ]
+        }},
+        {{
+            title: 'Minimap: Room with Door',
+            desc: '171=top+gap, 187=left+gap, 202=top+gap (door openings)',
+            grid: [
+                ['edge_wedge_nw', 'edge_top_thin', 'edge_top_thin', 'edge_wedge_ne'],
+                ['edge_left_thin', null, null, 'edge_right_thin'],
+                ['edge_left_thin', null, null, 'edge_left_thin'],
+                ['edge_top_thin', 'edge_top_thin', 'edge_top_thin', 'edge_wedge_se']
+            ]
+        }},
+        {{
+            title: 'Minimap: Two Connected Rooms',
+            desc: '187=door in dividing wall connects rooms',
+            grid: [
+                ['edge_wedge_nw', 'edge_top_thin', 'edge_wedge_nw', 'edge_top_thin', 'edge_left_thin'],
+                ['edge_left_thin', null, 'edge_right_thin', null, 'edge_left_thin'],
+                ['edge_top_thin', 'edge_top_thin', 'edge_top_thin', 'edge_top_thin', 'edge_wedge_se']
+            ]
+        }},
+        {{
+            title: 'Minimap: Goblin Tunnels (excerpt)',
+            desc: 'Actual layout from goblin-tunnels.psci rows 1-5, cols 1-5',
+            grid: [
+                ['edge_left_thin', 'edge_wedge_nw', 'edge_top_thin', 'edge_top_thin', 'edge_wedge_ne'],
+                ['edge_bottom_thin', 'edge_wedge_sw', 'edge_left_thin', 'edge_left_thin', 'edge_wedge_ne'],
+                ['edge_left_thin', 'icon_target_square', 'edge_bottom_thin', 'edge_wedge_ne', 'edge_wedge_ne'],
+                ['edge_left_thin', 'edge_wedge_ne', 'edge_left_thin', 'edge_wedge_ne', 'edge_wedge_ne'],
+                ['edge_top_thin', 'edge_top_thin', 'icon_target_square', 'edge_top_thin', 'edge_wedge_se']
+            ]
+        }},
+        // ── Stripe/Streaks Group ────────────────────────────────
+        // 3/4 blocks (192,194,224,226) make rounded corners
+        // Halftones (193,225) and fills (208,210) make shading
+        {{
+            title: 'Thick Wall Room (Streaks)',
+            desc: 'stripe_streaks_wall_group as walls — block fills + rounded inner corners',
+            grid: [
+                ['block_full', 'block_full', 'block_full', 'block_full', 'block_full', 'block_full'],
+                ['block_full', 'block_three_quarter_ne_sw_se', null, null, 'block_three_quarter_nw_sw_se', 'block_full'],
+                ['block_full', null, null, null, null, 'block_full'],
+                ['block_full', 'block_three_quarter_ne_nw_se', null, null, 'block_three_quarter_ne_nw_sw', 'block_full'],
+                ['block_full', 'block_full', 'block_full', 'block_full', 'block_full', 'block_full']
+            ]
+        }},
+        {{
+            title: 'Thick Corridor (Streaks)',
+            desc: 'Halftone transitions at corridor edges',
+            grid: [
+                ['block_full', 'block_full', 'block_three_quarter_ne_sw_se', null, 'block_three_quarter_nw_sw_se', 'block_full', 'block_full'],
+                ['block_full', 'block_full', null, null, null, 'block_full', 'block_full'],
+                ['block_full', 'block_full', 'block_three_quarter_ne_nw_se', null, 'block_three_quarter_ne_nw_sw', 'block_full', 'block_full']
+            ]
+        }},
+        {{
+            title: 'Rounded Corners (3/4 Blocks)',
+            desc: 'stripe_streaks_wall_group — 3/4 blocks fill all but one quadrant',
+            grid: [
+                [null, 'block_full', 'block_full', null],
+                ['block_full', 'block_three_quarter_ne_sw_se', 'block_three_quarter_nw_sw_se', 'block_full'],
+                ['block_full', 'block_three_quarter_ne_nw_se', 'block_three_quarter_ne_nw_sw', 'block_full'],
+                [null, 'block_full', 'block_full', null]
+            ]
+        }},
+        {{
+            title: 'Diagonal Fill Patterns',
+            desc: 'Forward/backward diagonal fills + checkerboard',
+            grid: [
+                ['fill_diagonal_forward', 'fill_diagonal_forward', 'fill_checkerboard', 'fill_diagonal_backward', 'fill_diagonal_backward'],
+                ['fill_diagonal_forward', 'fill_diagonal_forward', 'fill_checkerboard', 'fill_diagonal_backward', 'fill_diagonal_backward']
+            ]
+        }},
+        {{
+            title: 'Halftone Transitions',
+            desc: 'Diagonal halftones (193,225) for smooth shading',
+            grid: [
+                ['block_full', 'diagonal_halftone_se', null, null, 'diagonal_halftone_ne', 'block_full'],
+                ['block_full', 'block_full', 'diagonal_halftone_se', 'diagonal_halftone_ne', 'block_full', 'block_full']
+            ]
+        }},
+        {{
+            title: 'Shaded Room (all groups)',
+            desc: 'Double-line walls + rounded corners + shade fills',
+            grid: [
+                [null, 'wall2_se', 'wall2_ew', 'wall2_ew', 'wall2_sw', null],
+                ['wall2_se', 'wall2_nw', 'shade_light', 'shade_light', 'wall2_ne', 'wall2_sw'],
+                ['wall2_ns', 'shade_light', 'shade_medium', 'shade_medium', 'shade_light', 'wall2_ns'],
+                ['wall2_ns', 'shade_light', 'shade_medium', 'shade_medium', 'shade_light', 'wall2_ns'],
+                ['wall2_ne', 'wall2_sw', 'shade_light', 'shade_light', 'wall2_se', 'wall2_nw'],
+                [null, 'wall2_ne', 'wall2_ew', 'wall2_ew', 'wall2_nw', null]
             ]
         }}
     ];
@@ -1644,6 +1794,117 @@ function renderWallComparison(area, zoom) {{
 
         group.appendChild(grid);
         area.appendChild(group);
+    }}
+
+    // =========================================================================
+    // User-defined wall groups
+    // =========================================================================
+    const userGroupsHeader = document.createElement('div');
+    userGroupsHeader.className = 'wall-group';
+    userGroupsHeader.innerHTML = '<h4 style="color:#e94560">— User-Defined Tile Groups —</h4>';
+    area.appendChild(userGroupsHeader);
+
+    const userGroups = [
+        {{
+            label: 'Single Line Wall Group',
+            desc: 'Single-line box-drawing walls: nsw, nsew, sew, se, nse, ne, new, nw',
+            tiles: [181, 180, 164, 163, 179, 195, 196, 197],
+            color: '#baffc9'
+        }},
+        {{
+            label: 'Double Line Wall Group (Round Fillings)',
+            desc: 'Double-line box-drawing walls: nsew, sw, sew, nse, nsw, nw, new, ne',
+            tiles: [183, 168, 167, 182, 184, 200, 199, 198],
+            color: '#ffb3ba'
+        }},
+        {{
+            label: 'Vertical Double Wall Group (2v1h)',
+            desc: 'Mixed walls: double vertical, single horizontal',
+            tiles: [212, 211, 227, 228, 229, 245, 244, 243],
+            color: '#bae1ff'
+        }},
+        {{
+            label: '3D-Like Wall Group (1v2h)',
+            desc: 'Mixed walls: single vertical, double horizontal',
+            tiles: [230, 231, 232, 216, 215, 247, 248, 246],
+            color: '#ffffba'
+        }},
+        {{
+            label: 'Minimap Edge Group',
+            desc: 'Thin edge tiles for minimap rooms (Note: tile 169/edge_wedge_nw is essential but was missing from original group)',
+            tiles: [169, 170, 171, 185, 186, 187, 201, 202, 203],
+            color: '#e0bbff'
+        }},
+        {{
+            label: 'Stripe/Streaks Group',
+            desc: 'Diagonal halftones and 3/4 block fills',
+            tiles: [193, 192, 208, 225, 224, 226, 210],
+            color: '#ffdfba'
+        }},
+        {{
+            label: 'Diagonal Lines',
+            desc: 'Dotted diagonal patterns',
+            tiles: [148, 132, 133, 149],
+            color: '#ffc9de'
+        }},
+        {{
+            label: 'Quadrant Tiles',
+            desc: 'Corner quadrant fills (SE, SW, NE, NW)',
+            tiles: [130, 131, 146, 147],
+            color: '#c9ffec'
+        }}
+    ];
+
+    for (const ug of userGroups) {{
+        const groupDiv = document.createElement('div');
+        groupDiv.className = 'wall-group';
+        groupDiv.style.borderColor = ug.color + '66';
+        groupDiv.style.background = ug.color + '11';
+
+        const header = document.createElement('h4');
+        header.style.color = ug.color;
+        header.textContent = ug.label;
+        groupDiv.appendChild(header);
+
+        const desc = document.createElement('div');
+        desc.style.cssText = 'color:#888; font-size:11px; margin-bottom:8px;';
+        desc.textContent = ug.desc;
+        groupDiv.appendChild(desc);
+
+        const grid = document.createElement('div');
+        grid.style.cssText = `display:grid; grid-template-columns:repeat(${{ug.tiles.length}}, ${{zoom + 8}}px); gap:4px;`;
+
+        for (const tileIdx of ug.tiles) {{
+            const tile = DATA.dm.find(t => t.idx === tileIdx);
+            const wrapper = document.createElement('div');
+
+            if (tile) {{
+                const cell = document.createElement('div');
+                cell.className = 'tile-cell';
+                cell.style.width = zoom + 'px';
+                cell.style.height = zoom + 'px';
+                cell.dataset.idx = tile.idx;
+
+                const img = document.createElement('img');
+                img.src = `data:image/png;base64,${{tile.b64}}`;
+                cell.appendChild(img);
+
+                cell.addEventListener('mouseenter', () => showDetail(tile));
+                cell.addEventListener('click', () => lockDetail(tile, cell));
+                wrapper.appendChild(cell);
+
+                const label = document.createElement('div');
+                label.className = 'wall-label';
+                label.style.color = ug.color;
+                label.textContent = `${{tile.idx}}: ${{getTileName(tile).replace(/^(wall[12]?_|wall_[12]v[12]h_|edge_|diagonal_|block_|quadrant_|fill_|dots_)/, '')}}`;
+                wrapper.appendChild(label);
+            }}
+
+            grid.appendChild(wrapper);
+        }}
+
+        groupDiv.appendChild(grid);
+        area.appendChild(groupDiv);
     }}
 }}
 

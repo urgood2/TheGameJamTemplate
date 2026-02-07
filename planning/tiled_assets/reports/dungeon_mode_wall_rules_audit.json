@@ -1,0 +1,358 @@
+{
+  "generated_at": "2026-02-07T22:48:46.585600",
+  "manifest": "planning/tiled_assets/required_asset_manifest.json",
+  "tile_count": 21,
+  "canonical_rules": [
+    {
+      "mask": 0,
+      "bits": "N0 E0 S0 W0",
+      "rule": "isolated",
+      "tile_desc": "shade_heavy",
+      "tile_id": 253,
+      "rotation": 0,
+      "detected_mask": 0
+    },
+    {
+      "mask": 1,
+      "bits": "N1 E0 S0 W0",
+      "rule": "end_north",
+      "tile_desc": "block_full",
+      "tile_id": 254,
+      "rotation": 0,
+      "detected_mask": 1
+    },
+    {
+      "mask": 2,
+      "bits": "N0 E1 S0 W0",
+      "rule": "end_east",
+      "tile_desc": "block_full",
+      "tile_id": 254,
+      "rotation": 90,
+      "detected_mask": 2
+    },
+    {
+      "mask": 3,
+      "bits": "N1 E1 S0 W0",
+      "rule": "corner_bl",
+      "tile_desc": "box_corner_br",
+      "tile_id": 243,
+      "rotation": 0,
+      "detected_mask": 3
+    },
+    {
+      "mask": 4,
+      "bits": "N0 E0 S1 W0",
+      "rule": "end_south",
+      "tile_desc": "block_full",
+      "tile_id": 254,
+      "rotation": 180,
+      "detected_mask": 4
+    },
+    {
+      "mask": 5,
+      "bits": "N1 E0 S1 W0",
+      "rule": "vertical",
+      "tile_desc": "box_corner_bl",
+      "tile_id": 242,
+      "rotation": 90,
+      "detected_mask": 5
+    },
+    {
+      "mask": 6,
+      "bits": "N0 E1 S1 W0",
+      "rule": "corner_tl",
+      "tile_desc": "box_corner_br",
+      "tile_id": 243,
+      "rotation": 90,
+      "detected_mask": 6
+    },
+    {
+      "mask": 7,
+      "bits": "N1 E1 S1 W0",
+      "rule": "t_right",
+      "tile_desc": "box_horizontal",
+      "tile_id": 244,
+      "rotation": 90,
+      "detected_mask": 7
+    },
+    {
+      "mask": 8,
+      "bits": "N0 E0 S0 W1",
+      "rule": "end_west",
+      "tile_desc": "block_full",
+      "tile_id": 254,
+      "rotation": 270,
+      "detected_mask": 8
+    },
+    {
+      "mask": 9,
+      "bits": "N1 E0 S0 W1",
+      "rule": "corner_br",
+      "tile_desc": "box_corner_br",
+      "tile_id": 243,
+      "rotation": 270,
+      "detected_mask": 9
+    },
+    {
+      "mask": 10,
+      "bits": "N0 E1 S0 W1",
+      "rule": "horizontal",
+      "tile_desc": "box_corner_bl",
+      "tile_id": 242,
+      "rotation": 0,
+      "detected_mask": 10
+    },
+    {
+      "mask": 11,
+      "bits": "N1 E1 S0 W1",
+      "rule": "t_up",
+      "tile_desc": "box_horizontal",
+      "tile_id": 244,
+      "rotation": 0,
+      "detected_mask": 11
+    },
+    {
+      "mask": 12,
+      "bits": "N0 E0 S1 W1",
+      "rule": "corner_tr",
+      "tile_desc": "box_corner_br",
+      "tile_id": 243,
+      "rotation": 180,
+      "detected_mask": 12
+    },
+    {
+      "mask": 13,
+      "bits": "N1 E0 S1 W1",
+      "rule": "t_left",
+      "tile_desc": "box_horizontal",
+      "tile_id": 244,
+      "rotation": 270,
+      "detected_mask": 13
+    },
+    {
+      "mask": 14,
+      "bits": "N0 E1 S1 W1",
+      "rule": "t_down",
+      "tile_desc": "box_horizontal",
+      "tile_id": 244,
+      "rotation": 180,
+      "detected_mask": 14
+    },
+    {
+      "mask": 15,
+      "bits": "N1 E1 S1 W1",
+      "rule": "cross",
+      "tile_desc": "box_cross",
+      "tile_id": 250,
+      "rotation": 0,
+      "detected_mask": 15
+    }
+  ],
+  "tiles": [
+    {
+      "id": 129,
+      "desc": "wall_brick",
+      "path": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_129_wall_brick.png",
+      "rotation_masks": [
+        5,
+        10
+      ]
+    },
+    {
+      "id": 136,
+      "desc": "bridge",
+      "path": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_136_bridge.png",
+      "rotation_masks": [
+        15
+      ]
+    },
+    {
+      "id": 196,
+      "desc": "wall_stone",
+      "path": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_196_wall_stone.png",
+      "rotation_masks": [
+        7,
+        11,
+        13,
+        14
+      ]
+    },
+    {
+      "id": 197,
+      "desc": "wall_cave",
+      "path": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_197_wall_cave.png",
+      "rotation_masks": [
+        3,
+        6,
+        9,
+        12
+      ]
+    },
+    {
+      "id": 198,
+      "desc": "wall_mossy",
+      "path": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_198_wall_mossy.png",
+      "rotation_masks": [
+        3,
+        6,
+        9,
+        12
+      ]
+    },
+    {
+      "id": 199,
+      "desc": "wall_cracked",
+      "path": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_199_wall_cracked.png",
+      "rotation_masks": [
+        5,
+        10
+      ]
+    },
+    {
+      "id": 240,
+      "desc": "box_corner_tl",
+      "path": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_240_box_corner_tl.png",
+      "rotation_masks": [
+        5,
+        10
+      ]
+    },
+    {
+      "id": 241,
+      "desc": "box_corner_tr",
+      "path": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_241_box_corner_tr.png",
+      "rotation_masks": [
+        5,
+        10
+      ]
+    },
+    {
+      "id": 242,
+      "desc": "box_corner_bl",
+      "path": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_242_box_corner_bl.png",
+      "rotation_masks": [
+        5,
+        10
+      ]
+    },
+    {
+      "id": 243,
+      "desc": "box_corner_br",
+      "path": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_243_box_corner_br.png",
+      "rotation_masks": [
+        3,
+        6,
+        9,
+        12
+      ]
+    },
+    {
+      "id": 244,
+      "desc": "box_horizontal",
+      "path": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_244_box_horizontal.png",
+      "rotation_masks": [
+        7,
+        11,
+        13,
+        14
+      ]
+    },
+    {
+      "id": 245,
+      "desc": "box_vertical",
+      "path": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_245_box_vertical.png",
+      "rotation_masks": [
+        3,
+        6,
+        9,
+        12
+      ]
+    },
+    {
+      "id": 246,
+      "desc": "box_t_down",
+      "path": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_246_box_t_down.png",
+      "rotation_masks": [
+        3,
+        6,
+        9,
+        12
+      ]
+    },
+    {
+      "id": 247,
+      "desc": "box_t_up",
+      "path": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_247_box_t_up.png",
+      "rotation_masks": [
+        5,
+        10
+      ]
+    },
+    {
+      "id": 248,
+      "desc": "box_t_right",
+      "path": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_248_box_t_right.png",
+      "rotation_masks": [
+        3,
+        6,
+        9,
+        12
+      ]
+    },
+    {
+      "id": 249,
+      "desc": "box_t_left",
+      "path": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_249_box_t_left.png",
+      "rotation_masks": [
+        15
+      ]
+    },
+    {
+      "id": 250,
+      "desc": "box_cross",
+      "path": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_250_box_cross.png",
+      "rotation_masks": [
+        15
+      ]
+    },
+    {
+      "id": 251,
+      "desc": "shade_light",
+      "path": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_251_shade_light.png",
+      "rotation_masks": [
+        15
+      ]
+    },
+    {
+      "id": 252,
+      "desc": "shade_medium",
+      "path": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_252_shade_medium.png",
+      "rotation_masks": [
+        1,
+        2,
+        4,
+        8
+      ]
+    },
+    {
+      "id": 253,
+      "desc": "shade_heavy",
+      "path": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_253_shade_heavy.png",
+      "rotation_masks": [
+        0
+      ]
+    },
+    {
+      "id": 254,
+      "desc": "block_full",
+      "path": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_254_block_full.png",
+      "rotation_masks": [
+        1,
+        2,
+        4,
+        8
+      ]
+    }
+  ],
+  "pdf": "planning/tiled_assets/reports/dungeon_mode_wall_rules_audit.pdf"
+}

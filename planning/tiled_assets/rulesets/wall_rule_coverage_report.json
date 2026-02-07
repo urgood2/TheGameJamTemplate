@@ -741,20 +741,14 @@
       "ruleset_id": "dungeon_mode_walls",
       "runtime_path": "planning/tiled_assets/rulesets/dungeon_mode_walls.runtime.json",
       "mapped_assets": [
-        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_240_box_corner_tl.png",
-        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_241_box_corner_tr.png",
         "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_242_box_corner_bl.png",
         "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_243_box_corner_br.png",
         "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_244_box_horizontal.png",
-        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_245_box_vertical.png",
-        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_246_box_t_down.png",
-        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_247_box_t_up.png",
-        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_248_box_t_right.png",
-        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_249_box_t_left.png",
         "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_250_box_cross.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_253_shade_heavy.png",
         "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_254_block_full.png"
       ],
-      "mapped_count": 12,
+      "mapped_count": 6,
       "unknown_assets": [],
       "unknown_count": 0
     }
@@ -1218,8 +1212,7 @@
       "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_240_box_corner_tl.png",
       "status": "mapped",
       "rulesets": [
-        "dungeon_mode_dm_240_box_corner_tl_fill",
-        "dungeon_mode_walls"
+        "dungeon_mode_dm_240_box_corner_tl_fill"
       ],
       "reason": "Referenced by runtime wall autotile ruleset source assets."
     },
@@ -1227,8 +1220,7 @@
       "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_241_box_corner_tr.png",
       "status": "mapped",
       "rulesets": [
-        "dungeon_mode_dm_241_box_corner_tr_fill",
-        "dungeon_mode_walls"
+        "dungeon_mode_dm_241_box_corner_tr_fill"
       ],
       "reason": "Referenced by runtime wall autotile ruleset source assets."
     },
@@ -1263,8 +1255,7 @@
       "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_245_box_vertical.png",
       "status": "mapped",
       "rulesets": [
-        "dungeon_mode_dm_245_box_vertical_fill",
-        "dungeon_mode_walls"
+        "dungeon_mode_dm_245_box_vertical_fill"
       ],
       "reason": "Referenced by runtime wall autotile ruleset source assets."
     },
@@ -1272,8 +1263,7 @@
       "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_246_box_t_down.png",
       "status": "mapped",
       "rulesets": [
-        "dungeon_mode_dm_246_box_t_down_fill",
-        "dungeon_mode_walls"
+        "dungeon_mode_dm_246_box_t_down_fill"
       ],
       "reason": "Referenced by runtime wall autotile ruleset source assets."
     },
@@ -1281,8 +1271,7 @@
       "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_247_box_t_up.png",
       "status": "mapped",
       "rulesets": [
-        "dungeon_mode_dm_247_box_t_up_fill",
-        "dungeon_mode_walls"
+        "dungeon_mode_dm_247_box_t_up_fill"
       ],
       "reason": "Referenced by runtime wall autotile ruleset source assets."
     },
@@ -1290,8 +1279,7 @@
       "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_248_box_t_right.png",
       "status": "mapped",
       "rulesets": [
-        "dungeon_mode_dm_248_box_t_right_fill",
-        "dungeon_mode_walls"
+        "dungeon_mode_dm_248_box_t_right_fill"
       ],
       "reason": "Referenced by runtime wall autotile ruleset source assets."
     },
@@ -1299,8 +1287,7 @@
       "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_249_box_t_left.png",
       "status": "mapped",
       "rulesets": [
-        "dungeon_mode_dm_249_box_t_left_fill",
-        "dungeon_mode_walls"
+        "dungeon_mode_dm_249_box_t_left_fill"
       ],
       "reason": "Referenced by runtime wall autotile ruleset source assets."
     },
@@ -1333,7 +1320,8 @@
       "asset": "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_253_shade_heavy.png",
       "status": "mapped",
       "rulesets": [
-        "dungeon_mode_dm_253_shade_heavy_fill"
+        "dungeon_mode_dm_253_shade_heavy_fill",
+        "dungeon_mode_walls"
       ],
       "reason": "Referenced by runtime wall autotile ruleset source assets."
     },

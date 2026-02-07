@@ -33,10 +33,11 @@ local function configure_camera()
         return
     end
 
-    -- Fixed framing for the generated wall showcase map (144x96 tiles @ 8px).
+    -- Pixel-perfect framing for the generated wall showcase map (144x96 tiles @ 8px).
+    -- Fractional zoom can make 8px tiles look off-grid due to sub-pixel sampling.
     cam:SetActualTarget(576, 384)
     cam:SetActualOffset(640, 360)
-    cam:SetActualZoom(1.15)
+    cam:SetActualZoom(1.0)
 end
 
 local function contains_value(list, value)

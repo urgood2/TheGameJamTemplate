@@ -10,17 +10,11 @@
       "rules_path": "planning/tiled_assets/rulesets/dungeon_mode_walls.rules.txt",
       "runtime_path": "planning/tiled_assets/rulesets/dungeon_mode_walls.runtime.json",
       "source_assets": [
-        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_240_box_corner_tl.png",
-        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_241_box_corner_tr.png",
         "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_242_box_corner_bl.png",
         "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_243_box_corner_br.png",
         "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_244_box_horizontal.png",
-        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_245_box_vertical.png",
-        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_246_box_t_down.png",
-        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_247_box_t_up.png",
-        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_248_box_t_right.png",
-        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_249_box_t_left.png",
         "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_250_box_cross.png",
+        "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_253_shade_heavy.png",
         "assets/graphics/pre-packing-files_globbed/dungeon_mode/dm_254_block_full.png"
       ]
     },

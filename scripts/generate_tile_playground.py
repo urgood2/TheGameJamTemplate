@@ -814,26 +814,7 @@ def generate_playground_html():
                     if not wall_mask[y-1, 1]:
                         comp[y-1, 1] = np.array(fg_color[:4], dtype=np.uint8)
                         wall_mask[y-1, 1] = True
-            # Bottom wall: scan for gap→wall and wall→gap transitions
-            for x in range(1, right_x):
-                if wall_mask[bottom_y, x] and not wall_mask[bottom_y, x-1]:
-                    if bottom_y > 0 and not wall_mask[bottom_y-1, x]:
-                        comp[bottom_y-1, x] = np.array(fg_color[:4], dtype=np.uint8)
-                        wall_mask[bottom_y-1, x] = True
-                if not wall_mask[bottom_y, x] and wall_mask[bottom_y, x-1]:
-                    if not wall_mask[bottom_y-1, x-1]:
-                        comp[bottom_y-1, x-1] = np.array(fg_color[:4], dtype=np.uint8)
-                        wall_mask[bottom_y-1, x-1] = True
-            # Top wall: scan for gap→wall and wall→gap transitions
-            for x in range(1, right_x):
-                if wall_mask[0, x] and not wall_mask[0, x-1]:
-                    if not wall_mask[1, x]:
-                        comp[1, x] = np.array(fg_color[:4], dtype=np.uint8)
-                        wall_mask[1, x] = True
-                if not wall_mask[0, x] and wall_mask[0, x-1]:
-                    if not wall_mask[1, x-1]:
-                        comp[1, x-1] = np.array(fg_color[:4], dtype=np.uint8)
-                        wall_mask[1, x-1] = True
+            # Note: door tips only on left/right (vertical) walls, NOT top/bottom
 
         buf = io.BytesIO()
         Image.fromarray(comp).save(buf, format='PNG')
@@ -907,20 +888,14 @@ def generate_playground_html():
         if not gt_wall_mask[y, 0] and gt_wall_mask[y-1, 0]:
             if not gt_wall_mask[y-1, 1]:
                 gt_comp[y-1, 1] = gt_fg; gt_wall_mask[y-1, 1] = True
+    # Top wall tips: 1px extrusions into gap at y=0, aligned to top edge
     for x in range(1, right_x):
-        if gt_wall_mask[bottom_y, x] and not gt_wall_mask[bottom_y, x-1]:
-            if bottom_y > 0 and not gt_wall_mask[bottom_y-1, x]:
-                gt_comp[bottom_y-1, x] = gt_fg; gt_wall_mask[bottom_y-1, x] = True
-        if not gt_wall_mask[bottom_y, x] and gt_wall_mask[bottom_y, x-1]:
-            if not gt_wall_mask[bottom_y-1, x-1]:
-                gt_comp[bottom_y-1, x-1] = gt_fg; gt_wall_mask[bottom_y-1, x-1] = True
-    for x in range(1, right_x):
-        if gt_wall_mask[0, x] and not gt_wall_mask[0, x-1]:
-            if not gt_wall_mask[1, x]:
-                gt_comp[1, x] = gt_fg; gt_wall_mask[1, x] = True
         if not gt_wall_mask[0, x] and gt_wall_mask[0, x-1]:
-            if not gt_wall_mask[1, x-1]:
-                gt_comp[1, x-1] = gt_fg; gt_wall_mask[1, x-1] = True
+            # wall→gap: tip at gap start, same row
+            gt_comp[0, x] = gt_fg; gt_wall_mask[0, x] = True
+        if gt_wall_mask[0, x] and not gt_wall_mask[0, x-1]:
+            # gap→wall: tip at gap end, same row
+            gt_comp[0, x-1] = gt_fg; gt_wall_mask[0, x-1] = True
     gt_buf = io.BytesIO()
     Image.fromarray(gt_comp).save(gt_buf, format='PNG')
     minimap_composite_b64 = base64.b64encode(gt_buf.getvalue()).decode('ascii')
@@ -1769,14 +1744,47 @@ function renderWallComparison(area, zoom) {{
             ]
         }},
         {{
-            title: 'L-Room: Stripe Walls',
-            desc: 'Non-rectangular room with stripe wall corners',
+            title: 'L-Room: Stripe (notch NE)',
+            desc: 'quadrant_ne at inner corner — fills only NE quadrant where wall edges meet',
             grid: [
                 ['block_three_quarter_ne_nw_sw', 'diagonal_halftone_se', 'block_three_quarter_ne_nw_se', null, null],
                 ['fill_diagonal_forward', null, 'fill_diagonal_backward', null, null],
-                ['fill_diagonal_forward', null, 'block_three_quarter_nw_sw_se', 'diagonal_halftone_se', 'block_three_quarter_ne_nw_se'],
+                ['fill_diagonal_forward', null, 'quadrant_ne', 'diagonal_halftone_se', 'block_three_quarter_ne_nw_se'],
                 ['fill_diagonal_forward', null, null, null, 'fill_diagonal_backward'],
                 ['block_three_quarter_nw_sw_se', 'diagonal_halftone_ne', 'diagonal_halftone_ne', 'diagonal_halftone_ne', 'block_three_quarter_ne_sw_se']
+            ]
+        }},
+        {{
+            title: 'L-Room: Stripe (notch NW)',
+            desc: 'quadrant_nw at inner corner — mirrored L opening to the left',
+            grid: [
+                [null, null, 'block_three_quarter_ne_nw_sw', 'diagonal_halftone_se', 'block_three_quarter_ne_nw_se'],
+                [null, null, 'fill_diagonal_forward', null, 'fill_diagonal_backward'],
+                ['block_three_quarter_ne_nw_sw', 'diagonal_halftone_se', 'quadrant_nw', null, 'fill_diagonal_backward'],
+                ['fill_diagonal_forward', null, null, null, 'fill_diagonal_backward'],
+                ['block_three_quarter_nw_sw_se', 'diagonal_halftone_ne', 'diagonal_halftone_ne', 'diagonal_halftone_ne', 'block_three_quarter_ne_sw_se']
+            ]
+        }},
+        {{
+            title: 'L-Room: Stripe (notch SE)',
+            desc: 'quadrant_se at inner corner — top full-width, bottom narrows left',
+            grid: [
+                ['block_three_quarter_ne_nw_sw', 'diagonal_halftone_se', 'diagonal_halftone_se', 'diagonal_halftone_se', 'block_three_quarter_ne_nw_se'],
+                ['fill_diagonal_forward', null, null, null, 'fill_diagonal_backward'],
+                ['fill_diagonal_forward', null, 'quadrant_se', 'diagonal_halftone_ne', 'block_three_quarter_ne_sw_se'],
+                ['fill_diagonal_forward', null, 'fill_diagonal_backward', null, null],
+                ['block_three_quarter_nw_sw_se', 'diagonal_halftone_ne', 'block_three_quarter_ne_sw_se', null, null]
+            ]
+        }},
+        {{
+            title: 'L-Room: Stripe (notch SW)',
+            desc: 'quadrant_sw at inner corner — top full-width, bottom narrows right',
+            grid: [
+                ['block_three_quarter_ne_nw_sw', 'diagonal_halftone_se', 'diagonal_halftone_se', 'diagonal_halftone_se', 'block_three_quarter_ne_nw_se'],
+                ['fill_diagonal_forward', null, null, null, 'fill_diagonal_backward'],
+                ['block_three_quarter_nw_sw_se', 'diagonal_halftone_ne', 'quadrant_sw', null, 'fill_diagonal_backward'],
+                [null, null, 'fill_diagonal_forward', null, 'fill_diagonal_backward'],
+                [null, null, 'block_three_quarter_nw_sw_se', 'diagonal_halftone_ne', 'block_three_quarter_ne_sw_se']
             ]
         }}
     ];

@@ -144,22 +144,50 @@ def canonical_rulesets_by_source(
     d4 = by_desc["dungeon_437"]
 
     required_dm = [
-        "box_cross",
-        "box_t_down",
-        "box_t_up",
-        "box_t_right",
-        "box_t_left",
-        "box_vertical",
-        "box_horizontal",
-        "box_corner_tl",
-        "box_corner_tr",
         "box_corner_bl",
         "box_corner_br",
+        "box_horizontal",
+        "box_cross",
         "block_full",
+        "shade_heavy",
     ]
+    # The dungeon_mode naming around 240-250 is not a direct geometric legend;
+    # use connectivity-derived canonical pieces with rotation:
+    # - box_corner_bl (dm_242): straight piece (E-W) when unrotated
+    # - box_corner_br (dm_243): corner (N-E) when unrotated
+    # - box_horizontal (dm_244): tee (N-E-W) when unrotated
+    # - box_cross (dm_250): 4-way
+    # - block_full (dm_254): end-cap (N) when unrotated
+    # - shade_heavy (dm_253): isolated (0 neighbors)
     for key in required_dm:
         if key not in dm:
             raise ValueError(f"dungeon_mode canonical rules missing descriptor: {key}")
+
+    dm_straight = dm["box_corner_bl"]
+    dm_corner = dm["box_corner_br"]
+    dm_tee = dm["box_horizontal"]
+    dm_cross = dm["box_cross"]
+    dm_end = dm["block_full"]
+    dm_isolated = dm["shade_heavy"]
+
+    dm_rules = [
+        {"name": "cross", "terrain": 1, "exact_mask": 15, "tile": tile_spec(dm_cross)},
+        {"name": "t_down", "terrain": 1, "exact_mask": 14, "tile": tile_spec(dm_tee, rotation=180)},
+        {"name": "t_up", "terrain": 1, "exact_mask": 11, "tile": tile_spec(dm_tee)},
+        {"name": "t_right", "terrain": 1, "exact_mask": 7, "tile": tile_spec(dm_tee, rotation=90)},
+        {"name": "t_left", "terrain": 1, "exact_mask": 13, "tile": tile_spec(dm_tee, rotation=270)},
+        {"name": "vertical", "terrain": 1, "exact_mask": 5, "tile": tile_spec(dm_straight, rotation=90)},
+        {"name": "horizontal", "terrain": 1, "exact_mask": 10, "tile": tile_spec(dm_straight)},
+        {"name": "corner_tl", "terrain": 1, "exact_mask": 6, "tile": tile_spec(dm_corner, rotation=90)},
+        {"name": "corner_tr", "terrain": 1, "exact_mask": 12, "tile": tile_spec(dm_corner, rotation=180)},
+        {"name": "corner_bl", "terrain": 1, "exact_mask": 3, "tile": tile_spec(dm_corner)},
+        {"name": "corner_br", "terrain": 1, "exact_mask": 9, "tile": tile_spec(dm_corner, rotation=270)},
+        {"name": "end_north", "terrain": 1, "exact_mask": 1, "tile": tile_spec(dm_end)},
+        {"name": "end_east", "terrain": 1, "exact_mask": 2, "tile": tile_spec(dm_end, rotation=90)},
+        {"name": "end_south", "terrain": 1, "exact_mask": 4, "tile": tile_spec(dm_end, rotation=180)},
+        {"name": "end_west", "terrain": 1, "exact_mask": 8, "tile": tile_spec(dm_end, rotation=270)},
+        {"name": "isolated", "terrain": 1, "exact_mask": 0, "tile": tile_spec(dm_isolated)},
+    ]
 
     required_d4 = [
         "box_cross",
@@ -172,25 +200,6 @@ def canonical_rulesets_by_source(
     for key in required_d4:
         if key not in d4:
             raise ValueError(f"dungeon_437 canonical rules missing descriptor: {key}")
-
-    dm_rules = [
-        {"name": "cross", "terrain": 1, "exact_mask": 15, "tile": tile_spec(dm["box_cross"])},
-        {"name": "t_down", "terrain": 1, "exact_mask": 14, "tile": tile_spec(dm["box_t_down"])},
-        {"name": "t_up", "terrain": 1, "exact_mask": 11, "tile": tile_spec(dm["box_t_up"])},
-        {"name": "t_right", "terrain": 1, "exact_mask": 7, "tile": tile_spec(dm["box_t_right"])},
-        {"name": "t_left", "terrain": 1, "exact_mask": 13, "tile": tile_spec(dm["box_t_left"])},
-        {"name": "vertical", "terrain": 1, "exact_mask": 5, "tile": tile_spec(dm["box_vertical"])},
-        {"name": "horizontal", "terrain": 1, "exact_mask": 10, "tile": tile_spec(dm["box_horizontal"])},
-        {"name": "corner_tl", "terrain": 1, "exact_mask": 6, "tile": tile_spec(dm["box_corner_tl"])},
-        {"name": "corner_tr", "terrain": 1, "exact_mask": 12, "tile": tile_spec(dm["box_corner_tr"])},
-        {"name": "corner_bl", "terrain": 1, "exact_mask": 3, "tile": tile_spec(dm["box_corner_bl"])},
-        {"name": "corner_br", "terrain": 1, "exact_mask": 9, "tile": tile_spec(dm["box_corner_br"])},
-        {"name": "end_north", "terrain": 1, "exact_mask": 1, "tile": tile_spec(dm["box_vertical"])},
-        {"name": "end_east", "terrain": 1, "exact_mask": 2, "tile": tile_spec(dm["box_horizontal"])},
-        {"name": "end_south", "terrain": 1, "exact_mask": 4, "tile": tile_spec(dm["box_vertical"])},
-        {"name": "end_west", "terrain": 1, "exact_mask": 8, "tile": tile_spec(dm["box_horizontal"])},
-        {"name": "isolated", "terrain": 1, "exact_mask": 0, "tile": tile_spec(dm["block_full"])},
-    ]
 
     d4_rules = [
         {"name": "cross", "terrain": 1, "exact_mask": 15, "tile": tile_spec(d4["box_cross"])},
@@ -215,24 +224,21 @@ def canonical_rulesets_by_source(
         "dungeon_mode_walls": {
             "schema_version": "1.0",
             "ruleset": "dungeon_mode_walls",
-            "description": "Cardinal-neighbor autotile mapping for dungeon_mode wall set.",
+            "description": (
+                "Cardinal-neighbor autotile mapping for dungeon_mode wall set "
+                "(connectivity-derived canonical pieces + rotation)."
+            ),
             "default_terrain": 1,
             "mask_bits": {"north": 1, "east": 2, "south": 4, "west": 8},
             "rules": dm_rules,
             "source_assets": sorted(
                 {
-                    dm["box_corner_tl"].path,
-                    dm["box_corner_tr"].path,
-                    dm["box_corner_bl"].path,
-                    dm["box_corner_br"].path,
-                    dm["box_horizontal"].path,
-                    dm["box_vertical"].path,
-                    dm["box_t_down"].path,
-                    dm["box_t_up"].path,
-                    dm["box_t_right"].path,
-                    dm["box_t_left"].path,
-                    dm["box_cross"].path,
-                    dm["block_full"].path,
+                    dm_straight.path,
+                    dm_corner.path,
+                    dm_tee.path,
+                    dm_cross.path,
+                    dm_end.path,
+                    dm_isolated.path,
                 }
             ),
         },
@@ -409,7 +415,8 @@ def generate_demo_map(
     walls_mode = [0] * tile_count
     walls_437 = [0] * tile_count
     props = [0] * tile_count
-    wall_gallery = [0] * tile_count
+    wall_gallery_mode = [0] * tile_count
+    wall_gallery_437 = [0] * tile_count
 
     gid_by_asset: dict[str, int] = {}
     tsj_dir = demo_map_dir / "tilesets"
@@ -530,22 +537,28 @@ def generate_demo_map(
     set_tile(props, 74, 41, chair)
     set_tile(props, 74, 43, chair)
 
-    # Wall gallery: every wall asset appears at least once.
-    gx0, gy0 = 4, 56
-    cols = 64
-    for i, asset in enumerate(wall_asset_paths):
-        gx = gx0 + (i % cols) * 2
-        gy = gy0 + (i // cols) * 2
-        set_tile(wall_gallery, gx, gy, asset)
+    # Wall galleries: each wall asset appears once, split by source with wide spacing.
+    mode_assets = [asset.path for asset in wall_assets if asset.source == "dungeon_mode"]
+    d437_assets = [asset.path for asset in wall_assets if asset.source == "dungeon_437"]
+
+    def place_gallery(layer: list[int], assets: list[str], gx0: int, gy0: int, cols: int, step_x: int, step_y: int) -> None:
+        for i, asset in enumerate(assets):
+            gx = gx0 + (i % cols) * step_x
+            gy = gy0 + (i // cols) * step_y
+            set_tile(layer, gx, gy, asset)
+
+    place_gallery(wall_gallery_mode, mode_assets, gx0=4, gy0=56, cols=16, step_x=4, step_y=4)
+    place_gallery(wall_gallery_437, d437_assets, gx0=6, gy0=72, cols=16, step_x=4, step_y=4)
 
     layers = [
         _make_tile_layer(1, "Ground", width, height, ground),
         _make_tile_layer(2, "Walls_Mode", width, height, walls_mode),
         _make_tile_layer(3, "Walls_437", width, height, walls_437),
         _make_tile_layer(4, "Props", width, height, props),
-        _make_tile_layer(5, "Wall_Gallery", width, height, wall_gallery),
+        _make_tile_layer(5, "Wall_Gallery_Mode", width, height, wall_gallery_mode),
+        _make_tile_layer(6, "Wall_Gallery_437", width, height, wall_gallery_437),
         {
-            "id": 6,
+            "id": 7,
             "name": "Objects",
             "type": "objectgroup",
             "visible": True,

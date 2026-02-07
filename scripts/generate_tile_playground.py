@@ -1553,65 +1553,39 @@ function renderWallComparison(area, zoom) {{
                 ['edge_top_thin', 'edge_top_thin', 'icon_target_square', 'edge_top_thin', 'edge_wedge_se']
             ]
         }},
-        // ── Stripe/Streaks Group ────────────────────────────────
-        // 3/4 blocks (192,194,224,226) make rounded corners
-        // Halftones (193,225) and fills (208,210) make shading
+        // ── Stripe/Streaks Wall Group ────────────────────────────
+        // Diagonal-stripe wall system:
+        // 192=NW corner(noSE), 193=top edge, 194=NE corner(noSW),
+        // 208=left edge, 210=right edge,
+        // 224=SW corner(noNE), 225=bottom edge, 226=SE corner(noNW)
         {{
-            title: 'Thick Wall Room (Streaks)',
-            desc: 'stripe_streaks_wall_group as walls — block fills + rounded inner corners',
+            title: 'Box: Stripe Walls',
+            desc: 'stripe_streaks_wall_group — diagonal stripes as wall material',
             grid: [
-                ['block_full', 'block_full', 'block_full', 'block_full', 'block_full', 'block_full'],
-                ['block_full', 'block_three_quarter_ne_sw_se', null, null, 'block_three_quarter_nw_sw_se', 'block_full'],
-                ['block_full', null, null, null, null, 'block_full'],
-                ['block_full', 'block_three_quarter_ne_nw_se', null, null, 'block_three_quarter_ne_nw_sw', 'block_full'],
-                ['block_full', 'block_full', 'block_full', 'block_full', 'block_full', 'block_full']
+                ['block_three_quarter_ne_nw_sw', 'diagonal_halftone_se', 'diagonal_halftone_se', 'block_three_quarter_ne_nw_se'],
+                ['fill_diagonal_forward', null, null, 'fill_diagonal_backward'],
+                ['fill_diagonal_forward', null, null, 'fill_diagonal_backward'],
+                ['block_three_quarter_nw_sw_se', 'diagonal_halftone_ne', 'diagonal_halftone_ne', 'block_three_quarter_ne_sw_se']
             ]
         }},
         {{
-            title: 'Thick Corridor (Streaks)',
-            desc: 'Halftone transitions at corridor edges',
+            title: 'Corridor: Stripe Walls',
+            desc: 'Horizontal passage with stripe wall edges',
             grid: [
-                ['block_full', 'block_full', 'block_three_quarter_ne_sw_se', null, 'block_three_quarter_nw_sw_se', 'block_full', 'block_full'],
-                ['block_full', 'block_full', null, null, null, 'block_full', 'block_full'],
-                ['block_full', 'block_full', 'block_three_quarter_ne_nw_se', null, 'block_three_quarter_ne_nw_sw', 'block_full', 'block_full']
+                ['block_three_quarter_ne_nw_sw', 'diagonal_halftone_se', 'diagonal_halftone_se', 'diagonal_halftone_se', 'diagonal_halftone_se', 'block_three_quarter_ne_nw_se'],
+                [null, null, null, null, null, null],
+                ['block_three_quarter_nw_sw_se', 'diagonal_halftone_ne', 'diagonal_halftone_ne', 'diagonal_halftone_ne', 'diagonal_halftone_ne', 'block_three_quarter_ne_sw_se']
             ]
         }},
         {{
-            title: 'Rounded Corners (3/4 Blocks)',
-            desc: 'stripe_streaks_wall_group — 3/4 blocks fill all but one quadrant',
+            title: 'L-Room: Stripe Walls',
+            desc: 'Non-rectangular room with stripe wall corners',
             grid: [
-                [null, 'block_full', 'block_full', null],
-                ['block_full', 'block_three_quarter_ne_sw_se', 'block_three_quarter_nw_sw_se', 'block_full'],
-                ['block_full', 'block_three_quarter_ne_nw_se', 'block_three_quarter_ne_nw_sw', 'block_full'],
-                [null, 'block_full', 'block_full', null]
-            ]
-        }},
-        {{
-            title: 'Diagonal Fill Patterns',
-            desc: 'Forward/backward diagonal fills + checkerboard',
-            grid: [
-                ['fill_diagonal_forward', 'fill_diagonal_forward', 'fill_checkerboard', 'fill_diagonal_backward', 'fill_diagonal_backward'],
-                ['fill_diagonal_forward', 'fill_diagonal_forward', 'fill_checkerboard', 'fill_diagonal_backward', 'fill_diagonal_backward']
-            ]
-        }},
-        {{
-            title: 'Halftone Transitions',
-            desc: 'Diagonal halftones (193,225) for smooth shading',
-            grid: [
-                ['block_full', 'diagonal_halftone_se', null, null, 'diagonal_halftone_ne', 'block_full'],
-                ['block_full', 'block_full', 'diagonal_halftone_se', 'diagonal_halftone_ne', 'block_full', 'block_full']
-            ]
-        }},
-        {{
-            title: 'Shaded Room (all groups)',
-            desc: 'Double-line walls + rounded corners + shade fills',
-            grid: [
-                [null, 'wall2_se', 'wall2_ew', 'wall2_ew', 'wall2_sw', null],
-                ['wall2_se', 'wall2_nw', 'shade_light', 'shade_light', 'wall2_ne', 'wall2_sw'],
-                ['wall2_ns', 'shade_light', 'shade_medium', 'shade_medium', 'shade_light', 'wall2_ns'],
-                ['wall2_ns', 'shade_light', 'shade_medium', 'shade_medium', 'shade_light', 'wall2_ns'],
-                ['wall2_ne', 'wall2_sw', 'shade_light', 'shade_light', 'wall2_se', 'wall2_nw'],
-                [null, 'wall2_ne', 'wall2_ew', 'wall2_ew', 'wall2_nw', null]
+                ['block_three_quarter_ne_nw_sw', 'diagonal_halftone_se', 'block_three_quarter_ne_nw_se', null, null],
+                ['fill_diagonal_forward', null, 'fill_diagonal_backward', null, null],
+                ['fill_diagonal_forward', null, 'diagonal_halftone_ne', 'diagonal_halftone_se', 'block_three_quarter_ne_nw_se'],
+                ['fill_diagonal_forward', null, null, null, 'fill_diagonal_backward'],
+                ['block_three_quarter_nw_sw_se', 'diagonal_halftone_ne', 'diagonal_halftone_ne', 'diagonal_halftone_ne', 'block_three_quarter_ne_sw_se']
             ]
         }}
     ];

@@ -1,0 +1,305 @@
+{
+  "group_name": "3d_like_wall_group",
+  "tileset": "dungeon_mode",
+  "tile_count": 16,
+  "unique_source_tiles": 11,
+  "tiles": [
+    {
+      "mask": 0,
+      "mask_dirs": "isolated",
+      "tile_id": 178,
+      "tile_name": "shade_dark",
+      "rotation": 0,
+      "source": "fallback",
+      "wangid": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "mask": 1,
+      "mask_dirs": "N",
+      "tile_id": 16,
+      "tile_name": "block_full",
+      "rotation": 0,
+      "source": "fallback",
+      "wangid": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "mask": 2,
+      "mask_dirs": "E",
+      "tile_id": 16,
+      "tile_name": "block_full",
+      "rotation": 0,
+      "source": "fallback",
+      "wangid": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "mask": 3,
+      "mask_dirs": "NE",
+      "tile_id": 246,
+      "tile_name": "wall_1v2h_ne",
+      "rotation": 0,
+      "source": "suffix",
+      "wangid": [
+        1,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "mask": 4,
+      "mask_dirs": "S",
+      "tile_id": 16,
+      "tile_name": "block_full",
+      "rotation": 0,
+      "source": "fallback",
+      "wangid": [
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "mask": 5,
+      "mask_dirs": "NS",
+      "tile_id": 16,
+      "tile_name": "block_full",
+      "rotation": 0,
+      "source": "fallback",
+      "wangid": [
+        1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "mask": 6,
+      "mask_dirs": "ES",
+      "tile_id": 214,
+      "tile_name": "wall_1v2h_se",
+      "rotation": 0,
+      "source": "suffix",
+      "wangid": [
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "mask": 7,
+      "mask_dirs": "NES",
+      "tile_id": 230,
+      "tile_name": "wall_1v2h_nse",
+      "rotation": 0,
+      "source": "suffix",
+      "wangid": [
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "mask": 8,
+      "mask_dirs": "W",
+      "tile_id": 16,
+      "tile_name": "block_full",
+      "rotation": 0,
+      "source": "fallback",
+      "wangid": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "mask": 9,
+      "mask_dirs": "NW",
+      "tile_id": 248,
+      "tile_name": "wall_1v2h_nw",
+      "rotation": 0,
+      "source": "suffix",
+      "wangid": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "mask": 10,
+      "mask_dirs": "EW",
+      "tile_id": 16,
+      "tile_name": "block_full",
+      "rotation": 0,
+      "source": "fallback",
+      "wangid": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "mask": 11,
+      "mask_dirs": "NEW",
+      "tile_id": 247,
+      "tile_name": "wall_1v2h_new",
+      "rotation": 0,
+      "source": "suffix",
+      "wangid": [
+        1,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "mask": 12,
+      "mask_dirs": "SW",
+      "tile_id": 216,
+      "tile_name": "wall_1v2h_sw",
+      "rotation": 0,
+      "source": "suffix",
+      "wangid": [
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "mask": 13,
+      "mask_dirs": "NSW",
+      "tile_id": 232,
+      "tile_name": "wall_1v2h_nsw",
+      "rotation": 0,
+      "source": "suffix",
+      "wangid": [
+        1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "mask": 14,
+      "mask_dirs": "ESW",
+      "tile_id": 215,
+      "tile_name": "wall_1v2h_sew",
+      "rotation": 0,
+      "source": "suffix",
+      "wangid": [
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "mask": 15,
+      "mask_dirs": "NESW",
+      "tile_id": 231,
+      "tile_name": "wall_1v2h_nsew",
+      "rotation": 0,
+      "source": "suffix",
+      "wangid": [
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0
+      ]
+    }
+  ],
+  "supported_shapes": [
+    "box",
+    "L-room",
+    "corridor",
+    "cross",
+    "partition"
+  ],
+  "missing_mask_strategy": "fallback to block_full (end-caps) / shade_dark (isolated) / rotation of existing tiles",
+  "generated": "2026-02-08T10:55:51.578744"
+}

@@ -1,0 +1,66 @@
+{
+  "generated": "2026-02-08T10:55:51.602090",
+  "total_groups": 10,
+  "groups": {
+    "dungeon_mode/single_line_wall_group": {
+      "tileset": "dungeon_mode",
+      "group": "single_line_wall_group",
+      "source_tiles": 11,
+      "total_rules": 16
+    },
+    "dungeon_mode/wall_group_round_fillings": {
+      "tileset": "dungeon_mode",
+      "group": "wall_group_round_fillings",
+      "source_tiles": 11,
+      "total_rules": 16
+    },
+    "dungeon_mode/vertical_double_wall_group": {
+      "tileset": "dungeon_mode",
+      "group": "vertical_double_wall_group",
+      "source_tiles": 9,
+      "total_rules": 16
+    },
+    "dungeon_mode/3d_like_wall_group": {
+      "tileset": "dungeon_mode",
+      "group": "3d_like_wall_group",
+      "source_tiles": 9,
+      "total_rules": 16
+    },
+    "dungeon_mode/stripe_streaks_wall_group": {
+      "tileset": "dungeon_mode",
+      "group": "stripe_streaks_wall_group",
+      "source_tiles": 8,
+      "total_rules": 16
+    },
+    "dungeon_mode/minimap_wall_group": {
+      "tileset": "dungeon_mode",
+      "group": "minimap_wall_group",
+      "source_tiles": 8,
+      "total_rules": 16
+    },
+    "dungeon_437/single_line_wall_group": {
+      "tileset": "dungeon_437",
+      "group": "single_line_wall_group",
+      "source_tiles": 11,
+      "total_rules": 16
+    },
+    "dungeon_437/double_line_wall_group": {
+      "tileset": "dungeon_437",
+      "group": "double_line_wall_group",
+      "source_tiles": 11,
+      "total_rules": 16
+    },
+    "dungeon_437/mixed_2v1h_wall_group": {
+      "tileset": "dungeon_437",
+      "group": "mixed_2v1h_wall_group",
+      "source_tiles": 9,
+      "total_rules": 16
+    },
+    "dungeon_437/mixed_1v2h_wall_group": {
+      "tileset": "dungeon_437",
+      "group": "mixed_1v2h_wall_group",
+      "source_tiles": 9,
+      "total_rules": 16
+    }
+  }
+}

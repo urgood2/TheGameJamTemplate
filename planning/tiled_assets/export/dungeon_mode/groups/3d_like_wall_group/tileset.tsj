@@ -1,0 +1,238 @@
+{
+  "type": "tileset",
+  "version": "1.10",
+  "tiledversion": "1.11.0",
+  "name": "3d_like_wall_group",
+  "tilewidth": 8,
+  "tileheight": 8,
+  "tilecount": 16,
+  "columns": 16,
+  "image": "tileset.png",
+  "imagewidth": 128,
+  "imageheight": 8,
+  "wangsets": [
+    {
+      "name": "3D Like Wall Group",
+      "type": "edge",
+      "tile": -1,
+      "colors": [
+        {
+          "name": "Wall",
+          "color": "#FF808080",
+          "tile": 0,
+          "probability": 1.0
+        }
+      ],
+      "wangtiles": [
+        {
+          "tileid": 0,
+          "wangid": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "tileid": 1,
+          "wangid": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "tileid": 2,
+          "wangid": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "tileid": 3,
+          "wangid": [
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "tileid": 4,
+          "wangid": [
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "tileid": 5,
+          "wangid": [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "tileid": 6,
+          "wangid": [
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "tileid": 7,
+          "wangid": [
+            1,
+            0,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "tileid": 8,
+          "wangid": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "tileid": 9,
+          "wangid": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "tileid": 10,
+          "wangid": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "tileid": 11,
+          "wangid": [
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "tileid": 12,
+          "wangid": [
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "tileid": 13,
+          "wangid": [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "tileid": 14,
+          "wangid": [
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "tileid": 15,
+          "wangid": [
+            1,
+            0,
+            1,
+            0,
+            1,
+            0,
+            1,
+            0
+          ]
+        }
+      ]
+    }
+  ]
+}

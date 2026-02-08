@@ -1,5 +1,7 @@
 {
   "wall_group_round_fillings": [
+    144,
+    145,
     183,
     168,
     167,
@@ -10,6 +12,8 @@
     198
   ],
   "single_line_wall_group": [
+    128,
+    129,
     181,
     180,
     164,
@@ -42,6 +46,7 @@
   "stripe_streaks_wall_group": [
     193,
     192,
+    194,
     208,
     225,
     224,
